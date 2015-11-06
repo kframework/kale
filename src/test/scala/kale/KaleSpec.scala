@@ -9,7 +9,7 @@ class KaleSpec extends FreeSpec {
 
   import Implicits._
 
-  "SET" - {
+  "SET" in {
     val set = new SET("_,_", 0)
     assert(set.op(1, 2) == set.op(2, 1))
     assert(set.op(0, 2) == (2: Term))
@@ -24,11 +24,11 @@ class KaleSpec extends FreeSpec {
     assert(x == Int(2))
     assert(x != y)
 
-    "Int" - {
+    "Int" in {
       assert(x.value == 2)
       assert(x.label == INT.Int)
     }
-    "+" - {
+    "+" in {
       assert(x + y == Int(5))
       assert(x + X != Int(5))
       assert(x + 0 == Int(2))
