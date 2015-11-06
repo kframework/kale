@@ -5,7 +5,7 @@ import scala.language.implicitConversions
 object Implicits {
 
   implicit def intToken(x: Int): Token[Int] = INT.Int(x)
-  implicit class IntWithOps(x: Token[Int]) {
+  implicit class asTerm(x: Term) {
     def +(y: Term) = INT.+(x, y)
   }
 }

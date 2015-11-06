@@ -2,23 +2,21 @@ package kale
 
 import kale.LOGIC.Variable
 import org.scalatest.FreeSpec
-import org.scalatest._
 
 class KaleSpec extends FreeSpec {
 
   val X = Variable("X")
 
+  import Implicits._
+
   "SET" - {
-    val x = SET.SetOp
-    println(x)
-    println(INT.Int(2))
-    println(SET.SetOp(INT.Int(2), INT.Int(3)))
-    println(SET.SetOp())
+    val set = new SET("_,_", 0)
+    assert(set.op(1, 2) == set.op(2, 1))
+    assert(set.op(0, 2) == (2: Term))
   }
 
   "INT" - {
     import INT._
-    import Implicits._
 
     val x: Token[Int] = implicitly[Token[Int]](2)
     val y: Token[Int] = implicitly[Token[Int]](3)
@@ -33,6 +31,8 @@ class KaleSpec extends FreeSpec {
     "+" - {
       assert(x + y == Int(5))
       assert(x + X != Int(5))
+      assert(x + 0 == Int(2))
+      assert(x + 8 + 0 + y + X + 5 == (13: Term) + X + 5)
     }
   }
 }
