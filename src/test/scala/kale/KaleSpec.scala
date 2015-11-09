@@ -11,6 +11,8 @@ class KaleSpec extends FreeSpec {
 
   "SET" in {
     val set = new SET("_,_", 0)
+    set.op(1, 2)
+
     assert(set.op(1, 2) == set.op(2, 1))
     assert(set.op(0, 2) == (2: Term))
   }

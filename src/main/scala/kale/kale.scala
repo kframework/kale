@@ -1,7 +1,7 @@
 package kale
 
 import scala.collection.generic.{GenericCompanion, CanBuildFrom}
-import scala.collection.mutable
+import scala.collection.{IterableLike, mutable}
 import scala.language.implicitConversions
 
 import LOGIC._
@@ -17,10 +17,11 @@ trait Label extends MemoizedHashCode {
   override def computeHashCode = module.hashCode * 7 + name.hashCode
 
   override def toString = name + "@" + module
+
+  def unify(term: Term, that: Term) = this.module.unify(term, that)
 }
 
 trait NodeLabel extends Label {
-  def apply(children: Iterable[Term]): Term
   def unapplySeq(t: Term): Option[Seq[Term]] = t match {
     case t: Node if t.label == this => Some(t.iterator.toSeq)
     case _ => None
@@ -37,7 +38,7 @@ trait LeafLabel[T] extends Label {
 sealed trait Term {
   val label: Label
   def iterator(): Iterator[Term]
-  def unify(that: Term): Term = label.module.unify(this, that)
+  def unify(that: Term): Term = label.unify(this, that)
 }
 trait Node extends Term {
   val label: NodeLabel
@@ -75,26 +76,12 @@ case class TokenLabel[T](module: Module, name: String) extends LeafLabel[T] {
 case class Token[T](label: TokenLabel[T], value: T) extends Leaf[T]
 
 trait Node0Label extends NodeLabel {
-  final def apply(children: Iterable[Term]): Term = {
-    assert(children.size == 0)
-    apply()
-  }
   def apply(): Term = Node0(this)
 }
 trait Node1Label extends NodeLabel {
-  final def apply(children: Iterable[Term]): Term = {
-    assert(children.size == 1)
-    val it = children.iterator
-    apply(it.next())
-  }
   def apply(_1: Term): Term = Node1(this, _1)
 }
-trait Node2Label extends NodeLabel with ((Term, Term) => Term) {
-  def apply(children: Iterable[Term]): Term = {
-    assert(children.size == 2)
-    val it = children.iterator
-    apply(it.next(), it.next())
-  }
+trait Node2Label extends ((Term, Term) => Term) with NodeLabel {
   def apply(_1: Term, _2: Term): Term
 }
 trait SimpleNode2Label {
@@ -103,11 +90,6 @@ trait SimpleNode2Label {
 }
 
 trait Node3Label extends NodeLabel {
-  final def apply(children: Iterable[Term]): Term = {
-    assert(children.size == 3)
-    val it = children.iterator
-    apply(it.next(), it.next(), it.next())
-  }
   def apply(_1: Term, _2: Term, _3: Term): Term = Node3(this, _1, _2, _3)
 }
 
@@ -141,7 +123,7 @@ case class Node3(label: Node3Label, _1: Term, _2: Term, _3: Term) extends Node {
 }
 
 
-trait CollectionNode[C <: Iterable[Term]] extends Node {
+trait CollectionNode[C <: IterableLike[Term, C]] extends Node {
   val collection: C
 }
 
@@ -197,12 +179,21 @@ object LOGIC extends Module {
 
   object And extends Node2Label with InModule {
     override val name = "And"
-    override def apply(_1: Term, _2: Term): Term = ???
+    override def apply(_1: Term, _2: Term): Term = LOGIC.this.unify(_1, _2)
   }
-  object Or extends Node2Label with InModule {
-    override val name = "And"
-    override def apply(_1: Term, _2: Term): Term = ???
+
+  object OrModule extends ASSOC_LIST("op", False) {
+    override val name = "Or"
+    override def theOp(_1: Term, _2: Term): Either[Term, (Term, Term)] = (_1, _2) match {
+      case (a, True) => Left(True)
+      case (True, a) => Left(True)
+      case (False, a) => Left(a)
+      case (a, False) => Left(a)
+      case _ => Right(_1, _2)
+    }
   }
+
+  val Or = OrModule.op
 
   object TrueLabel extends Node0Label with InModule {
     override val name: String = "True"
@@ -217,38 +208,52 @@ object LOGIC extends Module {
     override val name: String = "=>"
     override def apply(_1: Term, _2: Term): Term = ???
   }
-  object Unify extends Node2Label with InModule {
-    override val name: String = " =U= "
-    override def apply(_1: Term, _2: Term): Term = _1.unify(_2)
-  }
   object Substitutions extends MAP(",", "|->", new Node0Label with InModule {
     override val name: String = ".Substitutions"
   }.apply())
 
   def unify(a: Term, b: Term): Term = {
-    assert(a.label.module == this)
     (a, b) match {
+      case (a, True) => a
+      case (True, a) => a
+      case (False, _) => False
+      case (_, False) => False
       case (v: Variable, b) => Substitutions.Pair(v, b)
+      case (a, b) => a.unify(b)
     }
   }
 }
 
 trait AssocModule
   extends Module {
-  type C <: Iterable[Term]
+  type C <: IterableLike[Term, C]
   val opLabel: String
   val unit: Term
   def newBuilder(): mutable.Builder[Term, C]
 
+  def theOp(a: Term, b: Term): Either[Term, (Term, Term)] = if (a == unit) Left(b) else Right((a, b))
+
   object op extends Node2Label with InModule {
-    override def apply(s: Iterable[Term]): Term = {
-      val noUnit = s.filterNot(_ == unit)
-      noUnit.size match {
+    def apply(s: Iterable[Term]): Term = {
+      var last = unit
+      val iterator = s.iterator
+      val builder = newBuilder()
+      while (iterator.hasNext) {
+        theOp(last, iterator.next()) match {
+          case Right((a, b)) => builder += a; last = b
+          case Left(a) => last = a
+        }
+      }
+      if (last != unit) builder += last
+      val res = builder.result()
+      res.size match {
         case 0 => unit
-        case 1 => noUnit.head
-        case _ => NeCollectionNode(this, (newBuilder() ++= noUnit).result())
+        case 1 => res.head
+        case _ => NeCollectionNode(res)
       }
     }
+
+    def unapply(t: Term): Option[C] = Some(asCollection(t))
 
     override def apply(_1: Term, _2: Term): Term = apply(Iterable(_1, _2))
 
@@ -261,10 +266,10 @@ trait AssocModule
     val name: String = opLabel
   }
 
-  case class NeCollectionNode(label: op.type, collection: C)
-    extends CollectionNode[C] with Node2 {
-    override val _1: Term = collection.head
-    override val _2: Term = label(collection.tail)
+  case class NeCollectionNode(collection: C) extends CollectionNode[C] with Node2 {
+    val label = op
+    override lazy val _1: Term = collection.head
+    override lazy val _2: Term = label(collection.tail)
     override def map(f: (Term) => Term): Term = label(collection.iterator.map(f).toIterable)
   }
 
@@ -291,16 +296,15 @@ trait AssocModule
 
 class SET(val opLabel: String, val unit: Term) extends AssocModule {
   type C = Set[Term]
-  override val newBuilder = Set.newBuilder[Term]
+  override def newBuilder = Set.newBuilder[Term]
   override def unify(a: Term, b: Term): Term = ???
 }
 
 class ASSOC_LIST(val opLabel: String, val unit: Term) extends AssocModule {
-
   def this(opLabel: String) = this(opLabel, new Node0Label with InModule {val name: String = "." + opLabel}.apply())
 
   type C = List[Term]
-  override val newBuilder = List.newBuilder[Term]
+  override def newBuilder() = List.newBuilder[Term]
 
   def unify(a: Term, b: Term): Term = if (a.label == op) {
     matchContents(op.asCollection(a), op.asCollection(b))
@@ -309,14 +313,18 @@ class ASSOC_LIST(val opLabel: String, val unit: Term) extends AssocModule {
   }
 }
 
-case class MAP(opLabel: String, pairLabel: String, unit: Term) extends AssocModule {
+class MAP(val opLabel: String, val pairLabel: String, val unit: Term, falseOnDuplicate: Boolean = false) extends
+AssocModule {
   type C = MapOfPairs
   object Pair extends Node2Label with InModule {
     override val name = pairLabel
     override def apply(_1: Term, _2: Term): Term = Node2(this, _1, _2)
   }
-  case class MapOfPairs(m: Map[Term, Term]) extends Iterable[Term] {
+  case class MapOfPairs(m: Map[Term, Term]) extends IterableLike[Term, MapOfPairs] {
     override def iterator: Iterator[Term] = m.map({ case (a, b) => Pair(a, b) }).iterator
+    override protected[this] def newBuilder = List.newBuilder[Term].mapResult(l =>
+      MapOfPairs(l map { case Pair(a, b) => (a, b) } toMap))
+    override def seq: TraversableOnce[Term] = m map { case (x, y) => Pair(x, y) }
   }
 
   override def newBuilder() = {
@@ -324,19 +332,30 @@ case class MAP(opLabel: String, pairLabel: String, unit: Term) extends AssocModu
     new mutable.Builder[Term, MapOfPairs] {
       override def +=(elem: Term): this.type = elem match {
         case t: Node2 if t.label == Pair => b.+=((t._1, t._2)); this
-        case _ => throw new Exception("Expected a Pair but got something else.")
+        case _ => throw new Exception("Expected a Pair but got something else: " + elem)
       }
       override def clear(): Unit = b.clear()
       override def result(): MapOfPairs = MapOfPairs(b.result())
     }
   }
-  override def unify(a: Term, b: Term): Term = ???
+
+  override def unify(a: Term, b: Term): Term = {
+    val aC: MapOfPairs = op.asCollection(a)
+    val bC: MapOfPairs = op.asCollection(b)
+    if (!falseOnDuplicate || (aC.m.keySet.intersect(bC.m.keySet).isEmpty)) {
+      op((aC.m ++ bC.m) map { case (a, b) => Pair(a, b) })
+    }
+    else {
+      False
+    }
+  }
 }
 
 object StructuralMatch {
   def apply(a: Term, b: Term) = (a, b) match {
     case (Token(aL, aV), Token(bL, bV)) => Truth(aL == bL && aV == bV)
     case _ if a.label == b.label => a.iterator().zip(b.iterator()).map(p => p._1.unify(p._2)).reduce(And)
+    case _ => False
   }
 }
 

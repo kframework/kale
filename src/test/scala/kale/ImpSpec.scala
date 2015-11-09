@@ -107,7 +107,7 @@ class ImpSpec extends FreeSpec {
       object TCell extends Production2("<T>")
       object kCell extends Production1("<k>")
       object stateCell extends Production1("<state>")
-      val StateModule = MAP(" ", "|->", new Production0(".State").apply())
+      val StateModule = new MAP(" ", "|->", new Production0(".State").apply())
       val state = StateModule.op
       val emptyState = StateModule.unit
       override def unify(a: Term, b: Term): Term = ???
