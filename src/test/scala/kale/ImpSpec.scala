@@ -79,10 +79,10 @@ class ImpSpec extends FreeSpec {
     object IMP extends Module {
       override val name = "IMP"
 
-      class Production0(val name: String) extends Node0Label with InModule
-      class Production1(val name: String) extends Node1Label with InModule
-      class Production2(val name: String) extends Node2Label with InModule with SimpleNode2Label
-      class Production3(val name: String) extends Node3Label with InModule
+      class Production0(val name: String) extends Label0 with InModule
+      class Production1(val name: String) extends Label1 with InModule
+      class Production2(val name: String) extends Label2 with InModule with SimpleNode2Label
+      class Production3(val name: String) extends Label3 with InModule
 
       object + extends Production2("+")
       object - extends Production2("-")
