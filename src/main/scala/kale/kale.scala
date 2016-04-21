@@ -1,6 +1,5 @@
 package kale
 
-import scala.collection.generic.{GenericCompanion, CanBuildFrom}
 import scala.collection.{IterableLike, mutable}
 import scala.language.implicitConversions
 
@@ -27,6 +26,7 @@ trait NodeLabel extends Label {
     case _ => None
   }
 }
+
 trait LeafLabel[T] extends Label {
   def apply(t: T): Term
   def unapply(t: Term): Option[T] = t match {
@@ -39,16 +39,18 @@ sealed trait Term {
   val label: Label
   def iterator(): Iterator[Term]
   def unify(that: Term): Term = label.unify(this, that)
+  // basic implementation -- override for performance
+  def map(f: (Term) => Term): Term
 }
 trait Node extends Term {
   val label: NodeLabel
   def iterator: Iterator[Term]
 
-  // basic implementation -- override for performance
-  def map(f: (Term) => Term): Term
+
   // = label(iterator.map(f).toSeq)
   override def toString = label + "(" + iterator.mkString(", ") + ")"
 }
+
 trait Leaf[T] extends Term {
   def iterator = Iterator.empty
   val label: LeafLabel[T]
@@ -75,10 +77,10 @@ case class TokenLabel[T](module: Module, name: String) extends LeafLabel[T] {
 }
 case class Token[T](label: TokenLabel[T], value: T) extends Leaf[T]
 
-trait Node0Label extends NodeLabel {
+trait Node0Label extends (=> Term) with NodeLabel {
   def apply(): Term = Node0(this)
 }
-trait Node1Label extends NodeLabel {
+trait Node1Label extends (Term => Term) with NodeLabel {
   def apply(_1: Term): Term = Node1(this, _1)
 }
 trait Node2Label extends ((Term, Term) => Term) with NodeLabel {
@@ -146,11 +148,13 @@ trait Function1Label[A, R] extends Node1Label {
     case _ => Node(this, _1)
   }
 }
+
 case class Operator1Label[T](module: Module, name: String, elmLabel: TokenLabel[T], f: T => T)
   extends Function1Label[T, T] {
   val aLabel = elmLabel
   val rLabel = elmLabel
 }
+
 trait Function2Label[A, B, R] extends Node2Label {
   val aLabel: TokenLabel[A]
   val bLabel: TokenLabel[B]
@@ -224,6 +228,15 @@ object LOGIC extends Module {
   }
 }
 
+//object size extends Node1Label  {
+//  val name = "size"
+//  override def apply(_1: Term): Term = _1 match {
+//    case Term(l, _) if ... => l.asCollection(l).size
+//    case e => 1
+//    case unit => 0
+//  }
+//}
+
 trait AssocModule
   extends Module {
   type C <: IterableLike[Term, C]
@@ -269,7 +282,7 @@ trait AssocModule
   case class NeCollectionNode(collection: C) extends CollectionNode[C] with Node2 {
     val label = op
     override lazy val _1: Term = collection.head
-    override lazy val _2: Term = label(collection.tail)
+    override lazy val _2: Term = ??? // label(collection.tail)
     override def map(f: (Term) => Term): Term = label(collection.iterator.map(f).toIterable)
   }
 
