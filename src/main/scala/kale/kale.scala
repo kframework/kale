@@ -3,6 +3,19 @@ package kale
 import scala.collection.{IterableLike, mutable}
 import scala.language.implicitConversions
 
+object UniqueId {
+  var nextId = 0
+
+  def apply(): Int = {
+    nextId += 1
+    nextId - 1
+  }
+}
+
+trait UniqueId {
+  val id = UniqueId()
+}
+
 trait Label extends MemoizedHashCode {
   val name: String
   val id: Int
@@ -53,18 +66,20 @@ trait Leaf[T] extends Term {
   val label: LeafLabel[T]
   val value: T
 
-  override def toString = label + "(" + value + ")"
+  override def toString = label + "(" + value.toString + ")"
 }
 
 trait NameFromObject {
   val name = this.getClass.getName.drop(5).dropRight(1)
 }
 
-case class ConstantLabel[T](id: Int, name: String) extends LeafLabel[T] {
+trait ConstantLabel[T] extends LeafLabel[T] with NameFromObject with UniqueId {
   def apply(v: T) = Constant(this, v)
 }
 
-case class Constant[T](label: ConstantLabel[T], value: T) extends Leaf[T]
+case class Constant[T](label: ConstantLabel[T], value: T) extends Leaf[T] {
+  override def toString = value.toString
+}
 
 trait Label0 extends Function0[Term] with NodeLabel {
   def apply(): Term
@@ -131,23 +146,70 @@ trait Node3 extends Node with Product3[Term, Term, Term] {
 
 case class FreeNode3(label: Label3, _1: Term, _2: Term, _3: Term) extends Node3
 
-object Variable extends LeafLabel[String] with NameFromObject {
-  val id = 0
-}
+object Variable extends LeafLabel[String] with NameFromObject with UniqueId
 
 case class Variable(name: String) extends Leaf[String] {
   override val label = Variable
   val value = name
 }
 
-object Truth extends ConstantLabel[Boolean](1, "Truth")
+object Truth extends LeafLabel[Boolean] with NameFromObject with UniqueId
 
-object True extends Constant(Truth, true)
+case class Truth(value: Boolean) extends Leaf[Boolean] with MatcherSolution {
+  val label = Truth
+}
 
-object False extends Constant(Truth, false)
+object Top extends Truth(true)
 
-trait CollectionNode[C <: IterableLike[Term, C]] extends Node {
-  val collection: C
+object Bottom extends Truth(false)
+
+object Binding extends Label2 with NameFromObject with UniqueId
+
+trait MatcherSolution extends Term
+
+case class Binding(_1: Term, _2: Term) extends Node2 with MatcherSolution {
+  assert(_1.isInstanceOf[Variable])
+  val label = Binding
+}
+
+object Substitution extends Label2 with NameFromObject with UniqueId {
+  override def apply(_1: Term, _2: Term): Term = {
+    val m1 = unwrap(_1)
+    val m2 = unwrap(_2)
+    if ((m1.keys.toSet & m2.keys.toSet).forall(v => m1(v) == m2(v))) {
+      apply(m1 ++ m2)
+    } else {
+      Bottom
+    }
+  }
+
+  def unwrap(t: Term) = t match {
+    case Top => Map[Variable, Term]()
+    case Binding(_1, _2) => Map[Variable, Term](_1.asInstanceOf[Variable] -> _2)
+    case Substitution(m) => m
+  }
+
+  def apply(m: Map[Variable, Term]): MatcherSolution = m.size match {
+    case 0 => Top
+    case 1 => Binding(m.head._1, m.head._2)
+    case _ => new Substitution(m)
+  }
+
+  def unapply(arg: Substitution): Option[Map[Variable, Term]] = Some(arg.m)
+}
+
+final class Substitution(val m: Map[Variable, Term]) extends Node2 with MatcherSolution {
+  assert(m.size >= 2)
+  val label = Substitution
+  lazy val _1 = Binding(m.head._1, m.head._2)
+  lazy val _2 = Substitution(m.tail)
+
+  override def equals(other: Any): Boolean = other match {
+    case that: Substitution => m == that.m
+    case _ => false
+  }
+
+  override def hashCode(): Int = label.hashCode
 }
 
 trait Hook {
@@ -155,34 +217,61 @@ trait Hook {
   val f: Term => Term
 }
 
-case class UnifierPiece(leftLabel: Label, rightLabel: Label, f: ((Term, Term) => Term) => (Term, Term) => Term)
+trait UnifierFunction[Left <: Term, Right <: Term, Result <: Term] extends (DispatchState => ((Term, Term) => Term)) {
+  def apply(solver: DispatchState) = { (a: Term, b: Term) => f(solver)(a.asInstanceOf[Left], b.asInstanceOf[Right]) }
 
-class Dispatch(pieces: Set[UnifierPiece], maxId: Int) {
+  def foo(solver: DispatchState)(a: Term, b: Term): Term = f(solver)(a.asInstanceOf[Left], b.asInstanceOf[Right])
+
+  def f(solver: DispatchState)(a: Left, b: Right): Result
+}
+
+case class UnifierPiece(leftLabel: Label, rightLabel: Label, f: DispatchState => (Term, Term) => Term)
+
+trait DispatchState {
+  def apply(left: Term, right: Term): Term
+}
+
+class Dispatch(pieces: Set[UnifierPiece], maxId: Int) extends DispatchState {
   val arr: Array[Array[(Term, Term) => (Term)]] =
     (0 until maxId).map({ i => new Array[(Term, Term) => (Term)](maxId) }).toArray
 
   for (p <- pieces) {
-    arr(p.leftLabel.id)(p.rightLabel.id) = p.f(apply)
+    arr(p.leftLabel.id)(p.rightLabel.id) = p.f(this)
   }
 
-  def apply(left: Term, right: Term): Term = arr(left.label.id)(right.label.id)(left, right)
+  def apply(left: Term, right: Term): Term = {
+    val u = arr(left.label.id)(right.label.id)
+    if(u != null)
+      u(left, right)
+    else
+      Bottom
+  }
 }
 
 
-object PlayWithMatcher {
-  def matchFreeNode0FreeNode0(apply: (Term, Term) => Term)(left: Term, right: Term): Term =
-    True
+object SimpleMatcher {
 
-  def matchFreeNode1FreeNode1(apply: (Term, Term) => Term)(left: Term, right: Term): Term =
-    apply(left.asInstanceOf[Node1]._1, right.asInstanceOf[Node1]._1)
+  object FreeNode0FreeNode0 extends UnifierFunction[Node0, Node0, Top.type] {
+    def f(solver: DispatchState)(a: Node0, b: Node0) = Top
+  }
 
-//  def matchFreeNode2FreeNode2(apply: (Term, Term) => Term)(left: Term, right: Term): Term =
-//    apply(left.asInstanceOf[Node1]._1, right.asInstanceOf[Node1]._1)
+  object FreeNode1FreeNode1 extends UnifierFunction[Node1, Node1, Term] {
+    def f(solver: DispatchState)(a: Node1, b: Node1) = solver(a._1, b._1)
+  }
 
-//  def matchVarLeft(apply: (Term, Term) => Term)(left: Term, right: Term): Term = {
-//    var v = left.asInstanceOf[Variable]
-//
-//  }
+  object FreeNode2FreeNode2 extends UnifierFunction[Node2, Node2, Term] {
+    def f(solver: DispatchState)(a: Node2, b: Node2) = Substitution(solver(a._1, b._1), solver(a._2, b._2))
+  }
+
+  object VarLeft extends UnifierFunction[Variable, Term, MatcherSolution] {
+    def f(solver: DispatchState)(a: Variable, b: Term) = Binding(a.asInstanceOf[Variable], b)
+  }
+
+  object Constants extends UnifierFunction[Constant[_], Constant[_], MatcherSolution] {
+    override def f(solver: DispatchState)(a: Constant[_], b: Constant[_]) =
+      Truth(a.value == b.value)
+  }
+
 }
 
 
