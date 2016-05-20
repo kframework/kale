@@ -1,8 +1,8 @@
-package kale
+package org.kframework.kale
 
-import scala.language.implicitConversions
-import collection._
 import scala.Iterable
+import scala.collection._
+import scala.language.implicitConversions
 
 object UniqueId {
   var nextId = 0
@@ -49,6 +49,10 @@ trait LeafLabel[T] extends Label {
 
 sealed trait Term extends Iterable[Term] {
   val label: Label
+
+  private var att: Any = null
+  def setHiddenAttDONOTUSE(att: Any) = this.att = att
+  def getHiddenAttDONOTUSE = this.att
 
   def iterator(): Iterator[Term]
 }

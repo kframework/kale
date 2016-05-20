@@ -1,7 +1,4 @@
-package kale
-
-import scala.collection.IterableLike
-import scala.collection.mutable.Builder
+package org.kframework.kale
 
 trait MemoizedHashCode {
   lazy val cachedHashCode = computeHashCode

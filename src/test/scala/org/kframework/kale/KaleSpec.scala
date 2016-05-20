@@ -1,4 +1,4 @@
-package kale
+package org.kframework.kale
 
 import org.scalatest.FreeSpec
 

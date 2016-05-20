@@ -1,4 +1,4 @@
-package kale
+package org.kframework.kale
 
 object INT extends ConstantLabel[Int] {
   object + extends Label2 with UniqueId {
