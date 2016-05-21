@@ -15,30 +15,13 @@ class MatchSpec extends FreeSpec {
   val emptyList = FreeLabel0(UniqueId(), ".List")
   val listLabel = AssocWithIdListLabel("_,_", emptyList())
 
-  val unifier = new Dispatch(Set(
-    UnifierPiece(Variable, INT, SimpleMatcher.VarLeft),
-    UnifierPiece(INT.+, INT.+, SimpleMatcher.FreeNode2FreeNode2),
-    UnifierPiece(INT, INT, SimpleMatcher.Constants),
-    UnifierPiece(listLabel, listLabel, SimpleMatcher.AssocTerm),
-    UnifierPiece(listLabel, INT, SimpleMatcher.AssocTerm),
-    UnifierPiece(INT, listLabel, SimpleMatcher.TermAssoc),
-    UnifierPiece(listLabel, INT.+, SimpleMatcher.AssocTerm),
-    UnifierPiece(INT.+, listLabel, SimpleMatcher.TermAssoc),
-    UnifierPiece(listLabel, emptyList, SimpleMatcher.AssocTerm),
-    UnifierPiece(emptyList, listLabel, SimpleMatcher.TermAssoc),
-    UnifierPiece(listLabel, Variable, SimpleMatcher.AssocTerm),
-    UnifierPiece(Variable, listLabel, SimpleMatcher.TermAssoc)
-  ), 30)
+  val allLabels = Set(Variable, INT.+, INT, emptyList, listLabel)
 
-  val substitutionApplier = SubstitutionApplication(Set(
-    UnaryPiece(Variable, ApplySubstitution.Var),
-    UnaryPiece(INT.+, ApplySubstitution.Node2),
-    UnaryPiece(INT, ApplySubstitution.Constant),
-    UnaryPiece(emptyList, ApplySubstitution.FreeNode0),
-    UnaryPiece(listLabel, ApplySubstitution.Node2)
-  ), 30) _
+  val unifier = SimpleMatcher(allLabels)
 
-  "simple" - {
+  val substitutionApplier = ApplySubstitution(allLabels)
+
+  "simple" in {
     assert(unifier(X, 5) === Equality(X, 5))
     assert(unifier(X + Y, (5: Term) + 7) === Substitution(Map(X -> (5: Term), Y -> (7: Term))))
     assert(unifier(X + X, (5: Term) + 7) === Bottom)
@@ -47,7 +30,7 @@ class MatchSpec extends FreeSpec {
     //    assert((2: Term).unify(2: Term) == Top)
   }
 
-  "assoc" - {
+  "assoc" in {
     assert(unifier(listLabel(X, 5), listLabel(3, 5)) === Equality(X, 3))
     assert(unifier(listLabel(List(3, 4, X, 7)), listLabel(List(3, 4, 5, 6, 7))) === Equality(X, listLabel(5, 6)))
     assert(unifier(listLabel(List(3, X, 5, Y, 7)), listLabel(List(3, 4, 5, 6, 7))) === Substitution(Map(X -> (4: Term), Y -> (6: Term))))
@@ -62,7 +45,7 @@ class MatchSpec extends FreeSpec {
     )
   }
 
-  "substitution" - {
+  "substitution" in {
     val s = Substitution(Map(X -> (5: Term)))
     val substitution = substitutionApplier(s)
 
@@ -72,11 +55,11 @@ class MatchSpec extends FreeSpec {
     assert(substitution(Y + X) === Y + 5)
   }
 
-  "rewrite X + 0 => X" - {
+  "rewrite X + 0 => X" in {
     assert(substitutionApplier(unifier(X + 0, (5: Term) + 0).asInstanceOf[PureSubstitution])(X) === (5: Term))
   }
 
-  "rewrite 2 + X + 3 => 5 + X" - {
+  "rewrite 2 + X + 3 => 5 + X" in {
     assert(substitutionApplier(unifier((2: Term) + X + 3, (2: Term) + 4 + 3).asInstanceOf[PureSubstitution])((5: Term) + X) === (5: Term) + 4)
   }
 

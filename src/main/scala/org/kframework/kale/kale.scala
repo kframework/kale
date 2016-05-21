@@ -51,7 +51,9 @@ sealed trait Term extends Iterable[Term] {
   val label: Label
 
   private var att: Any = null
+
   def setHiddenAttDONOTUSE(att: Any) = this.att = att
+
   def getHiddenAttDONOTUSE = this.att
 
   def iterator(): Iterator[Term]
@@ -90,8 +92,9 @@ trait Label0 extends Function0[Term] with NodeLabel {
   def apply(): Term
 }
 
+trait FreeLabel
 
-case class FreeLabel0(id: Int, name: String) extends Label0 {
+case class FreeLabel0(id: Int, name: String) extends Label0 with FreeLabel {
   def apply(): Term = FreeNode0(this)
 }
 
@@ -99,7 +102,7 @@ trait Label1 extends (Term => Term) with NodeLabel {
   def apply(_1: Term): Term
 }
 
-case class FreeLabel1(id: Int, name: String) extends Label1 {
+case class FreeLabel1(id: Int, name: String) extends Label1 with FreeLabel {
   def apply(_1: Term): Term = FreeNode1(this, _1)
 }
 
@@ -107,7 +110,7 @@ trait Label2 extends ((Term, Term) => Term) with NodeLabel {
   def apply(_1: Term, _2: Term): Term
 }
 
-case class FreeLabel2(id: Int, name: String) extends Label2 {
+case class FreeLabel2(id: Int, name: String) extends Label2 with FreeLabel {
   def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
 }
 
@@ -115,7 +118,7 @@ trait Label3 extends NodeLabel {
   def apply(_1: Term, _2: Term, _3: Term): Term
 }
 
-case class FreeLabel3(id: Int, name: String) extends Label3 {
+case class FreeLabel3(id: Int, name: String) extends Label3 with FreeLabel {
   def apply(_1: Term, _2: Term, _3: Term): Term = FreeNode3(this, _1, _2, _3)
 }
 
@@ -475,16 +478,34 @@ class SubstitutionApplication(pieces: Set[UnaryPiece[SubstitutionApplication]], 
 
 object ApplySubstitution {
 
-  object FreeNode0 extends UnaryFunction[Node0, Node0, SubstitutionApplication] {
+  def apply(labels: Set[Label]): PureSubstitution => SubstitutionApplication = {
+    val maxId = labels.map(_.id).max + 1
+    val setOfUnaryPieces = labels.map({
+      case `Variable` => UnaryPiece(Variable, Var)
+      case l: Label0 => UnaryPiece(l, Node0)
+      case l: Label1 => UnaryPiece(l, Node1)
+      case l: Label2 => UnaryPiece(l, Node2)
+      case l: Label3 => UnaryPiece(l, Node3)
+      case l: ConstantLabel[_] => UnaryPiece(l, Constant)
+    })
+
+    SubstitutionApplication(setOfUnaryPieces, maxId)
+  }
+
+  object Node0 extends UnaryFunction[Node0, Node0, SubstitutionApplication] {
     def f(solver: SubstitutionApplication)(t: Node0) = t
   }
 
-  object FreeNode1 extends UnaryFunction[Node1, Term, SubstitutionApplication] {
+  object Node1 extends UnaryFunction[Node1, Term, SubstitutionApplication] {
     def f(solver: SubstitutionApplication)(t: Node1) = t.label(solver(t._1))
   }
 
   object Node2 extends UnaryFunction[Node2, Term, SubstitutionApplication] {
     def f(solver: SubstitutionApplication)(t: Node2) = t.label(solver(t._1), solver(t._2))
+  }
+
+  object Node3 extends UnaryFunction[Node3, Term, SubstitutionApplication] {
+    def f(solver: SubstitutionApplication)(t: Node3) = t.label(solver(t._1), solver(t._2), solver(t._3))
   }
 
   object Var extends UnaryFunction[Variable, Term, SubstitutionApplication] {
@@ -499,6 +520,25 @@ object ApplySubstitution {
 
 object SimpleMatcher {
 
+  def apply(labels: Set[Label]): Dispatch = {
+    val variableXlabel = labels.map(UnifierPiece(Variable, _, SimpleMatcher.VarLeft))
+    val freeLikeLabelXfreeLikeLabel = labels.collect({
+      case l: FreeLabel0 => UnifierPiece(l, l, SimpleMatcher.FreeNode0FreeNode0)
+      case l: FreeLabel1 => UnifierPiece(l, l, SimpleMatcher.FreeNode1FreeNode1)
+      case l: FreeLabel2 => UnifierPiece(l, l, SimpleMatcher.FreeNode2FreeNode2)
+      case l: FreeLabel3 => UnifierPiece(l, l, SimpleMatcher.FreeNode3FreeNode3)
+      case l: ConstantLabel[_] => UnifierPiece(l, l, SimpleMatcher.Constants)
+    })
+
+    val assoc = labels.flatMap({
+      case l: AssocLabel =>
+        labels.collect({ case ll if !ll.isInstanceOf[Variable] => UnifierPiece(l, ll, SimpleMatcher.AssocTerm) })
+      case _ => Set[UnifierPiece]()
+    }).toSet
+
+    new Dispatch(variableXlabel | freeLikeLabelXfreeLikeLabel | assoc, labels.map(_.id).max + 1)
+  }
+
   object FreeNode0FreeNode0 extends UnifierFunction[Node0, Node0, Top.type] {
     def f(solver: DispatchState)(a: Node0, b: Node0) = Top
   }
@@ -509,6 +549,10 @@ object SimpleMatcher {
 
   object FreeNode2FreeNode2 extends UnifierFunction[Node2, Node2, Term] {
     def f(solver: DispatchState)(a: Node2, b: Node2) = Substitution(solver(a._1, b._1), solver(a._2, b._2))
+  }
+
+  object FreeNode3FreeNode3 extends UnifierFunction[Node3, Node3, Term] {
+    def f(solver: DispatchState)(a: Node3, b: Node3) = Substitution(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3)))
   }
 
   def matchContents(l: AssocLabel, ksL: Iterable[Term], ksR: Iterable[Term])(implicit solver: DispatchState): Term = {
