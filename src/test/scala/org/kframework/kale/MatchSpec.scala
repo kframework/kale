@@ -40,7 +40,7 @@ class MatchSpec extends FreeSpec {
     assert(unifier(listLabel(List(3, X, Y, 6)), listLabel(List(3, 4, 5, 6))) ===
       Or(List(
         Substitution(Map(X -> emptyList(), Y -> listLabel(4, 5))),
-        Substitution(Map(X -> (4:Term), Y -> (5:Term))),
+        Substitution(Map(X -> (4: Term), Y -> (5: Term))),
         Substitution(Map(X -> listLabel(4, 5), Y -> emptyList()))))
     )
   }
@@ -61,6 +61,12 @@ class MatchSpec extends FreeSpec {
 
   "rewrite 2 + X + 3 => 5 + X" in {
     assert(substitutionApplier(unifier((2: Term) + X + 3, (2: Term) + 4 + 3).asInstanceOf[PureSubstitution])((5: Term) + X) === (5: Term) + 4)
+  }
+
+  "use rewriter" in {
+    val rewriter = Rewriter(substitutionApplier, unifier)(Set(Rewrite(X + 0, X), Rewrite((0: Term) + X, X)))
+    assert(rewriter.executionStep((1: Term) + 0) === (1: Term))
+    assert(rewriter.executionStep(1: Term) === Bottom)
   }
 
   //  "LIST" in {

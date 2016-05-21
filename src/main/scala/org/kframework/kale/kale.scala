@@ -406,6 +406,12 @@ case class AssocWithIdList(label: AssocLabel, list: Iterable[Term]) extends Asso
   override def _2: Term = label(list.tail)
 }
 
+object Rewrite extends Label2 with NameFromObject with UniqueId
+
+case class Rewrite(_1: Term, _2: Term) extends Node2 {
+  override val label = Rewrite
+}
+
 trait Hook {
   val label: Label
   val f: Term => Term
@@ -615,6 +621,25 @@ object SimpleMatcher {
 
 }
 
+object Rewriter {
+  def apply(substitutioner: PureSubstitution => SubstitutionApplication, matcher: Dispatch)(rules: Set[Rewrite]) =
+    new Rewriter(substitutioner, matcher, rules)
+}
+
+class Rewriter(substitutioner: PureSubstitution => SubstitutionApplication, matcher: Dispatch, rules: Set[Rewrite]) {
+  def executionStep(obj: Term): Term = {
+    rules.toStream.map(r => (matcher(r._1, obj), r._2)).find(_._1 != Bottom) match {
+      case Some((substitutions, rhs)) =>
+        val oneSubstitutuion = Or.unwrap(substitutions).head.asInstanceOf[PureSubstitution]
+        substitutioner(oneSubstitutuion).apply(rhs)
+      case None => Bottom
+    }
+  }
+
+  def searchStep(obj: Term): Set[Term] = {
+    ???
+  }
+}
 
 //case class Operator0Label[T](name: String, elm: ConstantLabel[T], f: () => T) extends Node0Label {
 //  override def apply(): Term = elm(f())
