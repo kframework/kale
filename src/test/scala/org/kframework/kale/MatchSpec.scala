@@ -32,16 +32,16 @@ class MatchSpec extends FreeSpec {
 
   "assoc" in {
     assert(unifier(listLabel(X, 5), listLabel(3, 5)) === Equality(X, 3))
-    assert(unifier(listLabel(List(3, 4, X, 7)), listLabel(List(3, 4, 5, 6, 7))) === Equality(X, listLabel(5, 6)))
-    assert(unifier(listLabel(List(3, X, 5, Y, 7)), listLabel(List(3, 4, 5, 6, 7))) === Substitution(Map(X -> (4: Term), Y -> (6: Term))))
-    assert(unifier(listLabel(List(X, 5, Y)), listLabel(List(3, 4, 5, 6, 7))) === Substitution(Map(X -> listLabel(3, 4), Y -> listLabel(6, 7))))
-    val res = unifier(listLabel(List(3, X, Y, 6)), listLabel(List(3, 4, 5, 6)))
+    assert(unifier(listLabel(3, 4, X, 7), listLabel(3, 4, 5, 6, 7)) === Equality(X, listLabel(5, 6)))
+    assert(unifier(listLabel(3, X, 5, Y, 7), listLabel(3, 4, 5, 6, 7)) === Substitution(Map(X -> (4: Term), Y -> (6: Term))))
+    assert(unifier(listLabel(X, 5, Y), listLabel(3, 4, 5, 6, 7)) === Substitution(Map(X -> listLabel(3, 4), Y -> listLabel(6, 7))))
+    val res = unifier(listLabel(3, X, Y, 6), listLabel(3, 4, 5, 6))
     println(res)
-    assert(unifier(listLabel(List(3, X, Y, 6)), listLabel(List(3, 4, 5, 6))) ===
-      Or(List(
+    assert(unifier(listLabel(3, X, Y, 6), listLabel(3, 4, 5, 6)) ===
+      Or(
         Substitution(Map(X -> emptyList(), Y -> listLabel(4, 5))),
         Substitution(Map(X -> (4: Term), Y -> (5: Term))),
-        Substitution(Map(X -> listLabel(4, 5), Y -> emptyList()))))
+        Substitution(Map(X -> listLabel(4, 5), Y -> emptyList())))
     )
   }
 
@@ -66,7 +66,7 @@ class MatchSpec extends FreeSpec {
   val rewriter = Rewriter(substitutionApplier, unifier)(Set(
     Rewrite(X + 0, X),
     Rewrite((0: Term) + X, X),
-    Rewrite(listLabel(List(3, X, Y, 6)), listLabel(List(X, 0, Y)))
+    Rewrite(listLabel(3, X, Y, 6), listLabel(X, 0, Y))
   ))
 
   "use rewriter" in {
@@ -77,8 +77,8 @@ class MatchSpec extends FreeSpec {
   "use rewriter search" in {
     assert(rewriter.searchStep((1: Term) + 0) === (1: Term))
     assert(rewriter.searchStep(1: Term) === Bottom)
-    assert(rewriter.searchStep(listLabel(List(3: Term, 4, 5, 6))) ===
-      Or(List(listLabel(List(4, 0, 5)), listLabel(List(0, 4, 5)), listLabel(List(4, 5, 0)))))
+    assert(rewriter.searchStep(listLabel(3, 4, 5, 6)) ===
+      Or(List(listLabel(4, 0, 5), listLabel(0, 4, 5), listLabel(4, 5, 0))))
   }
 
   //  "LIST" in {

@@ -354,6 +354,8 @@ class Or(val terms: Set[Term]) extends Assoc with NonBottom {
 trait AssocLabel extends Label2 {
   def apply(l: Iterable[Term]): Term
 
+  def apply(terms: Term*): Term = apply(terms)
+
   val thisthis = this
 
   def asList(t: Term) = t.label match {
