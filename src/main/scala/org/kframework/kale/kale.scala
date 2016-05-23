@@ -325,7 +325,7 @@ object Or extends AssocLabel with NameFromObject with UniqueId {
     unwrap(_1) | unwrap(_2) match {
       case s if s.isEmpty => Bottom
       case s if s.size == 1 => s.head
-      case s => Or(s)
+      case s => new Or(s)
     }
 
   def unwrap(t: Term): Set[Term] = t match {
@@ -337,13 +337,18 @@ object Or extends AssocLabel with NameFromObject with UniqueId {
   def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
 }
 
-case class Or(terms: Set[Term]) extends Assoc with NonBottom {
+class Or(val terms: Set[Term]) extends Assoc with NonBottom {
   assert(terms.size > 1)
   val label = Or
 
   lazy val _1 = terms.head
   lazy val _2 = Or(terms.tail.toSeq)
   override val list: Iterable[Term] = terms
+
+  override def equals(other: Any): Boolean = other match {
+    case that: Or => this.terms == that.terms
+    case _ => false
+  }
 }
 
 trait AssocLabel extends Label2 {
@@ -636,8 +641,13 @@ class Rewriter(substitutioner: PureSubstitution => SubstitutionApplication, matc
     }
   }
 
-  def searchStep(obj: Term): Set[Term] = {
-    ???
+  def searchStep(obj: Term): Term = {
+    Or(rules.map(r => (matcher(r._1, obj), r._2)).flatMap({
+      case (Bottom, _) => Set[Term]()
+      case (or, rhs) =>
+        val substitutions: Set[PureSubstitution] = Or.unwrap(or).asInstanceOf[Set[PureSubstitution]]
+        substitutions.map(substitutioner).map(_ (rhs))
+    }))
   }
 }
 
