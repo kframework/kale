@@ -57,6 +57,8 @@ sealed trait Term extends Iterable[Term] {
   def getHiddenAttDONOTUSE = this.att
 
   def iterator(): Iterator[Term]
+
+  override def hashCode = label.hashCode
 }
 
 trait Node extends Term {
@@ -122,6 +124,14 @@ case class FreeLabel3(id: Int, name: String) extends Label3 with FreeLabel {
   def apply(_1: Term, _2: Term, _3: Term): Term = FreeNode3(this, _1, _2, _3)
 }
 
+trait Label4 extends NodeLabel {
+  def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term
+}
+
+case class FreeLabel4(id: Int, name: String) extends Label4 with FreeLabel {
+  def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term = FreeNode4(this, _1, _2, _3, _4)
+}
+
 trait Node0 extends Node {
   val label: Label0
 
@@ -154,11 +164,23 @@ trait Node3 extends Node with Product3[Term, Term, Term] {
 
 case class FreeNode3(label: Label3, _1: Term, _2: Term, _3: Term) extends Node3
 
+trait Node4 extends Node with Product4[Term, Term, Term, Term] {
+  val label: Label4
+
+  def iterator = Iterator(_1, _2, _3, _4)
+}
+
+case class FreeNode4(label: Label4, _1: Term, _2: Term, _3: Term, _4: Term) extends Node4
+
 object Variable extends LeafLabel[String] with NameFromObject with UniqueId
 
 case class Variable(name: String) extends Leaf[String] {
   override val label = Variable
   val value = name
+}
+
+trait Hooked {
+  def f(t: Term): Term
 }
 
 object Truth extends LeafLabel[Boolean] with NameFromObject with UniqueId {
@@ -419,11 +441,6 @@ case class Rewrite(_1: Term, _2: Term) extends Node2 {
   override val label = Rewrite
 }
 
-trait Hook {
-  val label: Label
-  val f: Term => Term
-}
-
 trait UnifierFunction[Left <: Term, Right <: Term, Result <: Term] extends (DispatchState => ((Term, Term) => Term)) {
   def apply(solver: DispatchState) = { (a: Term, b: Term) => f(solver)(a.asInstanceOf[Left], b.asInstanceOf[Right]) }
 
@@ -438,7 +455,7 @@ trait DispatchState {
 
 class Dispatch(pieces: Set[UnifierPiece], maxId: Int) extends DispatchState {
   val arr: Array[Array[(Term, Term) => (Term)]] =
-    (0 until maxId).map({ i => new Array[(Term, Term) => (Term)](maxId) }).toArray
+    (0 until maxId + 1).map({ i => new Array[(Term, Term) => (Term)](maxId) }).toArray
 
   for (p <- pieces) {
     arr(p.leftLabel.id)(p.rightLabel.id) = p.f(this)
@@ -499,6 +516,7 @@ object ApplySubstitution {
       case l: Label1 => UnaryPiece(l, Node1)
       case l: Label2 => UnaryPiece(l, Node2)
       case l: Label3 => UnaryPiece(l, Node3)
+      case l: Label4 => UnaryPiece(l, Node4)
       case l: ConstantLabel[_] => UnaryPiece(l, Constant)
     })
 
@@ -521,6 +539,10 @@ object ApplySubstitution {
     def f(solver: SubstitutionApplication)(t: Node3) = t.label(solver(t._1), solver(t._2), solver(t._3))
   }
 
+  object Node4 extends UnaryFunction[Node4, Term, SubstitutionApplication] {
+    def f(solver: SubstitutionApplication)(t: Node4) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4))
+  }
+
   object Var extends UnaryFunction[Variable, Term, SubstitutionApplication] {
     def f(solver: SubstitutionApplication)(v: Variable) = solver.get(v).getOrElse(v)
   }
@@ -540,6 +562,7 @@ object SimpleMatcher {
       case l: FreeLabel1 => UnifierPiece(l, l, SimpleMatcher.FreeNode1FreeNode1)
       case l: FreeLabel2 => UnifierPiece(l, l, SimpleMatcher.FreeNode2FreeNode2)
       case l: FreeLabel3 => UnifierPiece(l, l, SimpleMatcher.FreeNode3FreeNode3)
+      case l: FreeLabel4 => UnifierPiece(l, l, SimpleMatcher.FreeNode4FreeNode4)
       case l: ConstantLabel[_] => UnifierPiece(l, l, SimpleMatcher.Constants)
     })
 
@@ -566,6 +589,10 @@ object SimpleMatcher {
 
   object FreeNode3FreeNode3 extends UnifierFunction[Node3, Node3, Term] {
     def f(solver: DispatchState)(a: Node3, b: Node3) = Substitution(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3)))
+  }
+
+  object FreeNode4FreeNode4 extends UnifierFunction[Node4, Node4, Term] {
+    def f(solver: DispatchState)(a: Node4, b: Node4) = Substitution(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3), solver(a._4, b._4)))
   }
 
   def matchContents(l: AssocLabel, ksL: Iterable[Term], ksR: Iterable[Term])(implicit solver: DispatchState): Term = {
