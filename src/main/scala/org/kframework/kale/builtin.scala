@@ -49,7 +49,7 @@ object MAP {
 }
 
 class MAP(val label: MapLabel, val map: collection.Map[Term, Term]) extends Assoc {
-  lazy val list = map map { case (_1, _2) => Tuple2(_1, _2) }
+  lazy val assocIterable = map map { case (_1, _2) => Tuple2(_1, _2) }
 
   override def _1: Term = Tuple2(map.head._1, map.head._2)
 

@@ -343,7 +343,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
 
   lazy val _1: Term = terms.head
   lazy val _2: Term = And(s, terms.tail)
-  override val list: Iterable[Term] = Substitution.asList(s) ++ terms
+  override val assocIterable: Iterable[Term] = Substitution.asList(s) ++ terms
 }
 
 object Substitution extends AssocLabel with NameFromObject with UniqueId {
@@ -393,11 +393,11 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term]) extends
     case _ => false
   }
 
-  override def hashCode(): Int = label.hashCode
+  override val hashCode: Int = label.hashCode
 
   def get(v: Variable) = m.get(v)
 
-  override val list: Iterable[Term] = Substitution.asList(this)
+  override val assocIterable: Iterable[Term] = Substitution.asList(this)
 }
 
 object Or extends AssocLabel with NameFromObject with UniqueId {
@@ -405,11 +405,11 @@ object Or extends AssocLabel with NameFromObject with UniqueId {
     unwrap(_1) | unwrap(_2) match {
       case s if s.isEmpty => Bottom
       case s if s.size == 1 => s.head
-      case s => new Or(s)
+      case s => new OrWithAtLeastTwoElements(s)
     }
 
   def unwrap(t: Term): Set[Term] = t match {
-    case o: Or => o.terms
+    case o: OrWithAtLeastTwoElements => o.terms
     case `Bottom` => Set()
     case o => Set(o)
   }
@@ -419,16 +419,16 @@ object Or extends AssocLabel with NameFromObject with UniqueId {
   def unapply(t: Term): Some[Set[Term]] = Some(unwrap(t))
 }
 
-class Or(val terms: Set[Term]) extends Assoc {
+private[this] class OrWithAtLeastTwoElements(val terms: Set[Term]) extends Assoc {
   assert(terms.size > 1)
   val label = Or
 
   lazy val _1 = terms.head
   lazy val _2 = Or(terms.tail.toSeq)
-  override val list: Iterable[Term] = terms
+  override val assocIterable: Iterable[Term] = terms
 
   override def equals(other: Any): Boolean = other match {
-    case that: Or => this.terms == that.terms
+    case that: OrWithAtLeastTwoElements => this.terms == that.terms
     case _ => false
   }
 }
@@ -441,7 +441,7 @@ trait AssocLabel extends Label2 {
   val thisthis = this
 
   def asList(t: Term) = t.label match {
-    case `thisthis` => t.asInstanceOf[Assoc].list
+    case `thisthis` => t.asInstanceOf[Assoc].assocIterable
     case _ => List(t)
   }
 
@@ -463,36 +463,36 @@ trait AssocWithIdLabel extends AssocLabel with HasId {
 
   def unwrap(t: Term) = t match {
     case `identity` => List[Term]()
-    case x if x.label == this => x.asInstanceOf[Assoc].list
+    case x if x.label == this => x.asInstanceOf[Assoc].assocIterable
     case y => List(y)
   }
 
-  def apply(l: Iterable[Term]): Term = l match {
+  def apply(list: Iterable[Term]): Term = list match {
     case l if l.isEmpty => identity
     case l if l.size == 1 => l.head
-    case _ => construct(l)
+    case l => construct(l)
   }
 
   def construct(l: Iterable[Term]): Term
 }
 
 trait AssocWithoutIdLabel extends AssocLabel {
-
+  // todo
 }
 
 trait Assoc extends Node2 {
   override val label: AssocLabel
-  val list: Iterable[Term]
+  val assocIterable: Iterable[Term]
 }
 
 case class AssocWithIdListLabel(name: String, identity: Term) extends AssocWithIdLabel with UniqueId {
   override def construct(l: Iterable[Term]): Term = new AssocWithIdList(this, l)
 }
 
-case class AssocWithIdList(label: AssocLabel, list: Iterable[Term]) extends Assoc {
-  override def _1: Term = list.head
+case class AssocWithIdList(label: AssocLabel, assocIterable: Iterable[Term]) extends Assoc {
+  override def _1: Term = assocIterable.head
 
-  override def _2: Term = label(list.tail)
+  override def _2: Term = label(assocIterable.tail)
 }
 
 object Rewrite extends Label2 with NameFromObject with UniqueId
