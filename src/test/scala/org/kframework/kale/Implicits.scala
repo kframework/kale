@@ -10,7 +10,7 @@ object Implicits {
     def +(y: Term): Term = INT.+(x, y)
   }
 
-  implicit class RichTerm(t: Term)(implicit m: Dispatch) {
+  implicit class RichTerm(t: Term)(implicit m: transformer.Binary.Application) {
     def :=(tt: Term) = m(t, tt)
   }
 }

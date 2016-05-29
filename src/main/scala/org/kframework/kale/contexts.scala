@@ -27,8 +27,8 @@ case class ContextContentVariable(basedOn: Variable, index: Int) extends Variabl
   override val name: String = basedOn.name + "_" + index
 }
 
-object AnywhereContextMatcher extends UnifierFunction[Context1, Term, Term] {
-  override def f(solver: DispatchState)(c: Context1, t: Term): Term = {
+object AnywhereContextMatcher extends transformer.Binary.Function[Context1, Term, Term] {
+  override def f(solver: transformer.Binary.State)(c: Context1, t: Term): Term = {
     assert(c.label == AnywhereContext)
     val v = c.contextVar
 
