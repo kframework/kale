@@ -277,13 +277,11 @@ object Equality extends Label2 with NameFromObject with UniqueId {
   }
 }
 
-trait NonBottom extends Term
-
-trait Substitution extends NonBottom {
+trait Substitution extends Term {
   def get(v: Variable): Option[Term]
 }
 
-class Equality(val _1: Term, val _2: Term) extends Node2 with NonBottom {
+private[kale] class Equality(val _1: Term, val _2: Term) extends Node2 {
   val label = Equality
 
   override def equals(other: Any) = other match {
@@ -292,7 +290,7 @@ class Equality(val _1: Term, val _2: Term) extends Node2 with NonBottom {
   }
 }
 
-class Binding(val variable: Variable, val term: Term) extends Equality(variable, term) with Substitution {
+private[kale] class Binding(val variable: Variable, val term: Term) extends Equality(variable, term) with Substitution {
   assert(_1.isInstanceOf[Variable])
 
   def get(v: Variable) = if (_1 == v) Some(_2) else None
@@ -300,7 +298,7 @@ class Binding(val variable: Variable, val term: Term) extends Equality(variable,
 
 trait ConjunctionLabel extends AssocLabel
 
-trait Conjunction extends Assoc with NonBottom
+trait Conjunction extends Assoc
 
 object And extends ConjunctionLabel with NameFromObject with UniqueId {
 
@@ -319,7 +317,7 @@ object And extends ConjunctionLabel with NameFromObject with UniqueId {
 
   private def unwrap(t: Term): (Substitution, Iterable[Term]) = t match {
     case s: Substitution => (s, Iterable.empty)
-    case and: And => (and.s, and.terms)
+    case and: AndOfSubstitutionAndTerms => (and.s, and.terms)
     case o => (Top, Iterable(o))
   }
 
@@ -336,12 +334,12 @@ object And extends ConjunctionLabel with NameFromObject with UniqueId {
     } else if (pureSubstitution.isEmpty && others.size == 1) {
       others.head
     } else {
-      new And(pureSubstitution, others.toSet)
+      new AndOfSubstitutionAndTerms(pureSubstitution, others.toSet)
     }
   }
 }
 
-final class And(val s: Substitution, val terms: Set[Term]) extends Assoc with NonBottom {
+private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val terms: Set[Term]) extends Assoc {
   assert(!terms.contains(Bottom))
   val label = And
 
@@ -421,7 +419,7 @@ object Or extends AssocLabel with NameFromObject with UniqueId {
   def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
 }
 
-class Or(val terms: Set[Term]) extends Assoc with NonBottom {
+class Or(val terms: Set[Term]) extends Assoc {
   assert(terms.size > 1)
   val label = Or
 
