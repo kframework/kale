@@ -68,6 +68,8 @@ case class FreeLabel4(id: Int, name: String) extends Label4 with FreeLabel {
 trait Node0 extends Node {
   val label: Label0
 
+  val isGround = true
+
   def innerUpdateAt(i: Int, t: Term): Term = throw new AssertionError("unreachable code")
 
   def iterator = Iterator.empty
@@ -77,6 +79,8 @@ case class FreeNode0(label: Label0) extends Node0
 
 trait Node1 extends Node with Product1[Term] {
   val label: Label1
+
+  lazy val isGround = _1.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 1 => label(t)
@@ -89,6 +93,8 @@ case class FreeNode1(label: Label1, _1: Term) extends Node1
 
 trait Node2 extends Node with Product2[Term, Term] {
   val label: Label2
+
+  lazy val isGround = _1.isGround && _2.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 1 => label(t, _2)
@@ -103,6 +109,8 @@ case class FreeNode2(label: Label2, _1: Term, _2: Term) extends Node2
 trait Node3 extends Node with Product3[Term, Term, Term] {
   val label: Label3
 
+  lazy val isGround = _1.isGround && _2.isGround && _3.isGround
+
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 1 => label(t, _2, _3)
     case 2 => label(_1, t, _3)
@@ -116,6 +124,8 @@ case class FreeNode3(label: Label3, _1: Term, _2: Term, _3: Term) extends Node3
 
 trait Node4 extends Node with Product4[Term, Term, Term, Term] {
   val label: Label4
+
+  lazy val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 1 => label(t, _2, _3, _4)

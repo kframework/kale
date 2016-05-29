@@ -69,8 +69,12 @@ object SubstitutionApply {
 class SubstitutionApply(val pieces: Set[Unary.Piece[SubstitutionApply]], val maxId: Int)(val s: Substitution) extends Unary.Apply[SubstitutionApply](pieces, maxId) with (Term => Term) {
   def getVariable(v: Variable): Option[Term] = s.get(v)
 
-  def apply(t: Term) = arr(t.label.id) match {
-    case null => Bottom
-    case f => f(t)
-  }
+  def apply(t: Term) =
+    if (t.isGround)
+      t
+    else
+      arr(t.label.id) match {
+        case null => Bottom
+        case f => f(t)
+      }
 }

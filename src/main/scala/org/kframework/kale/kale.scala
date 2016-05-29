@@ -51,6 +51,8 @@ trait Term extends Iterable[Term] {
 
   val label: Label
 
+  val isGround: Boolean
+
   private var att: Any = null
 
   def setHiddenAttDONOTUSE(att: Any) = this.att = att
@@ -98,6 +100,7 @@ trait ConstantLabel[T] extends LeafLabel[T] with NameFromObject with UniqueId {
 }
 
 case class Constant[T](label: ConstantLabel[T], value: T) extends Leaf[T] {
+  val isGround = true
   override def toString = value.toString
 }
 
@@ -109,6 +112,7 @@ trait Variable extends Leaf[String] {
   val label = Variable
   val name: String
   lazy val value = name
+  val isGround = false
 }
 
 case class SimpleVariable(name: String) extends Variable
@@ -123,6 +127,7 @@ object Truth extends LeafLabel[Boolean] with NameFromObject with UniqueId {
 
 class Truth(val value: Boolean) extends Leaf[Boolean] {
   val label = Truth
+  val isGround = true
 }
 
 object Top extends Truth(true) with Substitution {
