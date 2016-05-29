@@ -663,9 +663,9 @@ object SimpleMatcher {
   }
 
   def matchContents(l: AssocLabel, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: DispatchState): Term = {
-    val res = (ksLeft, ksRight) match {
+    val res = (ksLeft.toSeq, ksRight.toSeq) match {
       case (Seq(), Seq()) => Top
-      case ((v: Variable) :: tailL, ksR) =>
+      case ((v: Variable) +: tailL, ksR) =>
         (0 to ksR.size)
           .map { index => (ksR.take(index), ksR.drop(index)) }
           .map { case (prefix, suffix) => And(Equality(v, l(prefix)), matchContents(l, tailL, suffix)) }
