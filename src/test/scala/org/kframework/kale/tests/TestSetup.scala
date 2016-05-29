@@ -1,6 +1,6 @@
 package org.kframework.kale.tests
 
-import org.kframework.kale.{ApplySubstitution, SimpleMatcher, _}
+import org.kframework.kale.{Matcher, _}
 
 trait TestSetup {
 
@@ -12,7 +12,7 @@ trait TestSetup {
 
   val allLabels = Set(Variable, INT.+, INT, emptyList, listLabel)
 
-  val unifier = SimpleMatcher(allLabels)
+  val unifier = Matcher(allLabels)
 
-  val substitutionApplier = ApplySubstitution(allLabels)
+  val substitutionApplier = SubstitutionApplication(allLabels)
 }

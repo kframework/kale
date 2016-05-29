@@ -1,6 +1,6 @@
 package org.kframework.kale.tests
 
-import org.kframework.kale.{AnywhereContext, SimpleMatcher, _}
+import org.kframework.kale.{AnywhereContext, Matcher, _}
 import org.scalatest.FreeSpec
 
 class MatchSpec extends FreeSpec with TestSetup {
@@ -42,7 +42,7 @@ class MatchSpec extends FreeSpec with TestSetup {
     val contextsLabels = Set(foo, STRING, INT, matched, traversed,
       andMatchingY, Variable, AnywhereContext, bar, buz, emptyList, listLabel)
 
-    implicit val m = SimpleMatcher(contextsLabels)
+    implicit val m = Matcher(contextsLabels)
 
     val X_1 = AnywhereContext.hole(X)
 
