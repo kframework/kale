@@ -23,3 +23,7 @@ object Util {
       f
   }
 }
+
+object unreachable {
+  def apply() = throw new AssertionError("unreachable")
+}

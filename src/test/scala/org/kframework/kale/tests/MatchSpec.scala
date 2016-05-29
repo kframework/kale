@@ -22,7 +22,6 @@ class MatchSpec extends FreeSpec with TestSetup {
     assert(unifier(listLabel(3, X, 5, Y, 7), listLabel(3, 4, 5, 6, 7)) === Substitution(Map(X -> (4: Term), Y -> (6: Term))))
     assert(unifier(listLabel(X, 5, Y), listLabel(3, 4, 5, 6, 7)) === Substitution(Map(X -> listLabel(3, 4), Y -> listLabel(6, 7))))
     val res = unifier(listLabel(3, X, Y, 6), listLabel(3, 4, 5, 6))
-    println(res)
     assert(unifier(listLabel(3, X, Y, 6), listLabel(3, 4, 5, 6)) ===
       Or(
         Substitution(Map(X -> emptyList(), Y -> listLabel(4, 5))),
@@ -74,7 +73,6 @@ class MatchSpec extends FreeSpec with TestSetup {
     }
 
     "assoc inside one element" in {
-      println(bar(AnywhereContext(X, bar(Y))) := bar(listLabel(1, 2, bar(2), bar(bar(3)))))
       assert(
         (bar(AnywhereContext(X, bar(Y))) := bar(listLabel(1, 2, bar(2), bar(bar(3)))))
           ===

@@ -249,7 +249,7 @@ object Truth extends LeafLabel[Boolean] with NameFromObject with UniqueId {
   def apply(v: Boolean) = if (v) Top else Bottom
 }
 
-class Truth(val value: Boolean) extends Leaf[Boolean] with Term {
+class Truth(val value: Boolean) extends Leaf[Boolean] {
   val label = Truth
 }
 
@@ -296,12 +296,9 @@ private[kale] class Binding(val variable: Variable, val term: Term) extends Equa
   def get(v: Variable) = if (_1 == v) Some(_2) else None
 }
 
-trait ConjunctionLabel extends AssocLabel
+trait And extends Assoc
 
-trait Conjunction extends Assoc
-
-object And extends ConjunctionLabel with NameFromObject with UniqueId {
-
+object And extends AssocLabel with NameFromObject with UniqueId {
   override def apply(_1: Term, _2: Term): Term = {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
@@ -309,8 +306,9 @@ object And extends ConjunctionLabel with NameFromObject with UniqueId {
       val l1: (Substitution, Iterable[Term]) = unwrap(_1)
       val l2: (Substitution, Iterable[Term]) = unwrap(_2)
       Substitution(l1._1, l2._1) match {
-        case Bottom => Bottom
+        case `Bottom` => Bottom
         case s: Substitution => apply(s, l1._2 ++ l2._2)
+        case _ => unreachable()
       }
     }
   }
@@ -348,7 +346,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
   override val list: Iterable[Term] = Substitution.asList(s) ++ terms
 }
 
-object Substitution extends ConjunctionLabel with NameFromObject with UniqueId {
+object Substitution extends AssocLabel with NameFromObject with UniqueId {
   override def apply(_1: Term, _2: Term): Term = {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
@@ -384,7 +382,7 @@ object Substitution extends ConjunctionLabel with NameFromObject with UniqueId {
   }
 }
 
-final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term]) extends Conjunction with Substitution {
+final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term]) extends And with Substitution {
   assert(m.size >= 2)
   val label = Substitution
   lazy val _1 = Equality(m.head._1, m.head._2)
@@ -412,11 +410,13 @@ object Or extends AssocLabel with NameFromObject with UniqueId {
 
   def unwrap(t: Term): Set[Term] = t match {
     case o: Or => o.terms
-    case Bottom => Set()
+    case `Bottom` => Set()
     case o => Set(o)
   }
 
   def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
+
+  def unapply(t: Term): Some[Set[Term]] = Some(unwrap(t))
 }
 
 class Or(val terms: Set[Term]) extends Assoc {
@@ -530,7 +530,7 @@ class Dispatch(pieces: Set[UnifierPiece], maxId: Int) extends DispatchState {
     else
       Bottom
 
-    //    println(left + "\n:= " + right + "\n=== " + res)
+    // println(left + "\n:= " + right + "\n=== " + res)
     res
   }
 }
@@ -662,10 +662,10 @@ object SimpleMatcher {
     def f(solver: DispatchState)(a: Node4, b: Node4) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3), solver(a._4, b._4)))
   }
 
-  def matchContents(l: AssocLabel, ksL: Iterable[Term], ksR: Iterable[Term])(implicit solver: DispatchState): Term = {
-    val res = (ksL, ksR) match {
+  def matchContents(l: AssocLabel, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: DispatchState): Term = {
+    val res = (ksLeft, ksRight) match {
       case (Seq(), Seq()) => Top
-      case ((v: Variable) +: tailL, ksR) =>
+      case ((v: Variable) :: tailL, ksR) =>
         (0 to ksR.size)
           .map { index => (ksR.take(index), ksR.drop(index)) }
           .map { case (prefix, suffix) => And(Equality(v, l(prefix)), matchContents(l, tailL, suffix)) }
