@@ -6,7 +6,7 @@ import scala.collection.{Iterable, Set}
 
 object Matcher {
 
-  def apply(labels: Set[Label]): Binary.Application = {
+  def apply(labels: Set[Label]): Binary.Apply = {
     val variableXlabel = labels.map(Binary.Piece(Variable, _, Matcher.VarLeft))
     val freeLikeLabelXfreeLikeLabel = labels.collect({
       case l: FreeLabel0 => Binary.Piece(l, l, Matcher.FreeNode0FreeNode0)
@@ -25,7 +25,7 @@ object Matcher {
 
     val anywhereContextMatchers = labels.map(Binary.Piece(AnywhereContext, _, AnywhereContextMatcher))
 
-    new Binary.Application(variableXlabel | freeLikeLabelXfreeLikeLabel | assoc | anywhereContextMatchers, labels.map(_.id).max + 1)
+    new Binary.Apply(variableXlabel | freeLikeLabelXfreeLikeLabel | assoc | anywhereContextMatchers, labels.map(_.id).max + 1)
   }
 
   object FreeNode0FreeNode0 extends Binary.Function[Node0, Node0, Top.type] {

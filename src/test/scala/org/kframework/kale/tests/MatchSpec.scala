@@ -31,20 +31,8 @@ class MatchSpec extends FreeSpec with TestSetup {
   }
 
   "contexts" - {
-    val foo = FreeLabel2("foo")
-    val bar = FreeLabel1("bar")
-    val buz = FreeLabel2("buz")
-    val (a, b, c, d) = (STRING("a"), STRING("b"), STRING("c"), STRING("d"))
-    val matched = FreeLabel1("matched")
-    val traversed = FreeLabel1("traversed")
-    val andMatchingY = FreeLabel0("andMatchingY")
 
-    val contextsLabels = Set(foo, STRING, INT, matched, traversed,
-      andMatchingY, Variable, AnywhereContext, bar, buz, emptyList, listLabel)
-
-    implicit val m = Matcher(contextsLabels)
-
-    val X_1 = AnywhereContext.hole(X)
+    implicit val m = Matcher(allLabels)
 
     "zero-level" in {
       assert((foo(a, AnywhereContext(X, b)) := foo(a, b)) === Equality(X, X_1))

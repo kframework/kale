@@ -18,7 +18,7 @@ object Unary {
 
   case class Piece[US <: State](label: Label, f: US => Term => Term)
 
-  abstract class Application[US <: State](pieces: Set[Piece[US]], maxId: Int) extends State {
+  abstract class Apply[US <: State](pieces: Set[Piece[US]], maxId: Int) extends State {
     this: US =>
     val arr = new Array[Term => Term](maxId)
 

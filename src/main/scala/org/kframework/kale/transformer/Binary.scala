@@ -18,7 +18,7 @@ object Binary {
 
   case class Piece(leftLabel: Label, rightLabel: Label, f: State => (Term, Term) => Term)
 
-  class Application(pieces: Set[Piece], maxId: Int) extends State {
+  class Apply(pieces: Set[Piece], maxId: Int) extends State {
     val arr: Array[Array[(Term, Term) => (Term)]] =
       (0 until maxId + 1).map({ i =>
         new Array[(Term, Term) => (Term)](maxId)

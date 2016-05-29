@@ -5,11 +5,11 @@ import org.kframework.kale.transformer.Binary
 import scala.collection.Set
 
 object Rewriter {
-  def apply(substitutioner: Substitution => SubstitutionApplication, matcher: Binary.Application)(rules: Set[Rewrite]) =
+  def apply(substitutioner: Substitution => SubstitutionApply, matcher: Binary.Apply)(rules: Set[Rewrite]) =
     new Rewriter(substitutioner, matcher, rules)
 }
 
-class Rewriter(substitutioner: Substitution => SubstitutionApplication, matcher: Binary.Application, rules: Set[Rewrite]) {
+class Rewriter(substitutioner: Substitution => SubstitutionApply, matcher: Binary.Apply, rules: Set[Rewrite]) {
   def executionStep(obj: Term): Term = {
     rules.toStream.map(r => (matcher(r._1, obj), r._2)).find(_._1 != Bottom) match {
       case Some((substitutions, rhs)) =>

@@ -10,9 +10,20 @@ trait TestSetup {
   val emptyList = FreeLabel0(UniqueId(), ".List")
   val listLabel = AssocWithIdListLabel("_,_", emptyList())
 
-  val allLabels = Set(Variable, INT.+, INT, emptyList, listLabel)
+  val foo = FreeLabel2("foo")
+  val bar = FreeLabel1("bar")
+  val buz = FreeLabel2("buz")
+  val (a, b, c, d) = (STRING("a"), STRING("b"), STRING("c"), STRING("d"))
+  val matched = FreeLabel1("matched")
+  val traversed = FreeLabel1("traversed")
+  val andMatchingY = FreeLabel0("andMatchingY")
+
+  val allLabels = Set(foo, STRING, INT, INT.+, matched, traversed,
+    andMatchingY, Variable, AnywhereContext, bar, buz, emptyList, listLabel)
 
   val unifier = Matcher(allLabels)
 
-  val substitutionApplier = SubstitutionApplication(allLabels)
+  val substitutionApplier = SubstitutionApply(allLabels)
+
+  val X_1 = AnywhereContext.hole(X)
 }
