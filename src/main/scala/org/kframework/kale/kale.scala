@@ -4,6 +4,8 @@ import scala.Iterable
 import scala.collection._
 import scala.language.implicitConversions
 
+import Util._
+
 object UniqueId {
   var nextId = 0
 
@@ -96,12 +98,20 @@ trait Label0 extends Function0[Term] with NodeLabel {
 
 trait FreeLabel
 
+object FreeLabel0 {
+  def apply(name: String): FreeLabel0 = FreeLabel0(UniqueId(), name)
+}
+
 case class FreeLabel0(id: Int, name: String) extends Label0 with FreeLabel {
   def apply(): Term = FreeNode0(this)
 }
 
 trait Label1 extends (Term => Term) with NodeLabel {
   def apply(_1: Term): Term
+}
+
+object FreeLabel1 {
+  def apply(name: String): FreeLabel1 = FreeLabel1(UniqueId(), name)
 }
 
 case class FreeLabel1(id: Int, name: String) extends Label1 with FreeLabel {
@@ -112,6 +122,10 @@ trait Label2 extends ((Term, Term) => Term) with NodeLabel {
   def apply(_1: Term, _2: Term): Term
 }
 
+object FreeLabel2 {
+  def apply(name: String): FreeLabel2 = FreeLabel2(UniqueId(), name)
+}
+
 case class FreeLabel2(id: Int, name: String) extends Label2 with FreeLabel {
   def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
 }
@@ -120,12 +134,20 @@ trait Label3 extends NodeLabel {
   def apply(_1: Term, _2: Term, _3: Term): Term
 }
 
+object FreeLabel3 {
+  def apply(name: String): FreeLabel3 = FreeLabel3(UniqueId(), name)
+}
+
 case class FreeLabel3(id: Int, name: String) extends Label3 with FreeLabel {
   def apply(_1: Term, _2: Term, _3: Term): Term = FreeNode3(this, _1, _2, _3)
 }
 
 trait Label4 extends NodeLabel {
   def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term
+}
+
+object FreeLabel4 {
+  def apply(name: String): FreeLabel4 = FreeLabel4(UniqueId(), name)
 }
 
 case class FreeLabel4(id: Int, name: String) extends Label4 with FreeLabel {
@@ -202,9 +224,11 @@ object Bottom extends Truth(false) {
 }
 
 object Equality extends Label2 with NameFromObject with UniqueId {
-  override def apply(_1: Term, _2: Term): Equality = _1 match {
-    case v: Variable => new Binding(v, _2)
-    case _ => new Equality(_1, _2)
+  override def apply(_1: Term, _2: Term): Term = bottomize(_1, _2) {
+    _1 match {
+      case v: Variable => new Binding(v, _2)
+      case _ => new Equality(_1, _2)
+    }
   }
 
   def unapply(t: Term): Option[(Term, Term)] = t match {
@@ -572,7 +596,9 @@ object SimpleMatcher {
       case _ => Set[UnifierPiece]()
     }).toSet
 
-    new Dispatch(variableXlabel | freeLikeLabelXfreeLikeLabel | assoc, labels.map(_.id).max + 1)
+    val anywhereContextMatchers = labels.map(UnifierPiece(AnywhereContext, _, AnywhereContextMatcher))
+
+    new Dispatch(variableXlabel | freeLikeLabelXfreeLikeLabel | assoc | anywhereContextMatchers, labels.map(_.id).max + 1)
   }
 
   object FreeNode0FreeNode0 extends UnifierFunction[Node0, Node0, Top.type] {

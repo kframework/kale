@@ -80,4 +80,34 @@ class MatchSpec extends FreeSpec {
     assert(rewriter.searchStep(listLabel(3, 4, 5, 6)) ===
       Or(List(listLabel(4, 0, 5), listLabel(0, 4, 5), listLabel(4, 5, 0))))
   }
+
+  "contexts" - {
+    "basic" in {
+      val foo = FreeLabel3("foo")
+      val (a, b, c, d) = (STRING("a"), STRING("b"), STRING("c"), STRING("d"))
+      val matched = FreeLabel1("matched")
+      val traversed = FreeLabel1("traversed")
+      val andMatchingY = FreeLabel0("andMatchingY")
+
+      val contextsLabels = Set(foo, STRING, matched, traversed, andMatchingY, Variable, AnywhereContext)
+
+      val m = SimpleMatcher(contextsLabels)
+
+      assert(m(foo(a, AnywhereContext(X, b), c), foo(a, b, c)) === Equality(X, Top))
+
+//      assert(m(foo(a, AnywhereContext(X, b), c), foo(a, traversed(b), c)) === Equality(X, Top))
+
+//      assert(
+//        m(foo(a, AnywhereContext(X, matched(Y)), c), foo(a, traversed(matched(andMatchingY())), c))
+//        === Bottom)
+
+
+//      assertMatch("foo(a, øxππ(matched(øy)), c)", "foo(a, traversed(matched(andMatchingY)), c)",
+//        res({
+//          øy : pExp("andMatchingY"),
+//          øx_CONTEXT : pExp("traversed(øx_SUBS[0])"),
+//          øx: pExp("traversed(matched(andMatchingY))"),
+//          øx_SUBS: [{øy : pExp("andMatchingY"), øx_CONTENT: pExp("matched(andMatchingY)")}]}))
+    }
+  }
 }

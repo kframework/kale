@@ -7,6 +7,6 @@ object Implicits {
   implicit def intConstant(x: Int): Constant[Int] = INT(x)
 
   implicit class asTerm(x: Term) {
-    def +(y: Term): Node2 = INT.+(x, y)
+    def +(y: Term): Term = INT.+(x, y)
   }
 }
