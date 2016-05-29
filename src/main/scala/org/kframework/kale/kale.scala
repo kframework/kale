@@ -3,7 +3,6 @@ package org.kframework.kale
 import scala.Iterable
 import scala.collection._
 import scala.language.implicitConversions
-
 import Util._
 
 object UniqueId {
@@ -50,6 +49,8 @@ trait LeafLabel[T] extends Label {
 }
 
 sealed trait Term extends Iterable[Term] {
+  def updateAt(i: Int)(t: Term): Term
+
   val label: Label
 
   private var att: Any = null
@@ -63,8 +64,16 @@ sealed trait Term extends Iterable[Term] {
   override def hashCode = label.hashCode
 }
 
-trait Node extends Term {
+trait Node extends Term with Product {
   val label: NodeLabel
+
+  def updateAt(i: Int)(t: Term): Term = if (i <= 0 || i > productArity) {
+    throw new IndexOutOfBoundsException(label + " has " + productArity + " children. Trying to update index _" + i)
+  } else {
+    innerUpdateAt(i, t)
+  }
+
+  protected def innerUpdateAt(i: Int, t: Term): Term
 
   def iterator: Iterator[Term]
 
@@ -73,6 +82,8 @@ trait Node extends Term {
 
 trait Leaf[T] extends Term {
   def iterator = Iterator.empty
+
+  def updateAt(i: Int)(t: Term): Term = throw new IndexOutOfBoundsException("Leaves have no children. Trying to update index _" + i)
 
   val label: LeafLabel[T]
   val value: T
@@ -157,6 +168,8 @@ case class FreeLabel4(id: Int, name: String) extends Label4 with FreeLabel {
 trait Node0 extends Node {
   val label: Label0
 
+  def innerUpdateAt(i: Int, t: Term): Term = throw new AssertionError("unreachable code")
+
   def iterator = Iterator.empty
 }
 
@@ -164,6 +177,10 @@ case class FreeNode0(label: Label0) extends Node0
 
 trait Node1 extends Node with Product1[Term] {
   val label: Label1
+
+  def innerUpdateAt(i: Int, t: Term): Term = i match {
+    case 1 => label(t)
+  }
 
   def iterator = Iterator(_1)
 }
@@ -173,6 +190,11 @@ case class FreeNode1(label: Label1, _1: Term) extends Node1
 trait Node2 extends Node with Product2[Term, Term] {
   val label: Label2
 
+  def innerUpdateAt(i: Int, t: Term): Term = i match {
+    case 1 => label(t, _2)
+    case 2 => label(_1, t)
+  }
+
   def iterator = Iterator(_1, _2)
 }
 
@@ -180,6 +202,12 @@ case class FreeNode2(label: Label2, _1: Term, _2: Term) extends Node2
 
 trait Node3 extends Node with Product3[Term, Term, Term] {
   val label: Label3
+
+  def innerUpdateAt(i: Int, t: Term): Term = i match {
+    case 1 => label(t, _2, _3)
+    case 2 => label(_1, t, _3)
+    case 3 => label(_1, _2, t)
+  }
 
   def iterator = Iterator(_1, _2, _3)
 }
@@ -189,17 +217,29 @@ case class FreeNode3(label: Label3, _1: Term, _2: Term, _3: Term) extends Node3
 trait Node4 extends Node with Product4[Term, Term, Term, Term] {
   val label: Label4
 
+  def innerUpdateAt(i: Int, t: Term): Term = i match {
+    case 1 => label(t, _2, _3, _4)
+    case 2 => label(_1, t, _3, _4)
+    case 3 => label(_1, _2, t, _4)
+    case 4 => label(_1, _2, _3, t)
+  }
+
   def iterator = Iterator(_1, _2, _3, _4)
 }
 
 case class FreeNode4(label: Label4, _1: Term, _2: Term, _3: Term, _4: Term) extends Node4
 
-object Variable extends LeafLabel[String] with NameFromObject with UniqueId
-
-case class Variable(name: String) extends Leaf[String] {
-  override val label = Variable
-  val value = name
+object Variable extends LeafLabel[String] with NameFromObject with UniqueId {
+  override def apply(name: String): Variable = SimpleVariable(name)
 }
+
+trait Variable extends Leaf[String] {
+  val label = Variable
+  val name: String
+  lazy val value = name
+}
+
+case class SimpleVariable(name: String) extends Variable
 
 trait Hooked {
   def f(t: Term): Term
@@ -213,7 +253,7 @@ class Truth(val value: Boolean) extends Leaf[Boolean] with Term {
   val label = Truth
 }
 
-object Top extends Truth(true) with PureSubstitution {
+object Top extends Truth(true) with Substitution {
   override def get(v: Variable): Option[Term] = None
 
   override def toString = "⊤"
@@ -225,8 +265,8 @@ object Bottom extends Truth(false) {
 
 object Equality extends Label2 with NameFromObject with UniqueId {
   override def apply(_1: Term, _2: Term): Term = bottomize(_1, _2) {
-    _1 match {
-      case v: Variable => new Binding(v, _2)
+    _1.label match {
+      case `Variable` => new Binding(_1.asInstanceOf[Variable], _2)
       case _ => new Equality(_1, _2)
     }
   }
@@ -239,15 +279,7 @@ object Equality extends Label2 with NameFromObject with UniqueId {
 
 trait NonBottom extends Term
 
-object PureSubstitution {
-  def unapply(t: PureSubstitution): Set[Term] = t match {
-    case Top => Set()
-    case b: Binding => Set(b)
-    case s: Substitution => s.iterator.toSet
-  }
-}
-
-trait PureSubstitution extends NonBottom {
+trait Substitution extends NonBottom {
   def get(v: Variable): Option[Term]
 }
 
@@ -260,7 +292,7 @@ class Equality(val _1: Term, val _2: Term) extends Node2 with NonBottom {
   }
 }
 
-class Binding(_1: Term, _2: Term) extends Equality(_1, _2) with PureSubstitution {
+class Binding(val variable: Variable, val term: Term) extends Equality(variable, term) with Substitution {
   assert(_1.isInstanceOf[Variable])
 
   def get(v: Variable) = if (_1 == v) Some(_2) else None
@@ -268,7 +300,7 @@ class Binding(_1: Term, _2: Term) extends Equality(_1, _2) with PureSubstitution
 
 trait ConjunctionLabel extends AssocLabel
 
-trait Conjunction extends Node2 with NonBottom
+trait Conjunction extends Assoc with NonBottom
 
 object And extends ConjunctionLabel with NameFromObject with UniqueId {
 
@@ -276,17 +308,17 @@ object And extends ConjunctionLabel with NameFromObject with UniqueId {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
     else {
-      val l1: (PureSubstitution, Iterable[Term]) = unwrap(_1)
-      val l2: (PureSubstitution, Iterable[Term]) = unwrap(_2)
+      val l1: (Substitution, Iterable[Term]) = unwrap(_1)
+      val l2: (Substitution, Iterable[Term]) = unwrap(_2)
       Substitution(l1._1, l2._1) match {
         case Bottom => Bottom
-        case s: PureSubstitution => apply(s, l1._2 ++ l2._2)
+        case s: Substitution => apply(s, l1._2 ++ l2._2)
       }
     }
   }
 
-  private def unwrap(t: Term): (PureSubstitution, Iterable[Term]) = t match {
-    case s: PureSubstitution => (s, Iterable.empty)
+  private def unwrap(t: Term): (Substitution, Iterable[Term]) = t match {
+    case s: Substitution => (s, Iterable.empty)
     case and: And => (and.s, and.terms)
     case o => (Top, Iterable(o))
   }
@@ -298,7 +330,7 @@ object And extends ConjunctionLabel with NameFromObject with UniqueId {
     apply(pureSubstitution, others)
   }
 
-  def apply(pureSubstitution: PureSubstitution, others: Iterable[Term]): Term = {
+  def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = {
     if (others.isEmpty) {
       pureSubstitution
     } else if (pureSubstitution.isEmpty && others.size == 1) {
@@ -309,13 +341,13 @@ object And extends ConjunctionLabel with NameFromObject with UniqueId {
   }
 }
 
-final class And(val s: PureSubstitution, val terms: Set[Term]) extends Assoc with NonBottom {
+final class And(val s: Substitution, val terms: Set[Term]) extends Assoc with NonBottom {
   assert(!terms.contains(Bottom))
   val label = And
 
   lazy val _1: Term = terms.head
   lazy val _2: Term = And(s, terms.tail)
-  override val list: Iterable[Term] = PureSubstitution.unapply(s) ++ terms
+  override val list: Iterable[Term] = Substitution.asList(s) ++ terms
 }
 
 object Substitution extends ConjunctionLabel with NameFromObject with UniqueId {
@@ -341,29 +373,35 @@ object Substitution extends ConjunctionLabel with NameFromObject with UniqueId {
 
   def apply(l: Iterable[Term]) = l.foldLeft(Top: Term)(apply)
 
-  def apply(m: Map[Variable, Term]): PureSubstitution = m.size match {
+  def apply(m: Map[Variable, Term]): Substitution = m.size match {
     case 0 => Top
     case 1 => new Binding(m.head._1, m.head._2)
-    case _ => new Substitution(m)
+    case _ => new SubstitutionWithMultipleBindings(m)
   }
 
-  def unapply(arg: Substitution): Option[Map[Variable, Term]] = Some(arg.m)
+  def unapply(t: Substitution): Option[Map[Variable, Term]] = t match {
+    case `Top` => Some(Map[Variable, Term]())
+    case b: Binding => Some(Map(b.variable -> b.term))
+    case s: SubstitutionWithMultipleBindings => Some(s.m)
+  }
 }
 
-final class Substitution(val m: Map[Variable, Term]) extends Conjunction with PureSubstitution {
+final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term]) extends Conjunction with Substitution {
   assert(m.size >= 2)
   val label = Substitution
   lazy val _1 = Equality(m.head._1, m.head._2)
   lazy val _2 = Substitution(m.tail)
 
   override def equals(other: Any): Boolean = other match {
-    case that: Substitution => m == that.m
+    case that: SubstitutionWithMultipleBindings => m == that.m
     case _ => false
   }
 
   override def hashCode(): Int = label.hashCode
 
   def get(v: Variable) = m.get(v)
+
+  override val list: Iterable[Term] = Substitution.asList(this)
 }
 
 object Or extends AssocLabel with NameFromObject with UniqueId {
@@ -479,7 +517,9 @@ trait DispatchState {
 
 class Dispatch(pieces: Set[UnifierPiece], maxId: Int) extends DispatchState {
   val arr: Array[Array[(Term, Term) => (Term)]] =
-    (0 until maxId + 1).map({ i => new Array[(Term, Term) => (Term)](maxId) }).toArray
+    (0 until maxId + 1).map({ i =>
+      new Array[(Term, Term) => (Term)](maxId)
+    }).toArray
 
   for (p <- pieces) {
     arr(p.leftLabel.id)(p.rightLabel.id) = p.f(this)
@@ -487,10 +527,13 @@ class Dispatch(pieces: Set[UnifierPiece], maxId: Int) extends DispatchState {
 
   def apply(left: Term, right: Term): Term = {
     val u = arr(left.label.id)(right.label.id)
-    if (u != null)
+    val res = if (u != null)
       u(left, right)
     else
       Bottom
+
+    //    println(left + "\n:= " + right + "\n=== " + res)
+    res
   }
 }
 
@@ -518,10 +561,10 @@ abstract class Application[US <: UnaryState](pieces: Set[UnaryPiece[US]], maxId:
 }
 
 object SubstitutionApplication {
-  def apply(pieces: Set[UnaryPiece[SubstitutionApplication]], maxId: Int)(s: PureSubstitution) = new SubstitutionApplication(pieces, maxId)(s)
+  def apply(pieces: Set[UnaryPiece[SubstitutionApplication]], maxId: Int)(s: Substitution) = new SubstitutionApplication(pieces, maxId)(s)
 }
 
-class SubstitutionApplication(pieces: Set[UnaryPiece[SubstitutionApplication]], maxId: Int)(s: PureSubstitution) extends Application[SubstitutionApplication](pieces, maxId) {
+class SubstitutionApplication(pieces: Set[UnaryPiece[SubstitutionApplication]], maxId: Int)(s: Substitution) extends Application[SubstitutionApplication](pieces, maxId) {
   def get(v: Variable): Option[Term] = s.get(v)
 
   def apply(t: Term) = arr(t.label.id) match {
@@ -532,7 +575,7 @@ class SubstitutionApplication(pieces: Set[UnaryPiece[SubstitutionApplication]], 
 
 object ApplySubstitution {
 
-  def apply(labels: Set[Label]): PureSubstitution => SubstitutionApplication = {
+  def apply(labels: Set[Label]): Substitution => SubstitutionApplication = {
     val maxId = labels.map(_.id).max + 1
     val setOfUnaryPieces = labels.map({
       case `Variable` => UnaryPiece(Variable, Var)
@@ -610,15 +653,15 @@ object SimpleMatcher {
   }
 
   object FreeNode2FreeNode2 extends UnifierFunction[Node2, Node2, Term] {
-    def f(solver: DispatchState)(a: Node2, b: Node2) = Substitution(solver(a._1, b._1), solver(a._2, b._2))
+    def f(solver: DispatchState)(a: Node2, b: Node2) = And(solver(a._1, b._1), solver(a._2, b._2))
   }
 
   object FreeNode3FreeNode3 extends UnifierFunction[Node3, Node3, Term] {
-    def f(solver: DispatchState)(a: Node3, b: Node3) = Substitution(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3)))
+    def f(solver: DispatchState)(a: Node3, b: Node3) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3)))
   }
 
   object FreeNode4FreeNode4 extends UnifierFunction[Node4, Node4, Term] {
-    def f(solver: DispatchState)(a: Node4, b: Node4) = Substitution(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3), solver(a._4, b._4)))
+    def f(solver: DispatchState)(a: Node4, b: Node4) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3), solver(a._4, b._4)))
   }
 
   def matchContents(l: AssocLabel, ksL: Iterable[Term], ksR: Iterable[Term])(implicit solver: DispatchState): Term = {
@@ -666,15 +709,15 @@ object SimpleMatcher {
 }
 
 object Rewriter {
-  def apply(substitutioner: PureSubstitution => SubstitutionApplication, matcher: Dispatch)(rules: Set[Rewrite]) =
+  def apply(substitutioner: Substitution => SubstitutionApplication, matcher: Dispatch)(rules: Set[Rewrite]) =
     new Rewriter(substitutioner, matcher, rules)
 }
 
-class Rewriter(substitutioner: PureSubstitution => SubstitutionApplication, matcher: Dispatch, rules: Set[Rewrite]) {
+class Rewriter(substitutioner: Substitution => SubstitutionApplication, matcher: Dispatch, rules: Set[Rewrite]) {
   def executionStep(obj: Term): Term = {
     rules.toStream.map(r => (matcher(r._1, obj), r._2)).find(_._1 != Bottom) match {
       case Some((substitutions, rhs)) =>
-        val oneSubstitutuion = Or.unwrap(substitutions).head.asInstanceOf[PureSubstitution]
+        val oneSubstitutuion = Or.unwrap(substitutions).head.asInstanceOf[Substitution]
         substitutioner(oneSubstitutuion).apply(rhs)
       case None => Bottom
     }
@@ -684,7 +727,7 @@ class Rewriter(substitutioner: PureSubstitution => SubstitutionApplication, matc
     Or(rules.map(r => (matcher(r._1, obj), r._2)).flatMap({
       case (Bottom, _) => Set[Term]()
       case (or, rhs) =>
-        val substitutions: Set[PureSubstitution] = Or.unwrap(or).asInstanceOf[Set[PureSubstitution]]
+        val substitutions: Set[Substitution] = Or.unwrap(or).asInstanceOf[Set[Substitution]]
         substitutions.map(substitutioner).map(_ (rhs))
     }))
   }

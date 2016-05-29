@@ -56,11 +56,11 @@ class MatchSpec extends FreeSpec {
   }
 
   "rewrite X + 0 => X" in {
-    assert(substitutionApplier(unifier(X + 0, (5: Term) + 0).asInstanceOf[PureSubstitution])(X) === (5: Term))
+    assert(substitutionApplier(unifier(X + 0, (5: Term) + 0).asInstanceOf[Substitution])(X) === (5: Term))
   }
 
   "rewrite 2 + X + 3 => 5 + X" in {
-    assert(substitutionApplier(unifier((2: Term) + X + 3, (2: Term) + 4 + 3).asInstanceOf[PureSubstitution])((5: Term) + X) === (5: Term) + 4)
+    assert(substitutionApplier(unifier((2: Term) + X + 3, (2: Term) + 4 + 3).asInstanceOf[Substitution])((5: Term) + X) === (5: Term) + 4)
   }
 
   val rewriter = Rewriter(substitutionApplier, unifier)(Set(
@@ -82,32 +82,60 @@ class MatchSpec extends FreeSpec {
   }
 
   "contexts" - {
-    "basic" in {
-      val foo = FreeLabel3("foo")
+    "basic" - {
+      val foo = FreeLabel2("foo")
+      val bar = FreeLabel1("bar")
+      val buz = FreeLabel2("buz")
       val (a, b, c, d) = (STRING("a"), STRING("b"), STRING("c"), STRING("d"))
       val matched = FreeLabel1("matched")
       val traversed = FreeLabel1("traversed")
       val andMatchingY = FreeLabel0("andMatchingY")
 
-      val contextsLabels = Set(foo, STRING, matched, traversed, andMatchingY, Variable, AnywhereContext)
+      val contextsLabels = Set(foo, STRING, INT, matched, traversed,
+        andMatchingY, Variable, AnywhereContext, bar, buz, emptyList, listLabel)
 
-      val m = SimpleMatcher(contextsLabels)
+      implicit val m = SimpleMatcher(contextsLabels)
 
-      assert(m(foo(a, AnywhereContext(X, b), c), foo(a, b, c)) === Equality(X, Top))
+      val X_1 = AnywhereContext.hole(X)
 
-//      assert(m(foo(a, AnywhereContext(X, b), c), foo(a, traversed(b), c)) === Equality(X, Top))
+      "zero-level" in {
+        assert((foo(a, AnywhereContext(X, b)) := foo(a, b)) === Equality(X, X_1))
+      }
 
-//      assert(
-//        m(foo(a, AnywhereContext(X, matched(Y)), c), foo(a, traversed(matched(andMatchingY())), c))
-//        === Bottom)
+      "a bit more" in {
+        assert((foo(a, AnywhereContext(X, b)) := foo(a, traversed(b))) === Equality(X, traversed(X_1)))
+      }
 
+      "with traversal" in {
+        assert(
+          (foo(a, AnywhereContext(X, matched(Y))) := foo(a, traversed(matched(andMatchingY()))))
+            ===
+            Substitution(Map(X -> traversed(X_1), Y -> andMatchingY())))
+      }
 
-//      assertMatch("foo(a, øxππ(matched(øy)), c)", "foo(a, traversed(matched(andMatchingY)), c)",
-//        res({
-//          øy : pExp("andMatchingY"),
-//          øx_CONTEXT : pExp("traversed(øx_SUBS[0])"),
-//          øx: pExp("traversed(matched(andMatchingY))"),
-//          øx_SUBS: [{øy : pExp("andMatchingY"), øx_CONTENT: pExp("matched(andMatchingY)")}]}))
+      "example on the board" in {
+        assert(
+          (foo(3, AnywhereContext(X, bar(Y))) := foo(3, buz(bar(1), bar(bar(2)))))
+            === Or(
+            Substitution(Map(X -> buz(X_1, bar(bar(2))), Y -> (1: Term))),
+            Substitution(Map(X -> buz(bar(1), X_1), Y -> bar(2))),
+            Substitution(Map(X -> buz(bar(1), bar(X_1)), Y -> (2: Term)))
+          )
+        )
+      }
+
+      "assoc inside one element" in {
+        println(bar(AnywhereContext(X, bar(Y))) := bar(listLabel(1, 2, bar(2), bar(bar(3)))))
+        assert(
+          (bar(AnywhereContext(X, bar(Y))) := bar(listLabel(1, 2, bar(2), bar(bar(3)))))
+            ===
+            Or(
+              Substitution(Map(X -> listLabel(1, 2, X_1, bar(bar(3))), Y -> (2: Term))),
+              Substitution(Map(X -> listLabel(1, 2, bar(2), X_1), Y -> bar(3))),
+              Substitution(Map(X -> listLabel(1, 2, bar(2), bar(X_1)), Y -> (3 : Term)))
+            )
+        )
+      }
     }
   }
 }
