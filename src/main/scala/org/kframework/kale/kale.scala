@@ -35,6 +35,16 @@ trait NodeLabel extends Label {
     case t: Node if t.label == this => Some(t.iterator.toSeq)
     case _ => None
   }
+
+  val arity: Int
+
+  def apply(l: Iterable[Term]): Term = if (l.size == arity) {
+    constructFromChildren(l)
+  } else {
+    throw new AssertionError("Incorrect number of children for constructing a " + name + ". Expected: " + arity + " but found: " + l.size)
+  }
+
+  protected def constructFromChildren(l: Iterable[Term]): Term
 }
 
 trait LeafLabel[T] extends Label {
@@ -101,6 +111,7 @@ trait ConstantLabel[T] extends LeafLabel[T] with NameFromObject with UniqueId {
 
 case class Constant[T](label: ConstantLabel[T], value: T) extends Leaf[T] {
   val isGround = true
+
   override def toString = value.toString
 }
 
@@ -113,6 +124,8 @@ trait Variable extends Leaf[String] {
   val name: String
   lazy val value = name
   val isGround = false
+
+  override def toString = name
 }
 
 case class SimpleVariable(name: String) extends Variable

@@ -4,7 +4,11 @@ import scala.collection.{Iterable, Iterator, Map, Set}
 import Util._
 
 trait Label0 extends Function0[Term] with NodeLabel {
+  val arity = 0
+
   def apply(): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply()
 }
 
 trait FreeLabel
@@ -18,7 +22,11 @@ case class FreeLabel0(id: Int, name: String) extends Label0 with FreeLabel {
 }
 
 trait Label1 extends (Term => Term) with NodeLabel {
+  val arity = 1
+
   def apply(_1: Term): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head)
 }
 
 object FreeLabel1 {
@@ -30,7 +38,11 @@ case class FreeLabel1(id: Int, name: String) extends Label1 with FreeLabel {
 }
 
 trait Label2 extends ((Term, Term) => Term) with NodeLabel {
+  val arity = 2
+
   def apply(_1: Term, _2: Term): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head)
 }
 
 object FreeLabel2 {
@@ -42,7 +54,11 @@ case class FreeLabel2(id: Int, name: String) extends Label2 with FreeLabel {
 }
 
 trait Label3 extends NodeLabel {
+  val arity = 3
+
   def apply(_1: Term, _2: Term, _3: Term): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head)
 }
 
 object FreeLabel3 {
@@ -54,7 +70,11 @@ case class FreeLabel3(id: Int, name: String) extends Label3 with FreeLabel {
 }
 
 trait Label4 extends NodeLabel {
+  val arity = 4
+
   def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head)
 }
 
 object FreeLabel4 {
@@ -195,7 +215,7 @@ object And extends AssocLabel with NameFromObject with UniqueId {
     case o => (Top, Iterable(o))
   }
 
-  def apply(terms: Iterable[Term]): Term = {
+  override def apply(terms: Iterable[Term]): Term = {
     val bindings: Map[Variable, Term] = terms.collect({ case Equality(v: Variable, t) => v -> t }).toMap
     val pureSubstitution = Substitution(bindings)
     val others: Iterable[Term] = terms.filter({ case Equality(v: Variable, t) => false; case _ => true })
@@ -243,7 +263,7 @@ object Substitution extends AssocLabel with NameFromObject with UniqueId {
     case Substitution(m) => m
   }
 
-  def apply(l: Iterable[Term]) = l.foldLeft(Top: Term)(apply)
+  override def apply(l: Iterable[Term]) = l.foldLeft(Top: Term)(apply)
 
   def apply(m: Map[Variable, Term]): Substitution = m.size match {
     case 0 => Top
@@ -290,7 +310,7 @@ object Or extends AssocLabel with NameFromObject with UniqueId {
     case o => Set(o)
   }
 
-  def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
+  override def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
 
   def unapply(t: Term): Some[Set[Term]] = Some(unwrap(t))
 }
@@ -343,7 +363,7 @@ trait AssocWithIdLabel extends AssocLabel with HasId {
     case y => List(y)
   }
 
-  def apply(list: Iterable[Term]): Term = list match {
+  override def apply(list: Iterable[Term]): Term = list match {
     case l if l.isEmpty => identity
     case l if l.size == 1 => l.head
     case l => construct(l)

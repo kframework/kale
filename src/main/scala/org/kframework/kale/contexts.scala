@@ -1,6 +1,8 @@
 package org.kframework.kale
 
-trait Context1Label extends Label2 with UniqueId {
+trait ContextLabel extends Label
+
+trait Context1Label extends Label2 with UniqueId with ContextLabel {
   def hole(x: Variable): ContextContentVariable
 }
 
@@ -15,11 +17,13 @@ object AnywhereContext extends Context1Label {
   def hole(x: Variable) = ContextContentVariable(x, 1)
 }
 
-case class Context1(label: Context1Label, contextVar: Variable, term: Term) extends Node2 {
+trait Context extends Term
+
+case class Context1(label: Context1Label, contextVar: Variable, term: Term) extends Node2 with Context {
   val _1 = contextVar
   val _2 = term
   val hole = label.hole(contextVar)
-  override val isGround = false
+  override lazy val isGround = false
 }
 
 case class ContextContentVariable(basedOn: Variable, index: Int) extends Variable {
