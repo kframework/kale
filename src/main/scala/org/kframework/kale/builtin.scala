@@ -23,12 +23,16 @@ case class MapLabel(name: String, identity: Term) extends AssocWithIdLabel with 
     case 2 => new MAP(this, map)
   }
 
-  def unapply(m: Term): Option[Map[Term, Term]] = m match {
-    case m: MAP => Some(m.map)
-    case `identity` => Some(Map[Term, Term]())
-    case Tuple2(_1, _2) => Some(Map(_1 -> _2))
-    case _ => throw new AssertionError("Not a map")
+  object map {
+    def unapply(m: Term): Option[Map[Term, Term]] = m match {
+      case m: MAP => Some(m.map)
+      case `identity` => Some(Map[Term, Term]())
+      case Tuple2(_1, _2) => Some(Map(_1 -> _2))
+      case _ => throw new AssertionError("Not a map")
+
+    }
   }
+
 }
 
 object MAP {

@@ -5,9 +5,9 @@ import org.kframework.kale.transformer.Unary
 import scala.collection.Set
 
 object Mapper {
-  def apply(pieces: Set[Unary.Piece[Mapper]], maxId: Int)(func: Term => Term): Mapper = new Mapper(pieces, maxId)(func)
+  def apply(pieces: Set[Unary.Piece[Mapper]], maxId: Int)(func: PartialFunction[Term, Term]): Mapper = new Mapper(pieces, maxId)(func)
 
-  def apply(labels: Set[Label]): (Term => Term) => Mapper = {
+  def apply(labels: Set[Label]): PartialFunction[Term, Term] => Mapper = {
     val maxId = labels.map(_.id).max + 1
     val setOfUnaryPieces = labels.map({
       case `Variable` => Unary.Piece(Variable, Identity)
@@ -44,10 +44,10 @@ object Mapper {
 
 }
 
-class Mapper(val pieces: Set[Unary.Piece[Mapper]], val maxId: Int)(val func: Term => Term) extends Unary.Apply[Mapper](pieces, maxId) with (Term => Term) {
+class Mapper(val pieces: Set[Unary.Piece[Mapper]], val maxId: Int)(val func: PartialFunction[Term, Term]) extends Unary.Apply[Mapper](pieces, maxId) with (Term => Term) {
   def apply(t: Term) =
     arr(t.label.id) match {
-      case null => func(t)
-      case f => func(f(t))
+      case null => func.lift(t).getOrElse(t)
+      case f => func.lift(f(t)).getOrElse(t)
     }
 }

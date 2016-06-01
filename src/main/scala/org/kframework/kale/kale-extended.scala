@@ -43,6 +43,11 @@ trait Label2 extends ((Term, Term) => Term) with NodeLabel {
   def apply(_1: Term, _2: Term): Term
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head)
+
+  def unapply(t: Label2): Option[(Term, Term)] = t match {
+    case n: Node2 if n.label == this => Some(n._1, n._2)
+    case _ => None
+  }
 }
 
 object FreeLabel2 {
@@ -166,11 +171,6 @@ object Equality extends Label2 with NameFromObject with UniqueId {
       case _ => new Equality(_1, _2)
     }
   }
-
-  def unapply(t: Term): Option[(Term, Term)] = t match {
-    case e: Equality => Some((e._1, e._2))
-    case _ => None
-  }
 }
 
 trait Substitution extends Term {
@@ -203,7 +203,7 @@ object And extends AssocLabel with NameFromObject with UniqueId {
       val l2: (Substitution, Iterable[Term]) = unwrap(_2)
       val allElements: Set[Term] = (l1._2.toSet ++ l2._2 + l1._1 + l2._1)
       Or(allElements
-        .collect({ case Or(elements) => elements })
+        .collect({ case Or.set(elements) => elements })
         .reduce(cartezianProduct))
     }
   }
@@ -235,7 +235,7 @@ object And extends AssocLabel with NameFromObject with UniqueId {
   }
 
   override def apply(terms: Iterable[Term]): Term = {
-    val disjunction = terms.collect({ case Or(elements) => elements }).reduce(cartezianProduct)
+    val disjunction = terms.collect({ case Or.set(elements) => elements }).reduce(cartezianProduct)
     Or(disjunction)
 
     //    val bindings: Map[Variable, Term] = terms.collect({ case Equality(v: Variable, t) => v -> t }).toMap
@@ -282,7 +282,7 @@ object Substitution extends AssocLabel with NameFromObject with UniqueId {
   private def unwrap(t: Term) = t match {
     case Top => Map[Variable, Term]()
     case Equality(_1: Variable, _2) => Map[Variable, Term](_1.asInstanceOf[Variable] -> _2)
-    case Substitution(m) => m
+    case Substitution.map(m) => m
   }
 
   override def apply(l: Iterable[Term]) = l.foldLeft(Top: Term)(apply)
@@ -293,11 +293,14 @@ object Substitution extends AssocLabel with NameFromObject with UniqueId {
     case _ => new SubstitutionWithMultipleBindings(m)
   }
 
-  def unapply(t: Substitution): Option[Map[Variable, Term]] = t match {
-    case `Top` => Some(Map[Variable, Term]())
-    case b: Binding => Some(Map(b.variable -> b.term))
-    case s: SubstitutionWithMultipleBindings => Some(s.m)
+  object map {
+    def unapply(t: Substitution): Option[Map[Variable, Term]] = t match {
+      case `Top` => Some(Map[Variable, Term]())
+      case b: Binding => Some(Map(b.variable -> b.term))
+      case s: SubstitutionWithMultipleBindings => Some(s.m)
+    }
   }
+
 }
 
 final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term]) extends And with Substitution {
@@ -334,7 +337,10 @@ object Or extends AssocLabel with NameFromObject with UniqueId {
 
   override def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
 
-  def unapply(t: Term): Some[Set[Term]] = Some(unwrap(t))
+  object set {
+    def unapply(t: Term): Some[Set[Term]] = Some(unwrap(t))
+  }
+
 }
 
 private[this] class OrWithAtLeastTwoElements(val terms: Set[Term]) extends Assoc {

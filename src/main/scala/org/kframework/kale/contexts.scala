@@ -4,6 +4,11 @@ trait ContextLabel extends Label
 
 trait Context1Label extends Label2 with UniqueId with ContextLabel {
   def hole(x: Variable): ContextContentVariable
+
+  def unapply(t: Term): Option[(Variable, Term)] = t match {
+    case n: Context1 if n.label == this => Some(n._1, n._2)
+    case _ => None
+  }
 }
 
 object AnywhereContext extends Context1Label {
@@ -27,7 +32,7 @@ case class Context1(label: Context1Label, contextVar: Variable, term: Term) exte
 }
 
 case class ContextContentVariable(basedOn: Variable, index: Int) extends Variable {
-//  assert(!basedOn.isInstanceOf[ContextContentVariable])
+  //  assert(!basedOn.isInstanceOf[ContextContentVariable])
 
   override val name: String = basedOn.name + "_" + index
 }
@@ -45,7 +50,7 @@ object AnywhereContextMatcher extends transformer.Binary.Function[Context1, Term
       Or(subterms.indices map { i =>
         val solutionForSubtermI = solver(c, subterms(i))
         val res = Or.unwrap(solutionForSubtermI) map {
-          case Substitution(m) if m.contains(v) => Substitution(m.updated(v, reconstruct(i, m(v))))
+          case Substitution.map(m) if m.contains(v) => Substitution(m.updated(v, reconstruct(i, m(v))))
         }
         Or(res)
       })
