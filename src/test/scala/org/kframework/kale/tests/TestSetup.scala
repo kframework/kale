@@ -13,7 +13,7 @@ trait TestSetup {
   val foo = FreeLabel2("foo")
   val bar = FreeLabel1("bar")
   val buz = FreeLabel2("buz")
-  val (a, b, c, d) = (STRING("a"), STRING("b"), STRING("c"), STRING("d"))
+  val (a, b, c, d, e) = (STRING("a"), STRING("b"), STRING("c"), STRING("d"), STRING("e"))
   val matched = FreeLabel1("matched")
   val traversed = FreeLabel1("traversed")
   val andMatchingY = FreeLabel0("andMatchingY")

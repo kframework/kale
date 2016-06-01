@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import scala.collection.{Iterable, Iterator, Map, Set}
+import scala.collection._
 import Util._
 
 trait Label0 extends Function0[Term] with NodeLabel {
@@ -201,6 +201,19 @@ object And extends AssocLabel with NameFromObject with UniqueId {
     else {
       val l1: (Substitution, Iterable[Term]) = unwrap(_1)
       val l2: (Substitution, Iterable[Term]) = unwrap(_2)
+      val allElements: Set[Term] = (l1._2.toSet ++ l2._2 + l1._1 + l2._1)
+      Or(allElements
+        .collect({ case Or(elements) => elements })
+        .reduce(cartezianProduct))
+    }
+  }
+
+  private def applyOnNonAnds(_1: Term, _2: Term): Term = {
+    if (_1 == Bottom || _2 == Bottom)
+      Bottom
+    else {
+      val l1: (Substitution, Iterable[Term]) = unwrap(_1)
+      val l2: (Substitution, Iterable[Term]) = unwrap(_2)
       Substitution(l1._1, l2._1) match {
         case `Bottom` => Bottom
         case s: Substitution => apply(s, l1._2 ++ l2._2)
@@ -215,11 +228,20 @@ object And extends AssocLabel with NameFromObject with UniqueId {
     case o => (Top, Iterable(o))
   }
 
+  private def cartezianProduct(t1: Iterable[Term], t2: Iterable[Term]): Seq[Term] = {
+    for (e1 <- t1.toSeq; e2 <- t2.toSeq) yield {
+      applyOnNonAnds(e1, e2)
+    }
+  }
+
   override def apply(terms: Iterable[Term]): Term = {
-    val bindings: Map[Variable, Term] = terms.collect({ case Equality(v: Variable, t) => v -> t }).toMap
-    val pureSubstitution = Substitution(bindings)
-    val others: Iterable[Term] = terms.filter({ case Equality(v: Variable, t) => false; case _ => true })
-    apply(pureSubstitution, others)
+    val disjunction = terms.collect({ case Or(elements) => elements }).reduce(cartezianProduct)
+    Or(disjunction)
+
+    //    val bindings: Map[Variable, Term] = terms.collect({ case Equality(v: Variable, t) => v -> t }).toMap
+    //    val pureSubstitution = Substitution(bindings)
+    //    val others: Iterable[Term] = terms.filter({ case Equality(v: Variable, t) => false; case _ => true })
+    //    apply(pureSubstitution, others)
   }
 
   def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = {

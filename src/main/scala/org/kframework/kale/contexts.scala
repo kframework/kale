@@ -7,7 +7,7 @@ trait Context1Label extends Label2 with UniqueId with ContextLabel {
 }
 
 object AnywhereContext extends Context1Label {
-  val name = "ANYWHERE"
+  val name = "AnywhereContext"
 
   override def apply(_1: Term, _2: Term): Context1 = _1 match {
     case v: Variable => Context1(this, v, _2)
@@ -27,7 +27,7 @@ case class Context1(label: Context1Label, contextVar: Variable, term: Term) exte
 }
 
 case class ContextContentVariable(basedOn: Variable, index: Int) extends Variable {
-  assert(!basedOn.isInstanceOf[ContextContentVariable])
+//  assert(!basedOn.isInstanceOf[ContextContentVariable])
 
   override val name: String = basedOn.name + "_" + index
 }
@@ -46,7 +46,6 @@ object AnywhereContextMatcher extends transformer.Binary.Function[Context1, Term
         val solutionForSubtermI = solver(c, subterms(i))
         val res = Or.unwrap(solutionForSubtermI) map {
           case Substitution(m) if m.contains(v) => Substitution(m.updated(v, reconstruct(i, m(v))))
-          case other => ???
         }
         Or(res)
       })
