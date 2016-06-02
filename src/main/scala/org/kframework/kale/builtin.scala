@@ -8,9 +8,9 @@ object INT extends ConstantLabel[Int] {
 
 }
 
-object STRING extends ConstantLabel[String] {
-
-}
+object STRING extends ConstantLabel[String]
+object DOUBLE extends ConstantLabel[Double]
+object BOOLEAN extends ConstantLabel[Boolean]
 
 object Tuple2 extends FreeLabel2(UniqueId(), "Pair")
 

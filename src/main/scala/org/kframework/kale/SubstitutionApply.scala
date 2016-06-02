@@ -18,6 +18,8 @@ object SubstitutionApply {
       case l: Label2 => Unary.Piece(l, Node2)
       case l: Label3 => Unary.Piece(l, Node3)
       case l: Label4 => Unary.Piece(l, Node4)
+      case l: Label5 => Unary.Piece(l, Node5)
+      case l: Label6 => Unary.Piece(l, Node6)
       case l: ConstantLabel[_] => Unary.Piece(l, Constant)
     })
 
@@ -42,6 +44,14 @@ object SubstitutionApply {
 
   object Node4 extends Unary.Function[Node4, Term, SubstitutionApply] {
     def f(solver: SubstitutionApply)(t: Node4) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4))
+  }
+
+  object Node5 extends Unary.Function[Node5, Term, SubstitutionApply] {
+    def f(solver: SubstitutionApply)(t: Node5) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5))
+  }
+
+  object Node6 extends Unary.Function[Node6, Term, SubstitutionApply] {
+    def f(solver: SubstitutionApply)(t: Node6) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5), solver(t._6))
   }
 
   object Var extends Unary.Function[Variable, Term, SubstitutionApply] {
@@ -80,9 +90,10 @@ class SubstitutionApply(val pieces: Set[Unary.Piece[SubstitutionApply]], val max
   def apply(t: Term) =
     if (t.isGround)
       t
-    else
+    else {
       arr(t.label.id) match {
         case null => Bottom
         case f => f(t)
       }
+    }
 }

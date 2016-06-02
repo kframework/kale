@@ -16,6 +16,8 @@ object Mapper {
       case l: Label2 => Unary.Piece(l, Node2)
       case l: Label3 => Unary.Piece(l, Node3)
       case l: Label4 => Unary.Piece(l, Node4)
+      case l: Label5 => Unary.Piece(l, Node5)
+      case l: Label6 => Unary.Piece(l, Node6)
       case l: ConstantLabel[_] => Unary.Piece(l, Identity)
     })
 
@@ -40,6 +42,14 @@ object Mapper {
 
   object Node4 extends Unary.Function[Node4, Term, Mapper] {
     def f(solver: Mapper)(t: Node4) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4))
+  }
+
+  object Node5 extends Unary.Function[Node5, Term, Mapper] {
+    def f(solver: Mapper)(t: Node5) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5))
+  }
+
+  object Node6 extends Unary.Function[Node6, Term, Mapper] {
+    def f(solver: Mapper)(t: Node6) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5), solver(t._6))
   }
 
 }

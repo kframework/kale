@@ -8,7 +8,7 @@ trait TestSetup {
   val Y = Variable("Y")
 
   val emptyList = FreeLabel0(UniqueId(), "emptyList")
-  val listLabel = AssocWithIdListLabel("listLabel", emptyList())
+  val listLabel = new AssocWithIdListLabel("listLabel", emptyList())
 
   val foo = FreeLabel2("foo")
   val bar = FreeLabel1("bar")

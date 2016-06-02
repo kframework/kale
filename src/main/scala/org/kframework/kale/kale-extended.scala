@@ -90,6 +90,22 @@ case class FreeLabel4(id: Int, name: String) extends Label4 with FreeLabel {
   def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term = FreeNode4(this, _1, _2, _3, _4)
 }
 
+trait Label5 extends NodeLabel {
+  val arity = 5
+
+  def apply(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head, l.tail.tail.tail.tail.head)
+}
+
+trait Label6 extends NodeLabel {
+  val arity = 6
+
+  def apply(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head, l.tail.tail.tail.tail.head, l.tail.tail.tail.tail.tail.head)
+}
+
 trait Node0 extends Node {
   val label: Label0
 
@@ -163,6 +179,43 @@ trait Node4 extends Node with Product4[Term, Term, Term, Term] {
 }
 
 case class FreeNode4(label: Label4, _1: Term, _2: Term, _3: Term, _4: Term) extends Node4
+
+trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
+  val label: Label5
+
+  lazy val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround
+
+  def innerUpdateAt(i: Int, t: Term): Term = i match {
+    case 1 => label(t, _2, _3, _4, _5)
+    case 2 => label(_1, t, _3, _4, _5)
+    case 3 => label(_1, _2, t, _4, _5)
+    case 4 => label(_1, _2, _3, t, _5)
+    case 5 => label(_1, _2, _3, _4, t)
+  }
+
+  def iterator = Iterator(_1, _2, _3, _4, _5)
+}
+
+case class FreeNode5(label: Label5, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term) extends Node5
+
+trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
+  val label: Label6
+
+  lazy val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround && _6.isGround
+
+  def innerUpdateAt(i: Int, t: Term): Term = i match {
+    case 1 => label(t, _2, _3, _4, _5, _6)
+    case 2 => label(_1, t, _3, _4, _5, _6)
+    case 3 => label(_1, _2, t, _4, _5, _6)
+    case 4 => label(_1, _2, _3, t, _5, _6)
+    case 5 => label(_1, _2, _3, _4, t, _6)
+    case 6 => label(_1, _2, _3, _4, _5, t)
+  }
+
+  def iterator = Iterator(_1, _2, _3, _4, _5, _6)
+}
+
+case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term) extends Node6
 
 object Equality extends Label2 with NameFromObject with UniqueId {
   override def apply(_1: Term, _2: Term): Term = bottomize(_1, _2) {
@@ -409,7 +462,7 @@ trait Assoc extends Node2 {
   val assocIterable: Iterable[Term]
 }
 
-case class AssocWithIdListLabel(name: String, identity: Term) extends AssocWithIdLabel with UniqueId {
+class AssocWithIdListLabel(val name: String, val identity: Term) extends AssocWithIdLabel with UniqueId {
   override def construct(l: Iterable[Term]): Term = new AssocWithIdList(this, l)
 }
 
