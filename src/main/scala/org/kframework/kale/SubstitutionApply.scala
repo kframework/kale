@@ -79,15 +79,9 @@ object SubstitutionApply {
 class SubstitutionApply(val pieces: Set[Unary.Piece[SubstitutionApply]], val maxId: Int)(val s: Substitution) extends Unary.Apply[SubstitutionApply](pieces, maxId) with (Term => Term) {
   def getVariable(v: Variable): Option[Term] = s.get(v)
 
-  def fixpoint(t: Term): Term = {
-    val after = apply(t)
-    if (after != t)
-      fixpoint(after)
-    else
-      after
-  }
+  def fixpoint(t: Term): Term = Util.fixpoint(apply)(t)
 
-  def apply(t: Term) =
+  def apply(t: Term): Term =
     if (t.isGround)
       t
     else {

@@ -5,7 +5,7 @@ trait ContextLabel extends Label
 trait Context1Label extends Label2 with UniqueId with ContextLabel {
   def hole(x: Variable): ContextContentVariable
 
-  def unapply(t: Term): Option[(Variable, Term)] = t match {
+  override def unapply(t: Term): Option[(Variable, Term)] = t match {
     case n: Context1 if n.label == this => Some(n._1, n._2)
     case _ => None
   }
@@ -42,6 +42,11 @@ object AnywhereContextMatcher extends transformer.Binary.Function[Context1, Term
     assert(c.label == AnywhereContext)
     val v = c.contextVar
 
+    //    val contextsBinding = t match {
+    //      case Context1(l, vv, tt) => Equality(v, vv)
+    //      case _ => Top
+    //    }
+
     val zeroLevel: Term = solver(c.term, t)
 
     val zeroLevelResult = And(zeroLevel, Equality(c.contextVar, c.hole))
@@ -66,5 +71,6 @@ object AnywhereContextMatcher extends transformer.Binary.Function[Context1, Term
     }
 
     Or(recursive, zeroLevelResult)
+    //    And(, contextsBinding)
   }
 }

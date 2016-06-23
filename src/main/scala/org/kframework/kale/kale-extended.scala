@@ -44,7 +44,7 @@ trait Label2 extends ((Term, Term) => Term) with NodeLabel {
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head)
 
-  def unapply(t: Label2): Option[(Term, Term)] = t match {
+  def unapply(t: Term): Option[(Term, Term)] = t match {
     case n: Node2 if n.label == this => Some(n._1, n._2)
     case _ => None
   }

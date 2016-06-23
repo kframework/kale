@@ -22,6 +22,16 @@ object Util {
     else
       f
   }
+
+  def fixpoint[T](f: T => T): (T => T) = {
+    { t: T =>
+      val after = f(t)
+      if (after != t)
+        fixpoint(f)(after)
+      else
+        after
+    }
+  }
 }
 
 object unreachable {
