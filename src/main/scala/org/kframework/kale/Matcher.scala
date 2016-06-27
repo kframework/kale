@@ -25,27 +25,27 @@ object Matcher {
 
     val anywhereContextMatchers = labels.map(Binary.Piece(AnywhereContext, _, AnywhereContextMatcher))
 
-    new Binary.Apply(variableXlabel | freeLikeLabelXfreeLikeLabel | assoc | anywhereContextMatchers, labels.map(_.id).max + 1)
+    new Binary.Apply(variableXlabel | freeLikeLabelXfreeLikeLabel | assoc | anywhereContextMatchers, labels)
   }
 
   object FreeNode0FreeNode0 extends Binary.Function[Node0, Node0, Top.type] {
     def f(solver: Binary.State)(a: Node0, b: Node0) = Top
   }
 
-  object FreeNode1FreeNode1 extends Binary.Function[Node1, Node1, Term] {
-    def f(solver: Binary.State)(a: Node1, b: Node1) = solver(a._1, b._1)
+  object FreeNode1FreeNode1 extends Binary.Function[FreeNode1, FreeNode1, Term] {
+    def f(solver: Binary.State)(a: FreeNode1, b: FreeNode1) = solver(a._1, b._1)
   }
 
-  object FreeNode2FreeNode2 extends Binary.Function[Node2, Node2, Term] {
-    def f(solver: Binary.State)(a: Node2, b: Node2) = And(solver(a._1, b._1), solver(a._2, b._2))
+  object FreeNode2FreeNode2 extends Binary.Function[FreeNode2, FreeNode2, Term] {
+    def f(solver: Binary.State)(a: FreeNode2, b: FreeNode2) = And(solver(a._1, b._1), solver(a._2, b._2))
   }
 
-  object FreeNode3FreeNode3 extends Binary.Function[Node3, Node3, Term] {
-    def f(solver: Binary.State)(a: Node3, b: Node3) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3)))
+  object FreeNode3FreeNode3 extends Binary.Function[FreeNode3, FreeNode3, Term] {
+    def f(solver: Binary.State)(a: FreeNode3, b: FreeNode3) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3)))
   }
 
-  object FreeNode4FreeNode4 extends Binary.Function[Node4, Node4, Term] {
-    def f(solver: Binary.State)(a: Node4, b: Node4) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3), solver(a._4, b._4)))
+  object FreeNode4FreeNode4 extends Binary.Function[FreeNode4, FreeNode4, Term] {
+    def f(solver: Binary.State)(a: FreeNode4, b: FreeNode4) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3), solver(a._4, b._4)))
   }
 
   def matchContents(l: AssocLabel, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Binary.State): Term = {

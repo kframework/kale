@@ -38,22 +38,13 @@ case class ContextContentVariable(basedOn: Variable, index: Int) extends Variabl
 }
 
 object AnywhereContextMatcher extends transformer.Binary.Function[Context1, Term, Term] {
-  override def f(solver: transformer.Binary.State)(c: Context1, t: Term): Term = {
-    assert(c.label == AnywhereContext)
-    val v = c.contextVar
-
-    //    val contextsBinding = t match {
-    //      case Context1(l, vv, tt) => Equality(v, vv)
-    //      case _ => Top
-    //    }
-
-    val zeroLevel: Term = solver(c.term, t)
-
-    val zeroLevelResult = And(zeroLevel, Equality(c.contextVar, c.hole))
+  override def f(solver: transformer.Binary.State)(leftContext: Context1, t: Term): Term = {
+    assert(leftContext.label == AnywhereContext)
+    val v = leftContext.contextVar
 
     def solutionFor(subterms: List[Term], reconstruct: (Int, Term) => Term) = {
       Or(subterms.indices map { i =>
-        val solutionForSubtermI = solver(c, subterms(i))
+        val solutionForSubtermI = solver(leftContext, subterms(i))
         val res = Or.unwrap(solutionForSubtermI) map {
           case Substitution.map(m) if m.contains(v) => Substitution(m.updated(v, reconstruct(i, m(v))))
         }
@@ -61,16 +52,30 @@ object AnywhereContextMatcher extends transformer.Binary.Function[Context1, Term
       })
     }
 
-    val recursive = t.label match {
-      case l: AssocLabel =>
-        val subresults = l.asList(t).toList
-        solutionFor(subresults, (pos: Int, tt: Term) => l(subresults.updated(pos, tt)))
-      case l =>
-        val subterms = t.toList
-        solutionFor(subterms, (pos: Int, tt: Term) => t.updateAt(pos + 1)(tt))
-    }
+    t.label match {
+      case AnywhereContext =>
+        val (rightContextVar, rightContextTerm) = AnywhereContext.unapply(t).get
+        def findMatches(t: Term): Term = {
+          Or(t match {
+            case AnywhereContext(_, tt) => solver(leftContext.term, tt)
+            case tt => Or(t.map(findMatches))
+          }, solver(leftContext.term, t))
+        }
 
-    Or(recursive, zeroLevelResult)
-    //    And(, contextsBinding)
+        val recursive = findMatches(rightContextTerm)
+        Or(Or.unwrap(recursive) map {
+          case Substitution.map(m) => Substitution(m.updated(v, rightContextVar))
+        })
+      case l: AssocLabel =>
+        val zeroLevel: Term = And(solver(leftContext.term, t), Equality(leftContext.contextVar, leftContext.hole))
+        val subresults = l.asList(t).toList
+        val recursive = solutionFor(subresults, (pos: Int, tt: Term) => l(subresults.updated(pos, tt)))
+        Or(recursive, zeroLevel)
+      case l =>
+        val zeroLevel: Term = And(solver(leftContext.term, t), Equality(leftContext.contextVar, leftContext.hole))
+        val subterms = t.toList
+        val recursive = solutionFor(subterms, (pos: Int, tt: Term) => t.updateAt(pos + 1)(tt))
+        Or(recursive, zeroLevel)
+    }
   }
 }

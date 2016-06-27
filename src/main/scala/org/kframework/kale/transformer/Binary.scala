@@ -18,7 +18,9 @@ object Binary {
 
   case class Piece(leftLabel: Label, rightLabel: Label, f: State => (Term, Term) => Term)
 
-  class Apply(pieces: Set[Piece], maxId: Int) extends State {
+  class Apply(pieces: Set[Piece], labels: Set[Label]) extends State {
+    val maxId = labels.map(_.id).max + 1
+
     val arr: Array[Array[(Term, Term) => (Term)]] =
       (0 until maxId + 1).map({ i =>
         new Array[(Term, Term) => (Term)](maxId)
@@ -29,12 +31,15 @@ object Binary {
     }
 
     def apply(left: Term, right: Term): Term = {
+//      assert(labels.contains(left.label) && labels.contains(right.label))
+
       val u = arr(left.label.id)(right.label.id)
       val res = if (u != null)
         u(left, right)
       else
         Bottom
 
+      assert(!(left == right && res == Bottom), left.toString)
       // println(left + "\n:= " + right + "\n=== " + res)
       res
     }

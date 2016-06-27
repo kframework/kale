@@ -72,4 +72,21 @@ class MatchSpec extends FreeSpec with TestSetup {
       )
     }
   }
+
+  "of contexts" - {
+    implicit val m = Matcher(allLabels)
+
+    val XX = Variable("XX")
+    val YY = Variable("YY")
+
+    "identical simple" in {
+      assert(AnywhereContext(XX, AnywhereContext(X, listLabel(YY, a)))
+        := AnywhereContext(XX, AnywhereContext(X, listLabel(YY, a))) !== Bottom)
+    }
+
+    "identical" in {
+      assert(foo(AnywhereContext(XX, AnywhereContext(X, Y)), AnywhereContext(XX, AnywhereContext(X, YY)))
+        := foo(AnywhereContext(XX, AnywhereContext(X, bar(Y))), AnywhereContext(XX, AnywhereContext(X, YY))) !== Bottom)
+    }
+  }
 }
