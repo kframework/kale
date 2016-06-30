@@ -20,6 +20,7 @@ object Unary {
 
   abstract class Apply[US <: State](pieces: Set[Piece[US]], maxId: Int) extends State {
     this: US =>
+
     val arr = new Array[Term => Term](maxId)
 
     for (p <- pieces) {

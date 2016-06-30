@@ -16,7 +16,7 @@ object AnywhereContext extends Context1Label {
 
   override def apply(_1: Term, _2: Term): Context1 = _1 match {
     case v: Variable => Context1(this, v, _2)
-    case _ => throw new AssertionError("First parameter needs to be a variable")
+    case _ => throw new AssertionError("First parameter needs to be a variable but was: " + _1)
   }
 
   def hole(x: Variable) = ContextContentVariable(x, 1)
