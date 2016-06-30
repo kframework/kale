@@ -5,6 +5,9 @@ import scala.language.implicitConversions
 object Implicits {
 
   implicit def intConstant(x: Int): Constant[Int] = INT(x)
+  implicit def doubleConstant(x: Double): Constant[Double] = DOUBLE(x)
+  implicit def booleanConstant(x: Boolean): Constant[Boolean] = BOOLEAN(x)
+  implicit def stringConstant(x: String): Constant[String] = STRING(x)
 
   implicit class asTerm(x: Term) {
     def +(y: Term): Term = INT.+(x, y)
