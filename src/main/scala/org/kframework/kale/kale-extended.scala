@@ -423,7 +423,7 @@ trait AssocLabel extends Label2 {
   }
 
   val listUnapplier = new {
-    def unapplySeq(t: Term): Iterable[Term] = asList(t)
+    def unapplySeq(t: Term): Seq[Term] = asList(t).toList
   }
 }
 
