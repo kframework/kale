@@ -6,7 +6,7 @@ import scala.collection.Set
 
 object Binary {
 
-  trait Function[Left <: Term, Right <: Term, Result <: Term] extends (State => ((Term, Term) => Term)) {
+  trait TransformationFunction[Left <: Term, Right <: Term, Result <: Term] extends (State => ((Term, Term) => Term)) {
     def apply(solver: State) = { (a: Term, b: Term) => f(solver)(a.asInstanceOf[Left], b.asInstanceOf[Right]) }
 
     def f(solver: State)(a: Left, b: Right): Result

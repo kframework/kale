@@ -24,31 +24,31 @@ object BUMapper {
     BUMapper(setOfUnaryPieces, maxId)
   }
 
-  object Identity extends Unary.Function[Term, Term, BUMapper] {
+  object Identity extends Unary.TransformationFunction[Term, Term, BUMapper] {
     def f(solver: BUMapper)(t: Term) = t
   }
 
-  object Node1 extends Unary.Function[Node1, Term, BUMapper] {
+  object Node1 extends Unary.TransformationFunction[Node1, Term, BUMapper] {
     def f(solver: BUMapper)(t: Node1) = t.label(solver(t._1))
   }
 
-  object Node2 extends Unary.Function[Node2, Term, BUMapper] {
+  object Node2 extends Unary.TransformationFunction[Node2, Term, BUMapper] {
     def f(solver: BUMapper)(t: Node2) = t.label(solver(t._1), solver(t._2))
   }
 
-  object Node3 extends Unary.Function[Node3, Term, BUMapper] {
+  object Node3 extends Unary.TransformationFunction[Node3, Term, BUMapper] {
     def f(solver: BUMapper)(t: Node3) = t.label(solver(t._1), solver(t._2), solver(t._3))
   }
 
-  object Node4 extends Unary.Function[Node4, Term, BUMapper] {
+  object Node4 extends Unary.TransformationFunction[Node4, Term, BUMapper] {
     def f(solver: BUMapper)(t: Node4) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4))
   }
 
-  object Node5 extends Unary.Function[Node5, Term, BUMapper] {
+  object Node5 extends Unary.TransformationFunction[Node5, Term, BUMapper] {
     def f(solver: BUMapper)(t: Node5) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5))
   }
 
-  object Node6 extends Unary.Function[Node6, Term, BUMapper] {
+  object Node6 extends Unary.TransformationFunction[Node6, Term, BUMapper] {
     def f(solver: BUMapper)(t: Node6) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5), solver(t._6))
   }
 

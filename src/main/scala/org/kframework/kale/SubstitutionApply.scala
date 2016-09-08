@@ -26,43 +26,43 @@ object SubstitutionApply {
     SubstitutionApply(setOfUnaryPieces, maxId)
   }
 
-  object Node0 extends Unary.Function[Node0, Node0, SubstitutionApply] {
+  object Node0 extends Unary.TransformationFunction[Node0, Node0, SubstitutionApply] {
     def f(solver: SubstitutionApply)(t: Node0) = t
   }
 
-  object Node1 extends Unary.Function[Node1, Term, SubstitutionApply] {
+  object Node1 extends Unary.TransformationFunction[Node1, Term, SubstitutionApply] {
     def f(solver: SubstitutionApply)(t: Node1) = t.label(solver(t._1))
   }
 
-  object Node2 extends Unary.Function[Node2, Term, SubstitutionApply] {
+  object Node2 extends Unary.TransformationFunction[Node2, Term, SubstitutionApply] {
     def f(solver: SubstitutionApply)(t: Node2) = t.label(solver(t._1), solver(t._2))
   }
 
-  object Node3 extends Unary.Function[Node3, Term, SubstitutionApply] {
+  object Node3 extends Unary.TransformationFunction[Node3, Term, SubstitutionApply] {
     def f(solver: SubstitutionApply)(t: Node3) = t.label(solver(t._1), solver(t._2), solver(t._3))
   }
 
-  object Node4 extends Unary.Function[Node4, Term, SubstitutionApply] {
+  object Node4 extends Unary.TransformationFunction[Node4, Term, SubstitutionApply] {
     def f(solver: SubstitutionApply)(t: Node4) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4))
   }
 
-  object Node5 extends Unary.Function[Node5, Term, SubstitutionApply] {
+  object Node5 extends Unary.TransformationFunction[Node5, Term, SubstitutionApply] {
     def f(solver: SubstitutionApply)(t: Node5) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5))
   }
 
-  object Node6 extends Unary.Function[Node6, Term, SubstitutionApply] {
+  object Node6 extends Unary.TransformationFunction[Node6, Term, SubstitutionApply] {
     def f(solver: SubstitutionApply)(t: Node6) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5), solver(t._6))
   }
 
-  object Var extends Unary.Function[Variable, Term, SubstitutionApply] {
+  object Var extends Unary.TransformationFunction[Variable, Term, SubstitutionApply] {
     def f(solver: SubstitutionApply)(v: Variable) = solver.getVariable(v).getOrElse(v)
   }
 
-  object Constant extends Unary.Function[Constant[_], Constant[_], SubstitutionApply] {
+  object Constant extends Unary.TransformationFunction[Constant[_], Constant[_], SubstitutionApply] {
     def f(solver: SubstitutionApply)(a: Constant[_]) = a
   }
 
-  object Context1 extends Unary.Function[Context1, Term, SubstitutionApply] {
+  object Context1 extends Unary.TransformationFunction[Context1, Term, SubstitutionApply] {
     override def f(solver: SubstitutionApply)(t: Context1): Term = {
       Substitution(solver.s, Equality(t.hole, solver(t.term))) match {
         case subs: Substitution =>
