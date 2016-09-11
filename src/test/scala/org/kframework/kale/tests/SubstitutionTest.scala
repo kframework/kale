@@ -5,7 +5,8 @@ import org.scalatest.FreeSpec
 
 class SubstitutionTest extends FreeSpec with TestSetup {
 
-  import Implicits._
+  import implicits._
+  import env._
 
   "substitution" in {
     val s = Substitution(Map(X -> (5: Term)))

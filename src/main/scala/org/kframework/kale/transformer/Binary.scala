@@ -1,6 +1,6 @@
 package org.kframework.kale.transformer
 
-import org.kframework.kale.{Bottom, Label, Term}
+import org.kframework.kale.{Environment, Label, Term}
 
 import scala.collection.Set
 
@@ -18,12 +18,12 @@ object Binary {
 
   case class Piece(leftLabel: Label, rightLabel: Label, f: State => (Term, Term) => Term)
 
-  class Apply(pieces: Set[Piece], labels: Set[Label]) extends State {
-    val maxId = labels.map(_.id).max + 1
+  class Apply(pieces: Set[Piece], env: Environment) extends State {
+    import env._
 
     val arr: Array[Array[(Term, Term) => (Term)]] =
-      (0 until maxId + 1).map({ i =>
-        new Array[(Term, Term) => (Term)](maxId)
+      (0 until env.labels.size + 1).map({ i =>
+        new Array[(Term, Term) => (Term)](env.labels.size + 1)
       }).toArray
 
     for (p <- pieces) {

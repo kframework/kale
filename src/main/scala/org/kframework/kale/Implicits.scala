@@ -2,7 +2,9 @@ package org.kframework.kale
 
 import scala.language.implicitConversions
 
-object Implicits {
+class Implicits(implicit env: Environment) {
+  import env._
+  import env.builtin._
 
   implicit def intConstant(x: Int): Constant[Int] = INT(x)
   implicit def doubleConstant(x: Double): Constant[Double] = DOUBLE(x)

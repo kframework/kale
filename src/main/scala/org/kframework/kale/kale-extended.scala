@@ -13,11 +13,7 @@ trait Label0 extends Function0[Term] with NodeLabel {
 
 trait FreeLabel
 
-object FreeLabel0 {
-  def apply(name: String): FreeLabel0 = FreeLabel0(UniqueId(), name)
-}
-
-case class FreeLabel0(id: Int, name: String) extends Label0 with FreeLabel {
+case class FreeLabel0(name: String)(implicit val env: Environment) extends Label0 with FreeLabel {
   def apply(): Term = FreeNode0(this)
 }
 
@@ -29,11 +25,7 @@ trait Label1 extends (Term => Term) with NodeLabel {
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head)
 }
 
-object FreeLabel1 {
-  def apply(name: String): FreeLabel1 = FreeLabel1(UniqueId(), name)
-}
-
-case class FreeLabel1(id: Int, name: String) extends Label1 with FreeLabel {
+case class FreeLabel1(name: String)(implicit val env: Environment) extends Label1 with FreeLabel {
   def apply(_1: Term): Term = FreeNode1(this, _1)
 }
 
@@ -50,11 +42,7 @@ trait Label2 extends ((Term, Term) => Term) with NodeLabel {
   }
 }
 
-object FreeLabel2 {
-  def apply(name: String): FreeLabel2 = FreeLabel2(UniqueId(), name)
-}
-
-case class FreeLabel2(id: Int, name: String) extends Label2 with FreeLabel {
+case class FreeLabel2(name: String)(implicit val env: Environment) extends Label2 with FreeLabel {
   def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
 }
 
@@ -66,11 +54,7 @@ trait Label3 extends NodeLabel {
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head)
 }
 
-object FreeLabel3 {
-  def apply(name: String): FreeLabel3 = FreeLabel3(UniqueId(), name)
-}
-
-case class FreeLabel3(id: Int, name: String) extends Label3 with FreeLabel {
+case class FreeLabel3(name: String)(implicit val env: Environment) extends Label3 with FreeLabel {
   def apply(_1: Term, _2: Term, _3: Term): Term = FreeNode3(this, _1, _2, _3)
 }
 
@@ -82,11 +66,7 @@ trait Label4 extends NodeLabel {
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head)
 }
 
-object FreeLabel4 {
-  def apply(name: String): FreeLabel4 = FreeLabel4(UniqueId(), name)
-}
-
-case class FreeLabel4(id: Int, name: String) extends Label4 with FreeLabel {
+case class FreeLabel4(name: String)(implicit val env: Environment) extends Label4 with FreeLabel {
   def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term = FreeNode4(this, _1, _2, _3, _4)
 }
 
@@ -217,8 +197,9 @@ trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
 
 case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term) extends Node6
 
-object Equality extends Label2 with NameFromObject with UniqueId {
-  override def apply(_1: Term, _2: Term): Term = bottomize(_1, _2) {
+case class EqualityLabel(implicit val env: Environment) extends NameFromObject with Label2 {
+  override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
+    val Variable = env.Variable
     _1.label match {
       case `Variable` => new Binding(_1.asInstanceOf[Variable], _2)
       case _ => new Equality(_1, _2)
@@ -230,8 +211,8 @@ trait Substitution extends Term {
   def get(v: Variable): Option[Term]
 }
 
-private[kale] class Equality(val _1: Term, val _2: Term) extends Node2 {
-  val label = Equality
+private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 {
+  val label = env.Equality
 
   override def equals(other: Any) = other match {
     case that: Equality => this._1 == that._1 && this._2 == that._2
@@ -239,7 +220,7 @@ private[kale] class Equality(val _1: Term, val _2: Term) extends Node2 {
   }
 }
 
-private[kale] class Binding(val variable: Variable, val term: Term) extends Equality(variable, term) with Substitution {
+private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: Environment) extends Equality(variable, term) with Substitution {
   assert(_1.isInstanceOf[Variable])
 
   def get(v: Variable) = if (_1 == v) Some(_2) else None
@@ -247,7 +228,10 @@ private[kale] class Binding(val variable: Variable, val term: Term) extends Equa
 
 trait And extends Assoc
 
-object And extends AssocLabel with NameFromObject with UniqueId {
+case class AndLabel(implicit val env: Environment) extends NameFromObject with AssocLabel {
+
+  import env._
+
   override def apply(_1: Term, _2: Term): Term = {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
@@ -308,8 +292,12 @@ object And extends AssocLabel with NameFromObject with UniqueId {
   }
 }
 
-private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val terms: Set[Term]) extends Assoc {
+private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val terms: Set[Term])(implicit env: Environment) extends Assoc {
+
+  import env._
+
   assert(!terms.contains(Bottom))
+
   val label = And
 
   lazy val _1: Term = terms.head
@@ -317,7 +305,10 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
   override val assocIterable: Iterable[Term] = Substitution.asList(s) ++ terms
 }
 
-object Substitution extends AssocLabel with NameFromObject with UniqueId {
+case class SubstitutionLabel(implicit val env: Environment) extends NameFromObject with AssocLabel {
+
+  import env._
+
   override def apply(_1: Term, _2: Term): Term = {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
@@ -356,8 +347,11 @@ object Substitution extends AssocLabel with NameFromObject with UniqueId {
 
 }
 
-final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term]) extends And with Substitution {
+final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implicit env: Environment) extends And with Substitution {
   assert(m.size >= 2)
+
+  import env._
+
   val label = Substitution
   lazy val _1 = Equality(m.head._1, m.head._2)
   lazy val _2 = Substitution(m.tail)
@@ -374,7 +368,10 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term]) extends
   override val assocIterable: Iterable[Term] = Substitution.asList(this)
 }
 
-object Or extends AssocLabel with NameFromObject with UniqueId {
+case class OrLabel(implicit val env: Environment) extends NameFromObject with AssocLabel {
+
+  import env._
+
   def apply(_1: Term, _2: Term): Term =
     unwrap(_1) | unwrap(_2) match {
       case s if s.isEmpty => Bottom
@@ -396,8 +393,11 @@ object Or extends AssocLabel with NameFromObject with UniqueId {
 
 }
 
-private[this] class OrWithAtLeastTwoElements(val terms: Set[Term]) extends Assoc {
+private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env: Environment) extends Assoc {
   assert(terms.size > 1)
+
+  import env._
+
   val label = Or
 
   lazy val _1 = terms.head
@@ -462,7 +462,7 @@ trait Assoc extends Node2 {
   val assocIterable: Iterable[Term]
 }
 
-class AssocWithIdListLabel(val name: String, val identity: Term) extends AssocWithIdLabel with UniqueId {
+class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
   override def construct(l: Iterable[Term]): Term = new AssocWithIdList(this, l)
 }
 
@@ -472,8 +472,10 @@ case class AssocWithIdList(label: AssocLabel, assocIterable: Iterable[Term]) ext
   override def _2: Term = label(assocIterable.tail)
 }
 
-object Rewrite extends Label2 with NameFromObject with UniqueId
+case class RewriteLabel(implicit val env: Environment) extends NameFromObject with Label2 {
+  def apply(_1: Term, _2: Term) = new Rewrite(_1, _2)
+}
 
-case class Rewrite(_1: Term, _2: Term) extends Node2 {
-  override val label = Rewrite
+case class Rewrite(_1: Term, _2: Term)(implicit env: Environment) extends Node2 {
+  override val label = env.Rewrite
 }

@@ -4,9 +4,14 @@ import org.scalatest.FreeSpec
 
 class KaleSpec extends FreeSpec {
 
+  implicit val env = new Environment
+  import env._
+  import env.builtin._
+  val impl = new Implicits()
+  import impl._
+
   val X = Variable("X")
 
-  import Implicits._
 
 //  "SET" in {
 //    val set = new SET("_,_", 0)
@@ -15,6 +20,7 @@ class KaleSpec extends FreeSpec {
 //    assert(set.op(1, 2) == set.op(2, 1))
 //    assert(set.op(0, 2) == (2: Term))
 //  }
+
 
   "INT" - {
     val x: Constant[Int] = 2

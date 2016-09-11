@@ -1,6 +1,6 @@
 package org.kframework.kale.transformer
 
-import org.kframework.kale.{Label, Term}
+import org.kframework.kale.{Environment, Label, Term}
 
 import scala.collection.Set
 
@@ -30,10 +30,10 @@ object Unary {
     */
   case class Piece[US <: State](label: Label, f: US => Term => Term)
 
-  abstract class Apply[US <: State](pieces: Set[Piece[US]], maxId: Int) extends State {
+  abstract class Apply[US <: State](pieces: Set[Piece[US]], env: Environment) extends State {
     this: US =>
 
-    val arr = new Array[Term => Term](maxId)
+    val arr = new Array[Term => Term](env.labels.size + 1)
 
     for (p <- pieces) {
       arr(p.label.id) = p.f(this)

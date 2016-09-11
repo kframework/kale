@@ -1,24 +1,75 @@
 package org.kframework.kale
 
+import org.kframework.kale.context.AnywhereContextLabel
+
 import scala.collection._
 import scala.language.implicitConversions
 
-object UniqueId {
-  var nextId = 0
+case class Environment() {
+  val uniqueLabels = mutable.Map[String, Label]()
 
-  def apply(): Int = {
-    nextId += 1
-    nextId - 1
+  def labels = uniqueLabels.values.toSet
+
+  def register(label: Label): Int = {
+    if (uniqueLabels.contains(label.name))
+      throw new AssertionError("Label " + label.name + " already registered. The current env is: \n" + this)
+
+    uniqueLabels.put(label.name, label)
+    uniqueLabels.size
+  }
+
+  def label(labelName: String): Label = uniqueLabels(labelName)
+
+  override def toString = {
+    "nextId: " + uniqueLabels.size + "\n" + uniqueLabels.mkString("\n")
+  }
+
+  implicit private val tthis = this
+
+  val Variable = VariableLabel()
+
+  val Truth = TruthLabel()
+  val Top: Truth with Substitution = TopInstance()
+  val Bottom: Truth = BottomInstance()
+
+  val Equality = EqualityLabel()
+  val And = AndLabel()
+  val Or = OrLabel()
+  val Substitution = SubstitutionLabel()
+  val Rewrite = RewriteLabel()
+
+  val AnywhereContext = AnywhereContextLabel()
+
+  val builtin = new Builtins()(this)
+
+  def bottomize(_1: Term)(f: => Term): Term = {
+    if (Bottom == _1)
+      Bottom
+    else
+      f
+  }
+
+  def bottomize(_1: Term, _2: Term)(f: => Term): Term = {
+    if (Bottom == _1 || Bottom == _2)
+      Bottom
+    else
+      f
+  }
+
+  def bottomize(terms: Term*)(f: => Term): Term = {
+    if(terms.contains(Bottom))
+      Bottom
+    else
+      f
   }
 }
 
-trait UniqueId {
-  val id = UniqueId()
-}
-
 trait Label extends MemoizedHashCode {
+  val env: Environment
+
   val name: String
-  val id: Int
+
+  val id: Int = env.register(this)
 
   override def equals(other: Any) = other match {
     case that: Label => this.name == that.name
@@ -102,10 +153,10 @@ trait Leaf[T] extends Term {
 }
 
 trait NameFromObject {
-  val name = this.getClass.getName.drop(5).dropRight(1)
+  val name = this.getClass.getName.drop(5)
 }
 
-trait ConstantLabel[T] extends LeafLabel[T] with NameFromObject with UniqueId {
+trait ConstantLabel[T] extends NameFromObject with LeafLabel[T] {
   def apply(v: T) = Constant(this, v)
 }
 
@@ -115,12 +166,12 @@ case class Constant[T](label: ConstantLabel[T], value: T) extends Leaf[T] {
   override def toString = value.toString
 }
 
-object Variable extends LeafLabel[String] with NameFromObject with UniqueId {
-  override def apply(name: String): Variable = SimpleVariable(name)
+case class VariableLabel(implicit val env: Environment) extends NameFromObject with LeafLabel[String] {
+  def apply(name: String): Variable = SimpleVariable(name)
 }
 
 trait Variable extends Leaf[String] {
-  val label = Variable
+  val label: VariableLabel
   val name: String
   lazy val value = name
   val isGround = false
@@ -128,31 +179,29 @@ trait Variable extends Leaf[String] {
   override def toString = name
 }
 
-case class SimpleVariable(name: String) extends Variable
+case class SimpleVariable(name: String)(implicit env: Environment) extends Variable {
+  val label = env.Variable
+}
 
 trait Hooked {
   def f(t: Term): Term
 }
 
-object Truth extends LeafLabel[Boolean] with NameFromObject with UniqueId {
-  def apply(v: Boolean) = if (v) Top else Bottom
+case class TruthLabel(implicit val env: Environment) extends LeafLabel[Boolean] with NameFromObject {
+  def apply(v: Boolean) = if (v) env.Top else env.Bottom
 }
 
-class Truth(val value: Boolean) extends Leaf[Boolean] {
-  val label = Truth
+class Truth(val value: Boolean)(implicit val env: Environment) extends Leaf[Boolean] {
+  val label = env.Truth
   val isGround = true
 }
 
-object Top extends Truth(true) with Substitution {
+private case class TopInstance(implicit eenv: Environment) extends Truth(true) with Substitution {
   override def get(v: Variable): Option[Term] = None
 
   override def toString = "⊤"
 }
 
-object Bottom extends Truth(false) {
+private case class BottomInstance(implicit eenv: Environment) extends Truth(false) {
   override def toString = "⊥"
 }
-
-
-
-

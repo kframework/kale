@@ -1,11 +1,13 @@
 package org.kframework.kale.tests
 
-import org.kframework.kale.{AnywhereContext, Matcher, _}
+import org.kframework.kale._
+import context._
 import org.scalatest.FreeSpec
 
 class MatchSpec extends FreeSpec with TestSetup {
 
-  import Implicits._
+  import env._
+  import implicits._
 
   "simple" in {
     assert(unifier(X, 5) === Equality(X, 5))
@@ -32,7 +34,7 @@ class MatchSpec extends FreeSpec with TestSetup {
 
   "contexts" - {
 
-    implicit val m = Matcher(allLabels)
+    implicit val m = Matcher(env)
 
     "zero-level" in {
       assert((foo(a, AnywhereContext(X, b)) := foo(a, b)) === Equality(X, X_1))
@@ -74,7 +76,7 @@ class MatchSpec extends FreeSpec with TestSetup {
   }
 
   "of contexts" - {
-    implicit val m = Matcher(allLabels)
+    implicit val m = Matcher(env)
 
     val XX = Variable("XX")
     val YY = Variable("YY")

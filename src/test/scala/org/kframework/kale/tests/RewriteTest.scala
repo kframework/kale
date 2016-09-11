@@ -8,7 +8,8 @@ import scala.language.implicitConversions
 
 class RewriteTest extends FreeSpec with TestSetup {
 
-  import Implicits._
+  import env._
+  import implicits._
 
   "X + 0 => X" in {
     assert(substitutionApplier(unifier(X + 0, (5: Term) + 0).asInstanceOf[Substitution])(X) === (5: Term))
@@ -18,7 +19,7 @@ class RewriteTest extends FreeSpec with TestSetup {
     assert(substitutionApplier(unifier((2: Term) + X + 3, (2: Term) + 4 + 3).asInstanceOf[Substitution])((5: Term) + X) === (5: Term) + 4)
   }
 
-  val rewriter = Rewriter(substitutionApplier, unifier)(Set(
+  val rewriter = Rewriter(substitutionApplier, unifier, env)(Set(
     Rewrite(X + 0, X),
     Rewrite((0: Term) + X, X),
     Rewrite(listLabel(3, X, Y, 6), listLabel(X, 0, Y))

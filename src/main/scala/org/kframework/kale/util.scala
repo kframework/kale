@@ -9,20 +9,6 @@ trait MemoizedHashCode {
 }
 
 object Util {
-  def bottomize(_1: Term)(f: => Term): Term = {
-    if (Bottom == _1)
-      Bottom
-    else
-      f
-  }
-
-  def bottomize(_1: Term, _2: Term)(f: => Term): Term = {
-    if (Bottom == _1 || Bottom == _2)
-      Bottom
-    else
-      f
-  }
-
   def fixpoint[T](f: T => T): (T => T) = {
     { t: T =>
       val after = f(t)

@@ -5,10 +5,11 @@ import org.kframework.kale.transformer.Unary
 import scala.collection.Set
 
 object BUMapper {
-  def apply(pieces: Set[Unary.Piece[BUMapper]], maxId: Int)(func: PartialFunction[Term, Term]): BUMapper = new BUMapper(pieces, maxId)(func)
+  def apply(pieces: Set[Unary.Piece[BUMapper]], env: Environment)(func: PartialFunction[Term, Term]): BUMapper = new BUMapper(pieces, env)(func)
 
-  def apply(labels: Set[Label]): PartialFunction[Term, Term] => BUMapper = {
-    val maxId = labels.map(_.id).max + 1
+  def apply(env: Environment): PartialFunction[Term, Term] => BUMapper = {
+    import env._
+
     val setOfUnaryPieces = labels.map({
       case `Variable` => Unary.Piece(Variable, Identity)
       case l: Label0 => Unary.Piece(l, Identity)
@@ -21,7 +22,7 @@ object BUMapper {
       case l: ConstantLabel[_] => Unary.Piece(l, Identity)
     })
 
-    BUMapper(setOfUnaryPieces, maxId)
+    BUMapper(setOfUnaryPieces, env)
   }
 
   object Identity extends Unary.TransformationFunction[Term, Term, BUMapper] {
@@ -54,7 +55,7 @@ object BUMapper {
 
 }
 
-class BUMapper(val pieces: Set[Unary.Piece[BUMapper]], val maxId: Int)(val func: PartialFunction[Term, Term]) extends Unary.Apply[BUMapper](pieces, maxId) with (Term => Term) {
+class BUMapper(val pieces: Set[Unary.Piece[BUMapper]], val env: Environment)(val func: PartialFunction[Term, Term]) extends Unary.Apply[BUMapper](pieces, env) with (Term => Term) {
   val liftedF = func.lift
 
   def apply(t: Term) =

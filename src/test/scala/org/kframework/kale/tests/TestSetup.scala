@@ -4,10 +4,15 @@ import org.kframework.kale.{Matcher, _}
 
 trait TestSetup {
 
+  implicit val env = new Environment
+  import env._
+  import env.builtin._
+  val implicits = new Implicits()
+
   val X = Variable("X")
   val Y = Variable("Y")
 
-  val emptyList = FreeLabel0(UniqueId(), "emptyList")
+  val emptyList = FreeLabel0("emptyList")
   val listLabel = new AssocWithIdListLabel("listLabel", emptyList())
 
   val foo = FreeLabel2("foo")
@@ -21,9 +26,9 @@ trait TestSetup {
   val allLabels = Set(foo, STRING, INT, INT.+, matched, traversed,
     andMatchingY, Variable, AnywhereContext, bar, buz, emptyList, listLabel)
 
-  val unifier = Matcher(allLabels)
+  val unifier = Matcher(env)
 
-  val substitutionApplier = SubstitutionApply(allLabels)
+  val substitutionApplier = SubstitutionApply(env)
 
   val X_1 = AnywhereContext.hole(X)
 
