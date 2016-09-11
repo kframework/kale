@@ -15,7 +15,7 @@ object Unary {
   /**
     * Extend this class to define the transformation by implementing f.
     */
-  trait TransformationFunction[Element <: Term, Result <: Term, US <: State] extends (US => Term => Term) {
+  trait ProcessingFunction[Element <: Term, Result <: Term, US <: State] extends (US => Term => Term) {
     def apply(unaryState: US) = { t: Term => f(unaryState)(t.asInstanceOf[Element]) }
 
     def f(state: US)(t: Element): Result
@@ -26,7 +26,8 @@ object Unary {
   }
 
   /**
-    * Transformation f is automatically hooked and applied to the label.
+    * f specifies how to process a term with label.
+    * f is automatically hooked and applied via Apply.
     */
   case class Piece[US <: State](label: Label, f: US => Term => Term)
 

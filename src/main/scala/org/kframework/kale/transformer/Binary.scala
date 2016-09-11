@@ -6,7 +6,7 @@ import scala.collection.Set
 
 object Binary {
 
-  trait TransformationFunction[Left <: Term, Right <: Term, Result <: Term] extends (State => ((Term, Term) => Term)) {
+  trait ProcessingFunction[Left <: Term, Right <: Term, Result <: Term] extends (State => ((Term, Term) => Term)) {
     def apply(solver: State) = { (a: Term, b: Term) => f(solver)(a.asInstanceOf[Left], b.asInstanceOf[Right]) }
 
     def f(solver: State)(a: Left, b: Right): Result
@@ -16,6 +16,10 @@ object Binary {
     def apply(left: Term, right: Term): Term
   }
 
+  /**
+    * f specifies how to process a pair of terms with labels (leftLabel, rightLabel).
+    * f is automatically hooked and applied via Apply.
+    */
   case class Piece(leftLabel: Label, rightLabel: Label, f: State => (Term, Term) => Term)
 
   class Apply(pieces: Set[Piece], env: Environment) extends State {

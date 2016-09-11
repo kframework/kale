@@ -12,43 +12,43 @@ object SubstitutionApply {
   def apply(env: Environment): Substitution => SubstitutionApply = {
     import env._
 
-    object Node0 extends Unary.TransformationFunction[Node0, Node0, SubstitutionApply] {
+    object Node0 extends Unary.ProcessingFunction[Node0, Node0, SubstitutionApply] {
       def f(solver: SubstitutionApply)(t: Node0) = t
     }
 
-    object Node1 extends Unary.TransformationFunction[Node1, Term, SubstitutionApply] {
+    object Node1 extends Unary.ProcessingFunction[Node1, Term, SubstitutionApply] {
       def f(solver: SubstitutionApply)(t: Node1) = t.label(solver(t._1))
     }
 
-    object Node2 extends Unary.TransformationFunction[Node2, Term, SubstitutionApply] {
+    object Node2 extends Unary.ProcessingFunction[Node2, Term, SubstitutionApply] {
       def f(solver: SubstitutionApply)(t: Node2) = t.label(solver(t._1), solver(t._2))
     }
 
-    object Node3 extends Unary.TransformationFunction[Node3, Term, SubstitutionApply] {
+    object Node3 extends Unary.ProcessingFunction[Node3, Term, SubstitutionApply] {
       def f(solver: SubstitutionApply)(t: Node3) = t.label(solver(t._1), solver(t._2), solver(t._3))
     }
 
-    object Node4 extends Unary.TransformationFunction[Node4, Term, SubstitutionApply] {
+    object Node4 extends Unary.ProcessingFunction[Node4, Term, SubstitutionApply] {
       def f(solver: SubstitutionApply)(t: Node4) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4))
     }
 
-    object Node5 extends Unary.TransformationFunction[Node5, Term, SubstitutionApply] {
+    object Node5 extends Unary.ProcessingFunction[Node5, Term, SubstitutionApply] {
       def f(solver: SubstitutionApply)(t: Node5) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5))
     }
 
-    object Node6 extends Unary.TransformationFunction[Node6, Term, SubstitutionApply] {
+    object Node6 extends Unary.ProcessingFunction[Node6, Term, SubstitutionApply] {
       def f(solver: SubstitutionApply)(t: Node6) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5), solver(t._6))
     }
 
-    object Var extends Unary.TransformationFunction[Variable, Term, SubstitutionApply] {
+    object Var extends Unary.ProcessingFunction[Variable, Term, SubstitutionApply] {
       def f(solver: SubstitutionApply)(v: Variable) = solver.getVariable(v).getOrElse(v)
     }
 
-    object DoNothing extends Unary.TransformationFunction[Term, Term, SubstitutionApply] {
+    object DoNothing extends Unary.ProcessingFunction[Term, Term, SubstitutionApply] {
       def f(solver: SubstitutionApply)(a: Term) = a
     }
 
-    object Context1 extends Unary.TransformationFunction[Context1, Term, SubstitutionApply] {
+    object Context1 extends Unary.ProcessingFunction[Context1, Term, SubstitutionApply] {
       override def f(solver: SubstitutionApply)(t: Context1): Term = {
         val recursiveResult = Equality(t.hole, solver(t.term))
         Substitution(solver.s, recursiveResult) match {

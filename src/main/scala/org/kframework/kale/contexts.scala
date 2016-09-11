@@ -40,7 +40,7 @@ object context {
     override val name: String = basedOn.name + "_" + index
   }
 
-  class AnywhereContextMatcher(implicit env: Environment) extends transformer.Binary.TransformationFunction[Context1, Term, Term] {
+  class AnywhereContextMatcher(implicit env: Environment) extends transformer.Binary.ProcessingFunction[Context1, Term, Term] {
     import env._
     override def f(solver: transformer.Binary.State)(leftContext: Context1, t: Term): Term = {
       assert(leftContext.label == AnywhereContext)
