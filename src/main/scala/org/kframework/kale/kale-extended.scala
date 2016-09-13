@@ -228,7 +228,9 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
 
 trait And extends Assoc
 
-case class AndLabel(implicit val env: Environment) extends NameFromObject with AssocLabel {
+case class AndLabel(implicit val env: Environment) extends {
+  val name = "∧"
+} with AssocLabel {
 
   import env._
 
@@ -457,7 +459,7 @@ trait AssocWithoutIdLabel extends AssocLabel {
   // todo
 }
 
-trait Assoc extends Node2 {
+trait Assoc extends Node2 with BinaryInfix {
   override val label: AssocLabel
   val assocIterable: Iterable[Term]
 }
@@ -472,10 +474,17 @@ case class AssocWithIdList(label: AssocLabel, assocIterable: Iterable[Term]) ext
   override def _2: Term = label(assocIterable.tail)
 }
 
-case class RewriteLabel(implicit val env: Environment) extends NameFromObject with Label2 {
+case class RewriteLabel(implicit val env: Environment) extends {
+  val name = "=>"
+} with Label2 {
   def apply(_1: Term, _2: Term) = new Rewrite(_1, _2)
 }
 
-case class Rewrite(_1: Term, _2: Term)(implicit env: Environment) extends Node2 {
+trait BinaryInfix {
+  self: Node2 =>
+  override def toString = _1 + " " + label.name + " " + _2
+}
+
+case class Rewrite(_1: Term, _2: Term)(implicit env: Environment) extends Node2 with BinaryInfix {
   override val label = env.Rewrite
 }

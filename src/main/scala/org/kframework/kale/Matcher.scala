@@ -73,8 +73,6 @@ object Matcher {
         Truth(a.value == b.value)
     }
 
-
-
     val variableXlabel = labels.map(Binary.Piece(Variable, _, VarLeft))
     val freeLikeLabelXfreeLikeLabel = labels.collect({
       case l: FreeLabel0 => Binary.Piece(l, l, FreeNode0FreeNode0)
