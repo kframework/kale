@@ -156,7 +156,7 @@ trait NameFromObject {
   val name = this.getClass.getName.drop(5)
 }
 
-trait ConstantLabel[T] extends NameFromObject with LeafLabel[T] {
+trait ConstantLabel[T] extends LeafLabel[T] {
   def apply(v: T) = Constant(this, v)
 }
 

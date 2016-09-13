@@ -3,7 +3,7 @@ organization := "org.kframework.kale"
 
 name := "kale"
 
-version := "0.1.4-SNAPSHOT"
+version := "0.1.5-SNAPSHOT"
 
 scalaVersion := "2.12.0-M5"
 

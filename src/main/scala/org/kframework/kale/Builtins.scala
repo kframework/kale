@@ -12,21 +12,23 @@ class Builtins(implicit val env: Environment) {
 
   sealed trait PrimordialConstantLabel[T] extends HasEnvironment with ConstantLabel[T]
 
-  object INT extends PrimordialConstantLabel[Int] {
+  object INT extends NameFromObject with PrimordialConstantLabel[Int] {
 
     object + extends FreeLabel2("+")(env)
 
   }
 
-  object STRING extends PrimordialConstantLabel[String]
+  object STRING extends NameFromObject with PrimordialConstantLabel[String]
 
-  object DOUBLE extends PrimordialConstantLabel[Double]
+  object DOUBLE extends NameFromObject with PrimordialConstantLabel[Double]
 
-  object BOOLEAN extends PrimordialConstantLabel[Boolean]
+  object BOOLEAN extends NameFromObject with PrimordialConstantLabel[Boolean]
 
   case class Sort(s: String)
 
-  case class GENERIC_TOKEN(sort: Sort) extends PrimordialConstantLabel[String]
+  case class GENERIC_TOKEN(sort: Sort) extends {
+    val name = "TOKEN_"+sort.s
+  } with PrimordialConstantLabel[String]
 
   object Tuple2 extends FreeLabel2("Pair")
 
