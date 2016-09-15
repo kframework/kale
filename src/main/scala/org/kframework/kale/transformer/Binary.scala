@@ -23,6 +23,7 @@ object Binary {
   case class Piece(leftLabel: Label, rightLabel: Label, f: State => (Term, Term) => Term)
 
   class Apply(pieces: Set[Piece], env: Environment) extends State {
+
     import env._
 
     val arr: Array[Array[(Term, Term) => (Term)]] =
@@ -35,17 +36,23 @@ object Binary {
     }
 
     def apply(left: Term, right: Term): Term = {
-//      assert(labels.contains(left.label) && labels.contains(right.label))
+      //      assert(labels.contains(left.label) && labels.contains(right.label))
+      assert(left.label.id <= env.labels.size, "Left label " + left.label + " with id " + left.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
+      assert(right.label.id <= env.labels.size, "Right label " + right.label + " with id " + right.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
 
-      val u = arr(left.label.id)(right.label.id)
-      val res = if (u != null)
-        u(left, right)
-      else
-        Bottom
+      try {
+        val u = arr(left.label.id)(right.label.id)
+        val res = if (u != null)
+          u(left, right)
+        else
+          Bottom
 
-      assert(!(left == right && res == Bottom), left.toString)
-      // println(left + "\n:= " + right + "\n=== " + res)
-      res
+        assert(!(left == right && res == Bottom), left.toString)
+        // println(left + "\n:= " + right + "\n=== " + res)
+        res
+      } catch {
+        case _: IndexOutOfBoundsException => throw new AssertionError("No processing function registered for: " + left + " and " + right)
+      }
     }
   }
 

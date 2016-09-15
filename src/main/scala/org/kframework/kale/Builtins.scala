@@ -13,16 +13,18 @@ class Builtins(implicit val env: Environment) {
   sealed trait PrimordialConstantLabel[T] extends HasEnvironment with ConstantLabel[T]
 
   object INT extends NameFromObject with PrimordialConstantLabel[Int] {
-
     object + extends FreeLabel2("+")(env)
-
   }
+  INT
 
   object STRING extends NameFromObject with PrimordialConstantLabel[String]
+  STRING
 
   object DOUBLE extends NameFromObject with PrimordialConstantLabel[Double]
+  DOUBLE
 
   object BOOLEAN extends NameFromObject with PrimordialConstantLabel[Boolean]
+  BOOLEAN
 
   case class Sort(s: String)
 
@@ -82,5 +84,6 @@ class Builtins(implicit val env: Environment) {
       case _ => false
     }
   }
+  MAP
 
 }

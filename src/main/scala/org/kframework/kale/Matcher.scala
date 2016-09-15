@@ -73,7 +73,23 @@ object Matcher {
         Truth(a.value == b.value)
     }
 
+    object AndTerm extends ProcessingFunction[And, Term, Term] {
+      override def f(solver: State)(a: And, b: Term): Term = {
+        val formulas = a.assocIterable filter (_.isInstanceOf[Formula])
+        val terms = a.assocIterable filter (!_.isInstanceOf[Formula])
+        // only handle one term for now
+        if (terms.size != 1) {
+          throw new NotImplementedError("only handle one term for now")
+        }
+        val left = terms.head
+        val solution = solver(left, b)
+        And(formulas.toList :+ solution)
+      }
+    }
+
     val variableXlabel = labels.map(Piece(Variable, _, VarLeft))
+    val andXlabel = labels.map(Piece(And, _, AndTerm))
+
     val freeLikeLabelXfreeLikeLabel = labels.collect({
       case l: FreeLabel0 => Piece(l, l, FreeNode0FreeNode0)
       case l: FreeLabel1 => Piece(l, l, FreeNode1FreeNode1)
@@ -91,7 +107,7 @@ object Matcher {
 
     val anywhereContextMatchers = labels.map(Piece(AnywhereContext, _, new AnywhereContextMatcher()))
 
-    new Apply(variableXlabel | freeLikeLabelXfreeLikeLabel | assoc | anywhereContextMatchers, env)
+    new Apply(variableXlabel | andXlabel | freeLikeLabelXfreeLikeLabel | assoc | anywhereContextMatchers, env)
   }
 
 }

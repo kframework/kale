@@ -3,6 +3,8 @@ package org.kframework.kale
 import scala.collection._
 import Util._
 
+import scala.Iterable
+
 trait Label0 extends Function0[Term] with NodeLabel {
   val arity = 0
 
@@ -207,11 +209,11 @@ case class EqualityLabel(implicit val env: Environment) extends NameFromObject w
   }
 }
 
-trait Substitution extends Term {
+trait Substitution extends Term with Formula {
   def get(v: Variable): Option[Term]
 }
 
-private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 {
+private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 with Formula {
   val label = env.Equality
 
   override def equals(other: Any) = other match {
@@ -226,11 +228,11 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
   def get(v: Variable) = if (_1 == v) Some(_2) else None
 }
 
-trait And extends Assoc
+trait And extends Assoc with Formula
 
 case class AndLabel(implicit val env: Environment) extends {
   val name = "∧"
-} with AssocLabel {
+} with AssocWithIdLabel {
 
   import env._
 
@@ -286,25 +288,45 @@ case class AndLabel(implicit val env: Environment) extends {
   def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = {
     if (others.isEmpty) {
       pureSubstitution
-    } else if (pureSubstitution.isEmpty && others.size == 1) {
+    } else if (pureSubstitution == Top && others.size == 1) {
       others.head
     } else {
-      new AndOfSubstitutionAndTerms(pureSubstitution, others.toSet)
+      val terms = new AndOfTerms(others.toSet)
+      if (pureSubstitution == Top) {
+        terms
+      } else {
+        new AndOfSubstitutionAndTerms(pureSubstitution, terms)
+      }
     }
   }
+
+  override def construct(l: Iterable[Term]): Term = ???
+  override val identity: Term = Top
 }
 
-private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val terms: Set[Term])(implicit env: Environment) extends Assoc {
+private[kale] final class AndOfTerms(terms: Set[Term])(implicit env: Environment) extends And with Assoc {
 
   import env._
 
+  assert(terms.size > 1)
   assert(!terms.contains(Bottom))
+  assert(!terms.contains(Top))
+
+  override val label = And
+  override val assocIterable: Iterable[Term] = terms
+  override def _1: Term = terms.head
+  override def _2: Term = if (terms.size == 2) terms.tail.head else new AndOfTerms(terms.tail)
+}
+
+private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val terms: AndOfTerms)(implicit env: Environment) extends And with Assoc {
+
+  import env._
 
   val label = And
 
-  lazy val _1: Term = terms.head
-  lazy val _2: Term = And(s, terms.tail)
-  override val assocIterable: Iterable[Term] = Substitution.asList(s) ++ terms
+  lazy val _1: Term = s
+  lazy val _2: Term = terms
+  override val assocIterable: Iterable[Term] = Substitution.asList(s) ++ terms.assocIterable
 }
 
 case class SubstitutionLabel(implicit val env: Environment) extends NameFromObject with AssocLabel {
@@ -395,7 +417,7 @@ case class OrLabel(implicit val env: Environment) extends NameFromObject with As
 
 }
 
-private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env: Environment) extends Assoc {
+private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env: Environment) extends Assoc with Formula {
   assert(terms.size > 1)
 
   import env._
@@ -440,7 +462,7 @@ trait AssocWithIdLabel extends AssocLabel with HasId {
     apply(l1 ++ l2)
   }
 
-  def unwrap(t: Term) = t match {
+  private def unwrap(t: Term) = t match {
     case `identity` => List[Term]()
     case x if x.label == this => x.asInstanceOf[Assoc].assocIterable
     case y => List(y)

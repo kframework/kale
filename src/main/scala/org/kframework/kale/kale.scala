@@ -10,7 +10,13 @@ case class Environment() {
 
   def labels = uniqueLabels.values.toSet
 
+  private var isSealed = false
+
+  def seal(): Unit = isSealed = true
+
   def register(label: Label): Int = {
+    assert(!isSealed, "The environment is sealed")
+
     if (uniqueLabels.contains(label.name))
       throw new AssertionError("Label " + label.name + " already registered. The current env is: \n" + this)
 
@@ -57,7 +63,7 @@ case class Environment() {
   }
 
   def bottomize(terms: Term*)(f: => Term): Term = {
-    if(terms.contains(Bottom))
+    if (terms.contains(Bottom))
       Bottom
     else
       f
@@ -187,11 +193,13 @@ trait Hooked {
   def f(t: Term): Term
 }
 
+trait Formula
+
 case class TruthLabel(implicit val env: Environment) extends LeafLabel[Boolean] with NameFromObject {
   def apply(v: Boolean) = if (v) env.Top else env.Bottom
 }
 
-class Truth(val value: Boolean)(implicit val env: Environment) extends Leaf[Boolean] {
+class Truth(val value: Boolean)(implicit val env: Environment) extends Leaf[Boolean] with Formula {
   val label = env.Truth
   val isGround = true
 }
