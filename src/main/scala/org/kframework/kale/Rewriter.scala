@@ -15,7 +15,6 @@ class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binar
   def executionStep(obj: Term): Term = {
     rules.map(r => (doMatch(r._1, obj), r._2)).find(_._1 != Bottom) match {
       case Some((substitutions, rhs)) =>
-        println(substitutions)
         val oneSubstitutuion = Or.unwrap(substitutions).head.asInstanceOf[Substitution]
         substitutioner(oneSubstitutuion).apply(rhs)
       case None => Bottom
