@@ -100,10 +100,10 @@ object Matcher {
     })
 
     val assoc = labels.flatMap({
-      case l: AssocLabel =>
+      case l: AssocLabel if l != And =>
         labels.collect({ case ll if !ll.isInstanceOf[Variable] => Piece(l, ll, AssocTerm) })
       case _ => Set[Piece]()
-    }).toSet
+    })
 
     val anywhereContextMatchers = labels.map(Piece(AnywhereContext, _, new AnywhereContextMatcher()))
 

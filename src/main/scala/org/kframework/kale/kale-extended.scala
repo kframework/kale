@@ -201,10 +201,14 @@ case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: 
 
 case class EqualityLabel(implicit val env: Environment) extends NameFromObject with Label2 {
   override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
-    val Variable = env.Variable
-    _1.label match {
-      case `Variable` => new Binding(_1.asInstanceOf[Variable], _2)
-      case _ => new Equality(_1, _2)
+    if (_1 == _2)
+      env.Top
+    else {
+      val Variable = env.Variable
+      _1.label match {
+        case `Variable` => new Binding(_1.asInstanceOf[Variable], _2)
+        case _ => new Equality(_1, _2)
+      }
     }
   }
 }
@@ -291,7 +295,7 @@ case class AndLabel(implicit val env: Environment) extends {
     } else if (pureSubstitution == Top && others.size == 1) {
       others.head
     } else {
-      val terms = new AndOfTerms(others.toSet)
+      val terms = if (others.size > 1) new AndOfTerms(others.toSet) else others.head
       if (pureSubstitution == Top) {
         terms
       } else {
@@ -301,6 +305,7 @@ case class AndLabel(implicit val env: Environment) extends {
   }
 
   override def construct(l: Iterable[Term]): Term = ???
+
   override val identity: Term = Top
 }
 
@@ -308,17 +313,19 @@ private[kale] final class AndOfTerms(terms: Set[Term])(implicit env: Environment
 
   import env._
 
-  assert(terms.size > 1)
+  assert(terms.size > 1, terms.toString())
   assert(!terms.contains(Bottom))
   assert(!terms.contains(Top))
 
   override val label = And
   override val assocIterable: Iterable[Term] = terms
+
   override def _1: Term = terms.head
+
   override def _2: Term = if (terms.size == 2) terms.tail.head else new AndOfTerms(terms.tail)
 }
 
-private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val terms: AndOfTerms)(implicit env: Environment) extends And with Assoc {
+private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val terms: Term)(implicit env: Environment) extends And with Assoc {
 
   import env._
 
@@ -326,7 +333,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
 
   lazy val _1: Term = s
   lazy val _2: Term = terms
-  override val assocIterable: Iterable[Term] = Substitution.asList(s) ++ terms.assocIterable
+  override val assocIterable: Iterable[Term] = Substitution.asList(s) ++ And.asList(terms)
 }
 
 case class SubstitutionLabel(implicit val env: Environment) extends NameFromObject with AssocLabel {

@@ -48,7 +48,7 @@ object Binary {
           Bottom
 
         assert(!(left == right && res == Bottom), left.toString)
-        // println(left + "\n:= " + right + "\n=== " + res)
+        println(left + "\n:= " + right + "\n=== " + res)
         res
       } catch {
         case _: IndexOutOfBoundsException => throw new AssertionError("No processing function registered for: " + left + " and " + right)
