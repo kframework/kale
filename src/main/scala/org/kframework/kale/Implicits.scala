@@ -3,7 +3,6 @@ package org.kframework.kale
 import scala.language.implicitConversions
 
 class Implicits(implicit env: Environment) {
-  import env._
   import env.builtin._
 
   implicit def intConstant(x: Int): Constant[Int] = INT(x)
