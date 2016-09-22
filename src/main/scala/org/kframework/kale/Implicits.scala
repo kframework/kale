@@ -2,7 +2,7 @@ package org.kframework.kale
 
 import scala.language.implicitConversions
 
-class Implicits(implicit env: Environment) {
+class Implicits(implicit env: Environment) extends StaticImplicits {
   import env.builtin._
 
   implicit def intConstant(x: Int): Constant[Int] = INT(x)
@@ -14,8 +14,15 @@ class Implicits(implicit env: Environment) {
     def +(y: Term): Term = INT.+(x, y)
   }
 
-  implicit class RichTerm(t: Term)(implicit m: transformer.Binary.Apply) {
-    def :=(tt: Term) = m(t, tt)
+  implicit class RichTerm(t: Term)(implicit env: Environment) {
+    def :=(tt: Term)(implicit m: transformer.Binary.Apply): Term = m(t, tt)
   }
 }
 
+trait StaticImplicits {
+  implicit class StaticRichTerm(t: Term) {
+    def contains(subterm: Term): Boolean = if (t == subterm) true else t.exists(_.contains(subterm))
+  }
+}
+
+object StaticImplicits extends StaticImplicits

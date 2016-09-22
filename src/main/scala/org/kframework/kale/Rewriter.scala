@@ -1,6 +1,7 @@
 package org.kframework.kale
 
 import org.kframework.kale.transformer.Binary
+import org.kframework.kale.transformer.Binary.Apply
 
 import scala.collection.Set
 
@@ -10,6 +11,7 @@ object Rewriter {
 }
 
 class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binary.Apply, rules: Set[Rewrite], env: Environment) {
+
   import env._
 
   def executionStep(obj: Term): Term = {
@@ -30,3 +32,26 @@ class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binar
     }))
   }
 }
+
+//object P {
+//  def m(left: Term)(matcher: Apply): (Term) => Term = matcher(left, _)
+//
+//  def ss(t: Term)(implicit substitutioner: Substitution => SubstitutionApply, env: Environment) = {
+//    import env._
+//    val (subs, terms) = And.unwrap(t)
+//    val s = substitutioner(subs)
+//    val res = terms.map(s)
+//    And(subs, res)
+//  }
+//
+//  def app(rw: Rewrite)(
+//    matcher: Apply,
+//    substitutioner: Substitution => SubstitutionApply,
+//    env: Environment,
+//    functionExecution: Term => Term)(obj: Term) = {
+//    val Rewrite(l, r) = rw
+//    val
+//    val afterMatch = m(left)
+//
+//  }
+//}

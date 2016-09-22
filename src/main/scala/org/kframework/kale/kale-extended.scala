@@ -1,7 +1,6 @@
 package org.kframework.kale
 
 import scala.collection._
-import Util._
 
 import scala.Iterable
 
@@ -204,9 +203,10 @@ case class EqualityLabel(implicit val env: Environment) extends NameFromObject w
     if (_1 == _2)
       env.Top
     else {
+      import StaticImplicits._
       val Variable = env.Variable
       _1.label match {
-        case `Variable` => new Binding(_1.asInstanceOf[Variable], _2)
+        case `Variable` if !_2.contains(_1) => new Binding(_1.asInstanceOf[Variable], _2)
         case _ => new Equality(_1, _2)
       }
     }
@@ -246,7 +246,7 @@ case class AndLabel(implicit val env: Environment) extends {
     else {
       val l1: (Substitution, Iterable[Term]) = unwrap(_1)
       val l2: (Substitution, Iterable[Term]) = unwrap(_2)
-      val allElements: Set[Term] = (l1._2.toSet ++ l2._2 + l1._1 + l2._1)
+      val allElements: Set[Term] = l1._2.toSet ++ l2._2 + l1._1 + l2._1
       Or(allElements
         .collect({ case Or.set(elements) => elements })
         .reduce(cartezianProduct))
@@ -267,9 +267,13 @@ case class AndLabel(implicit val env: Environment) extends {
     }
   }
 
-  private def unwrap(t: Term): (Substitution, Iterable[Term]) = t match {
+  /**
+    * Unwraps into a substitution and non-substitution terms
+    */
+  def unwrap(t: Term): (Substitution, Iterable[Term]) = t match {
     case s: Substitution => (s, Iterable.empty)
     case and: AndOfSubstitutionAndTerms => (and.s, and.terms)
+    case and: AndOfTerms => (Top, and.terms)
     case o => (Top, Iterable(o))
   }
 
@@ -309,7 +313,7 @@ case class AndLabel(implicit val env: Environment) extends {
   override val identity: Term = Top
 }
 
-private[kale] final class AndOfTerms(terms: Set[Term])(implicit env: Environment) extends And with Assoc {
+private[kale] final class AndOfTerms(val terms: Set[Term])(implicit env: Environment) extends And with Assoc {
 
   import env._
 
@@ -475,7 +479,7 @@ trait AssocWithIdLabel extends AssocLabel with HasId {
     case y => List(y)
   }
 
-  override def apply(list: Iterable[Term]): Term = list match {
+  override def apply(list: Iterable[Term]): Term = list filterNot (_ == identity) match {
     case l if l.isEmpty => identity
     case l if l.size == 1 => l.head
     case l => construct(l)
@@ -497,7 +501,9 @@ class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val en
   override def construct(l: Iterable[Term]): Term = new AssocWithIdList(this, l)
 }
 
-case class AssocWithIdList(label: AssocLabel, assocIterable: Iterable[Term]) extends Assoc {
+case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term]) extends Assoc {
+  assert(assocIterable.forall(_ != label.identity))
+
   override def _1: Term = assocIterable.head
 
   override def _2: Term = label(assocIterable.tail)
@@ -517,3 +523,11 @@ trait BinaryInfix {
 case class Rewrite(_1: Term, _2: Term)(implicit env: Environment) extends Node2 with BinaryInfix {
   override val label = env.Rewrite
 }
+
+class InvokeLabel(implicit val env: Environment) extends NameFromObject with Label1 {
+  // the rewriter is initialized after the creation of the label to break the cycle when creating the rewriter for applying functions
+  var rewriter: Rewriter = null
+  override def apply(obj: Term): Term = Invoke(this, obj)
+}
+
+case class Invoke(label: InvokeLabel, _1: Term) extends Node1
