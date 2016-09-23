@@ -189,10 +189,6 @@ case class SimpleVariable(name: String)(implicit env: Environment) extends Varia
   val label = env.Variable
 }
 
-trait Hooked {
-  def f(t: Term): Term
-}
-
 trait Formula
 
 case class TruthLabel(implicit val env: Environment) extends LeafLabel[Boolean] with NameFromObject {
@@ -212,4 +208,10 @@ private case class TopInstance(implicit eenv: Environment) extends Truth(true) w
 
 private case class BottomInstance(implicit eenv: Environment) extends Truth(false) {
   override def toString = "⊥"
+}
+
+trait PurelyFunctionalLabel2 extends Label2 {
+  def f(_1: Term, _2: Term): Option[Term]
+
+  def apply(_1: Term, _2: Term): Term = f(_1, _2) getOrElse FreeNode2(this, _1, _2)
 }

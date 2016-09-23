@@ -59,25 +59,32 @@ class Builtins(implicit val env: Environment) {
 
   object MAP {
 
-    object remove extends NameFromObject with HasEnvironment with Label2 with Hooked {
-      def apply(map: Term, key: Term): Term = FreeNode2(this, map, key)
+    object remove extends NameFromObject with HasEnvironment with PurelyFunctionalLabel2 {
+      def f(map: Term, key: Term) = map.label match {
+        case l: MapLabel =>
+          val l(m: Map[Term, Term]) = map
+          Some(l(m - key))
+        case _ => None
+      }
+    }
 
-      def f(t: Term) = t match {
-        case remove(map, key) => map.label match {
-          case l: MapLabel => map match {
-            case l(m: Map[Term, Term]) => l(m - key)
-          }
-          case _ => throw new AssertionError("Trying to remove an element from a non-MAP")
-        }
+    object lookup extends {
+      val name = "Map:lookup"
+    } with HasEnvironment with PurelyFunctionalLabel2 {
+      def f(map: Term, key: Term) = map.label match {
+        case l: MapLabel =>
+          val l(m: Map[Term, Term]) = map
+          Some(m(key))
+        case _ => None
       }
     }
 
   }
 
   class MAP(val label: MapLabel, val map: collection.Map[Term, Term]) extends Assoc {
-    lazy val assocIterable = map map { case (_1, _2) => label.elementLabel(_1, _2) }
+    lazy val assocIterable = map.values
 
-    override def _1: Term = label.elementLabel(map.head._1, map.head._2)
+    override def _1: Term = map.head._2
 
     override def _2: Term = label(map.tail)
 
