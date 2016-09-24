@@ -39,61 +39,75 @@ class Builtins(implicit val env: Environment) {
   } with PrimordialConstantLabel[String]
 
   case class MapLabel(name: String, index: Term => Term, identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
-    override def construct(l: Iterable[Term]): Term = new MAP(this, l.map(t => (index(t), t)).toMap)
+    def isIndexable(t: Term) = !t.label.isInstanceOf[VariableLabel] && !t.isInstanceOf[FunctionLabel]
 
-    def apply(map: collection.Map[Term, Term]): Term = map.size match {
-      case 0 => identity
-      case 1 => map.head._2
-      case 2 => new MAP(this, map)
+    override def construct(l: Iterable[Term]): Term = {
+      val indexed = l collect {
+        case t if isIndexable(t) => (index(t), t)
+      } toMap
+      val unindexed = (l filterNot isIndexable).toSet
+      new MAP(this, indexed, unindexed)
+    }
+
+
+    def apply(map: collection.Map[Term, Term], unindexable: Set[Term]): Term = (map.size, unindexable.size) match {
+      case (0, 0) => identity
+      case (1, 0) => map.head._2
+      case (0, 1) => unindexable.head
+      case _ => new MAP(this, map, unindexable)
     }
 
     object map {
-      def unapply(m: Term): Option[Map[Term, Term]] = m match {
-        case m: MAP => Some(m.map)
-        case `identity` => Some(Map[Term, Term]())
-        case t => Some(Map(index(t) -> t))
+      def unapply(m: Term): Option[(Map[Term, Term], Set[Term])] = m match {
+        case m: MAP => Some(m.map, m.unindexable)
+        case `identity` => Some(Map[Term, Term](), Set[Term]())
+        case t if isIndexable(t) => Some(Map(index(t) -> t), Set[Term]())
+        case t if !isIndexable(t) => Some(Map[Term, Term](), Set(t))
       }
     }
 
-  }
-
-  object MAP {
-
-    object remove extends NameFromObject with HasEnvironment with PurelyFunctionalLabel2 {
-      def f(map: Term, key: Term) = map.label match {
-        case l: MapLabel =>
-          val l(m: Map[Term, Term]) = map
-          Some(l(m - key))
-        case _ => None
-      }
-    }
-
-    object lookup extends {
-      val name = "Map:lookup"
+    // returns the entire object that has been indexed
+    object lookupByKey extends {
+      val name = MapLabel.this.name + ".lookupByKey"
     } with HasEnvironment with PurelyFunctionalLabel2 {
-      def f(map: Term, key: Term) = map.label match {
-        case l: MapLabel =>
-          val l(m: Map[Term, Term]) = map
-          Some(m(key))
+      def f(m: Term, key: Term) = m match {
+        case map(scalaMap, restOfElements) =>
+          scalaMap.get(key).orElse(
+            if (restOfElements.isEmpty && key.isGround && scalaMap.keys.forall(_.isGround)) Some(env.Bottom) else None)
+        case _ => None
+      }
+    }
+
+    // the classic map lookup
+    object lookup extends {
+      val name = MapLabel.this.name + ".lookup"
+    } with HasEnvironment with PurelyFunctionalLabel2 {
+      def f(m: Term, key: Term) = m match {
+        case map(scalaMap, restOfElements) =>
+          scalaMap.get(key).map(_.iterator().toList(1)).orElse(
+            if (restOfElements.isEmpty && key.isGround && scalaMap.keys.forall(_.isGround)) Some(env.Bottom) else None)
         case _ => None
       }
     }
 
   }
 
-  class MAP(val label: MapLabel, val map: collection.Map[Term, Term]) extends Assoc {
-    lazy val assocIterable = map.values
+  class MAP(val label: MapLabel, val map: collection.Map[Term, Term], val unindexable: Set[Term]) extends Assoc {
+    lazy val assocIterable = unindexable ++ map.values
 
-    override def _1: Term = map.head._2
+    override def _1: Term = unindexable.headOption.getOrElse(map.head._2)
 
-    override def _2: Term = label(map.tail)
+    override def _2: Term =
+      if (unindexable.nonEmpty)
+        label(map, unindexable.tail)
+      else
+        label(map.tail, unindexable)
+
 
     def equals(other: Term) = other match {
-      case that: MAP => this.label == that.label && this.map == that.map
+      case that: MAP => this.label == that.label && this.map == that.map && this.unindexable == that.unindexable
       case _ => false
     }
   }
-
-  MAP
 
 }
