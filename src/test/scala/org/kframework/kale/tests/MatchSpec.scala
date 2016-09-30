@@ -87,8 +87,10 @@ class MatchSpec extends FreeSpec with TestSetup {
     }
 
     "identical" in {
+      val Y1 = Variable("Y1")
+
       assert(foo(AnywhereContext(XX, AnywhereContext(X, Y)), AnywhereContext(XX, AnywhereContext(X, YY)))
-        := foo(AnywhereContext(XX, AnywhereContext(X, bar(Y))), AnywhereContext(XX, AnywhereContext(X, YY))) !== Bottom)
+        := foo(AnywhereContext(XX, AnywhereContext(X, bar(Y1))), AnywhereContext(XX, AnywhereContext(X, YY))) !== Bottom)
     }
   }
 }

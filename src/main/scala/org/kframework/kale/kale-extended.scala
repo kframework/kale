@@ -198,7 +198,9 @@ trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
 
 case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term) extends Node6
 
-case class EqualityLabel(implicit val env: Environment) extends NameFromObject with Label2 {
+case class EqualityLabel(implicit val env: Environment) extends {
+  val name = "="
+} with Label2 {
   override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
     if (_1 == _2)
       env.Top
@@ -217,7 +219,7 @@ trait Substitution extends Term with Formula {
   def get(v: Variable): Option[Term]
 }
 
-private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 with Formula {
+private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 with Formula with BinaryInfix {
   val label = env.Equality
 
   override def equals(other: Any) = other match {
@@ -226,7 +228,7 @@ private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environme
   }
 }
 
-private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: Environment) extends Equality(variable, term) with Substitution {
+private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: Environment) extends Equality(variable, term) with Substitution with BinaryInfix {
   assert(_1.isInstanceOf[Variable])
 
   def get(v: Variable) = if (_1 == v) Some(_2) else None
@@ -337,10 +339,12 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
 
   lazy val _1: Term = s
   lazy val _2: Term = terms
-  override val assocIterable: Iterable[Term] = Substitution.asList(s) ++ And.asList(terms)
+  override lazy val assocIterable: Iterable[Term] = Substitution.asList(s) ++ And.asList(terms)
 }
 
-case class SubstitutionLabel(implicit val env: Environment) extends NameFromObject with AssocLabel {
+abstract class Named(val name: String)
+
+case class SubstitutionLabel(implicit val env: Environment) extends Named("∧s") with AssocLabel {
 
   import env._
 
