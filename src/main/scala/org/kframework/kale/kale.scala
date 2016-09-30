@@ -41,7 +41,6 @@ case class Environment() {
   val Equality = EqualityLabel()
   val And = AndLabel()
   val Or = OrLabel()
-  val Substitution = SubstitutionLabel()
   val Rewrite = RewriteLabel()
 
   val AnywhereContext = AnywhereContextLabel()

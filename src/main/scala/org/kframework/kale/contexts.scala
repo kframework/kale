@@ -41,7 +41,9 @@ object context {
   }
 
   class AnywhereContextMatcher(implicit env: Environment) extends transformer.Binary.ProcessingFunction[Context1, Term, Term] {
+
     import env._
+
     override def f(solver: transformer.Binary.State)(leftContext: Context1, t: Term): Term = {
       assert(leftContext.label == AnywhereContext)
       val v = leftContext.contextVar
@@ -50,7 +52,7 @@ object context {
         Or(subterms.indices map { i =>
           val solutionForSubtermI = solver(leftContext, subterms(i))
           val res = Or.unwrap(solutionForSubtermI) map {
-            case Substitution.map(m) if m.contains(v) => Substitution(m.updated(v, reconstruct(i, m(v))))
+            case And.substitution(m) if m.contains(v) => And.createSubstitution(m.updated(v, reconstruct(i, m(v))))
           }
           Or(res)
         })
@@ -68,7 +70,7 @@ object context {
 
           val recursive = findMatches(rightContextTerm)
           Or(Or.unwrap(recursive) map {
-            case Substitution.map(m) => Substitution(m.updated(v, rightContextVar))
+            case And.substitution(m) => And.createSubstitution(m.updated(v, rightContextVar))
           })
         case l: AssocLabel =>
           val zeroLevel: Term = And(solver(leftContext.term, t), Equality(leftContext.contextVar, leftContext.hole))

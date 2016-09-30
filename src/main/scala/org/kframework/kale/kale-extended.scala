@@ -208,10 +208,16 @@ case class EqualityLabel(implicit val env: Environment) extends {
       import StaticImplicits._
       val Variable = env.Variable
       _1.label match {
-        case `Variable` if !_2.contains(_1) => new Binding(_1.asInstanceOf[Variable], _2)
+        case `Variable` if !_2.contains(_1) => createBinding(_1.asInstanceOf[Variable], _2)
         case _ => new Equality(_1, _2)
       }
     }
+  }
+
+  def createBinding(_1: Variable, _2: Term) = {
+    import StaticImplicits._
+    assert(!_2.contains(_1))
+    new Binding(_1.asInstanceOf[Variable], _2)
   }
 }
 
@@ -246,9 +252,9 @@ case class AndLabel(implicit val env: Environment) extends {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
     else {
-      val l1: (Substitution, Iterable[Term]) = unwrap(_1)
-      val l2: (Substitution, Iterable[Term]) = unwrap(_2)
-      val allElements: Set[Term] = l1._2.toSet ++ l2._2 + l1._1 + l2._1
+      val substitutionAndTerms(sub1, terms1) = _1
+      val substitutionAndTerms(sub2, terms2) = _2
+      val allElements: Set[Term] = terms1.toSet ++ terms2 + sub1 + sub2
       Or(allElements
         .collect({ case Or.set(elements) => elements })
         .reduce(cartezianProduct))
@@ -259,24 +265,52 @@ case class AndLabel(implicit val env: Environment) extends {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
     else {
-      val l1: (Substitution, Iterable[Term]) = unwrap(_1)
-      val l2: (Substitution, Iterable[Term]) = unwrap(_2)
-      Substitution(l1._1, l2._1) match {
+      val substitutionAndTerms(sub1, terms1) = _1
+      val substitutionAndTerms(sub2, terms2) = _2
+      applyOnSubstitutions(sub1, sub2) match {
         case `Bottom` => Bottom
-        case s: Substitution => apply(s, l1._2 ++ l2._2)
+        case s: Substitution => apply(s, terms1 ++ terms2)
         case _ => unreachable()
       }
     }
   }
 
+  def applyOnSubstitutions(_1: Substitution, _2: Substitution): Term = {
+    if (_1 == Bottom || _2 == Bottom)
+      Bottom
+    else {
+      val m1 = unwrapSubstitution(_1)
+      val m2 = unwrapSubstitution(_2)
+      if ((m1.keys.toSet & m2.keys.toSet).forall(v => m1(v) == m2(v))) {
+        createSubstitution(m1 ++ m2)
+      } else {
+        Bottom
+      }
+    }
+  }
+
+  def createSubstitution(m: Map[Variable, Term]): Substitution = m.size match {
+    case 0 => Top
+    case 1 => new Binding(m.head._1, m.head._2)
+    case _ => new SubstitutionWithMultipleBindings(m)
+  }
+
+  private def unwrapSubstitution(t: Substitution) = t match {
+    case Top => Map[Variable, Term]()
+    case Equality(_1: Variable, _2) => Map[Variable, Term](_1.asInstanceOf[Variable] -> _2)
+    case substitution(m) => m
+  }
+
   /**
     * Unwraps into a substitution and non-substitution terms
     */
-  def unwrap(t: Term): (Substitution, Iterable[Term]) = t match {
-    case s: Substitution => (s, Iterable.empty)
-    case and: AndOfSubstitutionAndTerms => (and.s, and.terms)
-    case and: AndOfTerms => (Top, and.terms)
-    case o => (Top, Iterable(o))
+  object substitutionAndTerms {
+    def unapply(t: Term): Option[(Substitution, Iterable[Term])] = t match {
+      case s: Substitution => Some(s, Iterable.empty)
+      case and: AndOfSubstitutionAndTerms => Some(and.s, and.terms)
+      case and: AndOfTerms => Some(Top, and.terms)
+      case o => Some(Top, Iterable(o))
+    }
   }
 
   private def cartezianProduct(t1: Iterable[Term], t2: Iterable[Term]): Seq[Term] = {
@@ -310,6 +344,14 @@ case class AndLabel(implicit val env: Environment) extends {
     }
   }
 
+  object substitution {
+    def unapply(t: Substitution): Option[Map[Variable, Term]] = t match {
+      case `Top` => Some(Map[Variable, Term]())
+      case b: Binding => Some(Map(b.variable -> b.term))
+      case s: SubstitutionWithMultipleBindings => Some(s.m)
+    }
+  }
+
   override def construct(l: Iterable[Term]): Term = ???
 
   override val identity: Term = Top
@@ -339,61 +381,19 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
 
   lazy val _1: Term = s
   lazy val _2: Term = terms
-  override lazy val assocIterable: Iterable[Term] = Substitution.asList(s) ++ And.asList(terms)
+  override lazy val assocIterable: Iterable[Term] = And.asList(s) ++ And.asList(terms)
 }
 
 abstract class Named(val name: String)
-
-case class SubstitutionLabel(implicit val env: Environment) extends Named("∧s") with AssocLabel {
-
-  import env._
-
-  override def apply(_1: Term, _2: Term): Term = {
-    if (_1 == Bottom || _2 == Bottom)
-      Bottom
-    else {
-      val m1 = unwrap(_1)
-      val m2 = unwrap(_2)
-      if ((m1.keys.toSet & m2.keys.toSet).forall(v => m1(v) == m2(v))) {
-        apply(m1 ++ m2)
-      } else {
-        Bottom
-      }
-    }
-  }
-
-  private def unwrap(t: Term) = t match {
-    case Top => Map[Variable, Term]()
-    case Equality(_1: Variable, _2) => Map[Variable, Term](_1.asInstanceOf[Variable] -> _2)
-    case Substitution.map(m) => m
-  }
-
-  override def apply(l: Iterable[Term]) = l.foldLeft(Top: Term)(apply)
-
-  def apply(m: Map[Variable, Term]): Substitution = m.size match {
-    case 0 => Top
-    case 1 => new Binding(m.head._1, m.head._2)
-    case _ => new SubstitutionWithMultipleBindings(m)
-  }
-
-  object map {
-    def unapply(t: Substitution): Option[Map[Variable, Term]] = t match {
-      case `Top` => Some(Map[Variable, Term]())
-      case b: Binding => Some(Map(b.variable -> b.term))
-      case s: SubstitutionWithMultipleBindings => Some(s.m)
-    }
-  }
-
-}
 
 final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implicit env: Environment) extends And with Substitution {
   assert(m.size >= 2)
 
   import env._
 
-  val label = Substitution
+  val label = And
   lazy val _1 = Equality(m.head._1, m.head._2)
-  lazy val _2 = Substitution(m.tail)
+  lazy val _2 = And.createSubstitution(m.tail)
 
   override def equals(other: Any): Boolean = other match {
     case that: SubstitutionWithMultipleBindings => m == that.m
@@ -404,7 +404,7 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
 
   def get(v: Variable) = m.get(v)
 
-  override val assocIterable: Iterable[Term] = Substitution.asList(this)
+  override val assocIterable: Iterable[Term] = And.asList(this)
 }
 
 case class OrLabel(implicit val env: Environment) extends NameFromObject with AssocLabel {
