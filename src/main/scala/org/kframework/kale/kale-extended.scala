@@ -286,11 +286,17 @@ case class AndLabel(implicit val env: Environment) extends {
   def apply(_1: Substitution, _2: Substitution): Term = substitution.apply(_1, _2)
   def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = substitutionAndTerms(pureSubstitution, others)
 
+  def asMap(t: Substitution): Map[Variable, Term] = t match {
+    case `Top` => Map[Variable, Term]()
+    case b: Binding => Map(b.variable -> b.term)
+    case s: SubstitutionWithMultipleBindings => s.m
+  }
+
   object substitution {
 
     def apply(_1: Substitution, _2: Substitution): Term = {
-      val substitution(m1) = _1
-      val substitution(m2) = _2
+      val m1 = asMap(_1)
+      val m2 = asMap(_2)
       if ((m1.keys.toSet & m2.keys.toSet).forall(v => m1(v) == m2(v))) {
         substitution(m1 ++ m2)
       } else {
@@ -304,12 +310,17 @@ case class AndLabel(implicit val env: Environment) extends {
       case _ => new SubstitutionWithMultipleBindings(m)
     }
 
-    def unapply(t: Substitution): Option[Map[Variable, Term]] = t match {
-      case `Top` => Some(Map[Variable, Term]())
-      case b: Binding => Some(Map(b.variable -> b.term))
-      case s: SubstitutionWithMultipleBindings => Some(s.m)
+    def unapply(t: Term): Option[Map[Variable, Term]] = t match {
+      case t: Substitution => Some(asMap(t))
       case _ => None
     }
+  }
+
+  def asSubstitutionAndTerms(t: Term): (Substitution, Iterable[Term]) = t match {
+    case s: Substitution => (s, Iterable.empty)
+    case and: AndOfSubstitutionAndTerms => (and.s, and.terms)
+    case and: AndOfTerms => (Top, and.terms)
+    case o => (Top, Iterable(o))
   }
 
   /**
@@ -331,12 +342,7 @@ case class AndLabel(implicit val env: Environment) extends {
       }
     }
 
-    def unapply(t: Term): Option[(Substitution, Iterable[Term])] = t match {
-      case s: Substitution => Some(s, Iterable.empty)
-      case and: AndOfSubstitutionAndTerms => Some(and.s, and.terms)
-      case and: AndOfTerms => Some(Top, and.terms)
-      case o => Some(Top, Iterable(o))
-    }
+    def unapply(t: Term): Option[(Substitution, Iterable[Term])] = Some(asSubstitutionAndTerms(t))
   }
 
   private def cartezianProduct(t1: Iterable[Term], t2: Iterable[Term]): Seq[Term] = {
