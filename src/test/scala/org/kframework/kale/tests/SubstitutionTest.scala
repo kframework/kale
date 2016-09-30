@@ -9,7 +9,7 @@ class SubstitutionTest extends FreeSpec with TestSetup {
   import env._
 
   "substitution" in {
-    val s = And.createSubstitution(Map(X -> (5: Term)))
+    val s = And.substitution(Map(X -> (5: Term)))
     val substitution = substitutionApplier(s)
 
     assert(substitution(5) === (5: Term))
@@ -19,7 +19,7 @@ class SubstitutionTest extends FreeSpec with TestSetup {
   }
 
   "context substitution" in {
-    val s = And.createSubstitution(Map(X -> buz(bar(1), X_1), Y -> bar(2)))
+    val s = And.substitution(Map(X -> buz(bar(1), X_1), Y -> bar(2)))
     val substitution = substitutionApplier(s)
 
     assert(substitution(

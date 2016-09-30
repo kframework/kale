@@ -261,13 +261,23 @@ case class AndLabel(implicit val env: Environment) extends {
     }
   }
 
+  override def apply(terms: Iterable[Term]): Term = {
+    val disjunction = terms.collect({ case Or.set(elements) => elements }).reduce(cartezianProduct)
+    Or(disjunction)
+
+    //    val bindings: Map[Variable, Term] = terms.collect({ case Equality(v: Variable, t) => v -> t }).toMap
+    //    val pureSubstitution = Substitution(bindings)
+    //    val others: Iterable[Term] = terms.filter({ case Equality(v: Variable, t) => false; case _ => true })
+    //    apply(pureSubstitution, others)
+  }
+
   private def applyOnNonAnds(_1: Term, _2: Term): Term = {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
     else {
       val substitutionAndTerms(sub1, terms1) = _1
       val substitutionAndTerms(sub2, terms2) = _2
-      applyOnSubstitutions(sub1, sub2) match {
+      apply(sub1, sub2) match {
         case `Bottom` => Bottom
         case s: Substitution => apply(s, terms1 ++ terms2)
         case _ => unreachable()
@@ -275,36 +285,55 @@ case class AndLabel(implicit val env: Environment) extends {
     }
   }
 
-  def applyOnSubstitutions(_1: Substitution, _2: Substitution): Term = {
-    if (_1 == Bottom || _2 == Bottom)
-      Bottom
-    else {
-      val m1 = unwrapSubstitution(_1)
-      val m2 = unwrapSubstitution(_2)
+  def apply(m: Map[Variable, Term]) = substitution.apply(m)
+  def apply(_1: Substitution, _2: Substitution): Term = substitution.apply(_1, _2)
+  def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = substitutionAndTerms(pureSubstitution, others)
+
+  object substitution {
+
+    def apply(_1: Substitution, _2: Substitution): Term = {
+      val substitution(m1) = _1
+      val substitution(m2) = _2
       if ((m1.keys.toSet & m2.keys.toSet).forall(v => m1(v) == m2(v))) {
-        createSubstitution(m1 ++ m2)
+        substitution(m1 ++ m2)
       } else {
         Bottom
       }
     }
-  }
 
-  def createSubstitution(m: Map[Variable, Term]): Substitution = m.size match {
-    case 0 => Top
-    case 1 => new Binding(m.head._1, m.head._2)
-    case _ => new SubstitutionWithMultipleBindings(m)
-  }
+    def apply(m: Map[Variable, Term]): Substitution = m.size match {
+      case 0 => Top
+      case 1 => new Binding(m.head._1, m.head._2)
+      case _ => new SubstitutionWithMultipleBindings(m)
+    }
 
-  private def unwrapSubstitution(t: Substitution) = t match {
-    case Top => Map[Variable, Term]()
-    case Equality(_1: Variable, _2) => Map[Variable, Term](_1.asInstanceOf[Variable] -> _2)
-    case substitution(m) => m
+    def unapply(t: Substitution): Option[Map[Variable, Term]] = t match {
+      case `Top` => Some(Map[Variable, Term]())
+      case b: Binding => Some(Map(b.variable -> b.term))
+      case s: SubstitutionWithMultipleBindings => Some(s.m)
+      case _ => None
+    }
   }
 
   /**
     * Unwraps into a substitution and non-substitution terms
     */
   object substitutionAndTerms {
+    def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = {
+      if (others.isEmpty) {
+        pureSubstitution
+      } else if (pureSubstitution == Top && others.size == 1) {
+        others.head
+      } else {
+        val terms = if (others.size > 1) new AndOfTerms(others.toSet) else others.head
+        if (pureSubstitution == Top) {
+          terms
+        } else {
+          new AndOfSubstitutionAndTerms(pureSubstitution, terms)
+        }
+      }
+    }
+
     def unapply(t: Term): Option[(Substitution, Iterable[Term])] = t match {
       case s: Substitution => Some(s, Iterable.empty)
       case and: AndOfSubstitutionAndTerms => Some(and.s, and.terms)
@@ -316,39 +345,6 @@ case class AndLabel(implicit val env: Environment) extends {
   private def cartezianProduct(t1: Iterable[Term], t2: Iterable[Term]): Seq[Term] = {
     for (e1 <- t1.toSeq; e2 <- t2.toSeq) yield {
       applyOnNonAnds(e1, e2)
-    }
-  }
-
-  override def apply(terms: Iterable[Term]): Term = {
-    val disjunction = terms.collect({ case Or.set(elements) => elements }).reduce(cartezianProduct)
-    Or(disjunction)
-
-    //    val bindings: Map[Variable, Term] = terms.collect({ case Equality(v: Variable, t) => v -> t }).toMap
-    //    val pureSubstitution = Substitution(bindings)
-    //    val others: Iterable[Term] = terms.filter({ case Equality(v: Variable, t) => false; case _ => true })
-    //    apply(pureSubstitution, others)
-  }
-
-  def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = {
-    if (others.isEmpty) {
-      pureSubstitution
-    } else if (pureSubstitution == Top && others.size == 1) {
-      others.head
-    } else {
-      val terms = if (others.size > 1) new AndOfTerms(others.toSet) else others.head
-      if (pureSubstitution == Top) {
-        terms
-      } else {
-        new AndOfSubstitutionAndTerms(pureSubstitution, terms)
-      }
-    }
-  }
-
-  object substitution {
-    def unapply(t: Substitution): Option[Map[Variable, Term]] = t match {
-      case `Top` => Some(Map[Variable, Term]())
-      case b: Binding => Some(Map(b.variable -> b.term))
-      case s: SubstitutionWithMultipleBindings => Some(s.m)
     }
   }
 
@@ -393,7 +389,7 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
 
   val label = And
   lazy val _1 = Equality(m.head._1, m.head._2)
-  lazy val _2 = And.createSubstitution(m.tail)
+  lazy val _2 = And.substitution(m.tail)
 
   override def equals(other: Any): Boolean = other match {
     case that: SubstitutionWithMultipleBindings => m == that.m
