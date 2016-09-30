@@ -1,7 +1,6 @@
 package org.kframework.kale
 
 import scala.collection._
-
 import scala.Iterable
 
 trait Label0 extends Function0[Term] with NodeLabel {
@@ -255,14 +254,12 @@ case class AndLabel(implicit val env: Environment) extends {
       val substitutionAndTerms(sub1, terms1) = _1
       val substitutionAndTerms(sub2, terms2) = _2
       val allElements: Set[Term] = terms1.toSet ++ terms2 + sub1 + sub2
-      Or(allElements
-        .collect({ case Or.set(elements) => elements })
-        .reduce(cartezianProduct))
+      Or(allElements map Or.asSet reduce cartezianProduct)
     }
   }
 
   override def apply(terms: Iterable[Term]): Term = {
-    val disjunction = terms.collect({ case Or.set(elements) => elements }).reduce(cartezianProduct)
+    val disjunction = terms map Or.asSet reduce cartezianProduct
     Or(disjunction)
 
     //    val bindings: Map[Variable, Term] = terms.collect({ case Equality(v: Variable, t) => v -> t }).toMap
@@ -408,24 +405,19 @@ case class OrLabel(implicit val env: Environment) extends NameFromObject with As
   import env._
 
   def apply(_1: Term, _2: Term): Term =
-    unwrap(_1) | unwrap(_2) match {
+    asSet(_1) | asSet(_2) match {
       case s if s.isEmpty => Bottom
       case s if s.size == 1 => s.head
       case s => new OrWithAtLeastTwoElements(s)
     }
 
-  def unwrap(t: Term): Set[Term] = t match {
+  def asSet(t: Term): Set[Term] = t match {
     case o: OrWithAtLeastTwoElements => o.terms
     case `Bottom` => Set()
     case o => Set(o)
   }
 
   override def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
-
-  object set {
-    def unapply(t: Term): Some[Set[Term]] = Some(unwrap(t))
-  }
-
 }
 
 private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env: Environment) extends Assoc with Formula {
@@ -468,12 +460,12 @@ trait HasId {
 
 trait AssocWithIdLabel extends AssocLabel with HasId {
   def apply(_1: Term, _2: Term) = {
-    val l1 = unwrap(_1)
-    val l2 = unwrap(_2)
+    val l1 = asIterable(_1)
+    val l2 = asIterable(_2)
     apply(l1 ++ l2)
   }
 
-  private def unwrap(t: Term) = t match {
+  def asIterable(t: Term): Iterable[Term] = t match {
     case `identity` => List[Term]()
     case x if x.label == this => x.asInstanceOf[Assoc].assocIterable
     case y => List(y)

@@ -17,7 +17,7 @@ class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binar
   def executionStep(obj: Term): Term = {
     rules.map(r => (doMatch(r._1, obj), r._2)).find(_._1 != Bottom) match {
       case Some((substitutions, rhs)) =>
-        Or.unwrap(substitutions).head match {
+        Or.asSet(substitutions).head match {
           case oneSubstitutuion: Substitution => substitutioner(oneSubstitutuion).apply(rhs)
           case s => s
         }
@@ -29,7 +29,7 @@ class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binar
     Or(rules.map(r => (doMatch(r._1, obj), r._2)).flatMap({
       case (Bottom, _) => Set[Term]()
       case (or, rhs) =>
-        val substitutions: Set[Substitution] = Or.unwrap(or).asInstanceOf[Set[Substitution]]
+        val substitutions: Set[Substitution] = Or.asSet(or).asInstanceOf[Set[Substitution]]
         substitutions.map(substitutioner).map(_ (rhs))
     }))
   }

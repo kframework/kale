@@ -51,7 +51,7 @@ object context {
       def solutionFor(subterms: List[Term], reconstruct: (Int, Term) => Term) = {
         Or(subterms.indices map { i =>
           val solutionForSubtermI = solver(leftContext, subterms(i))
-          val res = Or.unwrap(solutionForSubtermI) map {
+          val res = Or.asSet(solutionForSubtermI) map {
             case And.substitution(m) if m.contains(v) => And.substitution(m.updated(v, reconstruct(i, m(v))))
           }
           Or(res)
@@ -69,7 +69,7 @@ object context {
           }
 
           val recursive = findMatches(rightContextTerm)
-          Or(Or.unwrap(recursive) map {
+          Or(Or.asSet(recursive) map {
             case And.substitution(m) => And.substitution(m.updated(v, rightContextVar))
           })
         case l: AssocLabel =>
