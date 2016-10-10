@@ -5,8 +5,10 @@ import org.kframework.kale.{Invoke, _}
 trait TestSetup {
 
   implicit val env = new Environment
+
   import env._
   import env.builtin._
+
   val implicits = new Implicits()
 
   val X = Variable("X")
@@ -23,8 +25,11 @@ trait TestSetup {
   val traversed = FreeLabel1("traversed")
   val andMatchingY = FreeLabel0("andMatchingY")
 
-  val allLabels = Set(foo, STRING, INT, INT.+, matched, traversed,
-    andMatchingY, Variable, AnywhereContext, bar, buz, emptyList, listLabel)
+  val a2b = FunctionDefinedByRewritingLabel1("a2b")
+
+  a2b.setRules(Set(Rewrite(a2b(a), b)))
+
+  env.seal()
 
   val unifier = Matcher(env)
 

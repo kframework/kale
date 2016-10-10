@@ -16,8 +16,8 @@ object Matcher {
       def f(solver: State)(a: Node0, b: Node0) = Top
     }
 
-    object FreeNode1FreeNode1 extends ProcessingFunction[FreeNode1, FreeNode1, Term] {
-      def f(solver: State)(a: FreeNode1, b: FreeNode1) = solver(a._1, b._1)
+    object FreeNode1FreeNode1 extends ProcessingFunction[Node1, Node1, Term] {
+      def f(solver: State)(a: Node1, b: Node1) = solver(a._1, b._1)
     }
 
     object FreeNode2FreeNode2 extends ProcessingFunction[FreeNode2, FreeNode2, Term] {
@@ -92,10 +92,15 @@ object Matcher {
 
     val freeLikeLabelXfreeLikeLabel = labels.collect({
       case l: FreeLabel0 => Piece(l, l, FreeNode0FreeNode0)
+      case l: FunctionDefinedByRewritingLabel0 => Piece(l, l, FreeNode1FreeNode1)
       case l: FreeLabel1 => Piece(l, l, FreeNode1FreeNode1)
+      case l: FunctionDefinedByRewritingLabel1 => Piece(l, l, FreeNode1FreeNode1)
       case l: FreeLabel2 => Piece(l, l, FreeNode2FreeNode2)
+      case l: FunctionDefinedByRewritingLabel2 => Piece(l, l, FreeNode2FreeNode2)
       case l: FreeLabel3 => Piece(l, l, FreeNode3FreeNode3)
+      case l: FunctionDefinedByRewritingLabel3 => Piece(l, l, FreeNode2FreeNode2)
       case l: FreeLabel4 => Piece(l, l, FreeNode4FreeNode4)
+      case l: FunctionDefinedByRewritingLabel4 => Piece(l, l, FreeNode2FreeNode2)
       case l: ConstantLabel[_] => Piece(l, l, Constants)
     })
 

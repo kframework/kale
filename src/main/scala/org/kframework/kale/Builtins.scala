@@ -12,30 +12,28 @@ class Builtins(implicit val env: Environment) {
 
   sealed trait PrimordialConstantLabel[T] extends HasEnvironment with ConstantLabel[T]
 
-  object INT extends NameFromObject with PrimordialConstantLabel[Int] {
+  case class ReferenceLabel[T](name: String) extends HasEnvironment with PrimordialConstantLabel[T]
 
-    object + extends FreeLabel2("+")(env)
+  val allPrimitives = List(INT, STRING, DOUBLE, BOOLEAN)
+
+  // just for forcing initialization of "object" references
+
+  object INT extends ReferenceLabel[Int]("Int") {
+
+    val + = FreeLabel2("+")(env)
 
   }
 
-  INT
+  object STRING extends ReferenceLabel[String]("String")
 
-  object STRING extends NameFromObject with PrimordialConstantLabel[String]
+  object DOUBLE extends ReferenceLabel[Double]("Double")
 
-  STRING
+  object BOOLEAN extends ReferenceLabel[Boolean]("Boolean")
 
-  object DOUBLE extends NameFromObject with PrimordialConstantLabel[Double]
-
-  DOUBLE
-
-  object BOOLEAN extends NameFromObject with PrimordialConstantLabel[Boolean]
-
-  BOOLEAN
-
-  case class Sort(s: String)
+  case class Sort(name: String)
 
   case class GENERIC_TOKEN(sort: Sort) extends {
-    val name = "TOKEN_" + sort.s
+    val name = "TOKEN_" + sort.name
   } with PrimordialConstantLabel[String]
 
   case class MapLabel(name: String, index: Term => Term, identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {

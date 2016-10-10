@@ -10,10 +10,12 @@ object SubstitutionApply {
   def apply(pieces: Set[Unary.Piece[SubstitutionApply]], env: Environment)(s: Substitution): SubstitutionApply = new SubstitutionApply(pieces, env)(s)
 
   def apply(env: Environment): Substitution => SubstitutionApply = {
+    assert(env.isSealed)
+
     import env._
 
-    object Node0 extends Unary.ProcessingFunction[Node0, Node0, SubstitutionApply] {
-      def f(solver: SubstitutionApply)(t: Node0) = t
+    object Node0 extends Unary.ProcessingFunction[Node0, Term, SubstitutionApply] {
+      def f(solver: SubstitutionApply)(t: Node0) = t.label()
     }
 
     object Node1 extends Unary.ProcessingFunction[Node1, Term, SubstitutionApply] {

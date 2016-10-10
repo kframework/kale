@@ -23,6 +23,7 @@ object Binary {
   case class Piece(leftLabel: Label, rightLabel: Label, f: State => (Term, Term) => Term)
 
   class Apply(pieces: Set[Piece], env: Environment) extends State {
+    assert(env.isSealed)
 
     import env._
 

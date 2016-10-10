@@ -93,4 +93,14 @@ class MatchSpec extends FreeSpec with TestSetup {
         := foo(AnywhereContext(XX, AnywhereContext(X, bar(Y1))), AnywhereContext(XX, AnywhereContext(X, YY))) !== Bottom)
     }
   }
+
+  "function defined by rewriting" - {
+    "simple still stuck increment function" in {
+      assert(a2b(c).label === a2b)
+    }
+
+    "simple applied increment function" in {
+      assert(a2b(a) === b)
+    }
+  }
 }

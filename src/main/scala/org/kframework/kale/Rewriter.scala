@@ -10,7 +10,9 @@ object Rewriter {
     new Rewriter(substitutioner, matcher, rules, env)
 }
 
-class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binary.Apply, rules: Set[Rewrite], env: Environment) {
+class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binary.Apply, rules: Set[Rewrite], val env: Environment) {
+  assert(env.isSealed)
+  assert(rules != null)
 
   import env._
 
@@ -18,7 +20,8 @@ class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binar
     rules.map(r => (doMatch(r._1, obj), r._2)).find(_._1 != Bottom) match {
       case Some((substitutions, rhs)) =>
         Or.asSet(substitutions).head match {
-          case oneSubstitutuion: Substitution => substitutioner(oneSubstitutuion).apply(rhs)
+          case oneSubstitutuion: Substitution =>
+            substitutioner(oneSubstitutuion).apply(rhs)
           case s => s
         }
       case None => Bottom
