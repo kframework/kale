@@ -20,16 +20,16 @@ object Matcher {
       def f(solver: State)(a: Node1, b: Node1) = solver(a._1, b._1)
     }
 
-    object FreeNode2FreeNode2 extends ProcessingFunction[FreeNode2, FreeNode2, Term] {
-      def f(solver: State)(a: FreeNode2, b: FreeNode2) = And(solver(a._1, b._1), solver(a._2, b._2))
+    object FreeNode2FreeNode2 extends ProcessingFunction[Node2, Node2, Term] {
+      def f(solver: State)(a: Node2, b: Node2) = And(solver(a._1, b._1), solver(a._2, b._2))
     }
 
-    object FreeNode3FreeNode3 extends ProcessingFunction[FreeNode3, FreeNode3, Term] {
-      def f(solver: State)(a: FreeNode3, b: FreeNode3) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3)))
+    object FreeNode3FreeNode3 extends ProcessingFunction[Node3, Node3, Term] {
+      def f(solver: State)(a: Node3, b: Node3) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3)))
     }
 
-    object FreeNode4FreeNode4 extends ProcessingFunction[FreeNode4, FreeNode4, Term] {
-      def f(solver: State)(a: FreeNode4, b: FreeNode4) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3), solver(a._4, b._4)))
+    object FreeNode4FreeNode4 extends ProcessingFunction[Node4, Node4, Term] {
+      def f(solver: State)(a: Node4, b: Node4) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3), solver(a._4, b._4)))
     }
 
     def matchContents(l: AssocLabel, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: State): Term = {
@@ -92,15 +92,15 @@ object Matcher {
 
     val freeLikeLabelXfreeLikeLabel = labels.collect({
       case l: FreeLabel0 => Piece(l, l, FreeNode0FreeNode0)
-      case l: FunctionDefinedByRewritingLabel0 => Piece(l, l, FreeNode1FreeNode1)
+      case l: FunctionDefinedByRewritingLabel0 => Piece(l, l, FreeNode0FreeNode0)
       case l: FreeLabel1 => Piece(l, l, FreeNode1FreeNode1)
       case l: FunctionDefinedByRewritingLabel1 => Piece(l, l, FreeNode1FreeNode1)
       case l: FreeLabel2 => Piece(l, l, FreeNode2FreeNode2)
       case l: FunctionDefinedByRewritingLabel2 => Piece(l, l, FreeNode2FreeNode2)
       case l: FreeLabel3 => Piece(l, l, FreeNode3FreeNode3)
-      case l: FunctionDefinedByRewritingLabel3 => Piece(l, l, FreeNode2FreeNode2)
+      case l: FunctionDefinedByRewritingLabel3 => Piece(l, l, FreeNode3FreeNode3)
       case l: FreeLabel4 => Piece(l, l, FreeNode4FreeNode4)
-      case l: FunctionDefinedByRewritingLabel4 => Piece(l, l, FreeNode2FreeNode2)
+      case l: FunctionDefinedByRewritingLabel4 => Piece(l, l, FreeNode4FreeNode4)
       case l: ConstantLabel[_] => Piece(l, l, Constants)
     })
 
