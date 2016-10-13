@@ -1,6 +1,6 @@
 package org.kframework.kale.transformer
 
-import org.kframework.kale.{Environment, Label, Term}
+import org.kframework.kale.{Environment, Label, Term, Util}
 
 import scala.collection.Set
 

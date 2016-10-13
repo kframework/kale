@@ -203,7 +203,9 @@ case class EqualityLabel(implicit val env: Environment) extends {
   override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
     if (_1 == _2)
       env.Top
-    else {
+    else if (_1.isGround && _2.isGround) {
+      env.Bottom
+    } else {
       import StaticImplicits._
       val Variable = env.Variable
       _1.label match {
@@ -220,8 +222,9 @@ case class EqualityLabel(implicit val env: Environment) extends {
   }
 }
 
-trait Substitution extends Term with Formula {
+trait Substitution extends Term with Formula with (Term => Term) {
   def get(v: Variable): Option[Term]
+  def apply(t: Term): Term
 }
 
 private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 with Formula with BinaryInfix {
@@ -237,6 +240,15 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
   assert(_1.isInstanceOf[Variable])
 
   def get(v: Variable) = if (_1 == v) Some(_2) else None
+
+  /**
+    * Inefficient -- replace with some default version of ApplySubstitution
+    */
+  def apply(t: Term): Term = t match {
+    case `variable` => term
+    case Node(l, cs) => l((cs map apply).toIterable)
+    case _ => t
+  }
 }
 
 trait And extends Assoc with Formula
@@ -247,6 +259,9 @@ case class AndLabel(implicit val env: Environment) extends {
 
   import env._
 
+  /**
+    * normalizing
+    */
   override def apply(_1: Term, _2: Term): Term = {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
@@ -258,6 +273,9 @@ case class AndLabel(implicit val env: Environment) extends {
     }
   }
 
+  /**
+    * normalizing
+    */
   override def apply(terms: Iterable[Term]): Term = {
     val disjunction = terms map Or.asSet reduce cartezianProduct
     Or(disjunction)
@@ -268,7 +286,10 @@ case class AndLabel(implicit val env: Environment) extends {
     //    apply(pureSubstitution, others)
   }
 
-  private def applyOnNonAnds(_1: Term, _2: Term): Term = {
+  /**
+    * normalizing
+    */
+  private def applyOnNonOrs(_1: Term, _2: Term): Term = {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
     else {
@@ -276,14 +297,26 @@ case class AndLabel(implicit val env: Environment) extends {
       val substitutionAndTerms(sub2, terms2) = _2
       apply(sub1, sub2) match {
         case `Bottom` => Bottom
-        case s: Substitution => apply(s, terms1 ++ terms2)
+        case substitutionAndTerms(sub, terms) =>
+          apply(sub, (terms1 ++ terms2 map sub) ++ terms)
         case _ => unreachable()
       }
     }
   }
 
-  def apply(m: Map[Variable, Term]) = substitution.apply(m)
-  def apply(_1: Substitution, _2: Substitution): Term = substitution.apply(_1, _2)
+  /**
+    * not-normalizing
+    */
+  def apply(m: Map[Variable, Term]) = substitution(m)
+
+  /**
+    * normalizing
+    */
+  def apply(_1: Substitution, _2: Substitution): Term = substitution(_1, _2)
+
+  /**
+    * not-normalizing
+    */
   def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = substitutionAndTerms(pureSubstitution, others)
 
   def asMap(t: Substitution): Map[Variable, Term] = t match {
@@ -294,16 +327,26 @@ case class AndLabel(implicit val env: Environment) extends {
 
   object substitution {
 
+    /**
+      * normalizing
+      */
     def apply(_1: Substitution, _2: Substitution): Term = {
-      val m1 = asMap(_1)
-      val m2 = asMap(_2)
-      if ((m1.keys.toSet & m2.keys.toSet).forall(v => m1(v) == m2(v))) {
-        substitution(m1 ++ m2)
-      } else {
-        Bottom
-      }
+      // TODO: optimize to use the larger substitution as the first one
+      val substitutionAndTerms(newSubs2, termsOutOfSubs2: Iterable[Term]) = _1(_2)
+
+      val applyingTheSubsOutOf2To1 = newSubs2(_1).asInstanceOf[Substitution]
+
+      val m1 = asMap(applyingTheSubsOutOf2To1)
+      val m2 = asMap(newSubs2)
+
+      val newSub: Substitution = substitution(m1 ++ m2)
+
+      AndLabel.this.apply(newSub, termsOutOfSubs2)
     }
 
+    /**
+      * not-normalizing
+      */
     def apply(m: Map[Variable, Term]): Substitution = m.size match {
       case 0 => Top
       case 1 => new Binding(m.head._1, m.head._2)
@@ -327,17 +370,24 @@ case class AndLabel(implicit val env: Environment) extends {
     * Unwraps into a substitution and non-substitution terms
     */
   object substitutionAndTerms {
+    /**
+      * not normalizing
+      */
     def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = {
+      assert(others forall { t => t == pureSubstitution(t) })
+
       if (others.isEmpty) {
         pureSubstitution
       } else if (pureSubstitution == Top && others.size == 1) {
         others.head
       } else {
         val terms = if (others.size > 1) new AndOfTerms(others.toSet) else others.head
-        if (pureSubstitution == Top) {
-          terms
-        } else {
-          new AndOfSubstitutionAndTerms(pureSubstitution, terms)
+        bottomize(others.toSeq: _*) {
+          if (pureSubstitution == Top) {
+            terms
+          } else {
+            new AndOfSubstitutionAndTerms(pureSubstitution, terms)
+          }
         }
       }
     }
@@ -347,7 +397,7 @@ case class AndLabel(implicit val env: Environment) extends {
 
   private def cartezianProduct(t1: Iterable[Term], t2: Iterable[Term]): Seq[Term] = {
     for (e1 <- t1.toSeq; e2 <- t2.toSeq) yield {
-      applyOnNonAnds(e1, e2)
+      applyOnNonOrs(e1, e2)
     }
   }
 
@@ -370,6 +420,11 @@ private[kale] final class AndOfTerms(val terms: Set[Term])(implicit env: Environ
   override def _1: Term = terms.head
 
   override def _2: Term = if (terms.size == 2) terms.tail.head else new AndOfTerms(terms.tail)
+
+  override def equals(other: Any) = other match {
+    case that: AndOfTerms => this.terms == that.terms
+    case _ => false
+  }
 }
 
 private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val terms: Term)(implicit env: Environment) extends And with Assoc {
@@ -385,7 +440,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
 
 abstract class Named(val name: String)
 
-final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implicit env: Environment) extends And with Substitution {
+final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implicit env: Environment) extends And with Substitution with BinaryInfix {
   assert(m.size >= 2)
 
   import env._
@@ -404,9 +459,20 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
   def get(v: Variable) = m.get(v)
 
   override val assocIterable: Iterable[Term] = And.asList(this)
+
+  /**
+    * Inefficient -- replace with some default version of ApplySubstitution
+    */
+  def apply(t: Term): Term = t match {
+    case v: Variable => m.getOrElse(v, v)
+    case Node(l, cs) => l((cs map apply).toIterable)
+    case _ => t
+  }
 }
 
-case class OrLabel(implicit val env: Environment) extends NameFromObject with AssocLabel {
+case class OrLabel(implicit val env: Environment) extends {
+  val name = "∨"
+} with AssocLabel {
 
   import env._
 
@@ -450,7 +516,7 @@ trait AssocLabel extends Label2 {
 
   val thisthis = this
 
-  def asList(t: Term) = t.label match {
+  def asList(t: Term): Iterable[Term] = t.label match {
     case `thisthis` => t.asInstanceOf[Assoc].assocIterable
     case _ => List(t)
   }

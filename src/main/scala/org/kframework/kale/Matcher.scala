@@ -2,7 +2,7 @@ package org.kframework.kale
 
 import org.kframework.kale.transformer.Binary
 
-import scala.collection.{Iterable, Set}
+import scala.collection._
 
 object Matcher {
 
@@ -12,20 +12,32 @@ object Matcher {
   def apply(implicit env: Environment): Apply = {
     import env._
 
+    def shortCircuitAnd(solver: State)(toEqual: (Term, Term)*): Term = {
+      toEqual.foldLeft(Top: Term)({
+        case (Bottom, _) => Bottom
+        case (soFar, (l, r)) =>
+          val results = Or.asSet(soFar) map {
+            case soFarVariant@And.substitutionAndTerms(sub, _) =>
+              And(soFar: Term, solver(sub(l), sub(r)))
+          }
+          Or(results)
+      })
+    }
+
     object FreeNode0FreeNode0 extends ProcessingFunction[Node0, Node0, Top.type] {
       def f(solver: State)(a: Node0, b: Node0) = Top
     }
 
     object FreeNode1FreeNode1 extends ProcessingFunction[Node1, Node1, Term] {
-      def f(solver: State)(a: Node1, b: Node1) = solver(a._1, b._1)
+      def f(solver: State)(a: Node1, b: Node1) = shortCircuitAnd(solver)((a._1, b._1))
     }
 
     object FreeNode2FreeNode2 extends ProcessingFunction[Node2, Node2, Term] {
-      def f(solver: State)(a: Node2, b: Node2) = And(solver(a._1, b._1), solver(a._2, b._2))
+      def f(solver: State)(a: Node2, b: Node2) = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2))
     }
 
     object FreeNode3FreeNode3 extends ProcessingFunction[Node3, Node3, Term] {
-      def f(solver: State)(a: Node3, b: Node3) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3)))
+      def f(solver: State)(a: Node3, b: Node3) = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2), (a._3, b._3))
     }
 
     object FreeNode4FreeNode4 extends ProcessingFunction[Node4, Node4, Term] {
@@ -61,6 +73,91 @@ object Matcher {
         val l1 = asList(a)
         val l2 = asList(b)
         matchContents(b.label, l1, l2)(solver)
+      }
+    }
+
+    case class MatchNotSupporteredError(l: Term, r: Term, message: String = "") extends
+      AssertionError("Trying to match " + l + " with " + r + " not supported yet. " + message)
+
+    object MapTerm extends ProcessingFunction[Term, Term, Term] {
+      override def f(solver: State)(a: Term, b: Term): Term = a.label match {
+        case mapLabel: builtin.MapLabel =>
+          val mapLabel.map(left, leftUnindexed) = a
+          val mapLabel.map(right, rightUnindexed) = b
+
+          assert(left.size + leftUnindexed.size > 1, "There is some bug in the Piece registration")
+
+          if (rightUnindexed.nonEmpty) {
+            throw MatchNotSupporteredError(a, b, "Var on the rhs.")
+          }
+          else if (left.nonEmpty && right.isEmpty && rightUnindexed.isEmpty) {
+            Bottom
+          }
+          else if (left.nonEmpty && right.nonEmpty && leftUnindexed.size <= 1 && rightUnindexed.isEmpty) {
+            val leftKeys = left.keys.toSet
+            val rightKeys = right.keys.toSet
+
+
+            if (!rightKeys.forall(_.isGround)) {
+              throw MatchNotSupporteredError(a, b)
+            }
+
+            if (!(leftKeys filter (_.isGround) forall rightKeys.contains)) {
+              Bottom
+            }
+            else if (leftKeys.size - (leftKeys & rightKeys).size <= 1) {
+
+              val commonKeys = leftKeys & rightKeys
+
+              val valueMatches = if (commonKeys.nonEmpty)
+                And(commonKeys map (k => solver(right(k), right(k))))
+              else
+                Top
+
+              val lookupByKeyVariableAndValueMatch = if (leftKeys.size - commonKeys.size == 1) {
+                val v = (leftKeys -- rightKeys).head
+                val rightValue = (rightKeys -- leftKeys).head
+
+                And(Equality(v, rightValue), left(v), right(rightValue))
+              } else {
+                Top
+              }
+
+              val freeLeftVariableEquality = if (leftUnindexed.size == 1) {
+                Equality(leftUnindexed.head, mapLabel((rightKeys -- leftKeys).map(right)))
+              } else {
+                Top
+              }
+
+              if (lookupByKeyVariableAndValueMatch != Top && freeLeftVariableEquality != Top) {
+                throw MatchNotSupporteredError(a, b)
+              }
+
+              And(valueMatches, lookupByKeyVariableAndValueMatch, freeLeftVariableEquality)
+            } else {
+              throw MatchNotSupporteredError(a, b, "Only supported matches with at most one differing (i.e., symbolic somehow) key and at most a variable (at the top level) on the rhs.")
+            }
+          }
+          else {
+            throw MatchNotSupporteredError(a, b, "Not yet implemented. Should eventually default to AC.")
+          }
+
+        //          if (rightUnindexed.nonEmpty)
+        //            throw MatchNotSupporteredError(a, b, "No symbolic execution (i.e., vars on the object side) supported yet.")
+        //
+        //          def matchIndexed(left: Map[Term, Term]): Term = {
+        //            if (left.keys.toSet != right.keys.toSet)
+        //              throw MatchNotSupporteredError(a, b, "Not yet implemented. Do something smarter eventually.")
+        //
+        //            And(left map {
+        //              case (k, lv) => solver(lv, right(k))
+        //            })
+        //          }
+        //
+        //          a match {
+        //            case mapLabel.map(indexed, unindexed) if unindexed.isEmpty => matchIndexed(indexed)
+        //            case _ => throw MatchNotSupporteredError(a, b, "Not yet implemented. Should eventually default to AC.")
+        //          }
       }
     }
 
@@ -105,6 +202,8 @@ object Matcher {
     })
 
     val assoc = labels.flatMap({
+      case m: env.builtin.MapLabel =>
+        labels.collect({ case ll if !ll.isInstanceOf[Variable] => Piece(m, ll, MapTerm) })
       case l: AssocLabel if l != And =>
         labels.collect({ case ll if !ll.isInstanceOf[Variable] => Piece(l, ll, AssocTerm) })
       case _ => Set[Piece]()

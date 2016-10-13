@@ -38,6 +38,7 @@ case class Environment() {
   val Variable = VariableLabel()
 
   val Truth = TruthLabel()
+
   val Top: Truth with Substitution = TopInstance()
   val Bottom: Truth = BottomInstance()
 
@@ -69,6 +70,11 @@ case class Environment() {
       Bottom
     else
       f
+  }
+
+  def renameVariables[T <: Term](t: T): T = {
+    val rename = And.substitution((Util.variables(t) map (v => (v, v.label(v.name + Math.random().toInt)))).toMap)
+    rename(t).asInstanceOf[T]
   }
 }
 
@@ -131,6 +137,13 @@ trait Term extends Iterable[Term] {
   def iterator(): Iterator[Term]
 
   override def hashCode = label.hashCode
+}
+
+object Node {
+  def unapply(t: Term): Option[(NodeLabel, Iterator[Term])] = t match {
+    case t: Node => Some(t.label, t.iterator)
+    case _ => None
+  }
 }
 
 trait Node extends Term with Product {
@@ -206,6 +219,8 @@ private case class TopInstance(implicit eenv: Environment) extends Truth(true) w
   override def get(v: Variable): Option[Term] = None
 
   override def toString = "⊤"
+
+  def apply(t: Term) = t
 }
 
 private case class BottomInstance(implicit eenv: Environment) extends Truth(false) {
@@ -246,13 +261,15 @@ trait PurelyFunctionalLabel4 extends Label4 with FunctionLabel {
 
 trait FunctionDefinedByRewriting extends FunctionLabel {
   val env: Environment
-  private var rules: Set[Rewrite] = _
-  lazy val rewriter: Rewriter = {
-    assert(rules != null, "Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
-    Rewriter(SubstitutionApply(env), Matcher(env), env)(rules)
-  }
+  private var p_rewriter: Option[Rewriter] = None
 
-  def setRules(rules: Set[Rewrite]): Unit = this.rules = rules
+  def rewriter = p_rewriter.get
+
+  //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
+
+  def setRules(rules: Set[Rewrite]): Unit = {
+    p_rewriter = Some(Rewriter(SubstitutionApply(env), Matcher(env), env)(rules))
+  }
 
   def tryToApply(res: Term): Option[Term] =
     if (env.isSealed) {

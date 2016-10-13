@@ -18,6 +18,12 @@ object Util {
         after
     }
   }
+
+  def variables(t: Term): Set[Variable] = t match {
+    case v: Variable => Set(v)
+    case Node(_, cs) => (cs flatMap variables).toSet
+    case _ => Set()
+  }
 }
 
 object unreachable {
