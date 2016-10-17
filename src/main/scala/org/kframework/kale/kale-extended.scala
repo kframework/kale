@@ -101,7 +101,7 @@ case class FreeNode0(label: Label0) extends Node0
 trait Node1 extends Node with Product1[Term] {
   val label: Label1
 
-  lazy val isGround = _1.isGround
+  val isGround = _1.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 1 => label(t)
@@ -115,7 +115,7 @@ case class FreeNode1(label: Label1, _1: Term) extends Node1
 trait Node2 extends Node with Product2[Term, Term] {
   val label: Label2
 
-  lazy val isGround = _1.isGround && _2.isGround
+  val isGround = _1.isGround && _2.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 1 => label(t, _2)
@@ -130,7 +130,7 @@ case class FreeNode2(label: Label2, _1: Term, _2: Term) extends Node2
 trait Node3 extends Node with Product3[Term, Term, Term] {
   val label: Label3
 
-  lazy val isGround = _1.isGround && _2.isGround && _3.isGround
+  val isGround = _1.isGround && _2.isGround && _3.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 1 => label(t, _2, _3)
@@ -146,7 +146,7 @@ case class FreeNode3(label: Label3, _1: Term, _2: Term, _3: Term) extends Node3
 trait Node4 extends Node with Product4[Term, Term, Term, Term] {
   val label: Label4
 
-  lazy val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround
+  val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 1 => label(t, _2, _3, _4)
@@ -163,7 +163,7 @@ case class FreeNode4(label: Label4, _1: Term, _2: Term, _3: Term, _4: Term) exte
 trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
   val label: Label5
 
-  lazy val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround
+  val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 1 => label(t, _2, _3, _4, _5)
@@ -181,7 +181,7 @@ case class FreeNode5(label: Label5, _1: Term, _2: Term, _3: Term, _4: Term, _5: 
 trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
   val label: Label6
 
-  lazy val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround && _6.isGround
+  val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround && _6.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 1 => label(t, _2, _3, _4, _5, _6)
@@ -199,7 +199,7 @@ case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: 
 
 case class EqualityLabel(implicit val env: Environment) extends {
   val name = "="
-} with Label2 {
+} with Label2 with FormulaLabel {
   override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
     if (_1 == _2)
       env.Top
@@ -222,12 +222,12 @@ case class EqualityLabel(implicit val env: Environment) extends {
   }
 }
 
-trait Substitution extends Term with Formula with (Term => Term) {
+trait Substitution extends Term with (Term => Term) {
   def get(v: Variable): Option[Term]
   def apply(t: Term): Term
 }
 
-private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 with Formula with BinaryInfix {
+private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 with BinaryInfix {
   val label = env.Equality
 
   override def equals(other: Any) = other match {
@@ -249,13 +249,15 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
     case Node(l, cs) => l((cs map apply).toIterable)
     case _ => t
   }
+
+  override def toString: String = super[BinaryInfix].toString
 }
 
-trait And extends Assoc with Formula
+trait And extends Assoc
 
 case class AndLabel(implicit val env: Environment) extends {
   val name = "∧"
-} with AssocWithIdLabel {
+} with AssocWithIdLabel with FormulaLabel {
 
   import env._
 
@@ -373,7 +375,9 @@ case class AndLabel(implicit val env: Environment) extends {
     /**
       * not normalizing
       */
-    def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = {
+    def apply(pureSubstitution: Substitution, otherTerms: Iterable[Term]): Term = {
+      val others = otherTerms filterNot (_ == env.Top)
+
       assert(others forall { t => t == pureSubstitution(t) })
 
       if (others.isEmpty) {
@@ -468,11 +472,13 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
     case Node(l, cs) => l((cs map apply).toIterable)
     case _ => t
   }
+
+  override def toString: String = super[BinaryInfix].toString
 }
 
 case class OrLabel(implicit val env: Environment) extends {
   val name = "∨"
-} with AssocLabel {
+} with AssocLabel with FormulaLabel {
 
   import env._
 
@@ -489,10 +495,14 @@ case class OrLabel(implicit val env: Environment) extends {
     case o => Set(o)
   }
 
+  object set {
+    def unapply(t: Term): Option[Set[Term]] = Some(asSet(t))
+  }
+
   override def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
 }
 
-private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env: Environment) extends Assoc with Formula {
+private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env: Environment) extends Assoc {
   assert(terms.size > 1)
 
   import env._
@@ -531,10 +541,12 @@ trait HasId {
 }
 
 trait AssocWithIdLabel extends AssocLabel with HasId {
+
+  // normalizing
   def apply(_1: Term, _2: Term) = {
     val l1 = asIterable(_1)
     val l2 = asIterable(_2)
-    apply(l1 ++ l2)
+    construct(l1 ++ l2)
   }
 
   def asIterable(t: Term): Iterable[Term] = t match {
@@ -543,10 +555,11 @@ trait AssocWithIdLabel extends AssocLabel with HasId {
     case y => List(y)
   }
 
+  // normalizing
   override def apply(list: Iterable[Term]): Term = list filterNot (_ == identity) match {
     case l if l.isEmpty => identity
     case l if l.size == 1 => l.head
-    case l => construct(l)
+    case l => (l fold identity) ((a, b) => apply(a, b))
   }
 
   def construct(l: Iterable[Term]): Term
@@ -567,6 +580,7 @@ class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val en
 
 case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term]) extends Assoc {
   assert(assocIterable.forall(_ != label.identity))
+  assert(assocIterable.forall(_.label != label))
 
   override def _1: Term = assocIterable.head
 

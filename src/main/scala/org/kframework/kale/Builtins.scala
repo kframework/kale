@@ -18,11 +18,10 @@ class Builtins(implicit val env: Environment) {
 
   // just for forcing initialization of "object" references
 
-  object INT extends ReferenceLabel[Int]("Int") {
+  object INT extends ReferenceLabel[Int]("Int")
 
-    val + = FreeLabel2("+")(env)
-
-  }
+  val `<=Int` = PrimitiveFunction2("_<=Int_", INT, BOOLEAN, (a: Int, b: Int) => a <= b)(env)
+  val `+Int` = PrimitiveFunction2("_+Int_", INT, (a: Int, b: Int) => a + b)(env)
 
   object STRING extends ReferenceLabel[String]("String")
 

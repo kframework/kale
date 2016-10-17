@@ -204,13 +204,13 @@ case class SimpleVariable(name: String)(implicit env: Environment) extends Varia
   val label = env.Variable
 }
 
-trait Formula
+trait FormulaLabel
 
-case class TruthLabel(implicit val env: Environment) extends LeafLabel[Boolean] with NameFromObject {
+case class TruthLabel(implicit val env: Environment) extends LeafLabel[Boolean] with NameFromObject with FormulaLabel {
   def apply(v: Boolean) = if (v) env.Top else env.Bottom
 }
 
-class Truth(val value: Boolean)(implicit val env: Environment) extends Leaf[Boolean] with Formula {
+class Truth(val value: Boolean)(implicit val env: Environment) extends Leaf[Boolean] {
   val label = env.Truth
   val isGround = true
 }
@@ -227,7 +227,9 @@ private case class BottomInstance(implicit eenv: Environment) extends Truth(fals
   override def toString = "⊥"
 }
 
-trait FunctionLabel
+trait FunctionLabel {
+  val name: String
+}
 
 trait FunctionalLabel0 extends Label0 with FunctionLabel {
   def f(): Option[Term]
@@ -247,6 +249,33 @@ trait PurelyFunctionalLabel2 extends Label2 with FunctionLabel {
   def apply(_1: Term, _2: Term): Term = f(_1, _2) getOrElse FreeNode2(this, _1, _2)
 }
 
+object PrimitiveFunction2 {
+  def apply[A, R](name: String, aLabel: LeafLabel[A], rLabel: LeafLabel[R], f: (A, A) => R)(implicit env: Environment): PrimitiveFunction2[A, A, R] =
+    PrimitiveFunction2(name, aLabel, aLabel, rLabel, f)
+
+  def apply[A](name: String, aLabel: LeafLabel[A], f: (A, A) => A)(implicit env: Environment): PrimitiveFunction2[A, A, A] =
+    PrimitiveFunction2(name, aLabel, aLabel, aLabel, f)
+}
+
+object PrimitiveFunction1 {
+  def apply[A](name: String, aLabel: LeafLabel[A], f: A => A)(implicit env: Environment): PrimitiveFunction1[A, A] =
+    PrimitiveFunction1(name, aLabel, aLabel, f)
+}
+
+case class PrimitiveFunction1[A, R](name: String, aLabel: LeafLabel[A], rLabel: LeafLabel[R], primitiveF: A => R)(implicit val env: Environment) extends PurelyFunctionalLabel1 {
+  def f(_1: Term): Option[Term] = _1 match {
+    case aLabel(a) => Some(rLabel(primitiveF(a)))
+    case _ => None
+  }
+}
+
+case class PrimitiveFunction2[A, B, R](name: String, aLabel: LeafLabel[A], bLabel: LeafLabel[B], rLabel: LeafLabel[R], primitiveF: (A, B) => R)(implicit val env: Environment) extends PurelyFunctionalLabel2 {
+  def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
+    case (aLabel(a), bLabel(b)) => Some(rLabel(primitiveF(a, b)))
+    case _ => None
+  }
+}
+
 trait PurelyFunctionalLabel3 extends Label3 with FunctionLabel {
   def f(_1: Term, _2: Term, _3: Term): Option[Term]
 
@@ -263,7 +292,7 @@ trait FunctionDefinedByRewriting extends FunctionLabel {
   val env: Environment
   private var p_rewriter: Option[Rewriter] = None
 
-  def rewriter = p_rewriter.get
+  def rewriter: Rewriter = p_rewriter.get
 
   //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
 
@@ -271,19 +300,19 @@ trait FunctionDefinedByRewriting extends FunctionLabel {
     p_rewriter = Some(Rewriter(SubstitutionApply(env), Matcher(env), env)(rules))
   }
 
-  def tryToApply(res: Term): Option[Term] =
-    if (env.isSealed) {
-      // do not try to execute the function before the env is sealed as it would trigger the lazy initialization fo the Rewriter,
-      // and a Rewriter can only be built once the Environment is sealed
-      val Bottom = rewriter.env.Bottom
-      val ress = rewriter.executionStep(res)
-      ress match {
-        case Bottom => None
-        case t => Some(t)
-      }
-    } else {
-      None
+  def tryToApply(res: Term): Option[Term] = if (env.isSealed && rewriter.rules.nonEmpty) {
+    // do not try to execute the function before the env is sealed as it would trigger the lazy initialization fo the Rewriter,
+    // and a Rewriter can only be built once the Environment is sealed
+    val Bottom = rewriter.env.Bottom
+    val ress = rewriter.executionStep(res)
+    ress match {
+      case Bottom => None
+      case t if t.label != env.And && t.label != env.Or => Some(t)
+      case _ => None
     }
+  } else {
+    None
+  }
 }
 
 case class FunctionDefinedByRewritingLabel0(name: String)(implicit val env: Environment) extends FunctionDefinedByRewriting with FunctionalLabel0 {

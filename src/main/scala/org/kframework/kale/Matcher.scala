@@ -110,7 +110,7 @@ object Matcher {
               val commonKeys = leftKeys & rightKeys
 
               val valueMatches = if (commonKeys.nonEmpty)
-                And(commonKeys map (k => solver(right(k), right(k))))
+                And(commonKeys map (k => solver(left(k), right(k))))
               else
                 Top
 
@@ -172,8 +172,8 @@ object Matcher {
 
     object AndTerm extends ProcessingFunction[And, Term, Term] {
       override def f(solver: State)(a: And, b: Term): Term = {
-        val formulas = a.assocIterable filter (_.isInstanceOf[Formula])
-        val terms = a.assocIterable filter (!_.isInstanceOf[Formula])
+        val formulas = a.assocIterable filter (_.label.isInstanceOf[FormulaLabel])
+        val terms = a.assocIterable filter (!_.label.isInstanceOf[FormulaLabel])
         // only handle one term for now
         if (terms.size != 1) {
           throw new NotImplementedError("only handle one term for now")

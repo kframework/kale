@@ -30,7 +30,7 @@ object context {
     val _1 = contextVar
     val _2 = term
     val hole = label.hole(contextVar)
-    override lazy val isGround = false
+    override val isGround = false
   }
 
   case class ContextContentVariable(basedOn: Variable, index: Int) extends Variable {
