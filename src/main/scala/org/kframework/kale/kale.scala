@@ -136,7 +136,8 @@ trait Term extends Iterable[Term] {
 
   def iterator(): Iterator[Term]
 
-  override def hashCode = label.hashCode
+  // TODO: better implementation
+  override def hashCode = this.label.hashCode
 }
 
 object Node {

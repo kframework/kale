@@ -3,7 +3,8 @@ package org.kframework.kale
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
 
-import scala.collection.Set
+import scala.collection.immutable.TreeSet
+import scala.collection.{Set, mutable}
 
 object Rewriter {
   def apply(substitutioner: Substitution => SubstitutionApply, matcher: Binary.Apply, env: Environment)(rules: Set[Rewrite]) =
@@ -14,18 +15,55 @@ class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binar
   assert(env.isSealed)
   assert(rules != null)
 
+  val ruleHits = mutable.Map[Rewrite, Int]()
+
+  for (r <- rules)
+    ruleHits += (r -> 0)
+
+  var sortedRules = TreeSet[Rewrite]()({ (r1, r2) =>
+    if (r1 == r2)
+      0
+    else {
+      val p = ruleHits(r2) - ruleHits(r1)
+      if (p != 0)
+        p
+      else {
+        val id = System.identityHashCode(r1) - System.identityHashCode(r2)
+        if (id > 0)
+          1
+        else
+          -1
+      }
+    }
+  })
+
+  sortedRules ++= rules
+
+  if (rules.size > 5) {
+    println("RUUULZ")
+    println(sortedRules.mkString("\n"))
+  }
+
   import env._
 
   def executionStep(obj: Term): Term = {
-    val res = (rules.toStream map { r =>
+    var tries = 0
+    val res = (sortedRules.toStream map { r =>
       val m = doMatch(r._1, obj)
+      tries += 1
       m match {
         case Or.set(ands) =>
           val oneGoodSub = (ands collect { case s: Substitution => s }).headOption
           val afterSubstitution = oneGoodSub.map(substitutioner(_).apply(r._2)).getOrElse(Bottom)
+          //          if (afterSubstitution != Bottom) {
+          //            println("   " + r)
+          //            println("       " + oneGoodSub)
+          //          }
           if (afterSubstitution != Bottom) {
-//            println("   " + r)
-//            println("       " + oneGoodSub)
+            val prev = ruleHits(r)
+            sortedRules -= r
+            ruleHits.update(r, prev + 1)
+            sortedRules += r
           }
           afterSubstitution
         case Bottom => Bottom
