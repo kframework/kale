@@ -35,6 +35,37 @@ class Builtins(implicit val env: Environment) {
     val name = "TOKEN_" + sort.name
   } with PrimordialConstantLabel[String]
 
+  case class SetLabel(name: String, identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
+    override def construct(l: Iterable[Term]): Term = SET(this, l.toSet)
+
+    object set {
+      def unapply(t: Term): Some[Set[Term]] = t match {
+        case `identity` => Some(Set())
+        case SET(label, elements) if label == SetLabel.this => Some(elements)
+        case t => Some(Set(t))
+      }
+    }
+
+    object in extends {
+      val name = SetLabel.this.name + ".in"
+    } with HasEnvironment with PurelyFunctionalLabel2 {
+      def f(s: Term, key: Term) = s match {
+        case set(elements) => Some(BOOLEAN(elements.contains(key)))
+      }
+    }
+
+  }
+
+
+  val BuiltinSetUnit = FreeLabel0(".Set")
+  val BuiltinSet = SetLabel("_Set_", BuiltinSetUnit())
+
+  case class SET(label: SetLabel, elements: Set[Term]) extends Assoc {
+    val assocIterable: Iterable[Term] = elements
+    override def _1: Term = elements.head
+    override def _2: Term = SET(label, elements.tail)
+  }
+
   case class MapLabel(name: String, index: Term => Term, identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
     def isIndexable(t: Term) = !t.label.isInstanceOf[VariableLabel] && !t.isInstanceOf[FunctionLabel]
 
@@ -56,7 +87,7 @@ class Builtins(implicit val env: Environment) {
 
     object map {
       def unapply(m: Term): Option[(Map[Term, Term], Set[Term])] = m match {
-        case m: MAP => Some(m.map, m.unindexable)
+        case m: MAP if m.label == MapLabel.this => Some(m.map, m.unindexable)
         case `identity` => Some(Map[Term, Term](), Set[Term]())
         case t if isIndexable(t) => Some(Map(index(t) -> t), Set[Term]())
         case t if !isIndexable(t) => Some(Map[Term, Term](), Set(t))
@@ -83,6 +114,16 @@ class Builtins(implicit val env: Environment) {
         case map(scalaMap, restOfElements) =>
           scalaMap.get(key).map(_.iterator().toList(1)).orElse(
             if (restOfElements.isEmpty && key.isGround && scalaMap.keys.forall(_.isGround)) Some(env.Bottom) else None)
+        case _ => None
+      }
+    }
+
+    object keys extends {
+      val name = MapLabel.this.name + ".keys"
+    } with HasEnvironment with PurelyFunctionalLabel1 {
+      def f(m: Term) = m match {
+        case map(scalaMap, restOfElements) =>
+          Some(BuiltinSet(scalaMap.keys))
         case _ => None
       }
     }
