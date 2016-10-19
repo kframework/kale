@@ -1,5 +1,7 @@
 package org.kframework.kale
 
+import org.kframework.kale.context.AnywhereContextLabel
+
 import scala.collection._
 import scala.Iterable
 
@@ -115,7 +117,7 @@ case class FreeNode1(label: Label1, _1: Term) extends Node1
 trait Node2 extends Node with Product2[Term, Term] {
   val label: Label2
 
-  val isGround = _1.isGround && _2.isGround
+  lazy val isGround = _1.isGround && _2.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 1 => label(t, _2)
@@ -246,6 +248,7 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
     */
   def apply(t: Term): Term = t match {
     case `variable` => term
+    case Node(l: AnywhereContextLabel, cs) => l(cs.next, apply(cs.next))
     case Node(l, cs) => l((cs map apply).toIterable)
     case _ => t
   }
@@ -469,6 +472,7 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
     */
   def apply(t: Term): Term = t match {
     case v: Variable => m.getOrElse(v, v)
+    case Node(l: AnywhereContextLabel, cs) => l(cs.next, apply(cs.next))
     case Node(l, cs) => l((cs map apply).toIterable)
     case _ => t
   }
@@ -534,6 +538,7 @@ trait AssocLabel extends Label2 {
   object iterable {
     def unapply(t: Term): Option[Iterable[Term]] = Some(asList(t))
   }
+
 }
 
 trait HasId {

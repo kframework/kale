@@ -27,11 +27,13 @@ trait TestSetup {
 
   val a2b = FunctionDefinedByRewritingLabel1("a2b")
 
-  a2b.setRules(Set(Rewrite(a2b(a), b)))
+  val a2bRules = Set(Rewrite(a2b(a), b))
 
   env.seal()
 
-  val unifier = Matcher(env)
+  a2b.setRules(a2bRules)
+
+  implicit val unifier = Matcher(env).default
 
   val substitutionApplier = SubstitutionApply(env)
 

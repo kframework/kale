@@ -27,7 +27,7 @@ class RewriteTest extends FreeSpec with TestSetup {
 
   "step" in {
     assert(rewriter.executionStep((1: Term) + 0) === (1: Term))
-    assert(rewriter.executionStep(1: Term) === Bottom)
+    assert(rewriter.executionStep(1: Term) === (1: Term))
   }
 
   "search" in {
