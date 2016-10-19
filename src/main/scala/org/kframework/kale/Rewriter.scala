@@ -39,11 +39,6 @@ class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binar
 
   sortedRules ++= rules
 
-  if (rules.size > 5) {
-    println("RUUULZ")
-    println(sortedRules.mkString("\n"))
-  }
-
   import env._
 
   def executionStep(obj: Term): Term = {

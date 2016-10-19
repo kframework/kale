@@ -531,8 +531,8 @@ trait AssocLabel extends Label2 {
     case _ => List(t)
   }
 
-  val listUnapplier = new {
-    def unapplySeq(t: Term): Seq[Term] = asList(t).toList
+  object iterable {
+    def unapply(t: Term): Option[Iterable[Term]] = Some(asList(t))
   }
 }
 
