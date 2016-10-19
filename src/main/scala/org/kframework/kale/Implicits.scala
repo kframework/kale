@@ -11,7 +11,7 @@ class Implicits(implicit env: Environment) extends StaticImplicits {
   implicit def stringConstant(x: String): Constant[String] = STRING(x)
 
   implicit class asTerm(x: Term) {
-    def +(y: Term): Term = `+Int`(x, y)
+//    def +(y: Term): Term = `+Int`(x, y)
   }
 
   implicit class RichTerm(t: Term)(implicit env: Environment) {

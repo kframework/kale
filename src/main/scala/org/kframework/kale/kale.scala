@@ -298,7 +298,7 @@ trait FunctionDefinedByRewriting extends FunctionLabel {
   //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
 
   def setRules(rules: Set[Rewrite]): Unit = {
-    p_rewriter = Some(Rewriter(SubstitutionApply(env), Matcher(env), env)(rules))
+    p_rewriter = Some(Rewriter(SubstitutionApply(env), Matcher(env).default, env)(rules))
   }
 
   def tryToApply(res: Term): Option[Term] = if (env.isSealed && rewriter.rules.nonEmpty) {
