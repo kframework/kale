@@ -250,10 +250,12 @@ trait PurelyFunctionalLabel2 extends Label2 with FunctionLabel {
   def apply(_1: Term, _2: Term): Term = f(_1, _2) getOrElse FreeNode2(this, _1, _2)
 }
 
-object PrimitiveFunction2 {
+object Operator {
   def apply[A, R](name: String, aLabel: LeafLabel[A], rLabel: LeafLabel[R], f: (A, A) => R)(implicit env: Environment): PrimitiveFunction2[A, A, R] =
     PrimitiveFunction2(name, aLabel, aLabel, rLabel, f)
+}
 
+object PrimitiveFunction2 {
   def apply[A](name: String, aLabel: LeafLabel[A], f: (A, A) => A)(implicit env: Environment): PrimitiveFunction2[A, A, A] =
     PrimitiveFunction2(name, aLabel, aLabel, aLabel, f)
 }

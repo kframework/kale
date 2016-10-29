@@ -63,12 +63,12 @@ class Builtins(implicit val env: Environment) {
     override def _2: Term = SET(label, elements.tail)
   }
 
-  case class MapLabel(name: String, index: Term => Term, identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
+  case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
     def isIndexable(t: Term) = !t.label.isInstanceOf[VariableLabel] && !t.isInstanceOf[FunctionLabel]
 
     override def construct(l: Iterable[Term]): Term = {
       val indexed = l collect {
-        case t if isIndexable(t) => (index(t), t)
+        case t if isIndexable(t) => (indexFunction(t), t)
       } toMap
       val unindexed = (l filterNot isIndexable).toSet
       new MAP(this, indexed, unindexed)
@@ -86,7 +86,7 @@ class Builtins(implicit val env: Environment) {
       def unapply(m: Term): Option[(Map[Term, Term], Set[Term])] = m match {
         case m: MAP if m.label == MapLabel.this => Some(m.map, m.unindexable)
         case `identity` => Some(Map[Term, Term](), Set[Term]())
-        case t if isIndexable(t) => Some(Map(index(t) -> t), Set[Term]())
+        case t if isIndexable(t) => Some(Map(indexFunction(t) -> t), Set[Term]())
         case t if !isIndexable(t) => Some(Map[Term, Term](), Set(t))
       }
     }
