@@ -303,19 +303,15 @@ trait FunctionDefinedByRewriting extends FunctionLabel {
     p_rewriter = Some(Rewriter(SubstitutionApply(env), Matcher(env).default, env)(rules))
   }
 
-  def tryToApply(res: Term): Option[Term] = if (env.isSealed && rewriter.rules.nonEmpty) {
-    // do not try to execute the function before the env is sealed as it would trigger the lazy initialization fo the Rewriter,
-    // and a Rewriter can only be built once the Environment is sealed
-    val Bottom = rewriter.env.Bottom
-    val ress = rewriter.executionStep(res)
-    ress match {
-      case Bottom => None
-      case t if t.label != env.And && t.label != env.Or => Some(t)
-      case _ => None
+  def tryToApply(res: Term): Option[Term] =
+    if (env.isSealed && rewriter.rules.nonEmpty) {
+      // do not try to execute the function before the env is sealed as it would trigger the lazy initialization fo the Rewriter,
+      // and a Rewriter can only be built once the Environment is sealed
+      val Bottom = rewriter.env.Bottom
+      rewriter.step(res).find(t => t.label != env.And && t.label != env.Or)
+    } else {
+      None
     }
-  } else {
-    None
-  }
 }
 
 case class FunctionDefinedByRewritingLabel0(name: String)(implicit val env: Environment) extends FunctionDefinedByRewriting with FunctionalLabel0 {

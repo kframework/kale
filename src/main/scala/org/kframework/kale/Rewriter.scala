@@ -41,7 +41,7 @@ class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binar
 
   import env._
 
-  def executionStep(obj: Term): Term = {
+  def step(obj: Term): Stream[Term] = {
     var tries = 0
     val res = (sortedRules.toStream map { r =>
       val m = doMatch(r._1, obj)
@@ -63,8 +63,8 @@ class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binar
           afterSubstitution
         case Bottom => Bottom
       }
-    }).find(_ != Bottom)
-    res.getOrElse(obj)
+    }).filterNot(_ == Bottom)
+    res
   }
 
   def searchStep(obj: Term): Term = {
