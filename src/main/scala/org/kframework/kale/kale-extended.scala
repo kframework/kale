@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.context.AnywhereContextLabel
+import org.kframework.kale.context.AnywhereContextApplicationLabel
 
 import scala.collection._
 import scala.Iterable
@@ -248,7 +248,7 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
     */
   def apply(t: Term): Term = t match {
     case `variable` => term
-    case Node(l: AnywhereContextLabel, cs) => l(cs.next, apply(cs.next))
+    case Node(l: AnywhereContextApplicationLabel, cs) => l(cs.next, apply(cs.next))
     case Node(l, cs) => l((cs map apply).toIterable)
     case _ => t
   }
@@ -256,7 +256,10 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
   override def toString: String = super[BinaryInfix].toString
 }
 
-trait And extends Assoc
+trait And extends Assoc {
+  val formulas: Term
+  val nonFormula: Option[Term]
+}
 
 case class AndLabel(implicit val env: Environment) extends {
   val name = "∧"
@@ -328,6 +331,14 @@ case class AndLabel(implicit val env: Environment) extends {
     case `Top` => Map[Variable, Term]()
     case b: Binding => Map(b.variable -> b.term)
     case s: SubstitutionWithMultipleBindings => s.m
+  }
+
+  object formulasAndNonFormula{
+    def unapply(t: Term): Some[(Term, Option[Term])] = t match {
+      case tt: And => Some(tt.formulas, tt.nonFormula)
+      case tt if tt.label.isInstanceOf[FormulaLabel] => Some(tt, None)
+      case tt if !tt.label.isInstanceOf[FormulaLabel] => Some(Top, Some(tt))
+    }
   }
 
   object substitution {
@@ -417,6 +428,16 @@ private[kale] final class AndOfTerms(val terms: Set[Term])(implicit env: Environ
 
   import env._
 
+  lazy val formulas: Term = And(terms filter (_.label.isInstanceOf[FormulaLabel]))
+
+  lazy val nonFormula: Option[Term] = {
+    val nonFormulas = terms filter (!_.label.isInstanceOf[FormulaLabel])
+    if (nonFormulas.size > 1) {
+      throw new NotImplementedError("only handle at most one term for now")
+    }
+    nonFormulas.headOption
+  }
+
   assert(terms.size > 1, terms.toString())
   assert(!terms.contains(Bottom))
   assert(!terms.contains(Top))
@@ -439,6 +460,18 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
   import env._
 
   val label = And
+
+  lazy val formulas: Term = terms match {
+    case a: AndOfTerms => a.formulas
+    case t if t.label.isInstanceOf[FormulaLabel] => t
+    case _ => Top
+  }
+
+  lazy val nonFormula: Option[Term] = terms match {
+    case a: AndOfTerms => a.nonFormula
+    case t if !t.label.isInstanceOf[FormulaLabel] => Some(t)
+    case _ => None
+  }
 
   lazy val _1: Term = s
   lazy val _2: Term = terms
@@ -472,12 +505,14 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
     */
   def apply(t: Term): Term = t match {
     case v: Variable => m.getOrElse(v, v)
-    case Node(l: AnywhereContextLabel, cs) => l(cs.next, apply(cs.next))
+    case Node(l: AnywhereContextApplicationLabel, cs) => l(cs.next, apply(cs.next))
     case Node(l, cs) => l((cs map apply).toIterable)
     case _ => t
   }
 
   override def toString: String = super[BinaryInfix].toString
+  override val formulas: Term = this
+  override val nonFormula: Option[Term] = None
 }
 
 case class OrLabel(implicit val env: Environment) extends {

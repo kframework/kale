@@ -27,12 +27,13 @@ object Binary {
 
     import env._
 
-    val arr: Array[Array[(Term, Term) => (Term)]] =
+    val arr: Array[Array[(Term, Term) => Term]] =
       (0 until env.labels.size + 1).map({ i =>
         new Array[(Term, Term) => (Term)](env.labels.size + 1)
       }).toArray
 
     for (p <- pieces) {
+      assert(arr(p.leftLabel.id)(p.rightLabel.id) == null)
       arr(p.leftLabel.id)(p.rightLabel.id) = p.f(this)
     }
 

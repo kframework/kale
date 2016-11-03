@@ -162,15 +162,8 @@ case class Matcher(env: Environment) {
 
   object AndTerm extends ProcessingFunction[And, Term, Term] {
     override def f(solver: State)(a: And, b: Term): Term = {
-      val formulas = a.assocIterable filter (_.label.isInstanceOf[FormulaLabel])
-      val terms = a.assocIterable filter (!_.label.isInstanceOf[FormulaLabel])
-      // only handle one term for now
-      if (terms.size != 1) {
-        throw new NotImplementedError("only handle one term for now")
-      }
-      val left = terms.head
-      val solution = solver(left, b)
-      And(formulas.toList :+ solution)
+      val solution = solver(a.nonFormula.get, b)
+      And(a.formulas.toList :+ solution)
     }
   }
 

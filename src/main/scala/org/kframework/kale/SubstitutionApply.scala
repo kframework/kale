@@ -50,9 +50,9 @@ object SubstitutionApply {
       def f(solver: SubstitutionApply)(a: Term) = a
     }
 
-    object Context1 extends Unary.ProcessingFunction[Context1, Term, SubstitutionApply] {
-      override def f(solver: SubstitutionApply)(t: Context1): Term = {
-        val recursiveResult = Equality.createBinding(t.hole, solver(t.term))
+    object Context1 extends Unary.ProcessingFunction[Context1Application, Term, SubstitutionApply] {
+      override def f(solver: SubstitutionApply)(t: Context1Application): Term = {
+        val recursiveResult = Equality.createBinding(t.hole, solver(t.redex))
         And.substitution(solver.s, recursiveResult) match {
           case subs: Substitution =>
             val innerSolver: SubstitutionApply = SubstitutionApply(solver.pieces, solver.env)(subs)
@@ -65,7 +65,7 @@ object SubstitutionApply {
 
     val setOfUnaryPieces = labels.map({
       case `Variable` => Unary.Piece(Variable, Var)
-      case l: Context1Label => Unary.Piece(l, Context1)
+      case l: Context1ApplicationLabel => Unary.Piece(l, Context1)
 
       case l: Label0 => Unary.Piece(l, Node0)
       case l: Label1 => Unary.Piece(l, Node1)

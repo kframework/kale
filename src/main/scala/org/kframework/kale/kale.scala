@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.context.AnywhereContextLabel
+import org.kframework.kale.context.AnywhereContextApplicationLabel
 
 import scala.collection._
 import scala.language.implicitConversions
@@ -39,6 +39,8 @@ case class Environment() {
 
   val Truth = TruthLabel()
 
+  val Hole = Variable("☐")
+
   val Top: Truth with Substitution = TopInstance()
   val Bottom: Truth = BottomInstance()
 
@@ -47,7 +49,7 @@ case class Environment() {
   val Or = OrLabel()
   val Rewrite = RewriteLabel()
 
-  val AnywhereContext = AnywhereContextLabel()
+  val AnywhereContext = AnywhereContextApplicationLabel()
 
   val builtin = new Builtins()(this)
 

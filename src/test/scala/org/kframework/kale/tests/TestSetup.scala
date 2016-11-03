@@ -1,5 +1,6 @@
 package org.kframework.kale.tests
 
+import org.kframework.kale.context.PatternContextApplicationLabel
 import org.kframework.kale.{Invoke, _}
 
 trait TestSetup {
