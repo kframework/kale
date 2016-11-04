@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.context.AnywhereContextApplicationLabel
+import org.kframework.kale.context.{AnywhereContextApplicationLabel, Context1ApplicationLabel}
 
 import scala.collection._
 import scala.Iterable
@@ -248,7 +248,13 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
     */
   def apply(t: Term): Term = t match {
     case `variable` => term
-    case Node(l: AnywhereContextApplicationLabel, cs) => l(cs.next, apply(cs.next))
+    case Node(l: Context1ApplicationLabel, cs) =>
+      val contextVar = cs.next.asInstanceOf[Variable]
+      if (variable == contextVar) {
+        apply(env.And.substitution(Map(env.Hole -> cs.next))(term))
+      } else {
+        l(contextVar, apply(cs.next))
+      }
     case Node(l, cs) => l((cs map apply).toIterable)
     case _ => t
   }
@@ -333,7 +339,7 @@ case class AndLabel(implicit val env: Environment) extends {
     case s: SubstitutionWithMultipleBindings => s.m
   }
 
-  object formulasAndNonFormula{
+  object formulasAndNonFormula {
     def unapply(t: Term): Some[(Term, Option[Term])] = t match {
       case tt: And => Some(tt.formulas, tt.nonFormula)
       case tt if tt.label.isInstanceOf[FormulaLabel] => Some(tt, None)
@@ -505,7 +511,12 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
     */
   def apply(t: Term): Term = t match {
     case v: Variable => m.getOrElse(v, v)
-    case Node(l: AnywhereContextApplicationLabel, cs) => l(cs.next, apply(cs.next))
+    case Node(l: Context1ApplicationLabel, cs) =>
+      val contextVar = cs.next.asInstanceOf[Variable]
+      m.get(contextVar).map({ context =>
+        apply(And.substitution(Map(Hole -> cs.next))(context))
+      }).getOrElse(l(contextVar, apply(cs.next)))
+
     case Node(l, cs) => l((cs map apply).toIterable)
     case _ => t
   }

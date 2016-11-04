@@ -107,6 +107,10 @@ class MatchSpec extends FreeSpec with TestSetup {
     "one level" in {
       println(CAPP(C, bar(X)) := foo(1, bar(2)))
     }
+
+    "two levels" in {
+      println(CAPP(C, bar(X)) := foo(1, bar(bar(2))))
+    }
   }
 
   "function defined by rewriting" - {

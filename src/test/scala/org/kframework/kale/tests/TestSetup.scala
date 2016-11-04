@@ -31,10 +31,12 @@ trait TestSetup {
   val a2bRules = Set(Rewrite(a2b(a), b))
 
   val C = Variable("C")
+  val C1 = Variable("C")
 
   CAPP.setPatterns(Or(List(
     Equality(CAPP(C, Hole), Hole),
-    Equality(CAPP(C, Hole), foo(Variable("_"), Hole))
+    Equality(CAPP(C, Hole), foo(Variable("_"), CAPP(C1, Hole))),
+    Equality(CAPP(C, Hole), bar(CAPP(C1, Hole)))
   )))
 
   env.seal()
