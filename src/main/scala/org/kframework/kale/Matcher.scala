@@ -199,7 +199,9 @@ case class Matcher(env: Environment) {
 
     val anywhereContextMatchers = labels.map(Piece(AnywhereContext, _, new AnywhereContextMatcher()))
 
-    new Apply(variableXlabel | andXlabel | freeLikeLabelXfreeLikeLabel | assoc | anywhereContextMatchers, env)
+    val contextMatchers = labels.map(Piece(CAPP, _, new PatternContextMatcher()))
+
+    new Apply(variableXlabel | andXlabel | freeLikeLabelXfreeLikeLabel | assoc | anywhereContextMatchers | contextMatchers, env)
   }
 
 }

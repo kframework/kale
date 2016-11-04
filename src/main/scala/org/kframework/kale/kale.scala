@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.context.AnywhereContextApplicationLabel
+import org.kframework.kale.context.{AnywhereContextApplicationLabel, PatternContextApplicationLabel}
 
 import scala.collection._
 import scala.language.implicitConversions
@@ -50,6 +50,7 @@ case class Environment() {
   val Rewrite = RewriteLabel()
 
   val AnywhereContext = AnywhereContextApplicationLabel()
+  val CAPP = PatternContextApplicationLabel("CAPP")
 
   val builtin = new Builtins()(this)
 

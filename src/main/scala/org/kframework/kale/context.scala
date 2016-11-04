@@ -24,15 +24,22 @@ object context {
     def hole(x: Variable) = ContextContentVariable(x, 1)
   }
 
-  case class PatternContextApplicationLabel(name: String, patterns: Term)(implicit val env: Environment) extends Context1ApplicationLabel {
-    assert(env.Or.asSet(patterns) map {
-      case env.Equality(_, env.And.formulasAndNonFormula(_, Some(_))) => true;
-      case _ => false
-    } reduce (_ && _))
+  case class PatternContextApplicationLabel(name: String)(implicit val env: Environment) extends Context1ApplicationLabel {
 
-    override def apply(_1: Term, _2: Term): Context1Application
+    var patterns: Term = null
+
+    def setPatterns(ps: Term) {
+      this.patterns = ps
+
+      assert(env.Or.asSet(patterns) map {
+        case env.Equality(_, env.And.formulasAndNonFormula(_, Some(_))) => true;
+        case _ => false
+      } reduce (_ && _))
+    }
+
+    override def apply(_1: Term, _2: Term): PatternContextApplication
     = _1 match {
-      case v: Variable => Context1Application(this, v, _2)
+      case v: Variable => PatternContextApplication(this, v, _2)
       case _ => throw new AssertionError(id + " " + "First parameter needs to be a variable but was: " + _1)
     }
 
@@ -57,9 +64,9 @@ object context {
       case _ => Set()
     }
 
-    val patternsWithRedexHolesAndTheirContextVariables: Set[(Term, Set[Variable])] = Or.asSet(label.patterns) map {
+    lazy val patternsWithRedexHolesAndTheirContextVariables: Set[(Term, Term, Set[Variable])] = Or.asSet(label.patterns) map {
       case Equality(left, right) =>
-        (Equality(sub(left), sub(right)), contextVariables(right))
+        (Equality(sub(left), sub(right)), right, Util.variables(right))
     }
   }
 
@@ -88,13 +95,14 @@ object context {
 
 
       Or(contextApplication.patternsWithRedexHolesAndTheirContextVariables map {
-        case (Equality(And.formulasAndNonFormula(leftFormulas, Some(theContextDeclaration)), right), contextVars) =>
+        case (Equality(And.formulasAndNonFormula(leftFormulas, Some(theContextDeclaration)), right), withHoles, contextVars) =>
           val contextMatch = solver(right, term)
           val contextMatchSolutions = Or.asSet(contextMatch)
           Or(contextMatchSolutions map {
             case And.substitutionAndTerms(sub@And.substitution(substitutionAsAMap), rhsLeftoverConstraints) =>
               val partiallySolvedLeftFormulas = sub(leftFormulas)
-              val contextSub = Equality(contextVar, sub(right))
+              val contextSub = Equality(contextVar, sub(withHoles))
+              // TODO: filter out less
               And(partiallySolvedLeftFormulas, contextSub, And.substitution(substitutionAsAMap.filter({ case (k, _) => !contextVars.contains(k) })))
           })
       })

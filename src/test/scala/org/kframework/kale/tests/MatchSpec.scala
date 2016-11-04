@@ -75,7 +75,7 @@ class MatchSpec extends FreeSpec with TestSetup {
     }
   }
 
-  "of contexts" - {
+  "of anywhere contexts" - {
     implicit val m = Matcher(env)
 
     val XX = Variable("XX")
@@ -91,6 +91,21 @@ class MatchSpec extends FreeSpec with TestSetup {
 
       assert(foo(AnywhereContext(XX, AnywhereContext(X, Y)), AnywhereContext(XX, AnywhereContext(X, YY)))
         := foo(AnywhereContext(XX, AnywhereContext(X, bar(Y1))), AnywhereContext(XX, AnywhereContext(X, YY))) !== Bottom)
+    }
+  }
+
+  "of contexts" - {
+    implicit val m = Matcher(env)
+
+    val XX = Variable("XX")
+    val YY = Variable("YY")
+
+    "zero level" in {
+      println(CAPP(C, X) := 1)
+    }
+
+    "one level" in {
+      println(CAPP(C, bar(X)) := foo(1, bar(2)))
     }
   }
 
