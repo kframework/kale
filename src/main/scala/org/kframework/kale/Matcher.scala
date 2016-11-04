@@ -163,7 +163,7 @@ case class Matcher(env: Environment) {
   object AndTerm extends ProcessingFunction[And, Term, Term] {
     override def f(solver: State)(a: And, b: Term): Term = {
       val solution = solver(a.nonFormula.get, b)
-      And(a.formulas.toList :+ solution)
+      And(a.formulas, solution)
     }
   }
 
