@@ -1,5 +1,7 @@
 package org.kframework.kale
 
+import collection._
+
 object context {
 
   trait ContextLabel extends Label
@@ -23,8 +25,8 @@ object context {
   }
 
   case class PatternContextApplicationLabel(name: String, patterns: Term)(implicit val env: Environment) extends Context1ApplicationLabel {
-    assert(patterns map {
-      case env.Equality(_, env.And.formulasAndNonFormula(_, Some(c: Context1Application))) if c.label == this => true;
+    assert(env.Or.asSet(patterns) map {
+      case env.Equality(_, env.And.formulasAndNonFormula(_, Some(_))) => true;
       case _ => false
     } reduce (_ && _))
 
@@ -37,7 +39,29 @@ object context {
     def hole(x: Variable) = ContextContentVariable(x, 1)
   }
 
-  trait Context extends Term
+  trait Context extends Term {
+    val contextVar: Variable
+  }
+
+  case class PatternContextApplication(label: PatternContextApplicationLabel, contextVar: Variable, redex: Term) extends Node2 with Context {
+    override def _1: Term = contextVar
+    override def _2: Term = redex
+
+    import label.env._
+
+    private val sub = And.substitution(Map(Hole -> redex))
+
+    def contextVariables(t: Term): Set[Variable] = t match {
+      case c: Context => Set(c.contextVar)
+      case Node(_, cs) => (cs flatMap contextVariables).toSet
+      case _ => Set()
+    }
+
+    val patternsWithRedexHolesAndTheirContextVariables: Set[(Term, Set[Variable])] = Or.asSet(label.patterns) map {
+      case Equality(left, right) =>
+        (Equality(sub(left), sub(right)), contextVariables(right))
+    }
+  }
 
   case class Context1Application(label: Context1ApplicationLabel, contextVar: Variable, redex: Term) extends Node2 with Context {
     val _1: Variable = contextVar
@@ -53,42 +77,27 @@ object context {
     override val name: String = basedOn.name + "_" + index
   }
 
-  class PatternContextMatcher(implicit env: Environment) extends transformer.Binary.ProcessingFunction[Context1Application, Term, Term] {
+  class PatternContextMatcher(implicit env: Environment) extends transformer.Binary.ProcessingFunction[PatternContextApplication, Term, Term] {
 
     import env._
 
-    override def f(solver: transformer.Binary.State)(contextApplication: Context1Application, term: Term): Term = {
+    override def f(solver: transformer.Binary.State)(contextApplication: PatternContextApplication, term: Term): Term = {
       val leftContextLabel = contextApplication.label.asInstanceOf[PatternContextApplicationLabel]
       val contextVar = contextApplication.contextVar
       val redex = contextApplication.redex
 
-      leftContextLabel.patterns match {
-        case Or.set(set) =>
-          val res = set map {
-            case Equality(And.formulasAndNonFormula(leftFormulas, Some(theContextDeclaration: Context1Application)), right) =>
-              val contextMatch = solver(right, term)
-              val contextMatchSolutions = Or.asSet(contextMatch)
-              Or(contextMatchSolutions map {
-                case And.substitutionAndTerms(sub@And.substitution(substitutionAsAMap), rhsLeftoverConstraints) =>
-                  val partiallySolvedLeftFormulas = sub(leftFormulas)
-                  if (substitutionAsAMap.keys.toSet.contains(contextVar)) {
-                    val contextSub = Equality(contextVar, sub(right))
 
-                  } else {
-                    val solutionForTheRedex = solver(redex, substitutionAsAMap(Hole))
-                    And(solutionForTheRedex, partiallySolvedLeftFormulas)
-                  }
-
-                  ???
-                //                  val contextSub = And.substitution(substitutionAsAMap.updated(contextVar, s(contextEquation)))
-                //                  val zeroLevel = solver(contextApplication.redex, substitutionAsAMap(contextApplication.hole))
-                //                  And(List(contextSub, zeroLevel))
-
-                case _ => ???
-              })
-          }
-          Or(res)
-      }
+      Or(contextApplication.patternsWithRedexHolesAndTheirContextVariables map {
+        case (Equality(And.formulasAndNonFormula(leftFormulas, Some(theContextDeclaration)), right), contextVars) =>
+          val contextMatch = solver(right, term)
+          val contextMatchSolutions = Or.asSet(contextMatch)
+          Or(contextMatchSolutions map {
+            case And.substitutionAndTerms(sub@And.substitution(substitutionAsAMap), rhsLeftoverConstraints) =>
+              val partiallySolvedLeftFormulas = sub(leftFormulas)
+              val contextSub = Equality(contextVar, sub(right))
+              And(partiallySolvedLeftFormulas, contextSub, And.substitution(substitutionAsAMap.filter({ case (k, _) => !contextVars.contains(k) })))
+          })
+      })
 
       // `buz(H)`[H] = buz(C[H])
       // `H`[H] = H
