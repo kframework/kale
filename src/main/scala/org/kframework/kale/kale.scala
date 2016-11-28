@@ -5,7 +5,7 @@ import org.kframework.kale.context.{AnywhereContextApplicationLabel, PatternCont
 import scala.collection._
 import scala.language.implicitConversions
 
-case class Environment() {
+class Environment() {
   val uniqueLabels = mutable.Map[String, Label]()
 
   def labels = uniqueLabels.values.toSet
@@ -19,6 +19,7 @@ case class Environment() {
   def register(label: Label): Int = {
     assert(!isSealed, "The environment is sealed")
     assert(label != null)
+    assert(label.name != null)
 
     if (uniqueLabels.contains(label.name))
       throw new AssertionError("Label " + label.name + " already registered. The current env is: \n" + this)
@@ -210,7 +211,7 @@ case class SimpleVariable(name: String)(implicit env: Environment) extends Varia
 
 trait FormulaLabel
 
-case class TruthLabel(implicit val env: Environment) extends LeafLabel[Boolean] with NameFromObject with FormulaLabel {
+case class TruthLabel(implicit val env: Environment) extends NameFromObject with LeafLabel[Boolean] with FormulaLabel {
   def apply(v: Boolean) = if (v) env.Top else env.Bottom
 }
 
@@ -221,6 +222,8 @@ class Truth(val value: Boolean)(implicit val env: Environment) extends Leaf[Bool
 
 private case class TopInstance(implicit eenv: Environment) extends Truth(true) with Substitution {
   override def get(v: Variable): Option[Term] = None
+
+  def asMap = Map()
 
   override def toString = "⊤"
 
@@ -303,7 +306,7 @@ trait FunctionDefinedByRewriting extends FunctionLabel {
   //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
 
   def setRules(rules: Set[Rewrite]): Unit = {
-    p_rewriter = Some(Rewriter(SubstitutionApply(env), Matcher(env).default, env)(rules))
+    p_rewriter = Some(Rewriter(SubstitutionApply(env), new Matcher(env).applier, env)(rules))
   }
 
   def tryToApply(res: Term): Option[Term] =

@@ -25,6 +25,8 @@ trait Label1 extends (Term => Term) with NodeLabel {
   def apply(_1: Term): Term
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head)
+
+  override def toString = super[NodeLabel].toString
 }
 
 case class FreeLabel1(name: String)(implicit val env: Environment) extends Label1 with FreeLabel {
@@ -42,6 +44,8 @@ trait Label2 extends ((Term, Term) => Term) with NodeLabel {
     case n: Node2 if n.label == this => Some(n._1, n._2)
     case _ => None
   }
+
+  override def toString = super[NodeLabel].toString
 }
 
 case class FreeLabel2(name: String)(implicit val env: Environment) extends Label2 with FreeLabel {
@@ -227,6 +231,7 @@ case class EqualityLabel(implicit val env: Environment) extends {
 trait Substitution extends Term with (Term => Term) {
   def get(v: Variable): Option[Term]
   def apply(t: Term): Term
+  def asMap: Map[Variable, Term]
 }
 
 private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 with BinaryInfix {
@@ -242,6 +247,8 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
   assert(_1.isInstanceOf[Variable])
 
   def get(v: Variable) = if (_1 == v) Some(_2) else None
+
+  def asMap = Map(variable -> term)
 
   /**
     * Inefficient -- replace with some default version of ApplySubstitution
@@ -503,6 +510,8 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
   override val hashCode: Int = label.hashCode
 
   def get(v: Variable) = m.get(v)
+
+  def asMap = m
 
   override val assocIterable: Iterable[Term] = And.asList(this)
 

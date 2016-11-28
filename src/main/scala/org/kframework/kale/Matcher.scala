@@ -4,7 +4,7 @@ import org.kframework.kale.transformer.Binary
 
 import scala.collection._
 
-case class Matcher(env: Environment) {
+class Matcher(val env: Environment) {
 
   import context._
   import Binary._
@@ -167,7 +167,7 @@ case class Matcher(env: Environment) {
     }
   }
 
-  def default = {
+  def defaultPieces = {
     val variableXlabel = labels.map(Piece(Variable, _, VarLeft))
     val andXlabel = labels.map(Piece(And, _, AndTerm))
 
@@ -201,7 +201,11 @@ case class Matcher(env: Environment) {
 
     val contextMatchers = labels.map(Piece(CAPP, _, new PatternContextMatcher()))
 
-    new Apply(variableXlabel | andXlabel | freeLikeLabelXfreeLikeLabel | assoc | anywhereContextMatchers | contextMatchers, env)
+    variableXlabel | andXlabel | freeLikeLabelXfreeLikeLabel | assoc | anywhereContextMatchers | contextMatchers
+  }
+
+  def applier = {
+    new Apply(defaultPieces, env)
   }
 
 }

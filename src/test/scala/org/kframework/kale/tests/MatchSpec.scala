@@ -34,7 +34,7 @@ class MatchSpec extends FreeSpec with TestSetup {
 
   "contexts" - {
 
-    implicit val m = Matcher(env)
+    implicit val m = new Matcher(env)
 
     "zero-level" in {
       assert((foo(a, AnywhereContext(X, b)) := foo(a, b)) === Equality(X, X_1))
@@ -76,7 +76,7 @@ class MatchSpec extends FreeSpec with TestSetup {
   }
 
   "of anywhere contexts" - {
-    implicit val m = Matcher(env)
+    implicit val m = new Matcher(env)
 
     val XX = Variable("XX")
     val YY = Variable("YY")
@@ -95,7 +95,7 @@ class MatchSpec extends FreeSpec with TestSetup {
   }
 
   "of contexts" - {
-    implicit val m = Matcher(env)
+    implicit val m = new Matcher(env)
 
     val XX = Variable("XX")
     val YY = Variable("YY")
