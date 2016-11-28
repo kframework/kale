@@ -73,7 +73,9 @@ class Builtins(implicit val env: Environment) {
 
   case class SET(label: SetLabel, elements: Set[Term]) extends Assoc {
     val assocIterable: Iterable[Term] = elements
+
     override def _1: Term = elements.head
+
     override def _2: Term = SET(label, elements.tail)
   }
 
@@ -81,9 +83,11 @@ class Builtins(implicit val env: Environment) {
     def isIndexable(t: Term) = !t.label.isInstanceOf[VariableLabel] && !t.isInstanceOf[FunctionLabel]
 
     override def construct(l: Iterable[Term]): Term = {
-      val indexed = l collect {
-        case t if isIndexable(t) => (indexFunction(t), t)
-      } toMap
+      val indexed = l
+        .collect {
+          case t if isIndexable(t) => (indexFunction(t), t)
+        }
+        .toMap
       val unindexed = (l filterNot isIndexable).toSet
       new MAP(this, indexed, unindexed)
     }

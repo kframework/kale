@@ -169,7 +169,7 @@ case class SimpleVariable(name: String)(implicit env: Environment) extends Varia
 
 trait FormulaLabel
 
-case class TruthLabel(implicit val env: Environment) extends LeafLabel[Boolean] with NameFromObject with FormulaLabel {
+case class TruthLabel(implicit val env: Environment) extends NameFromObject with LeafLabel[Boolean] with FormulaLabel {
   def apply(v: Boolean) = if (v) env.Top else env.Bottom
 }
 
@@ -180,6 +180,8 @@ class Truth(val value: Boolean)(implicit val env: Environment) extends Leaf[Bool
 
 private case class TopInstance(implicit eenv: Environment) extends Truth(true) with Substitution with pattern.Top {
   override def get(v: Variable): Option[Term] = None
+
+  def asMap = Map()
 
   override def toString = "⊤"
 
@@ -268,7 +270,7 @@ trait FunctionDefinedByRewriting extends FunctionLabel {
   //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
 
   def setRules(rules: Set[Rewrite]): Unit = {
-    p_rewriter = Some(Rewriter(SubstitutionApply(env), Matcher(env).default, env)(rules))
+    p_rewriter = Some(Rewriter(SubstitutionApply(env), new Matcher(env).applier, env)(rules))
   }
 
   def tryToApply(res: Term): Option[Term] =
