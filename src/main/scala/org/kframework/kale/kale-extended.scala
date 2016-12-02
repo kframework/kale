@@ -102,6 +102,8 @@ trait Node0 extends Node {
   def innerUpdateAt(i: Int, t: Term): Term = throw new AssertionError("unreachable code")
 
   def iterator = Iterator.empty
+
+  def copy(): Term = label().setAtts(updatedAttributes())
 }
 
 case class FreeNode0(label: Label0) extends Node0
@@ -116,6 +118,8 @@ trait Node1 extends Node with Product1[Term] {
   }
 
   def iterator = Iterator(_1)
+
+  def copy(_1: Term): Term = label(_1).setAtts(updatedAttributes(_1))
 
   // FOR KORE
   def build(_1: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label2](_1.asInstanceOf[Term])
@@ -137,6 +141,8 @@ trait Node2 extends Node with Product2[Term, Term] {
 
   // FOR KORE
   def build(_1: pattern.Pattern, _2: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label2](_1.asInstanceOf[Term], _2.asInstanceOf[Term])
+
+  def copy(_1: Term, _2: Term): Term = label(_1, _2).setAtts(updatedAttributes(_1, _2))
 }
 
 case class FreeNode2(label: Label2, _1: Term, _2: Term) extends Node2
@@ -153,6 +159,8 @@ trait Node3 extends Node with Product3[Term, Term, Term] {
   }
 
   def iterator = Iterator(_1, _2, _3)
+
+  def copy(_1: Term, _2: Term, _3: Term): Term = label(_1, _2, _3).setAtts(updatedAttributes(_1, _2, _3))
 }
 
 case class FreeNode3(label: Label3, _1: Term, _2: Term, _3: Term) extends Node3
@@ -170,6 +178,8 @@ trait Node4 extends Node with Product4[Term, Term, Term, Term] {
   }
 
   def iterator = Iterator(_1, _2, _3, _4)
+
+  def copy(_1: Term, _2: Term, _3: Term, _4: Term): Term = label(_1, _2, _3, _4).setAtts(updatedAttributes(_1, _2, _3, _4))
 }
 
 case class FreeNode4(label: Label4, _1: Term, _2: Term, _3: Term, _4: Term) extends Node4
@@ -188,6 +198,8 @@ trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
   }
 
   def iterator = Iterator(_1, _2, _3, _4, _5)
+
+  def copy(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term): Term = label(_1, _2, _3, _4, _5).setAtts(updatedAttributes(_1, _2, _3, _4, _5))
 }
 
 case class FreeNode5(label: Label5, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term) extends Node5
@@ -207,6 +219,8 @@ trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
   }
 
   def iterator = Iterator(_1, _2, _3, _4, _5, _6)
+
+  def copy(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term): Term = label(_1, _2, _3, _4, _5, _6).setAtts(updatedAttributes(_1, _2, _3, _4, _5, _6))
 }
 
 case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term) extends Node6
@@ -238,7 +252,9 @@ case class EqualityLabel(implicit val env: Environment) extends {
 
 trait Substitution extends Term with (Term => Term) {
   def get(v: Variable): Option[Term]
+
   def apply(t: Term): Term
+
   def asMap: Map[Variable, Term]
 }
 
@@ -270,7 +286,9 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
       } else {
         l(contextVar, apply(cs.next))
       }
-    case Node(l, cs) => l((cs map apply).toIterable)
+    case n@Node(l, cs) =>
+      val newTerms = (cs map apply).toIterable
+      l(newTerms).setAtts(n.updatedAttributes(newTerms.toSeq: _*))
     case _ => t
   }
 
@@ -534,11 +552,14 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
         apply(And.substitution(Map(Hole -> cs.next))(context))
       }).getOrElse(l(contextVar, apply(cs.next)))
 
-    case Node(l, cs) => l((cs map apply).toIterable)
+    case n@Node(l, cs) =>
+      val newTerms = (cs map apply).toIterable
+      l(newTerms).setAtts(n.updatedAttributes(newTerms.toSeq: _*))
     case _ => t
   }
 
   override def toString: String = super[BinaryInfix].toString
+
   override val formulas: Term = this
   override val nonFormula: Option[Term] = None
 }
@@ -675,6 +696,7 @@ case class Rewrite(_1: Term, _2: Term)(implicit env: Environment) extends Node2 
 class InvokeLabel(implicit val env: Environment) extends NameFromObject with Label1 {
   // the rewriter is initialized after the creation of the label to break the cycle when creating the rewriter for applying functions
   var rewriter: Rewriter = null
+
   override def apply(obj: Term): Term = Invoke(this, obj)
 }
 

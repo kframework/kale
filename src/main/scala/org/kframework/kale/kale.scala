@@ -50,6 +50,25 @@ trait LeafLabel[T] extends Label {
   }
 }
 
+trait Key[T] {
+  def name: String = this.getClass.getName
+}
+
+trait Att[T] {
+  def value: T
+
+  def key: Class[_ <: Att[T]] = this.getClass.asInstanceOf[Class[Att[T]]]
+
+  def update(children: Iterable[Term]): Att[T]
+
+  def update(oldChildren: Iterable[Term], newChildren: Iterable[Term]): Att[T]
+}
+
+case class SimpleAtt[T](value: T) extends Att[T] {
+  override def update(children: Iterable[Term]): Att[T] = ???
+  override def update(oldChildren: Iterable[Term], newChildren: Iterable[Term]): Att[T] = ???
+}
+
 trait Term extends Iterable[Term] with pattern.Pattern {
   def updateAt(i: Int)(t: Term): Term
 
@@ -62,6 +81,29 @@ trait Term extends Iterable[Term] with pattern.Pattern {
   def setHiddenAttDONOTUSE(att: Any) = this.att = att
 
   def getHiddenAttDONOTUSE = this.att
+
+  //  protected[this]
+  var attributes = Map[Class[_], Att[_]]()
+
+  def updatedAttributes(newTerms: Term*): Map[Class[_], Att[_]] = (this.attributes map {
+    case (k, v) => (k, v.update(iterator.toIterable, newTerms))
+  }).toMap
+
+  def setAtt(value: Att[_]): Term = {
+    attributes = attributes + (value.getClass -> value)
+    this
+  }
+
+  def getAtt[T <: Att[_]](key: Class[T]): T = attributes(key).asInstanceOf[T]
+
+  def getAttOption[T <: Att[_]](key: Class[T]): Option[T] = attributes.get(key).asInstanceOf[Option[T]]
+
+  def hasAtt[T <: Att[_]](key: Class[T]): Boolean = attributes.contains(key)
+
+  def setAtts(atts: Map[Class[_], Att[_]]): Term = {
+    attributes = atts
+    this
+  }
 
   def iterator(): Iterator[Term]
 
@@ -108,11 +150,13 @@ trait Leaf[T] extends Term {
   val label: LeafLabel[T]
   val value: T
 
-  override def toString = label + "(" + value.toString + ")"
+  override def toString: String = label + "(" + value.toString + ")"
+
+  def copy(): Term = label(value).setAtts(attributes)
 }
 
 trait NameFromObject {
-  val name = this.getClass.getName.drop(5)
+  val name: String = this.getClass.getName.drop(5)
 }
 
 trait ConstantLabel[T] extends LeafLabel[T] {
@@ -138,7 +182,7 @@ case class Constant[T](label: ConstantLabel[T], value: T) extends Leaf[T] with p
 
   val isGround = true
 
-  override def toString = value.toString
+  override def toString: String = value.toString
 }
 
 case class VariableLabel(implicit val env: Environment) extends NameFromObject with LeafLabel[String] {
@@ -148,10 +192,10 @@ case class VariableLabel(implicit val env: Environment) extends NameFromObject w
 trait Variable extends Leaf[String] {
   val label: VariableLabel
   val name: String
-  lazy val value = name
+  lazy val value: String = name
   val isGround = false
 
-  override def toString = name
+  override def toString: String = name
 }
 
 case class SimpleVariable(name: String)(implicit env: Environment) extends Variable with pattern.Variable {
@@ -170,7 +214,7 @@ case class SimpleVariable(name: String)(implicit env: Environment) extends Varia
 trait FormulaLabel
 
 case class TruthLabel(implicit val env: Environment) extends NameFromObject with LeafLabel[Boolean] with FormulaLabel {
-  def apply(v: Boolean) = if (v) env.Top else env.Bottom
+  def apply(v: Boolean): Truth = if (v) env.Top else env.Bottom
 }
 
 class Truth(val value: Boolean)(implicit val env: Environment) extends Leaf[Boolean] {
@@ -185,7 +229,7 @@ private case class TopInstance(implicit eenv: Environment) extends Truth(true) w
 
   override def toString = "⊤"
 
-  def apply(t: Term) = t
+  def apply(t: Term): Term = t
 
   // FOR KORE
   override def build(): pattern.Top = this
