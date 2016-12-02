@@ -15,31 +15,31 @@ object SubstitutionApply {
     import env._
 
     object Node0 extends Unary.ProcessingFunction[Node0, Term, SubstitutionApply] {
-      def f(solver: SubstitutionApply)(t: Node0) = t.label()
+      def f(solver: SubstitutionApply)(t: Node0) = t.copy()
     }
 
     object Node1 extends Unary.ProcessingFunction[Node1, Term, SubstitutionApply] {
-      def f(solver: SubstitutionApply)(t: Node1) = t.label(solver(t._1))
+      def f(solver: SubstitutionApply)(t: Node1) = t.copy(solver(t._1))
     }
 
     object Node2 extends Unary.ProcessingFunction[Node2, Term, SubstitutionApply] {
-      def f(solver: SubstitutionApply)(t: Node2) = t.label(solver(t._1), solver(t._2))
+      def f(solver: SubstitutionApply)(t: Node2) = t.copy(solver(t._1), solver(t._2))
     }
 
     object Node3 extends Unary.ProcessingFunction[Node3, Term, SubstitutionApply] {
-      def f(solver: SubstitutionApply)(t: Node3) = t.label(solver(t._1), solver(t._2), solver(t._3))
+      def f(solver: SubstitutionApply)(t: Node3) = t.copy(solver(t._1), solver(t._2), solver(t._3))
     }
 
     object Node4 extends Unary.ProcessingFunction[Node4, Term, SubstitutionApply] {
-      def f(solver: SubstitutionApply)(t: Node4) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4))
+      def f(solver: SubstitutionApply)(t: Node4) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4))
     }
 
     object Node5 extends Unary.ProcessingFunction[Node5, Term, SubstitutionApply] {
-      def f(solver: SubstitutionApply)(t: Node5) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5))
+      def f(solver: SubstitutionApply)(t: Node5) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5))
     }
 
     object Node6 extends Unary.ProcessingFunction[Node6, Term, SubstitutionApply] {
-      def f(solver: SubstitutionApply)(t: Node6) = t.label(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5), solver(t._6))
+      def f(solver: SubstitutionApply)(t: Node6) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5), solver(t._6))
     }
 
     object Var extends Unary.ProcessingFunction[Variable, Term, SubstitutionApply] {
