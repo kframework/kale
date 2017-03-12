@@ -23,7 +23,7 @@ object SubstitutionApply {
         val recursiveResult = Equality.createBinding(t.hole, solver(t.redex))
         And.substitution(solver.s, recursiveResult) match {
           case subs: Substitution =>
-            val innerSolver: SubstitutionApply = SubstitutionApply(solver.getProcessingFunction, solver.env)(subs)
+            val innerSolver: SubstitutionApply = SubstitutionApply(solver.processingFunction, solver.env)(subs)
 
             solver.getVariable(t.contextVar) map innerSolver getOrElse Bottom
           case `Bottom` => Bottom
@@ -45,7 +45,7 @@ object SubstitutionApply {
   }
 }
 
-class SubstitutionApply(processingFunction: Label => ProcessingFunction[_ <: Term, SubstitutionApply], val env: Environment)(val s: Substitution) extends Unary.Apply[SubstitutionApply](env) with (Term => Term) {
+class SubstitutionApply(val processingFunction: Label => ProcessingFunction[_ <: Term, SubstitutionApply], val env: Environment)(val s: Substitution) extends Unary.Apply[SubstitutionApply](env) with (Term => Term) {
 
   import env._
 
@@ -62,6 +62,4 @@ class SubstitutionApply(processingFunction: Label => ProcessingFunction[_ <: Ter
         case f => f(t)
       }
     }
-
-  override def getProcessingFunction(l: Label): ProcessingFunction[_ <: Term, SubstitutionApply] = processingFunction(l)
 }

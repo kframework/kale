@@ -76,12 +76,12 @@ object Unary {
     val arr = new Array[Term => Term](env.labels.size + 1)
 
     for (label <- env.labels) {
-      arr(label.id) = getProcessingFunction(label)(this)
+      arr(label.id) = processingFunction(label)(this)
     }
 
     def apply(t: Term): Term
 
-    def getProcessingFunction(l: Label): ProcessingFunction[Term, US]
+    val processingFunction: Label => ProcessingFunction[_ <: Term, US]
   }
 
 }
