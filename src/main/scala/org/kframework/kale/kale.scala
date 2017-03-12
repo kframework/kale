@@ -134,14 +134,14 @@ trait Att[T] {
 
   def key: Class[_ <: Att[T]] = this.getClass.asInstanceOf[Class[Att[T]]]
 
-  def update(children: Iterable[Term]): Att[T]
+  def update(term: Term): Att[T]
 
-  def update(oldChildren: Iterable[Term], newChildren: Iterable[Term]): Att[T]
+  def update(term: Term, oldChildren: Iterable[Term]): Att[T]
 }
 
 case class SimpleAtt[T](value: T) extends Att[T] {
-  override def update(children: Iterable[Term]): Att[T] = ???
-  override def update(oldChildren: Iterable[Term], newChildren: Iterable[Term]): Att[T] = ???
+  override def update(term: Term): Att[T] = this
+  override def update(term: Term, oldChildren: Iterable[Term]): Att[T] = this
 }
 
 trait Term extends Iterable[Term] {
@@ -161,7 +161,7 @@ trait Term extends Iterable[Term] {
   var attributes = Map[Class[_], Att[_]]()
 
   def updatedAttributes(newTerms: Term*): Map[Class[_], Att[_]] = (this.attributes map {
-    case (k, v) => (k, v.update(iterator.toIterable, newTerms))
+    case (k, v) => (k, v.update(this, newTerms))
   }).toMap
 
   def setAtt(value: Att[_]): Term = {
