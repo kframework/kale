@@ -94,7 +94,7 @@ class MatchSpec extends FreeSpec with TestSetup {
     }
   }
 
-  "of contexts" - {
+  "of pattern contexts" - {
     implicit val m = new Matcher(env)
 
     val XX = Variable("XX")
@@ -114,6 +114,11 @@ class MatchSpec extends FreeSpec with TestSetup {
       assert((CAPP(C, bar(X)) := foo(1, bar(bar(2))))
         === Or(And.substitution(Map(C -> foo(1, Hole), X -> bar(2))),
         And.substitution(Map(C -> foo(1, bar(Hole)), X -> 2))))
+    }
+
+    "stops traversal when encountering unknown" in {
+      assert((CAPP(C, bar(X)) := foo(1, bar(buz(3, bar(2)))))
+        === And.substitution(Map(C -> foo(1, Hole), X -> bar(buz(3, bar(2))))))
     }
   }
 
