@@ -2,6 +2,7 @@ package org.kframework.kale.tests
 
 import org.kframework.kale._
 import context._
+import org.scalactic.Prettifier
 import org.scalatest.FreeSpec
 
 class MatchSpec extends FreeSpec with TestSetup {
@@ -118,7 +119,7 @@ class MatchSpec extends FreeSpec with TestSetup {
 
     "stops traversal when encountering unknown" in {
       assert((CAPP(C, bar(X)) := foo(1, bar(buz(3, bar(2)))))
-        === And.substitution(Map(C -> foo(1, Hole), X -> bar(buz(3, bar(2))))))
+        === And.substitution(Map(C -> foo(1, Hole), X -> buz(3, bar(2)))))
     }
   }
 
