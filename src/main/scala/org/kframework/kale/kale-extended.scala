@@ -114,7 +114,7 @@ trait Node1 extends Node with Product1[Term] {
   val isGround = _1.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
-    case 1 => label(t)
+    case 0 => label(t)
   }
 
   def iterator = Iterator(_1)
@@ -133,8 +133,8 @@ trait Node2 extends Node with Product2[Term, Term] {
   lazy val isGround = _1.isGround && _2.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
-    case 1 => label(t, _2)
-    case 2 => label(_1, t)
+    case 0 => label(t, _2)
+    case 1 => label(_1, t)
   }
 
   def iterator = Iterator(_1, _2)
@@ -153,9 +153,9 @@ trait Node3 extends Node with Product3[Term, Term, Term] {
   val isGround = _1.isGround && _2.isGround && _3.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
-    case 1 => label(t, _2, _3)
-    case 2 => label(_1, t, _3)
-    case 3 => label(_1, _2, t)
+    case 0 => label(t, _2, _3)
+    case 1 => label(_1, t, _3)
+    case 2 => label(_1, _2, t)
   }
 
   def iterator = Iterator(_1, _2, _3)
@@ -171,10 +171,10 @@ trait Node4 extends Node with Product4[Term, Term, Term, Term] {
   val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
-    case 1 => label(t, _2, _3, _4)
-    case 2 => label(_1, t, _3, _4)
-    case 3 => label(_1, _2, t, _4)
-    case 4 => label(_1, _2, _3, t)
+    case 0 => label(t, _2, _3, _4)
+    case 1 => label(_1, t, _3, _4)
+    case 2 => label(_1, _2, t, _4)
+    case 3 => label(_1, _2, _3, t)
   }
 
   def iterator = Iterator(_1, _2, _3, _4)
@@ -190,11 +190,11 @@ trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
   val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
-    case 1 => label(t, _2, _3, _4, _5)
-    case 2 => label(_1, t, _3, _4, _5)
-    case 3 => label(_1, _2, t, _4, _5)
-    case 4 => label(_1, _2, _3, t, _5)
-    case 5 => label(_1, _2, _3, _4, t)
+    case 0 => label(t, _2, _3, _4, _5)
+    case 1 => label(_1, t, _3, _4, _5)
+    case 2 => label(_1, _2, t, _4, _5)
+    case 3 => label(_1, _2, _3, t, _5)
+    case 4 => label(_1, _2, _3, _4, t)
   }
 
   def iterator = Iterator(_1, _2, _3, _4, _5)
@@ -210,12 +210,12 @@ trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
   val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround && _6.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
-    case 1 => label(t, _2, _3, _4, _5, _6)
-    case 2 => label(_1, t, _3, _4, _5, _6)
-    case 3 => label(_1, _2, t, _4, _5, _6)
-    case 4 => label(_1, _2, _3, t, _5, _6)
-    case 5 => label(_1, _2, _3, _4, t, _6)
-    case 6 => label(_1, _2, _3, _4, _5, t)
+    case 0 => label(t, _2, _3, _4, _5, _6)
+    case 1 => label(_1, t, _3, _4, _5, _6)
+    case 2 => label(_1, _2, t, _4, _5, _6)
+    case 3 => label(_1, _2, _3, t, _5, _6)
+    case 4 => label(_1, _2, _3, _4, t, _6)
+    case 5 => label(_1, _2, _3, _4, _5, t)
   }
 
   def iterator = Iterator(_1, _2, _3, _4, _5, _6)

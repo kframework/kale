@@ -174,7 +174,7 @@ object context {
             // C -> HOLE
             Equality(contextApplication.contextVar, contextApplication.hole))
           val subterms = term.toList
-          val recursive = solutionFor(subterms, (pos: Int, tt: Term) => term.updateAt(pos + 1)(tt))
+          val recursive = solutionFor(subterms, (pos: Int, tt: Term) => term.updateAt(pos)(tt))
           Or(recursive, zeroLevel)
       }
     }

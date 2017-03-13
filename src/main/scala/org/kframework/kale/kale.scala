@@ -129,7 +129,7 @@ trait Node extends Term with Product with tree.Node {
 
   val label: NodeLabel
 
-  def updateAt(i: Int)(t: Term): Term = if (i <= 0 || i > productArity) {
+  def updateAt(i: Int)(t: Term): Term = if (i < 0 || i >= productArity) {
     throw new IndexOutOfBoundsException(label + " has " + productArity + " children. Trying to update index _" + i)
   } else {
     innerUpdateAt(i, t)
