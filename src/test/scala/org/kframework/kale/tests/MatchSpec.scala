@@ -101,15 +101,19 @@ class MatchSpec extends FreeSpec with TestSetup {
     val YY = Variable("YY")
 
     "zero level" in {
-      println(CAPP(C, X) := 1)
+      assert((CAPP(C, X) := 1)
+        === And.substitution(Map(C -> Hole, X -> 1)))
     }
 
     "one level" in {
-      println(CAPP(C, bar(X)) := foo(1, bar(2)))
+      assert((CAPP(C, bar(X)) := foo(1, bar(2)))
+        === And.substitution(Map(C -> foo(1, Hole), X -> 2)))
     }
 
     "two levels" in {
-      println(CAPP(C, bar(X)) := foo(1, bar(bar(2))))
+      assert((CAPP(C, bar(X)) := foo(1, bar(bar(2))))
+        === Or(And.substitution(Map(C -> foo(1, Hole), X -> bar(2))),
+        And.substitution(Map(C -> foo(1, bar(Hole)), X -> 2))))
     }
   }
 
