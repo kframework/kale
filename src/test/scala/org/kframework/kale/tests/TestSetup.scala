@@ -2,6 +2,7 @@ package org.kframework.kale.tests
 
 import org.kframework.kale.context.PatternContextApplicationLabel
 import org.kframework.kale.{Invoke, _}
+import org.scalactic.Prettifier
 
 trait TestSetup {
 
@@ -52,5 +53,12 @@ trait TestSetup {
   def toAssert(t: Term): String = t match {
     case Variable(name) => name
     case t: Node => t.toString
+  }
+
+  implicit val pretty = new Prettifier {
+    override def apply(o: Any) = o match {
+      case n: Node => n.toString
+      case o => Prettifier.default(o)
+    }
   }
 }
