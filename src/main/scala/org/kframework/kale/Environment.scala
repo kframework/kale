@@ -3,6 +3,7 @@ package org.kframework.kale
 import org.kframework.kale.context.{AnywhereContextApplicationLabel, PatternContextApplicationLabel}
 
 import scala.collection.mutable
+import org.kframework.minikore.interfaces.pattern
 
 /**
   * Created by cos on 3/15/17.
@@ -43,8 +44,8 @@ case class Environment() {
 
   val Hole = Variable("☐")
 
-  val Top: Truth with Substitution = TopInstance()
-  val Bottom: Truth = BottomInstance()
+  val Top: Truth with Substitution with pattern.Top = TopInstance()
+  val Bottom: Truth with pattern.Bottom = BottomInstance()
 
   val Equality = EqualityLabel()
   val And = AndLabel()

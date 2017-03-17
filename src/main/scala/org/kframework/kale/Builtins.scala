@@ -12,25 +12,35 @@ class Builtins(implicit val env: Environment) {
 
   sealed trait PrimordialConstantLabel[T] extends HasEnvironment with ConstantLabel[T]
 
-  case class ReferenceLabel[T](name: String) extends HasEnvironment with PrimordialConstantLabel[T]
+  abstract class ReferenceLabel[T](val name: String) extends HasEnvironment with PrimordialConstantLabel[T]
 
   val allPrimitives = List(INT, STRING, DOUBLE, BOOLEAN)
 
   // just for forcing initialization of "object" references
 
-  object INT extends ReferenceLabel[Int]("Int")
+  object INT extends ReferenceLabel[Int]("Int") {
+    override def internalInterpret(s: String): Int = s.toInt
+  }
 
-  object STRING extends ReferenceLabel[String]("String")
+  object STRING extends ReferenceLabel[String]("String") {
+    override def internalInterpret(s: String): String = s
+  }
 
-  object DOUBLE extends ReferenceLabel[Double]("Double")
+  object DOUBLE extends ReferenceLabel[Double]("Double") {
+    override def internalInterpret(s: String): Double = s.toDouble
+  }
 
-  object BOOLEAN extends ReferenceLabel[Boolean]("Boolean")
+  object BOOLEAN extends ReferenceLabel[Boolean]("Boolean") {
+    override def internalInterpret(s: String): Boolean = s.toBoolean
+  }
 
   case class Sort(name: String)
 
   case class GENERIC_TOKEN(sort: Sort) extends {
     val name = "TOKEN_" + sort.name
-  } with PrimordialConstantLabel[String]
+  } with PrimordialConstantLabel[String] {
+    override def internalInterpret(s: String): String = s
+  }
 
   case class SetLabel(name: String, identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
     override def construct(l: Iterable[Term]): Term = SET(this, l.toSet)

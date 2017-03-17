@@ -5,6 +5,8 @@ import org.kframework.kale.context.{AnywhereContextApplicationLabel, Context1App
 import scala.collection._
 import scala.Iterable
 
+import org.kframework.minikore.interfaces.{pattern, tree}
+
 trait Label0 extends Function0[Term] with NodeLabel {
   val arity = 0
 
@@ -110,6 +112,9 @@ trait Node1 extends Node with Product1[Term] {
   }
 
   def iterator = Iterator(_1)
+
+  // FOR KORE
+  def build(_1: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label2](_1.asInstanceOf[Term])
 }
 
 case class FreeNode1(label: Label1, _1: Term) extends Node1
@@ -125,6 +130,9 @@ trait Node2 extends Node with Product2[Term, Term] {
   }
 
   def iterator = Iterator(_1, _2)
+
+  // FOR KORE
+  def build(_1: pattern.Pattern, _2: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label2](_1.asInstanceOf[Term], _2.asInstanceOf[Term])
 }
 
 case class FreeNode2(label: Label2, _1: Term, _2: Term) extends Node2
@@ -229,7 +237,7 @@ trait Substitution extends Term with (Term => Term) {
   def apply(t: Term): Term
 }
 
-private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 with BinaryInfix {
+private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 with BinaryInfix with pattern.Equals {
   val label = env.Equality
 
   override def equals(other: Any) = other match {
@@ -262,7 +270,7 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
   override def toString: String = super[BinaryInfix].toString
 }
 
-trait And extends Assoc {
+trait And extends Assoc with pattern.And {
   val formulas: Term
   val nonFormula: Option[Term]
 }
@@ -552,7 +560,9 @@ case class OrLabel(implicit val env: Environment) extends {
   override def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
 }
 
-private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env: Environment) extends Assoc {
+trait Or extends Assoc with pattern.Or
+
+private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env: Environment) extends Or {
   assert(terms.size > 1)
 
   import env._
@@ -649,7 +659,7 @@ trait BinaryInfix {
   override def toString = _1 + " " + label.name + " " + _2
 }
 
-case class Rewrite(_1: Term, _2: Term)(implicit env: Environment) extends Node2 with BinaryInfix {
+case class Rewrite(_1: Term, _2: Term)(implicit env: Environment) extends Node2 with BinaryInfix with pattern.Rewrite {
   override val label = env.Rewrite
 }
 

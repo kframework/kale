@@ -2,7 +2,6 @@ package org.kframework.kale
 
 import scala.collection._
 import scala.language.implicitConversions
-
 import org.kframework.minikore.interfaces.{pattern, tree}
 
 trait Label extends MemoizedHashCode {
@@ -98,11 +97,7 @@ trait Node extends Term with Product with tree.Node {
   override def toString = label + "(" + iterator.mkString(", ") + ")"
 }
 
-trait Leaf[T] extends Term with tree.Leaf[T] {
-  // FOR KORE
-  def contents = value
-  def build(content: T): pattern.Pattern = label(content)
-  // /FOR KORE
+trait Leaf[T] extends Term {
   def iterator = Iterator.empty
 
   def updateAt(i: Int)(t: Term): Term = throw new IndexOutOfBoundsException("Leaves have no children. Trying to update index _" + i)
@@ -117,11 +112,28 @@ trait NameFromObject {
   val name = this.getClass.getName.drop(5)
 }
 
-trait ConstantLabel[T] extends LeafLabel[T] {
+trait ConstantLabel[T] extends LeafLabel[T] with pattern.Symbol {
+
   def apply(v: T) = Constant(this, v)
+
+  def interpret(s: String): Constant[T] = this(internalInterpret(s))
+
+  // FOR KORE
+  def str: String = name
+  // remove this and all descendants if getting rid of Constant.build
+  protected[this] def internalInterpret(s: String): T
+  // FOR KORE
 }
 
-case class Constant[T](label: ConstantLabel[T], value: T) extends Leaf[T] {
+case class Constant[T](label: ConstantLabel[T], value: T) extends Leaf[T] with pattern.DomainValue {
+  // FOR KORE
+  def build(symbol: pattern.Symbol, content: pattern.Value): pattern.DomainValue = {
+    symbol.asInstanceOf[ConstantLabel[_]].interpret(content)
+  }
+  def _1 = label
+  def _2 = value.toString
+  // /FOR KORE
+
   val isGround = true
 
   override def toString = value.toString
@@ -140,8 +152,17 @@ trait Variable extends Leaf[String] {
   override def toString = name
 }
 
-case class SimpleVariable(name: String)(implicit env: Environment) extends Variable {
+case class SimpleVariable(name: String)(implicit env: Environment) extends Variable with pattern.Variable {
   val label = env.Variable
+
+  // FOR KORE
+  override def build(_1: pattern.Name, _2: pattern.Sort): SimpleVariable = {
+    assert(_2.str == "K")
+    SimpleVariable(_1)
+  }
+  override def _1: pattern.Name = name
+  override def _2: pattern.Sort = pattern.Sort("K")
+  // FOR KORE
 }
 
 trait FormulaLabel
@@ -155,16 +176,22 @@ class Truth(val value: Boolean)(implicit val env: Environment) extends Leaf[Bool
   val isGround = true
 }
 
-private case class TopInstance(implicit eenv: Environment) extends Truth(true) with Substitution {
+private case class TopInstance(implicit eenv: Environment) extends Truth(true) with Substitution with pattern.Top {
   override def get(v: Variable): Option[Term] = None
 
   override def toString = "⊤"
 
   def apply(t: Term) = t
+
+  // FOR KORE
+  override def build(): pattern.Top = this
 }
 
-private case class BottomInstance(implicit eenv: Environment) extends Truth(false) {
+private case class BottomInstance(implicit eenv: Environment) extends Truth(false) with pattern.Bottom {
   override def toString = "⊥"
+
+  // FOR KORE
+  override def build(): pattern.Bottom = this
 }
 
 trait FunctionLabel {
