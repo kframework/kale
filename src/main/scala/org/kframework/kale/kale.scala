@@ -3,6 +3,8 @@ package org.kframework.kale
 import scala.collection._
 import scala.language.implicitConversions
 
+import org.kframework.minikore.interfaces.{pattern, tree}
+
 trait Label extends MemoizedHashCode {
   val env: Environment
 
@@ -46,7 +48,7 @@ trait LeafLabel[T] extends Label {
   }
 }
 
-trait Term extends Iterable[Term] {
+trait Term extends Iterable[Term] with pattern.Pattern {
   def updateAt(i: Int)(t: Term): Term
 
   val label: Label
@@ -72,7 +74,15 @@ object Node {
   }
 }
 
-trait Node extends Term with Product {
+trait Node extends Term with Product with tree.Node {
+  // FOR KORE
+  override def args: Seq[pattern.Pattern] = iterator.toSeq
+  override def build(children: Seq[pattern.Pattern]): pattern.Pattern = {
+    // downcasting to Term, but it will fail somewhere in Label
+    label(children.asInstanceOf[Seq[Term]])
+  }
+  // /FOR KORE
+
   val label: NodeLabel
 
   def updateAt(i: Int)(t: Term): Term = if (i <= 0 || i > productArity) {
@@ -88,7 +98,11 @@ trait Node extends Term with Product {
   override def toString = label + "(" + iterator.mkString(", ") + ")"
 }
 
-trait Leaf[T] extends Term {
+trait Leaf[T] extends Term with tree.Leaf[T] {
+  // FOR KORE
+  def contents = value
+  def build(content: T): pattern.Pattern = label(content)
+  // /FOR KORE
   def iterator = Iterator.empty
 
   def updateAt(i: Int)(t: Term): Term = throw new IndexOutOfBoundsException("Leaves have no children. Trying to update index _" + i)
