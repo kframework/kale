@@ -7,7 +7,7 @@ import scala.collection.Seq
 
 class KoreBuilders(implicit val env: Environment) extends Builders {
 
-  def Symbol(str: String): pattern.Symbol = env.label(str).asInstanceOf[pattern.Symbol]
+  def Symbol(str: String): pattern.Symbol = env.label(str)
 
   def Variable(_1: pattern.Name, _2: pattern.Sort): pattern.Variable = SimpleVariable(_1)
 

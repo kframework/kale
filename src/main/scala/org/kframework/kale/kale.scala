@@ -4,7 +4,7 @@ import scala.collection._
 import scala.language.implicitConversions
 import org.kframework.minikore.interfaces.{pattern, tree}
 
-trait Label extends MemoizedHashCode {
+trait Label extends MemoizedHashCode with pattern.Symbol {
   val env: Environment
 
   val name: String
@@ -19,6 +19,9 @@ trait Label extends MemoizedHashCode {
   override def computeHashCode = name.hashCode
 
   override def toString = name
+
+  // FOR KORE
+  def str: String = name
 }
 
 trait NodeLabel extends Label {
@@ -112,14 +115,13 @@ trait NameFromObject {
   val name = this.getClass.getName.drop(5)
 }
 
-trait ConstantLabel[T] extends LeafLabel[T] with pattern.Symbol {
+trait ConstantLabel[T] extends LeafLabel[T] {
 
   def apply(v: T) = Constant(this, v)
 
   def interpret(s: String): Constant[T] = this(internalInterpret(s))
 
   // FOR KORE
-  def str: String = name
   // remove this and all descendants if getting rid of Constant.build
   protected[this] def internalInterpret(s: String): T
   // FOR KORE
