@@ -34,6 +34,10 @@ class Builtins(implicit val env: Environment) {
     override def internalInterpret(s: String): Boolean = s.toBoolean
   }
 
+  object ID extends ReferenceLabel[String]("Id") {
+    override def internalInterpret(s: String): String = s.toString
+  }
+
   case class Sort(name: String)
 
   case class GENERIC_TOKEN(sort: Sort) extends {
