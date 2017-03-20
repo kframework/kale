@@ -19,7 +19,7 @@ case class Matcher(env: Environment) {
       case (soFar, (l, r)) =>
         val results = Or.asSet(soFar) map {
           case soFarVariant@And.substitutionAndTerms(sub, _) =>
-            And(soFar: Term, solver(sub(l), sub(r)))
+            And(soFarVariant: Term, solver(sub(l), sub(r)))
         }
         Or(results)
     })
