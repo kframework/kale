@@ -66,9 +66,7 @@ object builtin {
     object ge extends compare { override val name: String = "_>=Int_"; override def f(i1: Int, i2: Int): Boolean = i1 >= i2 }
     object le extends compare { override val name: String = "_<=Int_"; override def f(i1: Int, i2: Int): Boolean = i1 <= i2 }
 
-    object eq extends Symbol {
-      override val name: String = "_==K_"
-      override val signature: Type = (Seq(SortK, SortK), SortBool)
+    trait eq extends Symbol {
       override val isFunctional: Boolean = true
       override def apply(children: Seq[Term]): Term = {
         assert(children.size == 2)
@@ -77,6 +75,9 @@ object builtin {
         else Application(this, children)
       }
     }
+    object eqK    extends eq { override val name: String = "_==K_";    override val signature: Type = (Seq(SortK,    SortK),    SortBool) }
+    object eqInt  extends eq { override val name: String = "_==Int_";  override val signature: Type = (Seq(SortInt,  SortInt),  SortBool) }
+    object eqBool extends eq { override val name: String = "_==Bool_"; override val signature: Type = (Seq(SortBool, SortBool), SortBool) }
 
     trait bop extends Symbol {
       def f(b1: Boolean, b2: Boolean): Boolean
