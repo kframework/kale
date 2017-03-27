@@ -1,16 +1,18 @@
 package org.kframework.km
 
-object rewrite {
+class rewrite {
 
   import term._
   import builtin._
   import unification._
 
-  def applyRule(cnt: Int)(rule: SimpleRewrite, term: SimplePattern): Seq[SimplePattern] = {
+  private var cntRename: Int = 0
+
+  def applyRule(rule: SimpleRewrite, term: SimplePattern): Seq[SimplePattern] = { cntRename += 1
     // rule:  l => r if c
-    lazy val l = rule.l.rename(cnt)
-    lazy val r = rule.r.rename(cnt)
-    lazy val c = rule.c.rename(cnt)
+    lazy val l = rule.l.rename(cntRename)
+    lazy val r = rule.r.rename(cntRename)
+    lazy val c = rule.c.rename(cntRename)
     // term:  t /\ p
     val t = term.term
     val p = term.constraint
@@ -31,8 +33,34 @@ object rewrite {
     }
   }
 
-  def applyRules(cnt: Int)(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
-    rules.flatMap(rule => applyRule(cnt)(rule, term))
+  def applyRules(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
+    rules.flatMap(rule => applyRule(rule, term))
+  }
+
+  def searchDepth(depth: Int)(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
+    def loop(depth: Int, currTerms: Seq[SimplePattern], normalTerms: Seq[SimplePattern]): (Seq[SimplePattern], Seq[SimplePattern]) = {
+      if (depth == 0) (currTerms, normalTerms)
+      else {
+        case class Next(terms: Seq[SimplePattern])
+        case class Done(term: SimplePattern)
+        val nextTerms = currTerms.map(t => {
+          applyRules(rules,t) match {
+            case Seq() => Done(t)
+            case ts => Next(ts)
+          }
+        })
+        val (newCurrTerms, newNormalTerms) = nextTerms.partition(_.isInstanceOf[Next])
+        val _newCurrTerms = newCurrTerms.flatMap({case Next(ts) => ts})
+        val _newNormalTerms = newNormalTerms.map({case Done(t) => t})
+        loop(depth - 1, _newCurrTerms, _newNormalTerms)
+      }
+    }
+    val (currTerms, normalTerms) = loop(depth, Seq(term), Seq())
+    currTerms ++ normalTerms
+  }
+
+  def search(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
+    searchDepth(-1)(rules, term)
   }
 
   // TODO:
