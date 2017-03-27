@@ -39,8 +39,9 @@ class rewrite {
 
   def searchDepth(depth: Int)(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
     def loop(depth: Int, currTerms: Seq[SimplePattern], normalTerms: Seq[SimplePattern]): (Seq[SimplePattern], Seq[SimplePattern]) = {
-      if (depth == 0) (currTerms, normalTerms)
+      if (depth == 0 || currTerms.isEmpty) (currTerms, normalTerms)
       else {
+        // TODO: more efficient and flexible way?
         case class Next(terms: Seq[SimplePattern])
         case class Done(term: SimplePattern)
         val nextTerms = currTerms.map(t => {
@@ -52,7 +53,7 @@ class rewrite {
         val (newCurrTerms, newNormalTerms) = nextTerms.partition(_.isInstanceOf[Next])
         val _newCurrTerms = newCurrTerms.flatMap({case Next(ts) => ts})
         val _newNormalTerms = newNormalTerms.map({case Done(t) => t})
-        loop(depth - 1, _newCurrTerms, _newNormalTerms)
+        loop(depth - 1, _newCurrTerms, normalTerms ++ _newNormalTerms)
       }
     }
     val (currTerms, normalTerms) = loop(depth, Seq(term), Seq())
