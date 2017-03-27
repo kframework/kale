@@ -106,7 +106,7 @@ object builtin {
     }
   }
 
-  object MAP {
+  object MAPK {
     case class NotFound() extends ControlThrowable
 
     object select extends Symbol {
@@ -164,7 +164,40 @@ object builtin {
         }
       }
     }
+  }
 
+  object LISTK {
+    object nil extends Symbol {
+      override val name: String = "nilListK"
+      override val signature: Type = (Seq(), SortListK)
+      override val isFunctional: Boolean = false
+      override def apply(children: Seq[Term]): Term = Application(this, children)
+    }
+
+    object insert extends Symbol {
+      override val name: String = "insertListK"
+      override val signature: Type = (Seq(SortK, SortListK), SortListK)
+      override val isFunctional: Boolean = false
+      override def apply(children: Seq[Term]): Term = Application(this, children)
+    }
+
+    object append extends Symbol {
+      override val name: String = "appendListK"
+      override val signature: Type = (Seq(SortListK, SortListK), SortListK)
+      override val isFunctional: Boolean = true
+      override def apply(children: Seq[Term]): Term = {
+        assert(children.size == 2)
+        val default = Application(this, children)
+        val (l1,l2) = (children(0), children(1))
+        (l1, l2) match {
+          case (_, Application(`nil`, _)) => l1
+          case (Application(`nil`, _), _) => l2
+          case (Application(`insert`, Seq(l11, l12)), _) =>
+            Application(insert, Seq(l11, append(l12, l2)))
+          case _ => default
+        }
+      }
+    }
   }
 
 }
