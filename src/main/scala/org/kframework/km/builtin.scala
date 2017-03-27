@@ -33,7 +33,6 @@ object builtin {
       def f(i1: Int, i2: Int): Int
       override val signature: Type = (Seq(SortInt, SortInt), SortInt)
       override val isFunctional: Boolean = true
-      //
       override def apply(children: Seq[Term]): Term = {
         assert(children.size == 2)
         (children(0), children(1)) match {
@@ -53,7 +52,6 @@ object builtin {
       def f(i1: Int, i2: Int): Boolean
       override val signature: Type = (Seq(SortInt, SortInt), SortBool)
       override val isFunctional: Boolean = true
-      //
       override def apply(children: Seq[Term]): Term = {
         assert(children.size == 2)
         (children(0), children(1)) match {
@@ -71,7 +69,6 @@ object builtin {
       override val name: String = "_==K_"
       override val signature: Type = (Seq(SortK, SortK), SortBool)
       override val isFunctional: Boolean = true
-      //
       override def apply(children: Seq[Term]): Term = {
         assert(children.size == 2)
         val (t1,t2) = (children(0), children(1))
@@ -84,7 +81,6 @@ object builtin {
       def f(b1: Boolean, b2: Boolean): Boolean
       override val signature: Type = (Seq(SortBool, SortBool), SortBool)
       override val isFunctional: Boolean = true
-      //
       override def apply(children: Seq[Term]): Term = {
         assert(children.size == 2)
         (children(0), children(1)) match {
@@ -100,7 +96,6 @@ object builtin {
       override val name: String = "_notBool_"
       override val signature: Type = (Seq(SortBool), SortBool)
       override val isFunctional: Boolean = true
-      //
       override def apply(children: Seq[Term]): Term = {
         assert(children.size == 1)
         children(0) match {
@@ -118,17 +113,17 @@ object builtin {
       override val name: String = "selectMapK"
       override val signature: Type = (Seq(SortMapK, SortK), SortK)
       override val isFunctional: Boolean = true
-      //
       override def apply(children: Seq[Term]): Term = {
         assert(children.size == 2)
         val default = Application(this, children)
         val (m,k) = (children(0), children(1))
         if (k.isSymbolic) default
         else {
-          def _select(_m: Term, _k: Term): Term = {
-            _m match {
+          def _select(m1: Term, k1: Term): Term = {
+            m1 match {
               case Application(`store`, Seq(m2, k2, v2)) =>
-                if (_k == k2) v2 else _select(m2, _k)
+                if (k1 == k2) v2
+                else _select(m2, k1)
               case _ => throw NotFound()
             }
           }
@@ -145,20 +140,19 @@ object builtin {
       override val name: String = "storeMapK"
       override val signature: Type = (Seq(SortMapK, SortK, SortK), SortK)
       override val isFunctional: Boolean = true
-      //
       override def apply(children: Seq[Term]): Term = {
         assert(children.size == 3)
         val default = Application(this, children)
         val (m,k,v) = (children(0), children(1), children(2))
         if (k.isSymbolic) default
         else {
-          def _store(_m: Term, _k: Term, _v: Term): Term = {
-            _m match {
+          def _store(m1: Term, k1: Term, v1: Term): Term = {
+            m1 match {
               case Application(`store`, Seq(m2, k2, v2)) =>
-                if (_k == k2)
-                  Application(this, Seq(m2, k2, _v))
+                if (k1 == k2)
+                  Application(store, Seq(m2, k2, v1))
                 else
-                  Application(this, Seq(_store(m2, _k, _v), k2, v2))
+                  Application(store, Seq(_store(m2, k1, v1), k2, v2))
               case _ => throw NotFound()
             }
           }

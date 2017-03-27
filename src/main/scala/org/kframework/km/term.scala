@@ -22,7 +22,6 @@ object term {
     val name: String
     val signature: Type
     val isFunctional: Boolean
-    //
     def apply(children: Seq[Term]): Term
   }
 
