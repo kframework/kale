@@ -50,7 +50,7 @@ object unification {
           unifyTerm(v1, u.subst(v2), u)
         case _ =>
           if (occur(v1, t2, u)) throw Fail(v1, t2, u)
-          else Unifier(u.subst + (v1 -> t2), u.constraint)
+          else Unifier(u.subst + (v1 -> t2), u.constraint.subst(Map(v1 -> t2))) // TODO: check if enough for constraint
       }
     }
   }
