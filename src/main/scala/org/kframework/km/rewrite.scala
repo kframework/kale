@@ -8,9 +8,9 @@ object rewrite {
 
   def applyRule(cnt: Int)(rule: SimpleRewrite, term: SimplePattern): Seq[SimplePattern] = {
     // rule:  l => r if c
-    val l = rule.l.rename(cnt)
-    val r = rule.r.rename(cnt)
-    val c = rule.c.rename(cnt)
+    lazy val l = rule.l.rename(cnt)
+    lazy val r = rule.r.rename(cnt)
+    lazy val c = rule.c.rename(cnt)
     // term:  t /\ p
     val t = term.term
     val p = term.constraint
@@ -29,6 +29,10 @@ object rewrite {
           Seq()
         }
     }
+  }
+
+  def applyRules(cnt: Int)(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
+    rules.flatMap(rule => applyRule(cnt)(rule, term))
   }
 
   // TODO:
