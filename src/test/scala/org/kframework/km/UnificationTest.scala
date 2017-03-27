@@ -32,9 +32,9 @@ class UnificationTest extends FreeSpec {
 
   "simple" in {
     assert(unifyTerm(x, y, u0) == Unifier(Map(x -> y), tt))
-    assert(unifyTerm(pxy, pyx, u0) == Unifier(Map(x -> y), tt))
-    assert(unifyTerm(qpp, qzz, u0) == Unifier(Map(x -> y, z -> pxy), tt))
-    assert(unifyTerm(pxya, pyxx, u0) == Unifier(Map(x -> y, y -> a), tt))
+    assert(unifyTerm(pxy, pyx, u0) == Unifier(Map(x -> y), tt)) // p(X,Y) = p(Y,X) // X -> Y
+    assert(unifyTerm(qpp, qzz, u0) == Unifier(Map(x -> y, z -> pxy), tt)) // q(p(X,Y),p(Y,X)) = q(Z,Z) // X -> Y, Z -> p(X,Y)
+    assert(unifyTerm(pxya, pyxx, u0) == Unifier(Map(x -> y, y -> a), tt)) // p(X,Y,a) = p(Y,X,X) // X -> Y, Y -> a
   }
 
 }
