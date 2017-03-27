@@ -9,25 +9,6 @@ object builtin {
   case class INT(v: Int) extends Constant {
     val sort: Sort = SortInt
   }
-
-  case class BOOL(v: Boolean) extends Constant {
-    val sort: Sort = SortBool
-  }
-
-  /* TODO: support string, real, float, and bit-vector
-  case class STRING(v: String) extends Constant {
-    val sort: Sort = SortString
-  }
-
-  case class REAL(v: Double) extends Constant {
-    val sort: Sort = SortReal
-  }
-
-  case class MINT(v: BitVector) extends Constant {
-    val sort: Sort = SortMInt
-  }
-   */
-
   object INT {
     trait bop extends Symbol {
       def f(i1: Int, i2: Int): Int
@@ -48,6 +29,9 @@ object builtin {
     object mod   extends bop { override val name: String = "_%Int_"; override def f(i1:Int, i2:Int): Int = i1 % i2 }
   }
 
+  case class BOOL(v: Boolean) extends Constant {
+    val sort: Sort = SortBool
+  }
   object BOOL {
     trait compare extends Symbol {
       def f(i1: Int, i2: Int): Boolean
@@ -109,7 +93,7 @@ object builtin {
     }
   }
 
-  object MAPK {
+  object MAP_K {
     case class NotFound() extends ControlThrowable
 
     object select extends Symbol {
@@ -169,7 +153,7 @@ object builtin {
     }
   }
 
-  object LISTK {
+  object LIST_K {
     object nil extends Symbol {
       override val name: String = "nilListK"
       override val signature: Type = (Seq(), SortListK)
@@ -202,5 +186,19 @@ object builtin {
       }
     }
   }
+
+  /* TODO: support string, real, float, and bit-vector
+  case class STRING(v: String) extends Constant {
+    val sort: Sort = SortString
+  }
+
+  case class REAL(v: Double) extends Constant {
+    val sort: Sort = SortReal
+  }
+
+  case class MINT(v: BitVector) extends Constant {
+    val sort: Sort = SortMInt
+  }
+   */
 
 }
