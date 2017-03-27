@@ -1,5 +1,6 @@
 package org.kframework.km
 
+import scala.collection.mutable
 import scala.util.control.ControlThrowable
 
 object builtin {
@@ -10,7 +11,7 @@ object builtin {
     val sort: Sort = SortInt
   }
   object INT {
-    trait bop extends Symbol {
+    sealed trait bop extends Symbol {
       def f(i1: Int, i2: Int): Int
       override val signature: Type = (Seq(SortInt, SortInt), SortInt)
       override val isFunctional: Boolean = true
@@ -27,13 +28,8 @@ object builtin {
     object mult  extends bop { override val name: String = "_*Int_"; override def f(i1:Int, i2:Int): Int = i1 * i2 }
     object div   extends bop { override val name: String = "_/Int_"; override def f(i1:Int, i2:Int): Int = i1 / i2 }
     object mod   extends bop { override val name: String = "_%Int_"; override def f(i1:Int, i2:Int): Int = i1 % i2 }
-  }
 
-  case class BOOL(v: Boolean) extends Constant {
-    val sort: Sort = SortBool
-  }
-  object BOOL {
-    trait compare extends Symbol {
+    sealed trait cmp extends Symbol {
       def f(i1: Int, i2: Int): Boolean
       override val signature: Type = (Seq(SortInt, SortInt), SortBool)
       override val isFunctional: Boolean = true
@@ -45,25 +41,17 @@ object builtin {
         }
       }
     }
-    object gt extends compare { override val name: String = "_>Int_";  override def f(i1: Int, i2: Int): Boolean = i1 > i2 }
-    object lt extends compare { override val name: String = "_<Int_";  override def f(i1: Int, i2: Int): Boolean = i1 < i2 }
-    object ge extends compare { override val name: String = "_>=Int_"; override def f(i1: Int, i2: Int): Boolean = i1 >= i2 }
-    object le extends compare { override val name: String = "_<=Int_"; override def f(i1: Int, i2: Int): Boolean = i1 <= i2 }
+    object gt extends cmp { override val name: String = "_>Int_";  override def f(i1: Int, i2: Int): Boolean = i1 > i2 }
+    object lt extends cmp { override val name: String = "_<Int_";  override def f(i1: Int, i2: Int): Boolean = i1 < i2 }
+    object ge extends cmp { override val name: String = "_>=Int_"; override def f(i1: Int, i2: Int): Boolean = i1 >= i2 }
+    object le extends cmp { override val name: String = "_<=Int_"; override def f(i1: Int, i2: Int): Boolean = i1 <= i2 }
+  }
 
-    trait eq extends Symbol {
-      override val isFunctional: Boolean = true
-      override def apply(children: Seq[Term]): Term = {
-        assert(children.size == 2)
-        val (t1,t2) = (children(0), children(1))
-        if (t1 == t2) BOOL(true)
-        else Application(this, children)
-      }
-    }
-    object eqK    extends eq { override val name: String = "_==K_";    override val signature: Type = (Seq(SortK,    SortK),    SortBool) }
-    object eqInt  extends eq { override val name: String = "_==Int_";  override val signature: Type = (Seq(SortInt,  SortInt),  SortBool) }
-    object eqBool extends eq { override val name: String = "_==Bool_"; override val signature: Type = (Seq(SortBool, SortBool), SortBool) }
-
-    trait bop extends Symbol {
+  case class BOOL(v: Boolean) extends Constant {
+    val sort: Sort = SortBool
+  }
+  object BOOL {
+    sealed trait bop extends Symbol {
       def f(b1: Boolean, b2: Boolean): Boolean
       override val signature: Type = (Seq(SortBool, SortBool), SortBool)
       override val isFunctional: Boolean = true
@@ -91,6 +79,46 @@ object builtin {
         }
       }
     }
+  }
+
+  object EQ {
+    private case class eq(name: String, sort: Sort) extends Symbol {
+      override val signature: Type = (Seq(sort, sort), SortBool)
+      override val isFunctional: Boolean = true
+      override def apply(children: Seq[Term]): Term = {
+        assert(children.size == 2)
+        val (t1,t2) = (children(0), children(1))
+        if (t1 == t2) BOOL(true)
+        else Application(this, children)
+      }
+    }
+
+ // private val symbols: Map[Sort, Symbol] = Map()
+    private val symbols: mutable.Map[Sort, Symbol] = mutable.Map()
+    // TODO: not thread safe
+    def of(sort: Sort): Symbol = {
+      if (symbols.contains(sort)) symbols(sort)
+      else {
+        val symbol = eq("_==" + sort.name + "_", sort)
+        symbols.put(sort, symbol)
+        symbol
+      }
+    }
+
+    // TODO: initialize symbols map in the beginning by making the builtin be class
+//    val sorts: Seq[Sort] = Seq(SortK, SortInt, SortBool)
+//
+//    val map: Map[Sort, Symbol] = {
+//      val m0: Map[Sort, Symbol] = Map()
+//      sorts.foldLeft(m0)((m,s) => m + (s -> eq("_==" + s.toString + "_", s)))
+//    }
+
+    // old
+//    val eqK = eq("_==K_", SortK)
+//
+//    object eqK    extends eq { override val name: String = "_==K_";    override val signature: Type = (Seq(SortK,    SortK),    SortBool) }
+//    object eqInt  extends eq { override val name: String = "_==Int_";  override val signature: Type = (Seq(SortInt,  SortInt),  SortBool) }
+//    object eqBool extends eq { override val name: String = "_==Bool_"; override val signature: Type = (Seq(SortBool, SortBool), SortBool) }
   }
 
   object MAP_K {

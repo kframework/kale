@@ -2,19 +2,33 @@ package org.kframework.km
 
 object term {
 
-  sealed trait Sort
+  sealed trait Sort {
+    val name: String
+  }
   case class SortOf(name: String) extends Sort
-  case class SortMap(key: Sort, value: Sort) extends Sort
-  case class SortList(elem: Sort) extends Sort
-  object SortBool extends Sort
-  object SortInt extends Sort
+  case class SortMap(key: Sort, value: Sort) extends Sort {
+    val name: String = "Map{" + key.name + "," + value.name + "}"
+  }
+  case class SortList(elem: Sort) extends Sort {
+    val name: String = "List{" + elem.name + "}"
+  }
+  object SortBool extends Sort {
+    val name: String = "Bool"
+  }
+  object SortInt extends Sort {
+    val name: String = "Int"
+  }
 //object SortString extends Sort
 //object SortReal extends Sort
 //object SortMInt extends Sort
   //
   object SortK extends SortOf("K")
-  object SortMapK extends SortMap(SortK, SortK)
-  object SortListK extends SortList(SortK)
+  object SortMapK extends SortMap(SortK, SortK) {
+    override val name: String = "MapK"
+  }
+  object SortListK extends SortList(SortK) {
+    override val name: String = "ListK"
+  }
 
   type Type = Product2[Seq[Sort], Sort]
 
