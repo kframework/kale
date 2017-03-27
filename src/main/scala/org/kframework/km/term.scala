@@ -63,6 +63,11 @@ object term {
 
   ////
 
+  case class Constructor(name: String, signature: Type) extends Symbol {
+    val isFunctional: Boolean = false
+    def apply(children: Seq[Term]): Term = Application(this, children)
+  }
+
   case class SimplePattern(term: Term, constraint: Term) {
     assert(constraint.sort == SortBool)
   }
