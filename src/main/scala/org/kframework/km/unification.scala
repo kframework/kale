@@ -2,6 +2,11 @@ package org.kframework.km
 
 import scala.util.control.ControlThrowable
 
+/*
+  Implemented the algorithm presented in:
+    Peter Norvig. Correcting a Widespread Error in Unification Algorithms. SPE. 1991.
+    http://dx.doi.org/10.1002/spe.4380210208
+*/
 object unification {
 
   import term._
@@ -13,6 +18,16 @@ object unification {
     assert(constraint.sort == SortBool)
   }
 
+  def unify(t1: Term, t2: Term): Option[Unifier] = {
+    val u = Unifier(Map(), BOOL(true))
+    try {
+      Some(unifyTerm(t1, t2, u))
+    } catch {
+      case e:Fail => None
+    }
+  }
+
+  @throws(classOf[Fail])
   def unifyTerm(t1: Term, t2: Term, u: Unifier): Unifier = {
     assert(t1.sort == t2.sort)
     if (t1 == t2) u
@@ -29,6 +44,7 @@ object unification {
     }
   }
 
+  @throws(classOf[Fail])
   def unifyTerms(ts1: Seq[Term], ts2: Seq[Term], u: Unifier): Unifier = {
     assert(ts1.size == ts2.size)
     (ts1, ts2) match {
@@ -40,6 +56,7 @@ object unification {
     }
   }
 
+  @throws(classOf[Fail])
   def unifyVariable(v1: Variable, t2: Term, u: Unifier): Unifier = {
     assert(v1.sort == t2.sort)
     if (v1 == t2) u
