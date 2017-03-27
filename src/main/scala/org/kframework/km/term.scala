@@ -31,6 +31,7 @@ object term {
     val sort: Sort
     val isSymbolic: Boolean
     def subst(m: Substitution): Term
+    def rename(cnt: Int) : Term
   }
   case class Application(symbol: Symbol, children: Seq[Term]) extends Term {
     assert(symbol.signature._1 == children.map(t => t.sort))
@@ -39,16 +40,21 @@ object term {
     def subst(m: Substitution): Term = {
       symbol.apply(children.map(t => t.subst(m))) // TODO: return this if no children are changed
     }
+    def rename(cnt: Int): Term = {
+      symbol.apply(children.map(t => t.rename(cnt)))
+    }
   }
   case class Variable(name: String, sort: Sort) extends Term {
     val isSymbolic: Boolean = true
     def subst(m: Substitution): Term = {
       if (m.contains(this)) m(this) else this // TODO: m.getOrElse(this, this)
     }
+    def rename(cnt: Int): Term = Variable(name + "!" + cnt, sort)
   }
   trait Constant extends Term {
     override val isSymbolic: Boolean = false
     override def subst(m: Substitution): Term = this
+    override def rename(cnt: Int): Term = this
   }
 
   ////
