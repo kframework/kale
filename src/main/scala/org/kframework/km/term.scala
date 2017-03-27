@@ -30,6 +30,7 @@ object term {
   sealed trait Term {
     val sort: Sort
     val isSymbolic: Boolean
+    val isFunctional: Boolean
     def subst(m: Substitution): Term
     def rename(cnt: Int) : Term
   }
@@ -37,6 +38,7 @@ object term {
     assert(symbol.signature._1 == children.map(t => t.sort))
     val sort: Sort = symbol.signature._2
     val isSymbolic: Boolean = children.exists(t => t.isSymbolic)
+    val isFunctional: Boolean = symbol.isFunctional
     def subst(m: Substitution): Term = {
       symbol.apply(children.map(t => t.subst(m))) // TODO: return this if no children are changed
     }
@@ -46,6 +48,7 @@ object term {
   }
   case class Variable(name: String, sort: Sort) extends Term {
     val isSymbolic: Boolean = true
+    val isFunctional: Boolean = false
     def subst(m: Substitution): Term = {
       if (m.contains(this)) m(this) else this // TODO: m.getOrElse(this, this)
     }
@@ -53,6 +56,7 @@ object term {
   }
   trait Constant extends Term {
     override val isSymbolic: Boolean = false
+    override val isFunctional: Boolean = false
     override def subst(m: Substitution): Term = this
     override def rename(cnt: Int): Term = this
   }
