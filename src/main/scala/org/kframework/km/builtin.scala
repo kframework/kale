@@ -193,7 +193,7 @@ object builtin {
           case (_, Application(`nil`, _)) => l1
           case (Application(`nil`, _), _) => l2
           case (Application(`insert`, Seq(l11, l12)), _) =>
-            Application(insert, Seq(l11, append(l12, l2)))
+            Application(insert, Seq(l11, append(Seq(l12, l2))))
           case _ => default
         }
       }

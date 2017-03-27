@@ -23,7 +23,6 @@ object term {
     val signature: Type
     val isFunctional: Boolean
     def apply(children: Seq[Term]): Term
-    def apply(children: Term*): Term = apply(children.toSeq)
   }
 
   type Substitution = Map[Variable, Term]
