@@ -45,6 +45,7 @@ object builtin {
     object minus extends bop { override val name: String = "_-Int_"; override def f(i1:Int, i2:Int): Int = i1 - i2 }
     object mult  extends bop { override val name: String = "_*Int_"; override def f(i1:Int, i2:Int): Int = i1 * i2 }
     object div   extends bop { override val name: String = "_/Int_"; override def f(i1:Int, i2:Int): Int = i1 / i2 }
+    object mod   extends bop { override val name: String = "_%Int_"; override def f(i1:Int, i2:Int): Int = i1 % i2 }
   }
 
   object BOOL {
@@ -89,8 +90,9 @@ object builtin {
         }
       }
     }
-    object and extends bop { override val name: String = "_andBool_"; override def f(b1:Boolean, b2:Boolean): Boolean = b1 && b2 }
-    object or  extends bop { override val name: String = "_orBool_";  override def f(b1:Boolean, b2:Boolean): Boolean = b1 || b2 }
+    object and     extends bop { override val name: String = "_andBool_";     override def f(b1:Boolean, b2:Boolean): Boolean =  b1 && b2 }
+    object or      extends bop { override val name: String = "_orBool_";      override def f(b1:Boolean, b2:Boolean): Boolean =  b1 || b2 }
+    object implies extends bop { override val name: String = "_impliesBool_"; override def f(b1:Boolean, b2:Boolean): Boolean = !b1 || b2 }
 
     object not extends Symbol {
       override val name: String = "_notBool_"
