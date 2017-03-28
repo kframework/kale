@@ -9,10 +9,12 @@ object builtin {
 
   case class INT(v: Int) extends Constant {
     val sort: Sort = SortInt
+    val smt: String = v.toString
   }
   object INT {
     sealed trait bop extends Symbol {
       def f(i1: Int, i2: Int): Int
+      override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortInt, SortInt), SortInt)
       override val isFunctional: Boolean = true
       override def apply(children: Seq[Term]): Term = {
@@ -23,14 +25,15 @@ object builtin {
         }
       }
     }
-    object plus  extends bop { override val name: String = "_+Int_"; override def f(i1:Int, i2:Int): Int = i1 + i2 }
-    object minus extends bop { override val name: String = "_-Int_"; override def f(i1:Int, i2:Int): Int = i1 - i2 }
-    object mult  extends bop { override val name: String = "_*Int_"; override def f(i1:Int, i2:Int): Int = i1 * i2 }
-    object div   extends bop { override val name: String = "_/Int_"; override def f(i1:Int, i2:Int): Int = i1 / i2 }
-    object mod   extends bop { override val name: String = "_%Int_"; override def f(i1:Int, i2:Int): Int = i1 % i2 }
+    object plus  extends bop { override val name: String = "_+Int_"; override val smt: String = "+";   override def f(i1:Int, i2:Int): Int = i1 + i2 }
+    object minus extends bop { override val name: String = "_-Int_"; override val smt: String = "-";   override def f(i1:Int, i2:Int): Int = i1 - i2 }
+    object mult  extends bop { override val name: String = "_*Int_"; override val smt: String = "*";   override def f(i1:Int, i2:Int): Int = i1 * i2 }
+    object div   extends bop { override val name: String = "_/Int_"; override val smt: String = "div"; override def f(i1:Int, i2:Int): Int = i1 / i2 }
+    object mod   extends bop { override val name: String = "_%Int_"; override val smt: String = "mod"; override def f(i1:Int, i2:Int): Int = i1 % i2 }
 
     sealed trait cmp extends Symbol {
       def f(i1: Int, i2: Int): Boolean
+      override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortInt, SortInt), SortBool)
       override val isFunctional: Boolean = true
       override def apply(children: Seq[Term]): Term = {
@@ -41,18 +44,20 @@ object builtin {
         }
       }
     }
-    object gt extends cmp { override val name: String = "_>Int_";  override def f(i1: Int, i2: Int): Boolean = i1 > i2 }
-    object lt extends cmp { override val name: String = "_<Int_";  override def f(i1: Int, i2: Int): Boolean = i1 < i2 }
-    object ge extends cmp { override val name: String = "_>=Int_"; override def f(i1: Int, i2: Int): Boolean = i1 >= i2 }
-    object le extends cmp { override val name: String = "_<=Int_"; override def f(i1: Int, i2: Int): Boolean = i1 <= i2 }
+    object gt extends cmp { override val name: String = "_>Int_";  override val smt: String = ">";  override def f(i1: Int, i2: Int): Boolean = i1 > i2 }
+    object lt extends cmp { override val name: String = "_<Int_";  override val smt: String = "<";  override def f(i1: Int, i2: Int): Boolean = i1 < i2 }
+    object ge extends cmp { override val name: String = "_>=Int_"; override val smt: String = ">="; override def f(i1: Int, i2: Int): Boolean = i1 >= i2 }
+    object le extends cmp { override val name: String = "_<=Int_"; override val smt: String = "<="; override def f(i1: Int, i2: Int): Boolean = i1 <= i2 }
   }
 
   case class BOOL(v: Boolean) extends Constant {
     val sort: Sort = SortBool
+    val smt: String = v.toString
   }
   object BOOL {
     sealed trait bop extends Symbol {
       def f(b1: Boolean, b2: Boolean): Boolean
+      override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortBool, SortBool), SortBool)
       override val isFunctional: Boolean = true
       override def apply(children: Seq[Term]): Term = {
@@ -63,12 +68,14 @@ object builtin {
         }
       }
     }
-    object and     extends bop { override val name: String = "_andBool_";     override def f(b1:Boolean, b2:Boolean): Boolean =  b1 && b2 }
-    object or      extends bop { override val name: String = "_orBool_";      override def f(b1:Boolean, b2:Boolean): Boolean =  b1 || b2 }
-    object implies extends bop { override val name: String = "_impliesBool_"; override def f(b1:Boolean, b2:Boolean): Boolean = !b1 || b2 }
+    object and     extends bop { override val name: String = "_andBool_";     override val smt: String = "and";     override def f(b1:Boolean, b2:Boolean): Boolean =  b1 && b2 }
+    object or      extends bop { override val name: String = "_orBool_";      override val smt: String = "or";      override def f(b1:Boolean, b2:Boolean): Boolean =  b1 || b2 }
+    object implies extends bop { override val name: String = "_impliesBool_"; override val smt: String = "implies"; override def f(b1:Boolean, b2:Boolean): Boolean = !b1 || b2 }
 
     object not extends Symbol {
       override val name: String = "_notBool_"
+      override val smt: String = "not"
+      override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortBool), SortBool)
       override val isFunctional: Boolean = true
       override def apply(children: Seq[Term]): Term = {
@@ -83,6 +90,8 @@ object builtin {
 
   object EQ {
     private case class eq(name: String, sort: Sort) extends Symbol {
+      override val smt: String = "="
+      override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(sort, sort), SortBool)
       override val isFunctional: Boolean = true
       override def apply(children: Seq[Term]): Term = {
@@ -126,6 +135,8 @@ object builtin {
 
     object select extends Symbol {
       override val name: String = "selectMapK"
+      override val smt: String = "select"
+      override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortMapK, SortK), SortK)
       override val isFunctional: Boolean = true
       override def apply(children: Seq[Term]): Term = {
@@ -153,6 +164,8 @@ object builtin {
 
     object store extends Symbol {
       override val name: String = "storeMapK"
+      override val smt: String = "store"
+      override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortMapK, SortK, SortK), SortK)
       override val isFunctional: Boolean = true
       override def apply(children: Seq[Term]): Term = {
@@ -184,6 +197,8 @@ object builtin {
   object LIST_K {
     object nil extends Symbol {
       override val name: String = "nilListK"
+      override val smt: String = "nil"
+      override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(), SortListK)
       override val isFunctional: Boolean = false
       override def apply(children: Seq[Term]): Term = Application(this, children)
@@ -191,6 +206,8 @@ object builtin {
 
     object insert extends Symbol {
       override val name: String = "insertListK"
+      override val smt: String = "insert"
+      override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortK, SortListK), SortListK)
       override val isFunctional: Boolean = false
       override def apply(children: Seq[Term]): Term = Application(this, children)
@@ -198,6 +215,8 @@ object builtin {
 
     object append extends Symbol {
       override val name: String = "appendListK"
+      override val smt: String = "append"
+      override val smtBuiltin: Boolean = false
       override val signature: Type = (Seq(SortListK, SortListK), SortListK)
       override val isFunctional: Boolean = true
       override def apply(children: Seq[Term]): Term = {

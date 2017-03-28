@@ -54,9 +54,10 @@ class RewriteTest extends FreeSpec {
   }
 
   "z3" in {
-    assert(z3.sat("(check-sat)"))
-    assert(!z3.sat("(assert false) (check-sat)"))
-    assert(try { z3.sat("(check-sat"); false } catch { case z3.Fail(msg) => msg  == "(error \"line 1 column 2: invalid command, symbol expected\")" })
+    assert(z3.sat(BOOL(true)))
+    assert(!z3.sat(BOOL(false)))
+//    assert(try { z3.sat("(check-sat"); false } catch { case z3.Fail(msg) => msg  == "(error \"line 1 column 2: invalid command, symbol expected\")" })
+    assert(z3.sat(EQ.of(SortK)(Seq(a,b))))
   }
 
 }

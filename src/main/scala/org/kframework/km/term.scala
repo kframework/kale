@@ -4,19 +4,29 @@ object term {
 
   sealed trait Sort {
     val name: String
+    val smt: String = name
+    val smtBuiltin: Boolean
   }
-  case class SortOf(name: String) extends Sort
+  case class SortOf(name: String) extends Sort {
+    val smtBuiltin: Boolean = false
+  }
   case class SortMap(key: Sort, value: Sort) extends Sort {
     val name: String = "Map{" + key.name + "," + value.name + "}"
+    override val smt: String = "(Array " + key.smt + " " + value.smt + ")"
+    val smtBuiltin: Boolean = true
   }
   case class SortList(elem: Sort) extends Sort {
     val name: String = "List{" + elem.name + "}"
+    override val smt: String = "(List " + elem.smt + ")"
+    val smtBuiltin: Boolean = true
   }
   object SortBool extends Sort {
     val name: String = "Bool"
+    val smtBuiltin: Boolean = true
   }
   object SortInt extends Sort {
     val name: String = "Int"
+    val smtBuiltin: Boolean = true
   }
 //object SortString extends Sort
 //object SortReal extends Sort
@@ -36,6 +46,8 @@ object term {
     val name: String
     val signature: Type
     val isFunctional: Boolean
+    val smt: String
+    val smtBuiltin: Boolean
     def apply(children: Seq[Term]): Term
   }
 
@@ -69,6 +81,7 @@ object term {
     def rename(cnt: Int): Term = Variable(name + "!" + cnt, sort)
   }
   trait Constant extends Term {
+    val smt: String
     override val isSymbolic: Boolean = false
     override val isFunctional: Boolean = false
     override def subst(m: Substitution): Term = this
@@ -79,6 +92,8 @@ object term {
 
   case class Constructor(name: String, signature: Type) extends Symbol {
     val isFunctional: Boolean = false
+    val smt: String = name
+    val smtBuiltin: Boolean = false
     def apply(children: Seq[Term]): Term = Application(this, children)
   }
 
