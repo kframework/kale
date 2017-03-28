@@ -8,28 +8,31 @@ object z3 {
 
   val cmd = Seq(z3, "-smt2", "-in")
 
-  case class Fail(msg: String) extends Exception
-
-  @throws(classOf[Fail])
-  def sat(query: String): Boolean = {
-    var stdout: String = ""
-    var stderr: String = ""
-
+  def run(query: String): (Int, String, String) = {
     val stdinJob: (java.io.OutputStream) => Unit = out => {
       out.write(query.getBytes())
       out.close()
     }
+    var stdout: String = ""
     val stdoutJob: (java.io.InputStream) => Unit = in => {
       stdout = scala.io.Source.fromInputStream(in).getLines.mkString("\n")
       in.close()
     }
+    var stderr: String = ""
     val stderrJob: (java.io.InputStream) => Unit = in => {
       stderr = scala.io.Source.fromInputStream(in).getLines.mkString("\n")
       in.close()
     }
     val pio = new ProcessIO(stdinJob, stdoutJob, stderrJob)
     val exitValue = Process(cmd).run(pio).exitValue()
+    (exitValue, stdout, stderr)
+  }
 
+  case class Fail(msg: String) extends Exception
+
+  @throws(classOf[Fail])
+  def sat(query: String): Boolean = {
+    val (exitValue, stdout, stderr) = run(query)
     if (exitValue == 0) stdout == "sat"
     else throw Fail(stdout + stderr)
   }
