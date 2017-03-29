@@ -36,7 +36,7 @@ object unification {
         case (v1:Variable, _) => unifyVariable(v1, t2, u)
         case (_, v2:Variable) => unifyVariable(v2, t1, u)
         case (_, _) if t1.isFunctional || t2.isFunctional =>
-          Unifier(u.subst, BOOL.and(Seq(u.constraint, EQ.of(t1.sort)(Seq(t1,t2)))))
+          Unifier(u.subst, BOOL.and(u.constraint, EQ.of(t1.sort)(t1,t2)))
         case (Application(l1,ts1), Application(l2,ts2)) if l1 == l2 && ts1.size == ts2.size =>
           unifyTerms(ts1, ts2, u)
         case _ => throw Fail(t1, t2, u)

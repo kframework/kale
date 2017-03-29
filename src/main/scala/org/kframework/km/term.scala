@@ -49,7 +49,8 @@ object term {
     val isFunctional: Boolean
     val smt: String
     val smtBuiltin: Boolean
-    def apply(children: Seq[Term]): Term
+    def apply(children: Term*): Term = applySeq(children.toSeq)
+    def applySeq(children: Seq[Term]): Term
     override def toString: String = name
   }
 
@@ -68,10 +69,10 @@ object term {
     val isSymbolic: Boolean = children.exists(t => t.isSymbolic)
     val isFunctional: Boolean = symbol.isFunctional
     def subst(m: Substitution): Term = {
-      symbol.apply(children.map(t => t.subst(m))) // TODO: return this if no children are changed
+      symbol.applySeq(children.map(t => t.subst(m))) // TODO: return this if no children are changed
     }
     def rename(cnt: Int): Term = {
-      symbol.apply(children.map(t => t.rename(cnt)))
+      symbol.applySeq(children.map(t => t.rename(cnt)))
     }
   }
   case class Variable(name: String, sort: Sort) extends Term {
@@ -96,7 +97,7 @@ object term {
     val isFunctional: Boolean = false
     val smt: String = name
     val smtBuiltin: Boolean = false
-    def apply(children: Seq[Term]): Term = Application(this, children)
+    def applySeq(children: Seq[Term]): Term = Application(this, children)
   }
 
   case class SimplePattern(term: Term, constraint: Term) {

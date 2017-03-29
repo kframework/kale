@@ -22,7 +22,7 @@ class rewrite {
       case Some(u) =>
         val _p = p.subst(u.subst)
         val _c = c.subst(u.subst)
-        val _p_c_u = BOOL.and(Seq(BOOL.and(Seq(_p, _c)), u.constraint))
+        val _p_c_u = BOOL.and(BOOL.and(_p, _c), u.constraint)
 
         if (z3.sat(_p_c_u)) {
           val _r = r.subst(u.subst)

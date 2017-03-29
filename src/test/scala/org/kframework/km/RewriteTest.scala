@@ -62,9 +62,9 @@ class RewriteTest extends FreeSpec {
     val px = Application(p, Seq(x))
     val qx = Application(q, Seq(x))
 
-    val xgt0 = INT.gt(Seq(x, INT(0)))
-    val xge0 = INT.ge(Seq(x, INT(0)))
-    val xlt0 = INT.lt(Seq(x, INT(0)))
+    val xgt0 = INT.gt(x, INT(0))
+    val xge0 = INT.ge(x, INT(0))
+    val xlt0 = INT.lt(x, INT(0))
 
     val c = Application(Constructor("c", (Seq(),SortK)), Seq())
     val d = Application(Constructor("d", (Seq(),SortK)), Seq())
@@ -83,7 +83,7 @@ class RewriteTest extends FreeSpec {
     // rule q(x:Int) => c if x >= 0
     // rule q(x:Int) => d if x < 0
     // p(x) =*=> [ c /\ x>= 0 /\ x > 0 ]
-    assert(search(Seq(r1,r2,r3), t1) == Seq(SimplePattern(c, BOOL.and(Seq(xgt0, xge0)))))
+    assert(search(Seq(r1,r2,r3), t1) == Seq(SimplePattern(c, BOOL.and(xgt0, xge0))))
   }
 
   "z3" in {
@@ -93,7 +93,7 @@ class RewriteTest extends FreeSpec {
     assert(z3.sat(BOOL(true)))
     assert(!z3.sat(BOOL(false)))
 //    assert(try { z3.sat("(check-sat"); false } catch { case z3.Fail(msg) => msg  == "(error \"line 1 column 2: invalid command, symbol expected\")" })
-    assert(!z3.sat(EQ.of(SortK)(Seq(a,b))))
+    assert(!z3.sat(EQ.of(SortK)(a,b)))
   }
 
 }

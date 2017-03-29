@@ -17,7 +17,7 @@ object builtin {
       override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortInt, SortInt), SortInt)
       override val isFunctional: Boolean = true
-      override def apply(children: Seq[Term]): Term = {
+      override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 2)
         (children(0), children(1)) match {
           case (INT(i1), INT(i2)) => INT(f(i1,i2))
@@ -36,7 +36,7 @@ object builtin {
       override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortInt, SortInt), SortBool)
       override val isFunctional: Boolean = true
-      override def apply(children: Seq[Term]): Term = {
+      override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 2)
         (children(0), children(1)) match {
           case (INT(i1), INT(i2)) => BOOL(f(i1,i2))
@@ -63,7 +63,7 @@ object builtin {
     object and extends bop {
       override val name: String = "_andBool_"
       override val smt: String = "and"
-      override def apply(children: Seq[Term]): Term = {
+      override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 2)
         (children(0), children(1)) match {
           case (BOOL(b1), BOOL(b2)) => BOOL(b1 && b2)
@@ -78,7 +78,7 @@ object builtin {
     object or extends bop {
       override val name: String = "_orBool_"
       override val smt: String = "or"
-      override def apply(children: Seq[Term]): Term = {
+      override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 2)
         (children(0), children(1)) match {
           case (BOOL(b1), BOOL(b2)) => BOOL(b1 || b2)
@@ -93,14 +93,14 @@ object builtin {
     object implies extends bop {
       override val name: String = "_impliesBool_"
       override val smt: String = "implies"
-      override def apply(children: Seq[Term]): Term = {
+      override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 2)
         (children(0), children(1)) match {
           case (BOOL(b1), BOOL(b2)) => BOOL(!b1 || b2)
           case (BOOL(true), t) => t
           case (_, BOOL(true)) => BOOL(true)
           case (BOOL(false), t) => BOOL(true)
-          case (t, BOOL(false)) => not(Seq(t))
+          case (t, BOOL(false)) => not(t)
           case _ => Application(this, children)
         }
       }
@@ -111,7 +111,7 @@ object builtin {
       override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortBool), SortBool)
       override val isFunctional: Boolean = true
-      override def apply(children: Seq[Term]): Term = {
+      override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 1)
         children(0) match {
           case BOOL(b) => BOOL(!b)
@@ -127,7 +127,7 @@ object builtin {
       override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(sort, sort), SortBool)
       override val isFunctional: Boolean = true
-      override def apply(children: Seq[Term]): Term = {
+      override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 2)
         val (t1,t2) = (children(0), children(1))
         if (t1 == t2) BOOL(true)
@@ -172,7 +172,7 @@ object builtin {
       override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortMapK, SortK), SortK)
       override val isFunctional: Boolean = true
-      override def apply(children: Seq[Term]): Term = {
+      override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 2)
         val default = Application(this, children)
         val (m,k) = (children(0), children(1))
@@ -201,7 +201,7 @@ object builtin {
       override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortMapK, SortK, SortK), SortK)
       override val isFunctional: Boolean = true
-      override def apply(children: Seq[Term]): Term = {
+      override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 3)
         val default = Application(this, children)
         val (m,k,v) = (children(0), children(1), children(2))
@@ -234,7 +234,7 @@ object builtin {
       override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(), SortListK)
       override val isFunctional: Boolean = false
-      override def apply(children: Seq[Term]): Term = Application(this, children)
+      override def applySeq(children: Seq[Term]): Term = Application(this, children)
     }
 
     object insert extends Symbol {
@@ -243,7 +243,7 @@ object builtin {
       override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortK, SortListK), SortListK)
       override val isFunctional: Boolean = false
-      override def apply(children: Seq[Term]): Term = Application(this, children)
+      override def applySeq(children: Seq[Term]): Term = Application(this, children)
     }
 
     object append extends Symbol {
@@ -252,7 +252,7 @@ object builtin {
       override val smtBuiltin: Boolean = false
       override val signature: Type = (Seq(SortListK, SortListK), SortListK)
       override val isFunctional: Boolean = true
-      override def apply(children: Seq[Term]): Term = {
+      override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 2)
         val default = Application(this, children)
         val (l1,l2) = (children(0), children(1))
@@ -260,7 +260,7 @@ object builtin {
           case (_, Application(`nil`, _)) => l1
           case (Application(`nil`, _), _) => l2
           case (Application(`insert`, Seq(l11, l12)), _) =>
-            Application(insert, Seq(l11, append(Seq(l12, l2))))
+            Application(insert, Seq(l11, append(l12, l2)))
           case _ => default
         }
       }

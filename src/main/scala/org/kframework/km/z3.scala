@@ -45,7 +45,7 @@ object z3 {
   @throws(classOf[Fail])
   def implies(t1: Term, t2: Term): Boolean = {
     // t1 -> t2 valid  iff  t1 /\ !t2 unsat
-    !sat(BOOL.and(Seq(t1, BOOL.not(Seq(t2)))))
+    !sat(BOOL.and(t1, BOOL.not(t2)))
   }
 
   def encode(term: Term): String = term match {
