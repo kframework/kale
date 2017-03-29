@@ -20,13 +20,13 @@ class rewrite {
     unify(l,t) match {
       case None => Seq()
       case Some(u) =>
-        val _c = c.subst(u.subst)
         val _p = p.subst(u.subst)
-        val _c_p_u = BOOL.and(Seq(BOOL.and(Seq(_c, _p)), u.constraint))
+        val _c = c.subst(u.subst)
+        val _p_c_u = BOOL.and(Seq(BOOL.and(Seq(_p, _c)), u.constraint))
 
-        if (z3.sat(_c_p_u)) {
+        if (z3.sat(_p_c_u)) {
           val _r = r.subst(u.subst)
-          Seq(SimplePattern(_r, _c_p_u))
+          Seq(SimplePattern(_r, _p_c_u))
         } else {
           Seq()
         }
