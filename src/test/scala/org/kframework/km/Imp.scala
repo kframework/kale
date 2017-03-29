@@ -81,14 +81,120 @@ object Imp {
   val tt = BOOL(true)
 
   val freezerDiv0 = Constructor("freezer_/_0:AExp->K", (Seq(AExp), SortK))
+  val freezerDiv1 = Constructor("freezer_/_1:AExp->K", (Seq(AExp), SortK))
 
-//  val rules = Seq(
-//    SimpleRewrite(
-//      T(k(KAExp(AExpId(X)) ~> Ks), state(M)),
-//      T(k(KAExp(AExpInt(MAP_K.select(Seq(M,X)))) ~> Ks), state(M)),
-//      tt)
-//
-//  )
+  object isKResult extends Symbol {
+    override val name: String = "isKResult"
+    override val smt: String = "isKResult"
+    override val smtBuiltin: Boolean = false
+    override val signature: Type = (Seq(SortK), SortBool)
+    override val isFunctional: Boolean = true
+    override def applySeq(children: Seq[Term]): Term = {
+      assert(children.size == 1)
+      val default = Application(this, children)
+      val t = children(0)
+      t match {
+        case Application(`KAExp`, Seq(Application(`AExpInt`, Seq(_)))) => BOOL(true)
+        case Application(`KBExp`, Seq(Application(`BExpBool`, Seq(_)))) => BOOL(true)
+        case _ => BOOL(false)
+      }
+    }
+  }
 
+  implicit class infixTerm(p: Term) {
+    def ~>:(q: Term): Term = kCons(p, q)
+    def /\(q: Term): Term = BOOL.and(p, q)
+  }
+
+  val rules = Seq(
+    // AExp
+      SimpleRewrite(
+      T(k(KAExp(AExpId(X)) ~>: Ks), state(M)),
+      T(k(KAExp(AExpInt(MAP_K.select(M,X))) ~>: Ks), state(M)),
+      tt)
+    , SimpleRewrite(
+      T(k(KAExp(AExpDiv(AExpInt(I1), AExpInt(I2))) ~>: Ks), state(M)),
+      T(k(KAExp(AExpInt(INT.div(I1, I2))) ~>: Ks), state(M)),
+      BOOL.not(EQ.of(SortInt)(I1, INT(0))))
+    , SimpleRewrite(
+      T(k(KAExp(AExpPlus(AExpInt(I1), AExpInt(I2))) ~>: Ks), state(M)),
+      T(k(KAExp(AExpInt(INT.plus(I1, I2))) ~>: Ks), state(M)),
+      tt)
+    // BExp
+    , SimpleRewrite(
+      T(k(KBExp(BExpLeq(AExpInt(I1), AExpInt(I2))) ~>: Ks), state(M)),
+      T(k(KBExp(BExpBool(INT.le(I1, I2))) ~>: Ks), state(M)),
+      tt)
+    , SimpleRewrite(
+      T(k(KBExp(BExpNot(BExpBool(B))) ~>: Ks), state(M)),
+      T(k(KBExp(BExpBool(BOOL.not(B))) ~>: Ks), state(M)),
+      tt)
+    , SimpleRewrite(
+      T(k(KBExp(BExpAnd(BExpBool(BOOL(true)), BExpBool(B))) ~>: Ks), state(M)),
+      T(k(KBExp(BExpBool(B)) ~>: Ks), state(M)),
+      tt)
+    , SimpleRewrite(
+      T(k(KBExp(BExpAnd(BExpBool(BOOL(false)), BExpBool(B))) ~>: Ks), state(M)),
+      T(k(KBExp(BExpBool(BOOL(false))) ~>: Ks), state(M)),
+      tt)
+    // Block
+    , SimpleRewrite(
+      T(k(KBlock(BlockEmpty()) ~>: Ks), state(M)),
+      T(k(Ks), state(M)),
+      tt)
+    , SimpleRewrite(
+      T(k(KBlock(BlockStmt(S)) ~>: Ks), state(M)),
+      T(k(KStmt(S) ~>: Ks), state(M)),
+      tt)
+    // Stmt
+    , SimpleRewrite(
+      T(k(KStmt(StmtAssign(X, AExpInt(I))) ~>: Ks), state(M)),
+      T(k(Ks), state(MAP_K.store(M,X,I))),
+      tt)
+    , SimpleRewrite(
+      T(k(KStmt(StmtSeq(S1,S2)) ~>: Ks), state(M)),
+      T(k(KStmt(S1) ~>: KStmt(S2) ~>: Ks), state(M)),
+      tt)
+    , SimpleRewrite(
+      T(k(KStmt(StmtIf(BExpBool(BOOL(true)), Blk1, Blk2)) ~>: Ks), state(M)),
+      T(k(KStmt(Blk1) ~>: Ks), state(M)),
+      tt)
+    , SimpleRewrite(
+      T(k(KStmt(StmtIf(BExpBool(BOOL(false)), Blk1, Blk2)) ~>: Ks), state(M)),
+      T(k(KStmt(Blk2) ~>: Ks), state(M)),
+      tt)
+    , SimpleRewrite(
+      T(k(KStmt(StmtWhile(Be, Blk)) ~>: Ks), state(M)),
+      T(k(KStmt(StmtIf(Be, BlockStmt(StmtSeq(StmtBlock(Blk), StmtWhile(Be, Blk))), BlockEmpty())) ~>: Ks), state(M)),
+      tt)
+    // Pgm
+    , SimpleRewrite(
+      T(k(KPgm(PgmOf(IdsCons(X, Xs), S)) ~>: Ks), state(M)),
+      T(k(KPgm(PgmOf(Xs, S)) ~>: Ks), state(MAP_K.store(M, X, INT(0)))),
+      tt)
+    , SimpleRewrite(
+      T(k(KPgm(PgmOf(IdsNil(), S)) ~>: Ks), state(M)),
+      T(k(KStmt(S) ~>: Ks), state(M)),
+      tt)
+    // strict
+    , SimpleRewrite(
+      T(k(KAExp(AExpDiv(E1, E2)) ~>: Ks), state(M)),
+      T(k(KAExp(E1) ~>: freezerDiv0(E2) ~>: Ks), state(M)),
+      BOOL.not(isKResult(KAExp(E1))))
+    , SimpleRewrite(
+      T(k(KAExp(AExpDiv(AExpInt(I1), E2)) ~>: Ks), state(M)),
+      T(k(KAExp(E2) ~>: freezerDiv1(AExpInt(I1)) ~>: Ks), state(M)),
+      tt)
+    , SimpleRewrite(
+      T(k(KAExp(AExpInt(I1)) ~>: freezerDiv0(E2) ~>: Ks), state(M)),
+      T(k(KAExp(AExpDiv(AExpInt(I1), E2)) ~>: Ks), state(M)),
+      tt)
+    , SimpleRewrite(
+      T(k(KAExp(AExpInt(I2)) ~>: freezerDiv1(E1) ~>: Ks), state(M)),
+      T(k(KAExp(AExpDiv(E1, AExpInt(I2))) ~>: Ks), state(M)),
+      tt)
+
+
+  )
 
 }
