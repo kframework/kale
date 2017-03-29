@@ -24,7 +24,7 @@ class rewrite {
         val _p = p.subst(u.subst)
         val _c_p_u = BOOL.and(Seq(BOOL.and(Seq(_c, _p)), u.constraint))
 
-        if (sat(_c_p_u)) {
+        if (z3.sat(_c_p_u)) {
           val _r = r.subst(u.subst)
           Seq(SimplePattern(_r, _c_p_u))
         } else {
@@ -63,8 +63,5 @@ class rewrite {
   def search(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
     searchDepth(-1)(rules, term)
   }
-
-  // TODO:
-  def sat(term: Term): Boolean = true
 
 }

@@ -56,22 +56,55 @@ object builtin {
   }
   object BOOL {
     sealed trait bop extends Symbol {
-      def f(b1: Boolean, b2: Boolean): Boolean
       override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(SortBool, SortBool), SortBool)
       override val isFunctional: Boolean = true
+    }
+    object and extends bop {
+      override val name: String = "_andBool_"
+      override val smt: String = "and"
       override def apply(children: Seq[Term]): Term = {
         assert(children.size == 2)
         (children(0), children(1)) match {
-          case (BOOL(b1), BOOL(b2)) => BOOL(f(b1,b2))
+          case (BOOL(b1), BOOL(b2)) => BOOL(b1 && b2)
+          case (BOOL(true), t) => t
+          case (t, BOOL(true)) => t
+          case (BOOL(false), _) => BOOL(false)
+          case (_, BOOL(false)) => BOOL(false)
           case _ => Application(this, children)
         }
       }
     }
-    object and     extends bop { override val name: String = "_andBool_";     override val smt: String = "and";     override def f(b1:Boolean, b2:Boolean): Boolean =  b1 && b2 }
-    object or      extends bop { override val name: String = "_orBool_";      override val smt: String = "or";      override def f(b1:Boolean, b2:Boolean): Boolean =  b1 || b2 }
-    object implies extends bop { override val name: String = "_impliesBool_"; override val smt: String = "implies"; override def f(b1:Boolean, b2:Boolean): Boolean = !b1 || b2 }
-
+    object or extends bop {
+      override val name: String = "_orBool_"
+      override val smt: String = "or"
+      override def apply(children: Seq[Term]): Term = {
+        assert(children.size == 2)
+        (children(0), children(1)) match {
+          case (BOOL(b1), BOOL(b2)) => BOOL(b1 || b2)
+          case (BOOL(true), _) => BOOL(true)
+          case (_, BOOL(true)) => BOOL(true)
+          case (BOOL(false), t) => t
+          case (t, BOOL(false)) => t
+          case _ => Application(this, children)
+        }
+      }
+    }
+    object implies extends bop {
+      override val name: String = "_impliesBool_"
+      override val smt: String = "implies"
+      override def apply(children: Seq[Term]): Term = {
+        assert(children.size == 2)
+        (children(0), children(1)) match {
+          case (BOOL(b1), BOOL(b2)) => BOOL(!b1 || b2)
+          case (BOOL(true), t) => t
+          case (_, BOOL(true)) => BOOL(true)
+          case (BOOL(false), t) => BOOL(true)
+          case (t, BOOL(false)) => not(Seq(t))
+          case _ => Application(this, children)
+        }
+      }
+    }
     object not extends Symbol {
       override val name: String = "_notBool_"
       override val smt: String = "not"

@@ -4,8 +4,9 @@ object term {
 
   sealed trait Sort {
     val name: String
-    val smt: String = name
+    def smt: String = name
     val smtBuiltin: Boolean
+    override def toString: String = name
   }
   case class SortOf(name: String) extends Sort {
     val smtBuiltin: Boolean = false
@@ -49,6 +50,7 @@ object term {
     val smt: String
     val smtBuiltin: Boolean
     def apply(children: Seq[Term]): Term
+    override def toString: String = name
   }
 
   type Substitution = Map[Variable, Term]
