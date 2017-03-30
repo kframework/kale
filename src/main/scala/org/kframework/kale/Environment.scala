@@ -5,9 +5,6 @@ import org.kframework.kale.context.{AnywhereContextApplicationLabel, PatternCont
 import scala.collection.mutable
 import org.kframework.minikore.interfaces.pattern
 
-/**
-  * Created by cos on 3/15/17.
-  */
 case class Environment() {
   val uniqueLabels = mutable.Map[String, Label]()
 
