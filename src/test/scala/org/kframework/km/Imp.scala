@@ -96,7 +96,7 @@ object Imp {
       t match {
         case Application(`KAExp`, Seq(Application(`AExpInt`, Seq(_)))) => BOOL(true)
         case Application(`KBExp`, Seq(Application(`BExpBool`, Seq(_)))) => BOOL(true)
-        case _ => BOOL(false)
+        case _ => BOOL(false) // TODO: wrong for symbolic terms
       }
     }
   }
