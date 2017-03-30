@@ -79,10 +79,12 @@ object Node {
 trait Node extends Term with Product with tree.Node {
   // FOR KORE
   override def args: Seq[pattern.Pattern] = iterator.toSeq
+
   override def build(children: Seq[pattern.Pattern]): pattern.Pattern = {
     // downcasting to Term, but it will fail somewhere in Label
     label(children.asInstanceOf[Seq[Term]])
   }
+
   // /FOR KORE
 
   val label: NodeLabel
@@ -117,23 +119,27 @@ trait NameFromObject {
 
 trait ConstantLabel[T] extends LeafLabel[T] {
 
-  def apply(v: T) = Constant(this, v)
+  def apply(v: T) = new Constant(this, v)
 
-  def interpret(s: String): Constant[T] = this(internalInterpret(s))
+  def interpret(s: String): Constant[T] = this (internalInterpret(s))
 
   // FOR KORE
   // remove this and all descendants if getting rid of Constant.build
   protected[this] def internalInterpret(s: String): T
+
   // FOR KORE
 }
 
-case class Constant[T](label: ConstantLabel[T], value: T) extends Leaf[T] with pattern.DomainValue {
+class Constant[T](val label: ConstantLabel[T], val value: T) extends Leaf[T] with pattern.DomainValue {
   // FOR KORE
   def build(symbol: pattern.Symbol, content: pattern.Value): pattern.DomainValue = {
     symbol.asInstanceOf[ConstantLabel[_]].interpret(content)
   }
+
   def _1 = label
+
   def _2 = value.toString
+
   // /FOR KORE
 
   val isGround = true
@@ -164,8 +170,11 @@ case class SimpleVariable(name: String)(implicit env: Environment) extends Varia
     assert(_2.str == "K")
     SimpleVariable(_1)
   }
+
   override def _1: pattern.Name = name
+
   override def _2: pattern.Sort = pattern.Sort("K")
+
   // FOR KORE
 }
 
@@ -200,6 +209,8 @@ private case class BottomInstance(implicit eenv: Environment) extends Truth(fals
   override def build(): pattern.Bottom = this
 }
 
+// Defining functions
+
 trait FunctionLabel {
   val name: String
 }
@@ -227,11 +238,6 @@ object Operator {
     PrimitiveFunction2(name, aLabel, aLabel, rLabel, f)
 }
 
-object PrimitiveFunction2 {
-  def apply[A](name: String, aLabel: LeafLabel[A], f: (A, A) => A)(implicit env: Environment): PrimitiveFunction2[A, A, A] =
-    PrimitiveFunction2(name, aLabel, aLabel, aLabel, f)
-}
-
 object PrimitiveFunction1 {
   def apply[A](name: String, aLabel: LeafLabel[A], f: A => A)(implicit env: Environment): PrimitiveFunction1[A, A] =
     PrimitiveFunction1(name, aLabel, aLabel, f)
@@ -242,6 +248,11 @@ case class PrimitiveFunction1[A, R](name: String, aLabel: LeafLabel[A], rLabel: 
     case aLabel(a) => Some(rLabel(primitiveF(a)))
     case _ => None
   }
+}
+
+object PrimitiveFunction2 {
+  def apply[A](name: String, aLabel: LeafLabel[A], f: (A, A) => A)(implicit env: Environment): PrimitiveFunction2[A, A, A] =
+    PrimitiveFunction2(name, aLabel, aLabel, aLabel, f)
 }
 
 case class PrimitiveFunction2[A, B, R](name: String, aLabel: LeafLabel[A], bLabel: LeafLabel[B], rLabel: LeafLabel[R], primitiveF: (A, B) => R)(implicit val env: Environment) extends PurelyFunctionalLabel2 {
@@ -262,6 +273,8 @@ trait PurelyFunctionalLabel4 extends Label4 with FunctionLabel {
 
   def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term = f(_1, _2, _3, _4) getOrElse FreeNode4(this, _1, _2, _3, _4)
 }
+
+// Fixed-arity
 
 trait Label0 extends Function0[Term] with NodeLabel {
   val arity = 0
@@ -497,6 +510,7 @@ trait AssocCommLabel extends AssocLabel with CommLabel {
   object set {
     def unapply(t: Term): Option[Set[Term]] = Some(asSet(t))
   }
+
 }
 
 // ML
@@ -522,6 +536,7 @@ trait Rewrite extends Node2 with BinaryInfix with pattern.Rewrite
 
 trait Substitution extends Term with (Term => Term) {
   def get(v: Variable): Option[Term]
+
   def apply(t: Term): Term
 }
 
