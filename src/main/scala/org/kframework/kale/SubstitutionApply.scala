@@ -7,9 +7,9 @@ import scala.collection.Set
 import context._
 
 object SubstitutionApply {
-  def apply(pieces: Set[Unary.Piece[SubstitutionApply]], env: Environment)(s: Substitution): SubstitutionApply = new SubstitutionApply(pieces, env)(s)
+  def apply(pieces: Set[Unary.Piece[SubstitutionApply]], env: CurrentEnvironment)(s: Substitution): SubstitutionApply = new SubstitutionApply(pieces, env)(s)
 
-  def apply(env: Environment): Substitution => SubstitutionApply = {
+  def apply(env: CurrentEnvironment): Substitution => SubstitutionApply = {
     assert(env.isSealed)
 
     import env._
@@ -82,7 +82,7 @@ object SubstitutionApply {
   }
 }
 
-class SubstitutionApply(val pieces: Set[Unary.Piece[SubstitutionApply]], val env: Environment)(val s: Substitution) extends Unary.Apply[SubstitutionApply](pieces, env) with (Term => Term) {
+class SubstitutionApply(val pieces: Set[Unary.Piece[SubstitutionApply]], val env: CurrentEnvironment)(val s: Substitution) extends Unary.Apply[SubstitutionApply](pieces, env) with (Term => Term) {
   import env._
 
   def getVariable(v: Variable): Option[Term] = s.get(v)

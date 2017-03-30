@@ -75,7 +75,7 @@ endmodule
  */
 
 object IMP {
-  implicit val env = new Environment
+  implicit val env = new CurrentEnvironment
 
   import env._
   import builtin._

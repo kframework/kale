@@ -207,9 +207,9 @@ trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
 
 case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term) extends Node6
 
-case class EqualityLabel(implicit val env: Environment) extends {
-  val name = "="
-} with Label2 with FormulaLabel {
+trait EqualityLabel extends Label2 with FormulaLabel
+
+case class SimpleEqualityLabel(implicit val env: CurrentEnvironment) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
     if (_1 == _2)
       env.Top
@@ -246,7 +246,7 @@ private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environme
   }
 }
 
-private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: Environment) extends Equality(variable, term) with Substitution with BinaryInfix {
+private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: CurrentEnvironment) extends Equality(variable, term) with Substitution with BinaryInfix {
   assert(_1.isInstanceOf[Variable])
 
   def get(v: Variable) = if (_1 == v) Some(_2) else None
@@ -275,9 +275,11 @@ trait And extends Assoc with pattern.And {
   val nonFormula: Option[Term]
 }
 
-case class AndLabel(implicit val env: Environment) extends {
+trait AndLabel extends AssocCommLabel with FormulaLabel
+
+case class DNFAndLabel(implicit val env: CurrentEnvironment) extends {
   val name = "∧"
-} with AssocWithIdLabel with FormulaLabel {
+} with AssocWithIdLabel with AndLabel {
 
   import env._
 
@@ -371,7 +373,7 @@ case class AndLabel(implicit val env: Environment) extends {
 
       val newSub: Substitution = substitution(m1 ++ m2)
 
-      AndLabel.this.apply(newSub, termsOutOfSubs2)
+      DNFAndLabel.this.apply(newSub, termsOutOfSubs2)
     }
 
     /**
@@ -436,6 +438,11 @@ case class AndLabel(implicit val env: Environment) extends {
   override def construct(l: Iterable[Term]): Term = ???
 
   override val identity: Term = Top
+
+  override def asSet(t: Term): Set[Term] = t match {
+    case ac: AssocComm => ac.asSet
+    case _ => Set(t)
+  }
 }
 
 private[kale] final class AndOfTerms(val terms: Set[Term])(implicit env: Environment) extends And with Assoc {
@@ -494,7 +501,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
 
 abstract class Named(val name: String)
 
-final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implicit env: Environment) extends And with Substitution with BinaryInfix {
+final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implicit env: CurrentEnvironment) extends And with Substitution with BinaryInfix {
   assert(m.size >= 2)
 
   import env._
@@ -534,9 +541,19 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
   override val nonFormula: Option[Term] = None
 }
 
-case class OrLabel(implicit val env: Environment) extends {
-  val name = "∨"
-} with AssocLabel with FormulaLabel {
+trait CommLabel
+
+trait AssocCommLabel extends AssocLabel with CommLabel {
+  def asSet(t: Term): Set[Term]
+
+  object set {
+    def unapply(t: Term): Option[Set[Term]] = Some(asSet(t))
+  }
+}
+
+trait OrLabel extends AssocCommLabel with FormulaLabel
+
+case class DNFOrLabel(implicit val env: Environment) extends Named("∨") with OrLabel {
 
   import env._
 
@@ -553,14 +570,10 @@ case class OrLabel(implicit val env: Environment) extends {
     case o => Set(o)
   }
 
-  object set {
-    def unapply(t: Term): Option[Set[Term]] = Some(asSet(t))
-  }
-
   override def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
 }
 
-trait Or extends Assoc with pattern.Or
+trait Or extends AssocComm with pattern.Or
 
 private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env: Environment) extends Or {
   assert(terms.size > 1)
@@ -577,12 +590,12 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
     case that: OrWithAtLeastTwoElements => this.terms == that.terms
     case _ => false
   }
+
+  override def asSet: Set[Term] = terms
 }
 
 trait AssocLabel extends Label2 {
   def apply(l: Iterable[Term]): Term
-
-  def apply(terms: Term*): Term = apply(terms)
 
   val thisthis = this
 
@@ -635,6 +648,12 @@ trait Assoc extends Node2 with BinaryInfix {
   val assocIterable: Iterable[Term]
 }
 
+trait Comm
+
+trait AssocComm extends Assoc with Comm {
+  def asSet: Set[Term]
+}
+
 class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
   override def construct(l: Iterable[Term]): Term = new AssocWithIdList(this, l)
 }
@@ -648,9 +667,11 @@ case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term
   override def _2: Term = label(assocIterable.tail)
 }
 
-case class RewriteLabel(implicit val env: Environment) extends {
+trait RewriteLabel extends Label2
+
+case class SimpleRewriteLabel(implicit val env: Environment) extends {
   val name = "=>"
-} with Label2 {
+} with RewriteLabel {
   def apply(_1: Term, _2: Term) = new Rewrite(_1, _2)
 }
 

@@ -24,7 +24,7 @@ object context {
     def hole(x: Variable) = ContextContentVariable(x, 1)
   }
 
-  case class PatternContextApplicationLabel(name: String)(implicit val env: Environment) extends Context1ApplicationLabel {
+  case class PatternContextApplicationLabel(name: String)(implicit val env: CurrentEnvironment) extends Context1ApplicationLabel {
 
     var patterns: Term = null
 
@@ -84,9 +84,11 @@ object context {
     override val name: String = basedOn.name + "_" + index
   }
 
-  class PatternContextMatcher(implicit env: Environment) extends transformer.Binary.ProcessingFunction[PatternContextApplication, Term, Term] {
+  class PatternContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[PatternContextApplication, Term, Term] {
 
     import env._
+
+    import StaticImplicits._
 
     override def f(solver: transformer.Binary.State)(contextApplication: PatternContextApplication, term: Term): Term = {
       val leftContextLabel = contextApplication.label.asInstanceOf[PatternContextApplicationLabel]
@@ -126,7 +128,7 @@ object context {
     }
   }
 
-  class AnywhereContextMatcher(implicit env: Environment) extends transformer.Binary.ProcessingFunction[Context1Application, Term, Term] {
+  class AnywhereContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Context1Application, Term, Term] {
 
     import env._
 

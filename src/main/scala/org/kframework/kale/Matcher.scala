@@ -4,7 +4,7 @@ import org.kframework.kale.transformer.Binary
 
 import scala.collection._
 
-case class Matcher(env: Environment) {
+case class Matcher(env: CurrentEnvironment) {
 
   import context._
   import Binary._
@@ -12,6 +12,8 @@ case class Matcher(env: Environment) {
   implicit val envv = env
 
   import env._
+
+  import StaticImplicits._
 
   def shortCircuitAnd(solver: State)(toEqual: (Term, Term)*): Term = {
     toEqual.foldLeft(Top: Term)({

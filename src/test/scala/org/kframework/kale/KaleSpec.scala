@@ -4,7 +4,7 @@ import org.scalatest.FreeSpec
 
 class KaleSpec extends FreeSpec {
 
-  implicit val env = new Environment
+  implicit val env = new CurrentEnvironment
   import env._
   import env.builtin._
   val impl = new Implicits()

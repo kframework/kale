@@ -5,7 +5,7 @@ import org.kframework.kale.{Invoke, _}
 
 trait TestSetup {
 
-  implicit val env = new Environment
+  implicit val env = new CurrentEnvironment
 
   import env._
   import env.builtin._
@@ -17,6 +17,12 @@ trait TestSetup {
 
   val emptyList = FreeLabel0("emptyList")
   val listLabel = new AssocWithIdListLabel("listLabel", emptyList())
+
+  implicit class WithListConcat(t: Term) {
+    def ~~(o: Term): Term = listLabel(t, o)
+  }
+
+  val el = emptyList()
 
   val foo = FreeLabel2("foo")
   val bar = FreeLabel1("bar")
