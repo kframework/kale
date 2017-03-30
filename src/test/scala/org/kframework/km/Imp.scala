@@ -21,6 +21,8 @@ object Imp {
   val Stmt = SortOf("Stmt")
   val Pgm = SortOf("Pgm")
 
+  val IdOf = new Constructor1("_:String->Id", (Seq(SortString), Id))
+
   val AExpInt = new Constructor1("_:Int->AExp", (Seq(SortInt), AExp))
   val AExpId = new Constructor1("_:Id->AExp", (Seq(Id), AExp))
   val AExpDiv = new Constructor1("_/_:AExp*AExp->AExp", (Seq(AExp, AExp), AExp))

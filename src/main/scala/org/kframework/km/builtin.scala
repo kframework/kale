@@ -267,11 +267,12 @@ object builtin {
     }
   }
 
-  /* TODO: support string, real, float, and bit-vector
   case class STRING(v: String) extends Constant {
     val sort: Sort = SortString
+    val smt: String = "\"" + v + "\""
   }
 
+  /* TODO: support string, real, float, and bit-vector
   case class REAL(v: Double) extends Constant {
     val sort: Sort = SortReal
   }

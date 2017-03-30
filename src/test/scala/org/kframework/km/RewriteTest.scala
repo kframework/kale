@@ -86,19 +86,6 @@ class RewriteTest extends FreeSpec {
     assert(search(Seq(r1,r2,r3), t1) == Seq(SimplePattern(c, BOOL.and(xgt0, xge0))))
   }
 
-  "imp" in {
-    import Imp._
-
-    val x0 = KStmt(StmtAssign(X, AExpInt(INT(0))))
-    val kcell = k(kCons(x0, kNil()))
-    val scell = state(M)
-    val tcell = T(kcell,scell)
-
-    val res = applyRules(rules, SimplePattern(tcell, BOOL(true)))
-    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(M:MapK,_(_(X:Id)),_(_(INT(0)))))) /\\ BOOL(true))")
-
-  }
-
   "z3" in {
     val a = Application(new Constructor("a", (Seq(),SortK)), Seq())
     val b = Application(new Constructor("b", (Seq(),SortK)), Seq())
@@ -107,6 +94,30 @@ class RewriteTest extends FreeSpec {
     assert(!z3.sat(BOOL(false)))
 //    assert(try { z3.sat("(check-sat"); false } catch { case z3.Fail(msg) => msg  == "(error \"line 1 column 2: invalid command, symbol expected\")" })
     assert(!z3.sat(EQ.of(SortK)(a,b)))
+  }
+
+  "0.imp" in {
+    import Imp._
+    val x = IdOf(STRING("x"))
+    val x0 = KStmt(StmtAssign(x, AExpInt(INT(0)))) // x = 0;
+    val kcell = k(kCons(x0, kNil()))
+    val scell = state(M)
+    val tcell = T(kcell,scell)
+    val res = search(rules, SimplePattern(tcell, BOOL(true)))
+    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(INT(0)))))) /\\ BOOL(true))")
+  }
+
+  "1.imp" in {
+    import Imp._
+    val x = IdOf(STRING("x"))
+    val y = IdOf(STRING("y"))
+    val x0 = KStmt(StmtAssign(x, AExpInt(INT(0)))) // x = 0;
+    val yx1 = KStmt(StmtAssign(y, AExpPlus(AExpId(x), AExpInt(INT(1))))) // y = x + 1;
+    val kcell = k(kCons(x0, kCons(yx1, kNil())))
+    val scell = state(M)
+    val tcell = T(kcell,scell)
+    val res = search(rules, SimplePattern(tcell, BOOL(true)))
+    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(INT(0)))),_(_(_(STRING(y)))),_(_(INT(1)))))) /\\ BOOL(true))")
   }
 
 }

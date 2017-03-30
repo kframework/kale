@@ -29,7 +29,10 @@ object term {
     val name: String = "Int"
     val smtBuiltin: Boolean = true
   }
-//object SortString extends Sort
+  object SortString extends Sort {
+    val name: String = "String" // TODO: altenative z3 encoding? (e.g., int)?
+    val smtBuiltin: Boolean = true
+  }
 //object SortReal extends Sort
 //object SortMInt extends Sort
   //
