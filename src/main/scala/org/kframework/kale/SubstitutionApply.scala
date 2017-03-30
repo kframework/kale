@@ -4,12 +4,11 @@ import org.kframework.kale.transformer.Unary
 
 import scala.collection.Set
 import context._
-import org.kframework.kale.transformer.Unary.ProcessingFunction
 
 object SubstitutionApply {
   def apply(processingFunction: Label => ProcessingFunction[_ <: Term, SubstitutionApply], env: Environment)(s: Substitution): SubstitutionApply = new SubstitutionApply(processingFunction, env)(s)
 
-  def apply(env: Environment): Substitution => SubstitutionApply = {
+  def apply(env: CurrentEnvironment): Substitution => SubstitutionApply = {
     assert(env.isSealed)
 
     import env._
@@ -45,8 +44,7 @@ object SubstitutionApply {
   }
 }
 
-class SubstitutionApply(val processingFunction: Label => ProcessingFunction[_ <: Term, SubstitutionApply], val env: Environment)(val s: Substitution) extends Unary.Apply[SubstitutionApply](env) with (Term => Term) {
-
+class SubstitutionApply(val processingFunction: Label => ProcessingFunction[_ <: Term, SubstitutionApply], val env: CurrentEnvironment)(val s: Substitution) extends Unary.Apply[SubstitutionApply](env) with (Term => Term) {
   import env._
 
   def getVariable(v: Variable): Option[Term] = s.get(v)

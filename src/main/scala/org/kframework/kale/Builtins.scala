@@ -2,7 +2,9 @@ package org.kframework.kale
 
 import collection._
 
-class Builtins(implicit val env: Environment) {
+import default._
+
+class Builtins(implicit val env: CurrentEnvironment) {
 
   val eenv = env
 

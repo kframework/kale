@@ -5,10 +5,7 @@ import org.kframework.kale.context.{AnywhereContextApplicationLabel, PatternCont
 import scala.collection.mutable
 import org.kframework.minikore.interfaces.pattern
 
-/**
-  * Created by cos on 3/15/17.
-  */
-case class Environment() {
+trait Environment extends KORELabels {
   val uniqueLabels = mutable.Map[String, Label]()
 
   def labels = uniqueLabels.values.toSet
@@ -35,22 +32,40 @@ case class Environment() {
   override def toString = {
     "nextId: " + uniqueLabels.size + "\n" + uniqueLabels.mkString("\n")
   }
+}
 
+trait KORELabels {
+  // Labels
+  val Variable: VariableLabel
+  val And: AndLabel
+  val Or: OrLabel
+  val Rewrite: RewriteLabel
+  val Equality: EqualityLabel
+  val Truth: TruthLabel
+
+  // Constants
+  val Bottom: Truth with pattern.Bottom
+  val Top: Truth with Substitution with pattern.Top
+}
+
+class CurrentEnvironment extends Environment {
   implicit private val tthis = this
 
-  val Variable = VariableLabel()
+  import default._
 
-  val Truth = TruthLabel()
+  val Variable = SimpleVariableLabel()
+
+  val Truth = SimpleTruthLabel()
 
   val Hole = Variable("☐")
 
   val Top: Truth with Substitution with pattern.Top = TopInstance()
   val Bottom: Truth with pattern.Bottom = BottomInstance()
 
-  val Equality = EqualityLabel()
-  val And = AndLabel()
-  val Or = OrLabel()
-  val Rewrite = RewriteLabel()
+  val Equality = SimpleEqualityLabel()
+  val And = DNFAndLabel()
+  val Or = DNFOrLabel()
+  val Rewrite = SimpleRewriteLabel()
 
   val AnywhereContext = AnywhereContextApplicationLabel()
   val CAPP = PatternContextApplicationLabel("CAPP")

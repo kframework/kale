@@ -2,9 +2,11 @@ package org.kframework.kale
 
 import scala.language.implicitConversions
 
-class Implicits(implicit env: Environment) extends StaticImplicits {
+class Implicits(implicit env: CurrentEnvironment) extends StaticImplicits {
 
   import env.builtin._
+
+  import default._
 
   implicit def intConstant(x: Int): Constant[Int] = INT(x)
   implicit def doubleConstant(x: Double): Constant[Double] = DOUBLE(x)
@@ -29,6 +31,9 @@ trait StaticImplicits {
     def contains(subterm: Term): Boolean = if (t == subterm) true else t.exists(_.contains(subterm))
   }
 
+  implicit class StaticRichAssocLabel(label: AssocLabel) {
+    def apply(args: Term*): Term = label.apply(args)
+  }
 }
 
 object StaticImplicits extends StaticImplicits

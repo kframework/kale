@@ -20,17 +20,17 @@ class MatchSpec extends FreeSpec with TestSetup {
   }
 
   "assoc" in {
-    assert(unifier(listLabel(X, 5), listLabel(3, 5)) === Equality(X, 3))
-    assert(unifier(listLabel(3, 4, X, 7), listLabel(3, 4, 5, 6, 7)) === Equality(X, listLabel(5, 6)))
-    assert(unifier(listLabel(3, X, 5, Y, 7), listLabel(3, 4, 5, 6, 7)) === And.substitution(Map(X -> (4: Term), Y -> (6: Term))))
-    assert(unifier(listLabel(X, 5, Y), listLabel(3, 4, 5, 6, 7)) === And.substitution(Map(X -> listLabel(3, 4), Y -> listLabel(6, 7))))
-    val res = unifier(listLabel(3, X, Y, 6), listLabel(3, 4, 5, 6))
-    assert(unifier(listLabel(3, X, Y, 6), listLabel(3, 4, 5, 6)) ===
+    assert(unifier(X ~~ 5, el ~~ 3 ~~ 5) === Equality(X, 3))
+    assert(unifier(el ~~ 3 ~~ 4 ~~ X ~~ 7, el ~~ 3 ~~ 4 ~~ 5 ~~ 6 ~~ 7) === Equality(X, el ~~ 5 ~~ 6))
+    assert(unifier(el ~~ 3 ~~ X ~~ 5 ~~ Y ~~ 7, el ~~ 3 ~~ 4 ~~ 5 ~~ 6 ~~ 7) === And.substitution(Map(X -> (4: Term), Y -> (6: Term))))
+    assert(unifier(el ~~ X ~~ 5 ~~ Y, el ~~ 3 ~~ 4 ~~ 5 ~~ 6 ~~ 7) === And.substitution(Map(X -> (el ~~ 3 ~~ 4), Y -> (el ~~ 6 ~~ 7))))
+    val res = unifier(el ~~ 3 ~~ X ~~ Y ~~ 6, el ~~ 3 ~~ 4 ~~ 5 ~~ 6)
+    assert(unifier(el ~~ 3 ~~ X ~~ Y ~~ 6, el ~~ 3 ~~ 4 ~~ 5 ~~ 6) ===
       Or(
-        And.substitution(Map(X -> emptyList(), Y -> listLabel(4, 5))),
+        And.substitution(Map(X -> el, Y -> el ~~ 4 ~~ 5)),
         And.substitution(Map(X -> (4: Term), Y -> (5: Term))),
-        And.substitution(Map(X -> listLabel(4, 5), Y -> emptyList())))
-    )
+        And.substitution(Map(X -> (el ~~ 4 ~~ 5), Y -> el))
+      ))
   }
 
   "contexts" - {
@@ -65,13 +65,12 @@ class MatchSpec extends FreeSpec with TestSetup {
 
     "assoc inside one element" in {
       assert(
-        (bar(AnywhereContext(X, bar(Y))) := bar(listLabel(1, 2, bar(2), bar(bar(3)))))
+        (bar(AnywhereContext(X, bar(Y))) := bar(el ~~ 1 ~~ 2 ~~ bar(2) ~~ bar(bar(3))))
           ===
           Or(
-            And.substitution(Map(X -> listLabel(1, 2, X_1, bar(bar(3))), Y -> (2: Term))),
-            And.substitution(Map(X -> listLabel(1, 2, bar(2), X_1), Y -> bar(3))),
-            And.substitution(Map(X -> listLabel(1, 2, bar(2), bar(X_1)), Y -> (3: Term)))
-          )
+            And.substitution(Map(X -> (el ~~ 1 ~~ 2 ~~ X_1 ~~ bar(bar(3))), Y -> (2: Term))),
+            And.substitution(Map(X -> (el ~~ 1 ~~ 2 ~~ bar(2) ~~ X_1), Y -> bar(3))),
+            And.substitution(Map(X -> (el ~~ 1 ~~ 2 ~~ bar(2) ~~ bar(X_1)), Y -> (3: Term))))
       )
     }
   }
@@ -83,8 +82,10 @@ class MatchSpec extends FreeSpec with TestSetup {
     val YY = Variable("YY")
 
     "identical simple" in {
-      assert(AnywhereContext(XX, AnywhereContext(X, listLabel(YY, a)))
-        := AnywhereContext(XX, AnywhereContext(X, listLabel(YY, a))) !== Bottom)
+      assert((AnywhereContext(XX, AnywhereContext(X, el ~~ YY ~~ a))
+        := AnywhereContext(XX, AnywhereContext(X, el ~~ YY ~~ a))
+        ) !== Bottom
+      )
     }
 
     "identical" in {

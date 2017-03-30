@@ -4,7 +4,7 @@ import org.kframework.kale.transformer.Binary
 
 import scala.collection._
 
-class Matcher(val env: Environment) {
+case class Matcher(val env: CurrentEnvironment) {
 
   import context._
   import Binary._
@@ -12,6 +12,8 @@ class Matcher(val env: Environment) {
   implicit val envv = env
 
   import env._
+
+  import StaticImplicits._
 
   def shortCircuitAnd(solver: State)(toEqual: (Term, Term)*): Term = {
     toEqual.foldLeft(Top: Term)({
@@ -167,9 +169,11 @@ class Matcher(val env: Environment) {
     }
   }
 
-  def defaultPieces = {
+  def defaultMatcher = {
     val variableXlabel = labels.map(Piece(Variable, _, VarLeft))
     val andXlabel = labels.map(Piece(And, _, AndTerm))
+
+    import default._
 
     val freeLikeLabelXfreeLikeLabel = labels.collect({
       case l: FreeLabel0 => Piece(l, l, FreeNode0FreeNode0)

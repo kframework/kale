@@ -75,7 +75,7 @@ endmodule
  */
 
 object IMP {
-  implicit val env = new Environment
+  implicit val env = new CurrentEnvironment
 
   import env._
   import builtin._
@@ -93,7 +93,7 @@ object IMP {
   val seq = FreeLabel2("__")
   val program = FreeLabel2("_;_")
   val emptyIntList = FreeLabel0(".List{Int}")
-  val ints = new AssocWithIdListLabel("_,_", emptyIntList())
+  val ints = new default.AssocWithIdListLabel("_,_", emptyIntList())
 
   val T = FreeLabel2("<T>")
   val k = FreeLabel1("<k>")
@@ -107,7 +107,7 @@ object IMP {
   }, emptyStates())
 
   val emptyk = FreeLabel0(".K")
-  val kseq = new AssocWithIdListLabel("_~>_", emptyk())
+  val kseq = new default.AssocWithIdListLabel("_~>_", emptyk())
 
   val intDiv = PrimitiveFunction2("_/Int_", INT, (a: Int, b: Int) => a / b)
 
@@ -175,7 +175,7 @@ object IMP {
 
   env.seal()
 
-  val matcher = new Matcher(env).applier
+  val matcher = Matcher(env).defaultMatcher
   val substitutionApplier = SubstitutionApply(env)
   val rewrite = Rewriter(substitutionApplier, matcher, env)(rules)
 }
