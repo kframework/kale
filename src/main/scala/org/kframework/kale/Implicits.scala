@@ -6,6 +6,8 @@ class Implicits(implicit env: CurrentEnvironment) extends StaticImplicits {
 
   import env.builtin._
 
+  import default._
+
   implicit def intConstant(x: Int): Constant[Int] = INT(x)
   implicit def doubleConstant(x: Double): Constant[Double] = DOUBLE(x)
   implicit def booleanConstant(x: Boolean): Constant[Boolean] = BOOLEAN(x)

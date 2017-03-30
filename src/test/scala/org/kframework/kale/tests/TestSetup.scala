@@ -1,7 +1,6 @@
 package org.kframework.kale.tests
 
-import org.kframework.kale.context.PatternContextApplicationLabel
-import org.kframework.kale.{Invoke, _}
+import org.kframework.kale._
 
 trait TestSetup {
 
@@ -16,7 +15,7 @@ trait TestSetup {
   val Y = Variable("Y")
 
   val emptyList = FreeLabel0("emptyList")
-  val listLabel = new AssocWithIdListLabel("listLabel", emptyList())
+  val listLabel = new default.AssocWithIdListLabel("listLabel", emptyList())
 
   implicit class WithListConcat(t: Term) {
     def ~~(o: Term): Term = listLabel(t, o)
@@ -32,7 +31,7 @@ trait TestSetup {
   val traversed = FreeLabel1("traversed")
   val andMatchingY = FreeLabel0("andMatchingY")
 
-  val a2b = FunctionDefinedByRewritingLabel1("a2b")
+  val a2b = default.FunctionDefinedByRewritingLabel1("a2b")
 
   val a2bRules = Set(Rewrite(a2b(a), b))
 
@@ -49,7 +48,7 @@ trait TestSetup {
 
   a2b.setRules(a2bRules)
 
-  implicit val unifier = Matcher(env).default
+  implicit val unifier = Matcher(env).defaultMatcher
 
   val substitutionApplier = SubstitutionApply(env)
 

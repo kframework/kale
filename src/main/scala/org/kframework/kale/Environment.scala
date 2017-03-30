@@ -51,6 +51,8 @@ trait KORELabels {
 class CurrentEnvironment extends Environment {
   implicit private val tthis = this
 
+  import default._
+
   val Variable = SimpleVariableLabel()
 
   val Truth = SimpleTruthLabel()

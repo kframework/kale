@@ -169,9 +169,11 @@ case class Matcher(env: CurrentEnvironment) {
     }
   }
 
-  def default = {
+  def defaultMatcher = {
     val variableXlabel = labels.map(Piece(Variable, _, VarLeft))
     val andXlabel = labels.map(Piece(And, _, AndTerm))
+
+    import default._
 
     val freeLikeLabelXfreeLikeLabel = labels.collect({
       case l: FreeLabel0 => Piece(l, l, FreeNode0FreeNode0)

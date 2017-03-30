@@ -263,45 +263,311 @@ trait PurelyFunctionalLabel4 extends Label4 with FunctionLabel {
   def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term = f(_1, _2, _3, _4) getOrElse FreeNode4(this, _1, _2, _3, _4)
 }
 
-trait FunctionDefinedByRewriting extends FunctionLabel {
-  val env: CurrentEnvironment
-  private var p_rewriter: Option[Rewriter] = None
+trait Label0 extends Function0[Term] with NodeLabel {
+  val arity = 0
 
-  def rewriter: Rewriter = p_rewriter.get
+  def apply(): Term
 
-  //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply()
+}
 
-  def setRules(rules: Set[Rewrite]): Unit = {
-    p_rewriter = Some(Rewriter(SubstitutionApply(env), Matcher(env).default, env)(rules))
+trait Label1 extends (Term => Term) with NodeLabel {
+  val arity = 1
+
+  def apply(_1: Term): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head)
+}
+
+trait Label2 extends ((Term, Term) => Term) with NodeLabel {
+  val arity = 2
+
+  def apply(_1: Term, _2: Term): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head)
+
+  def unapply(t: Term): Option[(Term, Term)] = t match {
+    case n: Node2 if n.label == this => Some(n._1, n._2)
+    case _ => None
+  }
+}
+
+trait Label3 extends NodeLabel {
+  val arity = 3
+
+  def apply(_1: Term, _2: Term, _3: Term): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head)
+}
+
+trait Label4 extends NodeLabel {
+  val arity = 4
+
+  def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head)
+}
+
+trait Label5 extends NodeLabel {
+  val arity = 5
+
+  def apply(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head, l.tail.tail.tail.tail.head)
+}
+
+trait Label6 extends NodeLabel {
+  val arity = 6
+
+  def apply(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term): Term
+
+  protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head, l.tail.tail.tail.tail.head, l.tail.tail.tail.tail.tail.head)
+}
+
+trait Node0 extends Node {
+  val label: Label0
+
+  val isGround = true
+
+  def innerUpdateAt(i: Int, t: Term): Term = throw new AssertionError("unreachable code")
+
+  def iterator = Iterator.empty
+}
+
+trait Node1 extends Node with Product1[Term] {
+  val label: Label1
+
+  val isGround = _1.isGround
+
+  def innerUpdateAt(i: Int, t: Term): Term = i match {
+    case 1 => label(t)
   }
 
-  def tryToApply(res: Term): Option[Term] =
-    if (env.isSealed && rewriter.rules.nonEmpty) {
-      // do not try to execute the function before the env is sealed as it would trigger the lazy initialization fo the Rewriter,
-      // and a Rewriter can only be built once the Environment is sealed
-      val Bottom = rewriter.env.Bottom
-      rewriter.step(res).find(t => t.label != env.And && t.label != env.Or)
-    } else {
-      None
-    }
+  def iterator = Iterator(_1)
+
+  // FOR KORE
+  def build(_1: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label2](_1.asInstanceOf[Term])
 }
 
-case class FunctionDefinedByRewritingLabel0(name: String)(implicit val env: CurrentEnvironment) extends FunctionDefinedByRewriting with FunctionalLabel0 {
-  def f(): Option[Term] = tryToApply(FreeNode0(this))
+trait Node2 extends Node with Product2[Term, Term] {
+  val label: Label2
+
+  lazy val isGround = _1.isGround && _2.isGround
+
+  def innerUpdateAt(i: Int, t: Term): Term = i match {
+    case 1 => label(t, _2)
+    case 2 => label(_1, t)
+  }
+
+  def iterator = Iterator(_1, _2)
+
+  // FOR KORE
+  def build(_1: pattern.Pattern, _2: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label2](_1.asInstanceOf[Term], _2.asInstanceOf[Term])
 }
 
-case class FunctionDefinedByRewritingLabel1(name: String)(implicit val env: CurrentEnvironment) extends FunctionDefinedByRewriting with PurelyFunctionalLabel1 {
-  def f(_1: Term): Option[Term] = tryToApply(FreeNode1(this, _1))
+trait Node3 extends Node with Product3[Term, Term, Term] {
+  val label: Label3
+
+  val isGround = _1.isGround && _2.isGround && _3.isGround
+
+  def innerUpdateAt(i: Int, t: Term): Term = i match {
+    case 1 => label(t, _2, _3)
+    case 2 => label(_1, t, _3)
+    case 3 => label(_1, _2, t)
+  }
+
+  def iterator = Iterator(_1, _2, _3)
 }
 
-case class FunctionDefinedByRewritingLabel2(name: String)(implicit val env: CurrentEnvironment) extends FunctionDefinedByRewriting with PurelyFunctionalLabel2 {
-  def f(_1: Term, _2: Term): Option[Term] = tryToApply(FreeNode2(this, _1, _2))
+trait Node4 extends Node with Product4[Term, Term, Term, Term] {
+  val label: Label4
+
+  val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround
+
+  def innerUpdateAt(i: Int, t: Term): Term = i match {
+    case 1 => label(t, _2, _3, _4)
+    case 2 => label(_1, t, _3, _4)
+    case 3 => label(_1, _2, t, _4)
+    case 4 => label(_1, _2, _3, t)
+  }
+
+  def iterator = Iterator(_1, _2, _3, _4)
 }
 
-case class FunctionDefinedByRewritingLabel3(name: String)(implicit val env: CurrentEnvironment) extends FunctionDefinedByRewriting with PurelyFunctionalLabel3 {
-  def f(_1: Term, _2: Term, _3: Term): Option[Term] = tryToApply(FreeNode3(this, _1, _2, _3))
+trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
+  val label: Label5
+
+  val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround
+
+  def innerUpdateAt(i: Int, t: Term): Term = i match {
+    case 1 => label(t, _2, _3, _4, _5)
+    case 2 => label(_1, t, _3, _4, _5)
+    case 3 => label(_1, _2, t, _4, _5)
+    case 4 => label(_1, _2, _3, t, _5)
+    case 5 => label(_1, _2, _3, _4, t)
+  }
+
+  def iterator = Iterator(_1, _2, _3, _4, _5)
 }
 
-case class FunctionDefinedByRewritingLabel4(name: String)(implicit val env: CurrentEnvironment) extends FunctionDefinedByRewriting with PurelyFunctionalLabel4 {
-  def f(_1: Term, _2: Term, _3: Term, _4: Term): Option[Term] = tryToApply(FreeNode4(this, _1, _2, _3, _4))
+trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
+  val label: Label6
+
+  val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround && _6.isGround
+
+  def innerUpdateAt(i: Int, t: Term): Term = i match {
+    case 1 => label(t, _2, _3, _4, _5, _6)
+    case 2 => label(_1, t, _3, _4, _5, _6)
+    case 3 => label(_1, _2, t, _4, _5, _6)
+    case 4 => label(_1, _2, _3, t, _5, _6)
+    case 5 => label(_1, _2, _3, _4, t, _6)
+    case 6 => label(_1, _2, _3, _4, _5, t)
+  }
+
+  def iterator = Iterator(_1, _2, _3, _4, _5, _6)
 }
+
+// AC stuff
+
+trait HasId {
+  val identity: Term
+}
+
+trait AssocLabel extends Label2 {
+  def apply(l: Iterable[Term]): Term
+
+  val thisthis = this
+
+  def asList(t: Term): Iterable[Term] = t.label match {
+    case `thisthis` => t.asInstanceOf[Assoc].assocIterable
+    case _ => List(t)
+  }
+
+  object iterable {
+    def unapply(t: Term): Option[Iterable[Term]] = Some(asList(t))
+  }
+
+}
+
+trait AssocWithIdLabel extends AssocLabel with HasId {
+
+  // normalizing
+  def apply(_1: Term, _2: Term) = {
+    val l1 = asIterable(_1)
+    val l2 = asIterable(_2)
+    construct(l1 ++ l2)
+  }
+
+  def asIterable(t: Term): Iterable[Term] = t match {
+    case `identity` => List[Term]()
+    case x if x.label == this => x.asInstanceOf[Assoc].assocIterable
+    case y => List(y)
+  }
+
+  // normalizing
+  override def apply(list: Iterable[Term]): Term = list filterNot (_ == identity) match {
+    case l if l.isEmpty => identity
+    case l if l.size == 1 => l.head
+    case l => (l fold identity) ((a, b) => apply(a, b))
+  }
+
+  def construct(l: Iterable[Term]): Term
+}
+
+trait AssocWithoutIdLabel extends AssocLabel {
+  // todo
+}
+
+trait Assoc extends Node2 with BinaryInfix {
+  override val label: AssocLabel
+  val assocIterable: Iterable[Term]
+}
+
+trait Comm
+
+trait AssocComm extends Assoc with Comm {
+  def asSet: Set[Term]
+}
+
+trait CommLabel
+
+trait AssocCommLabel extends AssocLabel with CommLabel {
+  def asSet(t: Term): Set[Term]
+
+  object set {
+    def unapply(t: Term): Option[Set[Term]] = Some(asSet(t))
+  }
+}
+
+// ML
+
+trait AndLabel extends AssocCommLabel with FormulaLabel
+
+trait OrLabel extends AssocCommLabel with FormulaLabel
+
+trait RewriteLabel extends Label2
+
+trait EqualityLabel extends Label2 with FormulaLabel
+
+trait And extends Assoc with pattern.And {
+  val formulas: Term
+  val nonFormula: Option[Term]
+}
+
+trait Or extends AssocComm with pattern.Or
+
+trait Rewrite extends Node2 with BinaryInfix with pattern.Rewrite
+
+// Substitution
+
+trait Substitution extends Term with (Term => Term) {
+  def get(v: Variable): Option[Term]
+  def apply(t: Term): Term
+}
+
+// Util
+
+abstract class Named(val name: String)
+
+trait BinaryInfix {
+  self: Node2 =>
+  override def toString = _1 + " " + label.name + " " + _2
+}
+
+// Free nodes
+
+trait FreeLabel
+
+case class FreeLabel0(name: String)(implicit val env: Environment) extends Label0 with FreeLabel {
+  def apply(): Term = FreeNode0(this)
+}
+
+case class FreeLabel1(name: String)(implicit val env: Environment) extends Label1 with FreeLabel {
+  def apply(_1: Term): Term = FreeNode1(this, _1)
+}
+
+case class FreeLabel2(name: String)(implicit val env: Environment) extends Label2 with FreeLabel {
+  def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
+}
+
+case class FreeLabel3(name: String)(implicit val env: Environment) extends Label3 with FreeLabel {
+  def apply(_1: Term, _2: Term, _3: Term): Term = FreeNode3(this, _1, _2, _3)
+}
+
+case class FreeLabel4(name: String)(implicit val env: Environment) extends Label4 with FreeLabel {
+  def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term = FreeNode4(this, _1, _2, _3, _4)
+}
+
+case class FreeNode0(label: Label0) extends Node0
+
+case class FreeNode1(label: Label1, _1: Term) extends Node1
+
+case class FreeNode2(label: Label2, _1: Term, _2: Term) extends Node2
+
+case class FreeNode3(label: Label3, _1: Term, _2: Term, _3: Term) extends Node3
+
+case class FreeNode4(label: Label4, _1: Term, _2: Term, _3: Term, _4: Term) extends Node4
+
+case class FreeNode5(label: Label5, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term) extends Node5
+
+case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term) extends Node6
