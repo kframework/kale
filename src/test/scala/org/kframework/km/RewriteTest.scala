@@ -17,10 +17,10 @@ class RewriteTest extends FreeSpec {
     val y = Variable("y", SortK)
     val z = Variable("z", SortK)
 
-    val a = Application(Constructor("a", (Seq(),SortK)), Seq())
-    val b = Application(Constructor("b", (Seq(),SortK)), Seq())
-    val c = Application(Constructor("c", (Seq(),SortK)), Seq())
-    val d = Application(Constructor("d", (Seq(),SortK)), Seq())
+    val a = Application(new Constructor("a", (Seq(),SortK)), Seq())
+    val b = Application(new Constructor("b", (Seq(),SortK)), Seq())
+    val c = Application(new Constructor("c", (Seq(),SortK)), Seq())
+    val d = Application(new Constructor("d", (Seq(),SortK)), Seq())
 
     val r1 = SimpleRewrite(a, b, tt)
     val r2 = SimpleRewrite(b, c, tt)
@@ -56,8 +56,8 @@ class RewriteTest extends FreeSpec {
     val y = Variable("y", SortInt)
     val z = Variable("z", SortInt)
 
-    val p = Constructor("p", (Seq(SortInt),SortK))
-    val q = Constructor("q", (Seq(SortInt),SortK))
+    val p = new Constructor("p", (Seq(SortInt),SortK))
+    val q = new Constructor("q", (Seq(SortInt),SortK))
 
     val px = Application(p, Seq(x))
     val qx = Application(q, Seq(x))
@@ -66,8 +66,8 @@ class RewriteTest extends FreeSpec {
     val xge0 = INT.ge(x, INT(0))
     val xlt0 = INT.lt(x, INT(0))
 
-    val c = Application(Constructor("c", (Seq(),SortK)), Seq())
-    val d = Application(Constructor("d", (Seq(),SortK)), Seq())
+    val c = Application(new Constructor("c", (Seq(),SortK)), Seq())
+    val d = Application(new Constructor("d", (Seq(),SortK)), Seq())
 
     val r1 = SimpleRewrite(px, qx, xgt0)
     val r2 = SimpleRewrite(qx, c, xge0)
@@ -95,13 +95,13 @@ class RewriteTest extends FreeSpec {
     val tcell = T(kcell,scell)
 
     val res = applyRules(rules, SimplePattern(tcell, BOOL(true)))
-    println(res)
+    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(M:MapK,_(_(X:Id)),_(_(INT(0)))))) /\\ BOOL(true))")
 
   }
 
   "z3" in {
-    val a = Application(Constructor("a", (Seq(),SortK)), Seq())
-    val b = Application(Constructor("b", (Seq(),SortK)), Seq())
+    val a = Application(new Constructor("a", (Seq(),SortK)), Seq())
+    val b = Application(new Constructor("b", (Seq(),SortK)), Seq())
 
     assert(z3.sat(BOOL(true)))
     assert(!z3.sat(BOOL(false)))

@@ -5,6 +5,10 @@ object Imp {
   import term._
   import builtin._
 
+  class Constructor1(override val name: String, override val signature: Type) extends Constructor(name, signature) {
+    override def toString: String = if (name.contains(':')) name.substring(0, name.indexOf(':')) else name
+  }
+
   // signature
 
   val Id = SortOf("Id")
@@ -17,46 +21,46 @@ object Imp {
   val Stmt = SortOf("Stmt")
   val Pgm = SortOf("Pgm")
 
-  val AExpInt = Constructor("_:Int->AExp", (Seq(SortInt), AExp))
-  val AExpId = Constructor("_:Id->AExp", (Seq(Id), AExp))
-  val AExpDiv = Constructor("_/_:AExp*AExp->AExp", (Seq(AExp, AExp), AExp))
-  val AExpPlus = Constructor("_+_:AExp*AExp->AExp", (Seq(AExp, AExp), AExp))
+  val AExpInt = new Constructor1("_:Int->AExp", (Seq(SortInt), AExp))
+  val AExpId = new Constructor1("_:Id->AExp", (Seq(Id), AExp))
+  val AExpDiv = new Constructor1("_/_:AExp*AExp->AExp", (Seq(AExp, AExp), AExp))
+  val AExpPlus = new Constructor1("_+_:AExp*AExp->AExp", (Seq(AExp, AExp), AExp))
 
-  val BExpBool = Constructor("_:Bool->BExp", (Seq(SortBool), BExp))
-  val BExpLeq = Constructor("_<=_:AExp*AExp->BExp", (Seq(AExp, AExp), BExp))
-  val BExpNot = Constructor("!_:BExp->BExp", (Seq(BExp), BExp))
-  val BExpAnd = Constructor("_&&_:BExp*BExp->BExp", (Seq(BExp, BExp), BExp))
+  val BExpBool = new Constructor1("_:Bool->BExp", (Seq(SortBool), BExp))
+  val BExpLeq = new Constructor1("_<=_:AExp*AExp->BExp", (Seq(AExp, AExp), BExp))
+  val BExpNot = new Constructor1("!_:BExp->BExp", (Seq(BExp), BExp))
+  val BExpAnd = new Constructor1("_&&_:BExp*BExp->BExp", (Seq(BExp, BExp), BExp))
 
-  val BlockEmpty = Constructor("{}:->Block", (Seq(), Block))
-  val BlockStmt = Constructor("{_}:Stmt->Block", (Seq(Stmt), Block))
+  val BlockEmpty = new Constructor1("{}:->Block", (Seq(), Block))
+  val BlockStmt = new Constructor1("{_}:Stmt->Block", (Seq(Stmt), Block))
 
-  val StmtBlock = Constructor("_:Block->Stmt", (Seq(Block), Stmt))
-  val StmtAssign = Constructor("_=_;:Id*AExp->Stmt", (Seq(Id, AExp), Stmt))
-  val StmtIf = Constructor("if(_)_else_:BExp*Block*Block->Stmt", (Seq(BExp, Block, Block), Stmt))
-  val StmtWhile = Constructor("while(_)_:BExp*Block->Stmt", (Seq(BExp, Block), Stmt))
-  val StmtSeq = Constructor("__:Stmt*Stmt->Stmt", (Seq(Stmt, Stmt), Stmt))
+  val StmtBlock = new Constructor1("_:Block->Stmt", (Seq(Block), Stmt))
+  val StmtAssign = new Constructor1("_=_;:Id*AExp->Stmt", (Seq(Id, AExp), Stmt))
+  val StmtIf = new Constructor1("if(_)_else_:BExp*Block*Block->Stmt", (Seq(BExp, Block, Block), Stmt))
+  val StmtWhile = new Constructor1("while(_)_:BExp*Block->Stmt", (Seq(BExp, Block), Stmt))
+  val StmtSeq = new Constructor1("__:Stmt*Stmt->Stmt", (Seq(Stmt, Stmt), Stmt))
 
-  val PgmOf = Constructor("int_;_:List{Id}*Stmt->Pgm", (Seq(ListId, Stmt), Pgm))
+  val PgmOf = new Constructor1("int_;_:List{Id}*Stmt->Pgm", (Seq(ListId, Stmt), Pgm))
 
-  val IdsCons = Constructor("_,_:Id*List{Id}->List{Id}", (Seq(Id, ListId), ListId))
-  val IdsNil = Constructor(".List:->List{Id}", (Seq(), ListId))
+  val IdsCons = new Constructor1("_,_:Id*List{Id}->List{Id}", (Seq(Id, ListId), ListId))
+  val IdsNil = new Constructor1(".List:->List{Id}", (Seq(), ListId))
 
-  val KAExp = Constructor("_:AExp->K", (Seq(AExp), SortK))
-  val KBExp = Constructor("_:BExp->K", (Seq(BExp), SortK))
-  val KBlock = Constructor("_:Block->K", (Seq(Block), SortK))
-  val KStmt = Constructor("_:Stmt->K", (Seq(Stmt), SortK))
-  val KPgm = Constructor("_:Pgm->K", (Seq(Pgm), SortK))
+  val KAExp = new Constructor1("_:AExp->K", (Seq(AExp), SortK))
+  val KBExp = new Constructor1("_:BExp->K", (Seq(BExp), SortK))
+  val KBlock = new Constructor1("_:Block->K", (Seq(Block), SortK))
+  val KStmt = new Constructor1("_:Stmt->K", (Seq(Stmt), SortK))
+  val KPgm = new Constructor1("_:Pgm->K", (Seq(Pgm), SortK))
 
   // configuration
 
   val Cell = SortOf("Cell")
 
-  val T = Constructor("<T>:Cell*Cell->Cell", (Seq(Cell, Cell), Cell))
-  val k = Constructor("<k>:List{K}->Cell", (Seq(SortListK), Cell))
-  val state = Constructor("<state>:Map{Id,Int}->Cell", (Seq(SortMapK), Cell))
+  val T = new Constructor1("<T>:Cell*Cell->Cell", (Seq(Cell, Cell), Cell))
+  val k = new Constructor1("<k>:List{K}->Cell", (Seq(SortListK), Cell))
+  val state = new Constructor1("<state>:Map{Id,Int}->Cell", (Seq(SortMapK), Cell))
 
-  val kCons = Constructor("_~>_:K*List{K}->List{K}", (Seq(SortK, SortListK), SortListK))
-  val kNil = Constructor(".K:->List{K}", (Seq(), SortListK))
+  val kCons = new Constructor1("_~>_:K*List{K}->List{K}", (Seq(SortK, SortListK), SortListK))
+  val kNil = new Constructor1(".K:->List{K}", (Seq(), SortListK))
 
   // rules
 
@@ -82,16 +86,16 @@ object Imp {
 
   val tt = BOOL(true)
 
-  val freezerDiv0 = Constructor("freezer_/_0:AExp->K", (Seq(AExp), SortK))
-  val freezerDiv1 = Constructor("freezer_/_1:AExp->K", (Seq(AExp), SortK))
-  val freezerPlus0 = Constructor("freezer_+_0:AExp->K", (Seq(AExp), SortK))
-  val freezerPlus1 = Constructor("freezer_+_1:AExp->K", (Seq(AExp), SortK))
-  val freezerLeq0 = Constructor("freezer_<=_0:AExp->K", (Seq(AExp), SortK))
-  val freezerLeq1 = Constructor("freezer_<=_1:AExp->K", (Seq(AExp), SortK))
-  val freezerNot0 = Constructor("freezer!_0:->K", (Seq(), SortK))
-  val freezerAnd0 = Constructor("freezer_&&_0:BExp->K", (Seq(BExp), SortK))
-  val freezerAssign1 = Constructor("freezer_=_;1:Id->K", (Seq(Id), SortK))
-  val freezerIf0 = Constructor("freezerif(_)_else_0:Block*Block->K", (Seq(Block, Block), SortK))
+  val freezerDiv0 = new Constructor1("freezer_/_0:AExp->K", (Seq(AExp), SortK))
+  val freezerDiv1 = new Constructor1("freezer_/_1:AExp->K", (Seq(AExp), SortK))
+  val freezerPlus0 = new Constructor1("freezer_+_0:AExp->K", (Seq(AExp), SortK))
+  val freezerPlus1 = new Constructor1("freezer_+_1:AExp->K", (Seq(AExp), SortK))
+  val freezerLeq0 = new Constructor1("freezer_<=_0:AExp->K", (Seq(AExp), SortK))
+  val freezerLeq1 = new Constructor1("freezer_<=_1:AExp->K", (Seq(AExp), SortK))
+  val freezerNot0 = new Constructor1("freezer!_0:->K", (Seq(), SortK))
+  val freezerAnd0 = new Constructor1("freezer_&&_0:BExp->K", (Seq(BExp), SortK))
+  val freezerAssign1 = new Constructor1("freezer_=_;1:Id->K", (Seq(Id), SortK))
+  val freezerIf0 = new Constructor1("freezerif(_)_else_0:Block*Block->K", (Seq(Block, Block), SortK))
 
 
   object isKResult extends Symbol {
@@ -106,8 +110,11 @@ object Imp {
       val t = children(0)
       t match {
         case Application(`KAExp`, Seq(Application(`AExpInt`, Seq(_)))) => BOOL(true)
+        case Application(`KAExp`, Seq(Variable(_,_))) => default
         case Application(`KBExp`, Seq(Application(`BExpBool`, Seq(_)))) => BOOL(true)
-        case _ => BOOL(false) // TODO: wrong for symbolic terms
+        case Application(`KBExp`, Seq(Variable(_,_))) => default
+        case Variable(_,_) => default
+        case _ => BOOL(false)
       }
     }
   }

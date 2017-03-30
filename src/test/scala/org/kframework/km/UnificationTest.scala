@@ -14,11 +14,11 @@ class UnificationTest extends FreeSpec {
   val y = Variable("y", SortK)
   val z = Variable("z", SortK)
 
-  val p = Constructor("p", (Seq(SortK,SortK),SortK))
-  val q = Constructor("q", (Seq(SortK,SortK),SortK))
-  val p3 = Constructor("p3", (Seq(SortK,SortK,SortK),SortK))
+  val p = new Constructor("p", (Seq(SortK,SortK),SortK))
+  val q = new Constructor("q", (Seq(SortK,SortK),SortK))
+  val p3 = new Constructor("p3", (Seq(SortK,SortK,SortK),SortK))
 
-  val a = Application(Constructor("a", (Seq(),SortK)), Seq())
+  val a = Application(new Constructor("a", (Seq(),SortK)), Seq())
 
   val pxy = Application(p, Seq(x, y))
   val pyx = Application(p, Seq(y, x))

@@ -74,6 +74,7 @@ object term {
     def rename(cnt: Int): Term = {
       symbol.applySeq(children.map(t => t.rename(cnt)))
     }
+    override def toString: String = symbol + "(" + children.map(_.toString).mkString(",") + ")"
   }
   case class Variable(name: String, sort: Sort) extends Term {
     val isSymbolic: Boolean = true
@@ -82,6 +83,7 @@ object term {
       if (m.contains(this)) m(this) else this // TODO: m.getOrElse(this, this)
     }
     def rename(cnt: Int): Term = Variable(name + "!" + cnt, sort)
+    override def toString: String = name + ":" + sort.name
   }
   trait Constant extends Term {
     val smt: String
@@ -93,7 +95,7 @@ object term {
 
   ////
 
-  case class Constructor(name: String, signature: Type) extends Symbol {
+  class Constructor(val name: String, val signature: Type) extends Symbol {
     val isFunctional: Boolean = false
     val smt: String = name
     val smtBuiltin: Boolean = false
@@ -102,6 +104,7 @@ object term {
 
   case class SimplePattern(term: Term, constraint: Term) {
     assert(constraint.sort == SortBool)
+    override def toString: String = term + " /\\ " + constraint
   }
 
   type Terms = Seq[Term]
