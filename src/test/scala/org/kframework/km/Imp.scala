@@ -77,8 +77,8 @@ object Imp {
   val Blk = Variable("Blk", Block)
   val Blk1 = Variable("Blk1", Block)
   val Blk2 = Variable("Blk2", Block)
-  val E1 = Variable("E1", Exp)
-  val E2 = Variable("E2", Exp)
+  val E1 = Variable("E1", AExp)
+  val E2 = Variable("E2", AExp)
 
   val tt = BOOL(true)
 
@@ -113,7 +113,7 @@ object Imp {
   }
 
   implicit class infixTerm(p: Term) {
-    def ~>:(q: Term): Term = kCons(p, q)
+    def ~>:(q: Term): Term = kCons(q, p)
     def /\(q: Term): Term = BOOL.and(p, q)
   }
 
@@ -121,7 +121,7 @@ object Imp {
     // AExp
       SimpleRewrite(
       T(k(KAExp(AExpId(X)) ~>: Ks), state(M)),
-      T(k(KAExp(AExpInt(MAP_K.select(M,X))) ~>: Ks), state(M)),
+      T(k(MAP_K.select(M, KAExp(AExpId(X))) ~>: Ks), state(M)),
       tt)
     , SimpleRewrite(
       T(k(KAExp(AExpDiv(AExpInt(I1), AExpInt(I2))) ~>: Ks), state(M)),
@@ -150,17 +150,17 @@ object Imp {
       tt)
     // Block
     , SimpleRewrite(
-      T(k(KBlock(BlockEmpty()) ~>: Ks), state(M)),
+      T(k(KStmt(StmtBlock(BlockEmpty())) ~>: Ks), state(M)),
       T(k(Ks), state(M)),
       tt)
     , SimpleRewrite(
-      T(k(KBlock(BlockStmt(S)) ~>: Ks), state(M)),
+      T(k(KStmt(StmtBlock(BlockStmt(S))) ~>: Ks), state(M)),
       T(k(KStmt(S) ~>: Ks), state(M)),
       tt)
     // Stmt
     , SimpleRewrite(
       T(k(KStmt(StmtAssign(X, AExpInt(I))) ~>: Ks), state(M)),
-      T(k(Ks), state(MAP_K.store(M,X,I))),
+      T(k(Ks), state(MAP_K.store(M, KAExp(AExpId(X)), KAExp(AExpInt(I))))),
       tt)
     , SimpleRewrite(
       T(k(KStmt(StmtSeq(S1,S2)) ~>: Ks), state(M)),
@@ -168,11 +168,11 @@ object Imp {
       tt)
     , SimpleRewrite(
       T(k(KStmt(StmtIf(BExpBool(BOOL(true)), Blk1, Blk2)) ~>: Ks), state(M)),
-      T(k(KStmt(Blk1) ~>: Ks), state(M)),
+      T(k(KStmt(StmtBlock(Blk1)) ~>: Ks), state(M)),
       tt)
     , SimpleRewrite(
       T(k(KStmt(StmtIf(BExpBool(BOOL(false)), Blk1, Blk2)) ~>: Ks), state(M)),
-      T(k(KStmt(Blk2) ~>: Ks), state(M)),
+      T(k(KStmt(StmtBlock(Blk2)) ~>: Ks), state(M)),
       tt)
     , SimpleRewrite(
       T(k(KStmt(StmtWhile(Be, Blk)) ~>: Ks), state(M)),
@@ -181,7 +181,7 @@ object Imp {
     // Pgm
     , SimpleRewrite(
       T(k(KPgm(PgmOf(IdsCons(X, Xs), S)) ~>: Ks), state(M)),
-      T(k(KPgm(PgmOf(Xs, S)) ~>: Ks), state(MAP_K.store(M, X, INT(0)))),
+      T(k(KPgm(PgmOf(Xs, S)) ~>: Ks), state(MAP_K.store(M, KAExp(AExpId(X)), KAExp(AExpInt(INT(0)))))),
       tt)
     , SimpleRewrite(
       T(k(KPgm(PgmOf(IdsNil(), S)) ~>: Ks), state(M)),
@@ -200,7 +200,7 @@ object Imp {
     , SimpleRewrite(
       T(k(KAExp(AExpDiv(E1, E2)) ~>: Ks), state(M)),
       T(k(KAExp(E2) ~>: freezerDiv1(E1) ~>: Ks), state(M)),
-      BOOL.and(isKResult(KAExp(E1), BOOL.not(isKResult(KAExp(E2))))))
+      BOOL.and(isKResult(KAExp(E1)), BOOL.not(isKResult(KAExp(E2)))))
     , SimpleRewrite(
       T(k(KAExp(E2) ~>: freezerDiv1(E1) ~>: Ks), state(M)),
       T(k(KAExp(AExpDiv(E1, E2)) ~>: Ks), state(M)),
@@ -217,7 +217,7 @@ object Imp {
     , SimpleRewrite(
       T(k(KAExp(AExpPlus(E1, E2)) ~>: Ks), state(M)),
       T(k(KAExp(E2) ~>: freezerPlus1(E1) ~>: Ks), state(M)),
-      BOOL.and(isKResult(KAExp(E1), BOOL.not(isKResult(KAExp(E2))))))
+      BOOL.and(isKResult(KAExp(E1)), BOOL.not(isKResult(KAExp(E2)))))
     , SimpleRewrite(
       T(k(KAExp(E2) ~>: freezerPlus1(E1) ~>: Ks), state(M)),
       T(k(KAExp(AExpPlus(E1, E2)) ~>: Ks), state(M)),
@@ -234,7 +234,7 @@ object Imp {
     , SimpleRewrite(
       T(k(KBExp(BExpLeq(E1, E2)) ~>: Ks), state(M)),
       T(k(KAExp(E2) ~>: freezerLeq1(E1) ~>: Ks), state(M)),
-      BOOL.and(isKResult(KAExp(E1), BOOL.not(isKResult(KAExp(E2))))))
+      BOOL.and(isKResult(KAExp(E1)), BOOL.not(isKResult(KAExp(E2)))))
     , SimpleRewrite(
       T(k(KAExp(E2) ~>: freezerLeq1(E1) ~>: Ks), state(M)),
       T(k(KBExp(BExpLeq(E1, E2)) ~>: Ks), state(M)),

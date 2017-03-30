@@ -199,7 +199,7 @@ object builtin {
       override val name: String = "storeMapK"
       override val smt: String = "store"
       override val smtBuiltin: Boolean = true
-      override val signature: Type = (Seq(SortMapK, SortK, SortK), SortK)
+      override val signature: Type = (Seq(SortMapK, SortK, SortK), SortMapK)
       override val isFunctional: Boolean = true
       override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 3)

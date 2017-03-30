@@ -86,6 +86,19 @@ class RewriteTest extends FreeSpec {
     assert(search(Seq(r1,r2,r3), t1) == Seq(SimplePattern(c, BOOL.and(xgt0, xge0))))
   }
 
+  "imp" in {
+    import Imp._
+
+    val x0 = KStmt(StmtAssign(X, AExpInt(INT(0))))
+    val kcell = k(kCons(x0, kNil()))
+    val scell = state(M)
+    val tcell = T(kcell,scell)
+
+    val res = applyRules(rules, SimplePattern(tcell, BOOL(true)))
+    println(res)
+
+  }
+
   "z3" in {
     val a = Application(Constructor("a", (Seq(),SortK)), Seq())
     val b = Application(Constructor("b", (Seq(),SortK)), Seq())
