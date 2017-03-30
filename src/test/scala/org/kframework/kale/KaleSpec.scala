@@ -26,10 +26,10 @@ class KaleSpec extends FreeSpec {
     val x: Constant[Int] = 2
     val y: Constant[Int] = 3
 
-    assert(x == INT(2))
-    assert(x != y)
-
     "Int" in {
+      assert(x == INT(2))
+      assert(x != y)
+
       assert(x.value == 2)
       assert(x.label == INT)
     }

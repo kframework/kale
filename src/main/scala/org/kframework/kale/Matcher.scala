@@ -209,7 +209,7 @@ case class Matcher(val env: CurrentEnvironment) {
   }
 
   def applier = {
-    new Apply(defaultPieces, env)
+    new Apply(defaultMatcher, env)
   }
 
 }

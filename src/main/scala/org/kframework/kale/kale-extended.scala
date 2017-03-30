@@ -2,11 +2,10 @@ package org.kframework.kale.default
 
 import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kale.context.{AnywhereContextApplicationLabel, Context1ApplicationLabel}
+import org.kframework.kale.context.{Context1ApplicationLabel}
 
 import scala.collection._
 import scala.Iterable
-
 import org.kframework.minikore.interfaces.{pattern, tree}
 
 case class SimpleEqualityLabel(implicit val env: CurrentEnvironment) extends Named("=") with EqualityLabel {
@@ -415,8 +414,8 @@ trait FunctionDefinedByRewriting extends FunctionLabel {
 
   //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
 
-  def setRules(rules: Set[_ <: Rewrite]): Unit = {
-    p_rewriter = Some(Rewriter(SubstitutionApply(env), Matcher(env).defaultMatcher, env)(rules))
+  def setRules(rules: Set[Rewrite]): Unit = {
+    p_rewriter = Some(Rewriter(SubstitutionApply(env), Matcher(env).applier, env)(rules))
   }
 
   def tryToApply(res: Term): Option[Term] =

@@ -1,6 +1,7 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
+import org.scalactic.Prettifier
 
 trait TestSetup {
 
@@ -48,7 +49,7 @@ trait TestSetup {
 
   a2b.setRules(a2bRules)
 
-  implicit val unifier = new Matcher(env).defaultMatcher
+  implicit val unifier = new Matcher(env).applier
 
   val substitutionApplier = SubstitutionApply(env)
 

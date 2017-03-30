@@ -19,6 +19,6 @@ class PathTest extends FreeSpec with TestSetup {
   }
 
   "apply to third element in assoc" in {
-    assert(Path(Seq(2))(listLabel(1, 2, 3)) === (3:Term))
+    assert(Path(Seq(2))(el ~~ 1 ~~ 2 ~~ 3) === (3:Term))
   }
 }
