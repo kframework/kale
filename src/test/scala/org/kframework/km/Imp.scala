@@ -72,6 +72,8 @@ object Imp {
   val S2 = Variable("S2", Stmt)
   val Ks = Variable("Ks", SortListK)
   val Be = Variable("Be", BExp)
+  val Be1 = Variable("Be1", BExp)
+  val Be2 = Variable("Be2", BExp)
   val Blk = Variable("Blk", Block)
   val Blk1 = Variable("Blk1", Block)
   val Blk2 = Variable("Blk2", Block)
@@ -82,6 +84,15 @@ object Imp {
 
   val freezerDiv0 = Constructor("freezer_/_0:AExp->K", (Seq(AExp), SortK))
   val freezerDiv1 = Constructor("freezer_/_1:AExp->K", (Seq(AExp), SortK))
+  val freezerPlus0 = Constructor("freezer_+_0:AExp->K", (Seq(AExp), SortK))
+  val freezerPlus1 = Constructor("freezer_+_1:AExp->K", (Seq(AExp), SortK))
+  val freezerLeq0 = Constructor("freezer_<=_0:AExp->K", (Seq(AExp), SortK))
+  val freezerLeq1 = Constructor("freezer_<=_1:AExp->K", (Seq(AExp), SortK))
+  val freezerNot0 = Constructor("freezer!_0:->K", (Seq(), SortK))
+  val freezerAnd0 = Constructor("freezer_&&_0:BExp->K", (Seq(BExp), SortK))
+  val freezerAssign1 = Constructor("freezer_=_;1:Id->K", (Seq(Id), SortK))
+  val freezerIf0 = Constructor("freezerif(_)_else_0:Block*Block->K", (Seq(Block, Block), SortK))
+
 
   object isKResult extends Symbol {
     override val name: String = "isKResult"
@@ -130,11 +141,11 @@ object Imp {
       T(k(KBExp(BExpBool(BOOL.not(B))) ~>: Ks), state(M)),
       tt)
     , SimpleRewrite(
-      T(k(KBExp(BExpAnd(BExpBool(BOOL(true)), BExpBool(B))) ~>: Ks), state(M)),
-      T(k(KBExp(BExpBool(B)) ~>: Ks), state(M)),
+      T(k(KBExp(BExpAnd(BExpBool(BOOL(true)), Be)) ~>: Ks), state(M)),
+      T(k(KBExp(Be) ~>: Ks), state(M)),
       tt)
     , SimpleRewrite(
-      T(k(KBExp(BExpAnd(BExpBool(BOOL(false)), BExpBool(B))) ~>: Ks), state(M)),
+      T(k(KBExp(BExpAnd(BExpBool(BOOL(false)), Be)) ~>: Ks), state(M)),
       T(k(KBExp(BExpBool(BOOL(false))) ~>: Ks), state(M)),
       tt)
     // Block
@@ -177,24 +188,93 @@ object Imp {
       T(k(KStmt(S) ~>: Ks), state(M)),
       tt)
     // strict
+    // AExpDiv
     , SimpleRewrite(
       T(k(KAExp(AExpDiv(E1, E2)) ~>: Ks), state(M)),
       T(k(KAExp(E1) ~>: freezerDiv0(E2) ~>: Ks), state(M)),
       BOOL.not(isKResult(KAExp(E1))))
     , SimpleRewrite(
-      T(k(KAExp(AExpDiv(AExpInt(I1), E2)) ~>: Ks), state(M)),
-      T(k(KAExp(E2) ~>: freezerDiv1(AExpInt(I1)) ~>: Ks), state(M)),
-      tt)
+      T(k(KAExp(E1) ~>: freezerDiv0(E2) ~>: Ks), state(M)),
+      T(k(KAExp(AExpDiv(E1, E2)) ~>: Ks), state(M)),
+      isKResult(KAExp(E1)))
     , SimpleRewrite(
-      T(k(KAExp(AExpInt(I1)) ~>: freezerDiv0(E2) ~>: Ks), state(M)),
-      T(k(KAExp(AExpDiv(AExpInt(I1), E2)) ~>: Ks), state(M)),
-      tt)
+      T(k(KAExp(AExpDiv(E1, E2)) ~>: Ks), state(M)),
+      T(k(KAExp(E2) ~>: freezerDiv1(E1) ~>: Ks), state(M)),
+      BOOL.and(isKResult(KAExp(E1), BOOL.not(isKResult(KAExp(E2))))))
     , SimpleRewrite(
-      T(k(KAExp(AExpInt(I2)) ~>: freezerDiv1(E1) ~>: Ks), state(M)),
-      T(k(KAExp(AExpDiv(E1, AExpInt(I2))) ~>: Ks), state(M)),
-      tt)
-
-
+      T(k(KAExp(E2) ~>: freezerDiv1(E1) ~>: Ks), state(M)),
+      T(k(KAExp(AExpDiv(E1, E2)) ~>: Ks), state(M)),
+      isKResult(KAExp(E2)))
+    // AExpPlus
+    , SimpleRewrite(
+      T(k(KAExp(AExpPlus(E1, E2)) ~>: Ks), state(M)),
+      T(k(KAExp(E1) ~>: freezerPlus0(E2) ~>: Ks), state(M)),
+      BOOL.not(isKResult(KAExp(E1))))
+    , SimpleRewrite(
+      T(k(KAExp(E1) ~>: freezerPlus0(E2) ~>: Ks), state(M)),
+      T(k(KAExp(AExpPlus(E1, E2)) ~>: Ks), state(M)),
+      isKResult(KAExp(E1)))
+    , SimpleRewrite(
+      T(k(KAExp(AExpPlus(E1, E2)) ~>: Ks), state(M)),
+      T(k(KAExp(E2) ~>: freezerPlus1(E1) ~>: Ks), state(M)),
+      BOOL.and(isKResult(KAExp(E1), BOOL.not(isKResult(KAExp(E2))))))
+    , SimpleRewrite(
+      T(k(KAExp(E2) ~>: freezerPlus1(E1) ~>: Ks), state(M)),
+      T(k(KAExp(AExpPlus(E1, E2)) ~>: Ks), state(M)),
+      isKResult(KAExp(E2)))
+    // BExpLeq
+    , SimpleRewrite(
+      T(k(KBExp(BExpLeq(E1, E2)) ~>: Ks), state(M)),
+      T(k(KAExp(E1) ~>: freezerLeq0(E2) ~>: Ks), state(M)),
+      BOOL.not(isKResult(KAExp(E1))))
+    , SimpleRewrite(
+      T(k(KAExp(E1) ~>: freezerLeq0(E2) ~>: Ks), state(M)),
+      T(k(KBExp(BExpLeq(E1, E2)) ~>: Ks), state(M)),
+      isKResult(KAExp(E1)))
+    , SimpleRewrite(
+      T(k(KBExp(BExpLeq(E1, E2)) ~>: Ks), state(M)),
+      T(k(KAExp(E2) ~>: freezerLeq1(E1) ~>: Ks), state(M)),
+      BOOL.and(isKResult(KAExp(E1), BOOL.not(isKResult(KAExp(E2))))))
+    , SimpleRewrite(
+      T(k(KAExp(E2) ~>: freezerLeq1(E1) ~>: Ks), state(M)),
+      T(k(KBExp(BExpLeq(E1, E2)) ~>: Ks), state(M)),
+      isKResult(KAExp(E2)))
+    // BExpNot
+    , SimpleRewrite(
+      T(k(KBExp(BExpNot(Be)) ~>: Ks), state(M)),
+      T(k(KBExp(Be) ~>: freezerNot0() ~>: Ks), state(M)),
+      BOOL.not(isKResult(KBExp(Be))))
+    , SimpleRewrite(
+      T(k(KBExp(Be) ~>: freezerNot0() ~>: Ks), state(M)),
+      T(k(KBExp(BExpNot(Be)) ~>: Ks), state(M)),
+      isKResult(KBExp(Be)))
+    // BExpAnd
+    , SimpleRewrite(
+      T(k(KBExp(BExpAnd(Be1, Be2)) ~>: Ks), state(M)),
+      T(k(KBExp(Be1) ~>: freezerAnd0(Be2) ~>: Ks), state(M)),
+      BOOL.not(isKResult(KBExp(Be1))))
+    , SimpleRewrite(
+      T(k(KBExp(Be1) ~>: freezerAnd0(Be2) ~>: Ks), state(M)),
+      T(k(KBExp(BExpAnd(Be1, Be2)) ~>: Ks), state(M)),
+      isKResult(KBExp(Be1)))
+    // StmtAssign
+    , SimpleRewrite(
+      T(k(KStmt(StmtAssign(X, E1)) ~>: Ks), state(M)),
+      T(k(KAExp(E1) ~>: freezerAssign1(X) ~>: Ks), state(M)),
+      BOOL.not(isKResult(KAExp(E1))))
+    , SimpleRewrite(
+      T(k(KAExp(E1) ~>: freezerAssign1(X) ~>: Ks), state(M)),
+      T(k(KStmt(StmtAssign(X, E1)) ~>: Ks), state(M)),
+      isKResult(KAExp(E1)))
+    // StmtIf
+    , SimpleRewrite(
+      T(k(KStmt(StmtIf(Be, Blk1, Blk2)) ~>: Ks), state(M)),
+      T(k(KBExp(Be) ~>: freezerIf0(Blk1, Blk2) ~>: Ks), state(M)),
+      BOOL.not(isKResult(KBExp(Be))))
+    , SimpleRewrite(
+      T(k(KBExp(Be) ~>: freezerIf0(Blk1, Blk2) ~>: Ks), state(M)),
+      T(k(KStmt(StmtIf(Be, Blk1, Blk2)) ~>: Ks), state(M)),
+      isKResult(KBExp(Be)))
   )
 
 }
