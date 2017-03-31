@@ -18,6 +18,7 @@ trait Att[T] {
 
 case class SimpleAtt[T](value: T) extends Att[T] {
   override def update(term: Term): Att[T] = this
+
   override def update(term: Term, oldChildren: Iterable[Term]): Att[T] = this
 }
 
@@ -53,7 +54,7 @@ trait HasAtt {
     this
   }
 
-  def updatePostProcess(oldTerm: Term): Unit = {
-
+  def updatePostProcess(oldTerm: Term): Term = {
+    this.setAtts(updatedAttributes(oldTerm.iterator().toSeq: _*))
   }
 }
