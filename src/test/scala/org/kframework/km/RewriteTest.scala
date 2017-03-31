@@ -150,7 +150,6 @@ class RewriteTest extends FreeSpec {
     val ifx0 = KStmt(StmtIf(BExpLeq(AExpId(x), AExpInt(INT(0))), y0, y1)) // if(x <= 0) { y = 0; } else { y = 1; }
     val N = Variable("N", SortInt)
     val kcell = k(kCons(ifx0, kNil()))
- // val scell = state(M) // TODO: why just state(m) doesn't work?
     val scell = state(MAP.storeOf(SortMapIdInt)(M, x, N)) // <state> M[x <- N] </state>
     val tcell = T(kcell,scell)
     val rewriter = new rewrite(declareDatatypes)
@@ -160,6 +159,13 @@ class RewriteTest extends FreeSpec {
     assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),N:Int),_(STRING(y)),INT(0)))) /\\ _==Bool_(BOOL(true),_<=Int_(N:Int,INT(0))), <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),N:Int),_(STRING(y)),INT(1)))) /\\ _==Bool_(BOOL(false),_<=Int_(N:Int,INT(0))))")
     // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),N:Int),_(STRING(y)),INT(0)))) /\ _==Bool_(BOOL(true),_<=Int_(N:Int,INT(0)))
     // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),N:Int),_(STRING(y)),INT(1)))) /\ _==Bool_(BOOL(false),_<=Int_(N:Int,INT(0)))
+
+    val scell2 = state(M)
+    val tcell2 = T(kcell,scell2)
+    val res2 = search(rules, SimplePattern(tcell2, BOOL(true)))
+    assert(res2.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(M:Map{Id,Int},_(STRING(y)),INT(0)))) /\\ _==Bool_(BOOL(true),_<=Int_(selectMapIdInt(M:Map{Id,Int},_(STRING(x))),INT(0))), <T>(<k>(.K()),<state>(storeMapIdInt(M:Map{Id,Int},_(STRING(y)),INT(1)))) /\\ _==Bool_(BOOL(false),_<=Int_(selectMapIdInt(M:Map{Id,Int},_(STRING(x))),INT(0))))")
+    // <T>(<k>(.K()),<state>(storeMapIdInt(M:Map{Id,Int},_(STRING(y)),INT(0)))) /\ _==Bool_(BOOL(true),_<=Int_(selectMapIdInt(M:Map{Id,Int},_(STRING(x))),INT(0)))
+    // <T>(<k>(.K()),<state>(storeMapIdInt(M:Map{Id,Int},_(STRING(y)),INT(1)))) /\ _==Bool_(BOOL(false),_<=Int_(selectMapIdInt(M:Map{Id,Int},_(STRING(x))),INT(0)))
   }
 
 }
