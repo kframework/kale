@@ -12,7 +12,8 @@ object Imp {
   // signature
 
   val Id = SortOf("Id")
-  val ListId = SortList(Id)
+  val ListId = SortOf("ListId") // SortList(Id) // TODO: ???
+  val ListK = SortOf("ListK") // TODO: ???
 
   val AExp = SortOf("AExp")
   val BExp = SortOf("BExp")
@@ -53,11 +54,11 @@ object Imp {
   val Cell = SortOf("Cell")
 
   val T = new Constructor1("<T>:Cell*Cell->Cell", "tCell", (Seq(Cell, Cell), Cell))
-  val k = new Constructor1("<k>:List{K}->Cell", "kCell", (Seq(SortListK), Cell))
+  val k = new Constructor1("<k>:List{K}->Cell", "kCell", (Seq(ListK), Cell))
   val state = new Constructor1("<state>:Map{Id,Int}->Cell", "stateCell", (Seq(SortMapK), Cell))
 
-  val kCons = new Constructor1("_~>_:K*List{K}->List{K}", "kCons", (Seq(SortK, SortListK), SortListK))
-  val kNil = new Constructor1(".K:->List{K}", "kNil", (Seq(), SortListK))
+  val kCons = new Constructor1("_~>_:K*List{K}->List{K}", "kCons", (Seq(SortK, ListK), ListK))
+  val kNil = new Constructor1(".K:->List{K}", "kNil", (Seq(), ListK))
 
   // rules
 
@@ -71,7 +72,7 @@ object Imp {
   val S = Variable("S", Stmt)
   val S1 = Variable("S1", Stmt)
   val S2 = Variable("S2", Stmt)
-  val Ks = Variable("Ks", SortListK)
+  val Ks = Variable("Ks", ListK)
   val Be = Variable("Be", BExp)
   val Be1 = Variable("Be1", BExp)
   val Be2 = Variable("Be2", BExp)
@@ -91,6 +92,13 @@ object Imp {
   val freezerAssign1 = new Constructor1("freezer_=_;1:Id->K",                 "freezerAssign1", (Seq(Id), SortK))
   val freezerIf0     = new Constructor1("freezerif(_){_}else{_}0:Stmt*Stmt->K", "freezerIf0"    , (Seq(Stmt, Stmt), SortK))
 
+  val constructors1 = Seq(IdOf, AExpInt, AExpId, AExpDiv, AExpPlus, BExpBool, BExpLeq, BExpNot, BExpAnd, StmtAssign, StmtIf, StmtWhile, StmtSeq, StmtSkip, PgmOf, IdsCons, IdsNil, KAExp, KBExp, KStmt, KPgm, kCons, kNil, freezerDiv0, freezerDiv1, freezerPlus0, freezerPlus1, freezerLeq0, freezerLeq1, freezerNot0, freezerAnd0, freezerAssign1, freezerIf0)
+  val constructors2 = Seq(T, k, state)
+  val declareDatatypes1 = z3.declareDatatypes(constructors1)
+  val declareDatatypes2 = z3.declareDatatypes(constructors2)
+  val declareDatatypes = declareDatatypes1 + declareDatatypes2
+  val constructors = constructors1 ++ constructors2
+  val datatypes = constructors.flatMap(s => s.signature._1.toSet + s.signature._2).toSet
 
   object isKResult extends Symbol {
     override val name: String = "isKResult"

@@ -1,12 +1,13 @@
 package org.kframework.km
 
-class rewrite {
+class rewrite(val declareDatatypes: String) {
 
   import term._
   import builtin._
   import unification._
 
   private var cntRename: Int = 0
+  var datatypes: Set[Sort] = Set()
 
   def applyRule(rule: SimpleRewrite, term: SimplePattern): Seq[SimplePattern] = { cntRename += 1
     // rule:  l => r if c
@@ -24,7 +25,7 @@ class rewrite {
         val _c = c.subst(u.subst)
         val _p_c_u = BOOL.and(BOOL.and(_p, _c), u.constraint)
 
-        if (z3.sat(_p_c_u)) {
+        if (z3.sat(declareDatatypes, datatypes)(_p_c_u)) {
           val _r = r.subst(u.subst)
           Seq(SimplePattern(_r, _p_c_u))
         } else {

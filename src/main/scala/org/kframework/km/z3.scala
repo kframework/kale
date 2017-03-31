@@ -35,17 +35,17 @@ object z3 {
   case class Fail(msg: String) extends Exception
 
   @throws(classOf[Fail])
-  def sat(term: Term): Boolean = {
-    val query = declare(term) + "\n(assert " + encode(term) + ")\n" + "(check-sat)\n"
+  def sat(declareDatatypes: String, datatypes: Set[Sort])(term: Term): Boolean = {
+    val query = declare(declareDatatypes, datatypes)(term) + "\n(assert " + encode(term) + ")\n" + "(check-sat)\n"
     val (exitValue, stdout, stderr) = run(query)
     if (exitValue == 0) stdout == "sat"
     else throw Fail(stdout + stderr)
   }
 
   @throws(classOf[Fail])
-  def implies(t1: Term, t2: Term): Boolean = {
+  def implies(declareDatatypes: String, datatypes: Set[Sort])(t1: Term, t2: Term): Boolean = {
     // t1 -> t2 valid  iff  t1 /\ !t2 unsat
-    !sat(BOOL.and(t1, BOOL.not(t2)))
+    !sat(declareDatatypes, datatypes)(BOOL.and(t1, BOOL.not(t2)))
   }
 
   def encode(term: Term): String = term match {
@@ -55,49 +55,47 @@ object z3 {
     case c:Constant => c.smt
   }
 
-  def declare(term: Term): String = {
-    trait Decl; case class Ctr(t: Symbol) extends Decl; case class Fun(t: Term) extends Decl
-    // gather symbols and variables, where variables are supposed to be encoded as constants
-    def getDecls(term: Term): Set[Decl] = term match {
+  def declare(declareDatatypes: String, datatypes: Set[Sort])(term: Term): String = {
+    // gather functional symbols and variables, where variables are supposed to be encoded as constants
+    def getFunctionSymbols(term: Term): Set[Any] = term match {
       case Application(symbol, children) =>
-        val decls = children.flatMap(getDecls).toSet
-        if (symbol.smtBuiltin) decls else decls + Ctr(symbol)
-      case _:Variable => Set(Fun(term))
+        val decls = children.flatMap(getFunctionSymbols).toSet
+        if (!symbol.smtBuiltin && symbol.isFunctional) decls + symbol
+        else decls
+      case _:Variable => Set(term)
       case _:Constant => Set()
     }
-    val decls = getDecls(term)
-    val (ctrs,funs) = decls.partition(_.isInstanceOf[Ctr])
-    // constructor symbols group by the image sorts, as `datatypes`
-    val declCtrs: String =
-    "(declare-datatypes () (\n" +
-      ctrs.groupBy({case Ctr(t) => t.signature._2})
-        .map({case (sort, ctrs) =>
-            "  (" + sort.smt + "\n" +
-              ctrs.map({case Ctr(sym) =>
-                "    (" + sym.smt + " " + sym.signature._1.zipWithIndex.map({case (s,i) => "(" + sym.smt + i + " " + s.smt + ")"}).mkString(" ") + ")\n"
-              }).mkString +
-            "  )\n"
-        }).mkString +
-    "))\n"
+    val symbols = getFunctionSymbols(term)
     // function (i.e., non-constructor) symbols
     // - variables and zero-argument symbols as `const`
     // - non-zero-argument symbols as `fun`
-    val declFuns: String = funs.map({
-        case Fun(Variable(name, sort)) => "(declare-const " + name + " " + sort.smt + ")\n"
-        case Fun(sym:Symbol) if sym.signature._1 == Seq() => "(declare-const " + sym.smt + " " + sym.signature._2.smt + ")\n"
-        case Fun(sym:Symbol) => "(declare-fun " + sym.smt + " (" + sym.signature._1.map(_.smt).mkString(" ") + ") " + sym.signature._2.smt + ")\n"
+    val declareFuns: String = symbols.map({
+        case Variable(name, sort) => "(declare-const " + name + " " + sort.smt + ")\n"
+        case sym:Symbol if sym.signature._1 == Seq() => "(declare-const " + sym.smt + " " + sym.signature._2.smt + ")\n"
+        case sym:Symbol => "(declare-fun " + sym.smt + " (" + sym.signature._1.map(_.smt).mkString(" ") + ") " + sym.signature._2.smt + ")\n"
       }).mkString
     // remaining sorts not defined by constructor datatypes
-    val sorts = decls.flatMap({
-      case Ctr(symbol) => symbol.signature._1.toSet + symbol.signature._2
-      case Fun(symbol:Symbol) => symbol.signature._1.toSet + symbol.signature._2
-      case Fun(Variable(_, sort)) => Set(sort)
-    }) -- decls.flatMap({
-      case Ctr(symbol) => Set(symbol.signature._2)
-      case Fun(_) => Set[Sort]()
+    val sorts = symbols.flatMap({
+      case symbol:Symbol => symbol.signature._1.toSet + symbol.signature._2
+      case Variable(_, sort) => Set(sort)
     })
-    val declSorts = sorts.map(sort => if (sort.smtBuiltin) "" else "(declare-sort " + sort.smt + ")\n").mkString
-    declCtrs + declSorts + declFuns
+    val declareSorts = (sorts -- datatypes)
+      .map(sort => if (sort.smtBuiltin) "" else "(declare-sort " + sort.smt + ")\n").mkString
+    declareDatatypes + declareSorts + declareFuns
+  }
+
+  def declareDatatypes(symbols: Seq[Symbol]): String = {
+    "(declare-datatypes () (\n" +
+      symbols.filter(sym => !sym.isFunctional && !sym.smtBuiltin)
+        .groupBy(_.signature._2)
+        .map({case (sort, syms) =>
+          "  (" + sort.smt + "\n" +
+            syms.map(sym =>
+              "    (" + sym.smt + " " + sym.signature._1.zipWithIndex.map({case (s,i) => "(" + sym.smt + i + " " + s.smt + ")"}).mkString(" ") + ")\n"
+            ).mkString +
+            "  )\n"
+        }).mkString +
+    "))\n"
   }
 
 }

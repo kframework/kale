@@ -7,20 +7,22 @@ class RewriteTest extends FreeSpec {
   import term._
   import builtin._
 
-  val rewriter = new rewrite()
-  import rewriter._
-
-  val tt = BOOL(true)
-
   "simple" in {
+    val tt = BOOL(true)
+
     val x = Variable("x", SortK)
     val y = Variable("y", SortK)
     val z = Variable("z", SortK)
 
-    val a = Application(new Constructor("a", (Seq(),SortK)), Seq())
-    val b = Application(new Constructor("b", (Seq(),SortK)), Seq())
-    val c = Application(new Constructor("c", (Seq(),SortK)), Seq())
-    val d = Application(new Constructor("d", (Seq(),SortK)), Seq())
+    val al = new Constructor("a", (Seq(),SortK))
+    val bl = new Constructor("b", (Seq(),SortK))
+    val cl = new Constructor("c", (Seq(),SortK))
+    val dl = new Constructor("d", (Seq(),SortK))
+
+    val a = Application(al, Seq())
+    val b = Application(bl, Seq())
+    val c = Application(cl, Seq())
+    val d = Application(dl, Seq())
 
     val r1 = SimpleRewrite(a, b, tt)
     val r2 = SimpleRewrite(b, c, tt)
@@ -28,6 +30,9 @@ class RewriteTest extends FreeSpec {
     val r4 = SimpleRewrite(a, c, tt)
 
     val t1 = SimplePattern(a, tt)
+
+    val rewriter = new rewrite(z3.declareDatatypes(Seq(al,bl,cl,dl)))
+    import rewriter._
 
     // rule a => b
     // a => [ b ]
@@ -52,6 +57,8 @@ class RewriteTest extends FreeSpec {
   }
 
   "symbolic" in {
+    val tt = BOOL(true)
+
     val x = Variable("x", SortInt)
     val y = Variable("y", SortInt)
     val z = Variable("z", SortInt)
@@ -66,14 +73,20 @@ class RewriteTest extends FreeSpec {
     val xge0 = INT.ge(x, INT(0))
     val xlt0 = INT.lt(x, INT(0))
 
-    val c = Application(new Constructor("c", (Seq(),SortK)), Seq())
-    val d = Application(new Constructor("d", (Seq(),SortK)), Seq())
+    val cl = new Constructor("c", (Seq(),SortK))
+    val dl = new Constructor("d", (Seq(),SortK))
+
+    val c = Application(cl, Seq())
+    val d = Application(dl, Seq())
 
     val r1 = SimpleRewrite(px, qx, xgt0)
     val r2 = SimpleRewrite(qx, c, xge0)
     val r3 = SimpleRewrite(qx, d, xlt0)
 
     val t1 = SimplePattern(px, tt)
+
+    val rewriter = new rewrite(z3.declareDatatypes(Seq(p,q,cl,dl)))
+    import rewriter._
 
     // rule p(x:Int) => q(x) if x > 0
     // p(x) =*=> [ q(x) /\ x > 0 ]
@@ -87,13 +100,17 @@ class RewriteTest extends FreeSpec {
   }
 
   "z3" in {
-    val a = Application(new Constructor("a", (Seq(),SortK)), Seq())
-    val b = Application(new Constructor("b", (Seq(),SortK)), Seq())
+    val a = new Constructor("a", (Seq(),SortK))
+    val b = new Constructor("b", (Seq(),SortK))
+    val decl = z3.declareDatatypes(Seq(a,b))
 
-    assert(z3.sat(BOOL(true)))
-    assert(!z3.sat(BOOL(false)))
+    val aa = Application(a, Seq())
+    val bb = Application(b, Seq())
+
+    assert(z3.sat("",Set())(BOOL(true)))
+    assert(!z3.sat("",Set())(BOOL(false)))
 //    assert(try { z3.sat("(check-sat"); false } catch { case z3.Fail(msg) => msg  == "(error \"line 1 column 2: invalid command, symbol expected\")" })
-    assert(!z3.sat(EQ.of(SortK)(a,b)))
+    assert(!z3.sat(decl,Set())(EQ.of(SortK)(aa,bb)))
   }
 
   "0.imp" in {
@@ -103,6 +120,8 @@ class RewriteTest extends FreeSpec {
     val kcell = k(kCons(x0, kNil()))
     val scell = state(M)
     val tcell = T(kcell,scell)
+    val rewriter = new rewrite(declareDatatypes)
+    import rewriter._
     val res = search(rules, SimplePattern(tcell, BOOL(true)))
     assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(INT(0)))))) /\\ BOOL(true))")
   }
@@ -116,6 +135,8 @@ class RewriteTest extends FreeSpec {
     val kcell = k(kCons(x0, kCons(yx1, kNil())))
     val scell = state(M)
     val tcell = T(kcell,scell)
+    val rewriter = new rewrite(declareDatatypes)
+    import rewriter._
     val res = search(rules, SimplePattern(tcell, BOOL(true)))
     assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(INT(0)))),_(_(_(STRING(y)))),_(_(INT(1)))))) /\\ BOOL(true))")
   }
@@ -126,13 +147,19 @@ class RewriteTest extends FreeSpec {
     val y = IdOf(STRING("y"))
     val y0 = StmtAssign(y, AExpInt(INT(0))) // y = 0;
     val y1 = StmtAssign(y, AExpInt(INT(1))) // y = 1;
-    val ifx0 = KStmt(StmtIf(BExpLeq(AExpId(x), AExpInt(INT(0))), y0, y1))
+    val ifx0 = KStmt(StmtIf(BExpLeq(AExpId(x), AExpInt(INT(0))), y0, y1)) // if(x <= 0) { y = 0; } else { y = 1; }
+    val N = Variable("N", SortInt)
     val kcell = k(kCons(ifx0, kNil()))
-    val scell = state(M)
+ // val scell = state(M) // TODO: why just state(m) doesn't work?
+    val scell = state(MAP_K.store(M, KAExp(AExpId(x)), KAExp(AExpInt(N)))) // <state> M[x <- N] </state>
     val tcell = T(kcell,scell)
+    val rewriter = new rewrite(declareDatatypes)
+    rewriter.datatypes = datatypes
+    import rewriter._
     val res = search(rules, SimplePattern(tcell, BOOL(true)))
-    println(res)
-//    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(INT(0)))),_(_(_(STRING(y)))),_(_(INT(1)))))) /\\ BOOL(true))")
+    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(N:Int))),_(_(_(STRING(y)))),_(_(INT(0)))))) /\\ _==Bool_(BOOL(true),_<=Int_(N:Int,INT(0))), <T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(N:Int))),_(_(_(STRING(y)))),_(_(INT(1)))))) /\\ _==Bool_(BOOL(false),_<=Int_(N:Int,INT(0))))")
+    // <T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(N:Int))),_(_(_(STRING(y)))),_(_(INT(0)))))) /\ _==Bool_(BOOL(true),_<=Int_(N:Int,INT(0)))
+    // <T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(N:Int))),_(_(_(STRING(y)))),_(_(INT(1)))))) /\ _==Bool_(BOOL(false),_<=Int_(N:Int,INT(0)))
   }
 
 }
