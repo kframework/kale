@@ -2,7 +2,7 @@ package org.kframework.kale.default
 
 import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kale.context.{Context1ApplicationLabel}
+import org.kframework.kale.context.Context1ApplicationLabel
 
 import scala.collection._
 import scala.Iterable
