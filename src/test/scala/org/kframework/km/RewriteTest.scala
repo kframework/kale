@@ -120,4 +120,19 @@ class RewriteTest extends FreeSpec {
     assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(INT(0)))),_(_(_(STRING(y)))),_(_(INT(1)))))) /\\ BOOL(true))")
   }
 
+  "2.imp" in {
+    import Imp._
+    val x = IdOf(STRING("x"))
+    val y = IdOf(STRING("y"))
+    val y0 = StmtAssign(y, AExpInt(INT(0))) // y = 0;
+    val y1 = StmtAssign(y, AExpInt(INT(1))) // y = 1;
+    val ifx0 = KStmt(StmtIf(BExpLeq(AExpId(x), AExpInt(INT(0))), y0, y1))
+    val kcell = k(kCons(ifx0, kNil()))
+    val scell = state(M)
+    val tcell = T(kcell,scell)
+    val res = search(rules, SimplePattern(tcell, BOOL(true)))
+    println(res)
+//    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(INT(0)))),_(_(_(STRING(y)))),_(_(INT(1)))))) /\\ BOOL(true))")
+  }
+
 }

@@ -69,14 +69,16 @@ object z3 {
     val (ctrs,funs) = decls.partition(_.isInstanceOf[Ctr])
     // constructor symbols group by the image sorts, as `datatypes`
     val declCtrs: String =
+    "(declare-datatypes () (\n" +
       ctrs.groupBy({case Ctr(t) => t.signature._2})
         .map({case (sort, ctrs) =>
-            "(declare-datatypes () ((" + sort.smt + "\n" +
+            "  (" + sort.smt + "\n" +
               ctrs.map({case Ctr(sym) =>
-                "(" + sym.smt + sym.signature._1.zipWithIndex.map({case (s,i) => "(" + sym.smt + i + " " + s.smt + ")"}).mkString(" ") + ")\n"
+                "    (" + sym.smt + " " + sym.signature._1.zipWithIndex.map({case (s,i) => "(" + sym.smt + i + " " + s.smt + ")"}).mkString(" ") + ")\n"
               }).mkString +
-            ")))\n"
-        }).mkString
+            "  )\n"
+        }).mkString +
+    "))\n"
     // function (i.e., non-constructor) symbols
     // - variables and zero-argument symbols as `const`
     // - non-zero-argument symbols as `fun`
@@ -95,7 +97,7 @@ object z3 {
       case Fun(_) => Set[Sort]()
     })
     val declSorts = sorts.map(sort => if (sort.smtBuiltin) "" else "(declare-sort " + sort.smt + ")\n").mkString
-    declSorts + declFuns + declCtrs
+    declCtrs + declSorts + declFuns
   }
 
 }
