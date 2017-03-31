@@ -1,7 +1,6 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard._
-import org.kframework.kale.free.{FreeLabel1, FreeLabel2, FreeLabel3}
 import org.kframework.kale.util.Implicits
 import org.scalatest.FreeSpec
 
@@ -179,7 +178,7 @@ object IMP {
   env.seal()
 
   val matcher = Matcher(env).applier
-  val substitutionApplier = SubstitutionApply(env)
+  val substitutionApplier = StandardSubstitution(env)
   val rewrite = Rewriter(substitutionApplier, matcher, env)(rules)
 }
 

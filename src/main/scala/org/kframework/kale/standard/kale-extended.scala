@@ -19,13 +19,13 @@ case class SimpleEqualityLabel(implicit val env: CurrentEnvironment) extends Nam
       import org.kframework.kale.util.StaticImplicits._
       val Variable = env.Variable
       _1.label match {
-        case `Variable` if !_2.contains(_1) => createBinding(_1.asInstanceOf[Variable], _2)
+        case `Variable` if !_2.contains(_1) => binding(_1.asInstanceOf[Variable], _2)
         case _ => new Equality(_1, _2)
       }
     }
   }
 
-  def createBinding(_1: Variable, _2: Term): Binding = {
+  override def binding(_1: Variable, _2: Term): Binding = {
     import org.kframework.kale.util.StaticImplicits._
     assert(!_2.contains(_1))
     new Binding(_1.asInstanceOf[Variable], _2)

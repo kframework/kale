@@ -1,8 +1,7 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
-import org.kframework.kale.standard.{CurrentEnvironment, FreeLabel0, FreeLabel1, FreeLabel2}
-import org.kframework.kale.free.{FreeLabel1, FreeLabel2}
+import org.kframework.kale.standard.{Rewrite => _, _}
 import org.kframework.kale.util.Implicits
 import org.scalactic.Prettifier
 
@@ -54,7 +53,7 @@ trait TestSetup {
 
   implicit val unifier = new Matcher(env).applier
 
-  val substitutionApplier = SubstitutionApply(env)
+  val substitutionApplier = StandardSubstitution(env)
 
   val X_1 = AnywhereContext.hole(X)
 

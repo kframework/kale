@@ -1,17 +1,12 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale.{standard, _}
+import standard._
 import org.kframework.kale.context.{AnywhereContextApplicationLabel, PatternContextApplicationLabel}
 import org.kframework.kale.util.Util
-import org.kframework.minikore.interfaces.pattern
 
-/**
-  * Created by cos on 3/31/17.
-  */
 class CurrentEnvironment extends Environment {
   implicit private val tthis = this
-
-  import standard._
 
   val Variable = standard.SimpleVariableLabel()
 

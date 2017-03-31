@@ -1,5 +1,6 @@
 package org.kframework.kale
 
+import org.kframework.kale.standard.Binding
 import org.kframework.minikore.interfaces.pattern
 
 trait FormulaLabel
@@ -63,7 +64,9 @@ trait OrLabel extends AssocCommLabel with FormulaLabel
 
 trait RewriteLabel extends Label2
 
-trait EqualityLabel extends Label2 with FormulaLabel
+trait EqualityLabel extends Label2 with FormulaLabel {
+  def binding(_1: Variable, _2: Term): Binding
+}
 
 trait And extends Assoc with pattern.And {
   val formulas: Term
