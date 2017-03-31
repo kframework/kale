@@ -11,14 +11,14 @@ trait Label extends MemoizedHashCode with pattern.Symbol {
 
   val id: Int = env.register(this)
 
-  override def equals(other: Any) = other match {
+  override def equals(other: Any): Boolean = other match {
     case that: Label => this.name == that.name
     case _ => false
   }
 
-  override def computeHashCode = name.hashCode
+  override def computeHashCode: Int = name.hashCode
 
-  override def toString = name
+  override def toString: String = name
 
   // FOR KORE
   def str: String = name
@@ -26,7 +26,7 @@ trait Label extends MemoizedHashCode with pattern.Symbol {
 
 trait NodeLabel extends Label {
   def unapplySeq(t: Term): Option[Seq[Term]] = t match {
-    case t: Node if t.label == this => Some(t.iterator.toSeq)
+    case t: Node if t.label == this => Some(t.iterator().toSeq)
     case _ => None
   }
 
@@ -60,19 +60,19 @@ trait Term extends Iterable[Term] with pattern.Pattern with HasAtt {
   def iterator(): Iterator[Term]
 
   // TODO: better implementation
-  override def hashCode = this.label.hashCode
+  override def hashCode: Int = this.label.hashCode
 }
 
 object Node {
   def unapply(t: Term): Option[(NodeLabel, Iterator[Term])] = t match {
-    case t: Node => Some(t.label, t.iterator)
+    case t: Node => Some(t.label, t.iterator())
     case _ => None
   }
 }
 
 trait Node extends Term with Product with tree.Node {
   // FOR KORE
-  override def args: Seq[pattern.Pattern] = iterator.toSeq
+  override def args: Seq[pattern.Pattern] = iterator().toSeq
 
   override def build(children: Seq[pattern.Pattern]): pattern.Pattern = {
     // downcasting to Term, but it will fail somewhere in Label
@@ -91,13 +91,13 @@ trait Node extends Term with Product with tree.Node {
 
   protected def innerUpdateAt(i: Int, t: Term): Term
 
-  def iterator: Iterator[Term]
+  def iterator(): Iterator[Term]
 
-  override def toString = label + "(" + iterator.mkString(", ") + ")"
+  override def toString: String = label + "(" + iterator().mkString(", ") + ")"
 }
 
 trait Leaf[T] extends Term {
-  def iterator = Iterator.empty
+  def iterator(): Iterator[Term] = Iterator.empty
 
   def updateAt(i: Int)(t: Term): Term = throw new IndexOutOfBoundsException("Leaves have no children. Trying to update index _" + i)
 
@@ -115,7 +115,7 @@ trait NameFromObject {
 
 trait ConstantLabel[T] extends LeafLabel[T] {
 
-  def apply(v: T) = new Constant(this, v)
+  def apply(v: T) = Constant(this, v)
 
   def interpret(s: String): Constant[T] = this (internalInterpret(s))
 
@@ -132,9 +132,9 @@ case class Constant[T](label: ConstantLabel[T], value: T) extends Leaf[T] with p
     symbol.asInstanceOf[ConstantLabel[_]].interpret(content)
   }
 
-  def _1 = label
+  def _1: ConstantLabel[T] = label
 
-  def _2 = value.toString
+  def _2: String = value.toString
 
   // /FOR KORE
 
@@ -179,7 +179,7 @@ trait FormulaLabel
 trait TruthLabel extends LeafLabel[Boolean] with FormulaLabel
 
 case class SimpleTruthLabel(implicit val env: Environment) extends NameFromObject with TruthLabel {
-  def apply(v: Boolean) = if (v) env.Top else env.Bottom
+  def apply(v: Boolean): Truth with tree.Node0 = if (v) env.Top else env.Bottom
 }
 
 class Truth(val value: Boolean)(implicit val env: Environment) extends Leaf[Boolean] {
@@ -192,7 +192,7 @@ private case class TopInstance(implicit eenv: Environment) extends Truth(true) w
 
   def asMap = Map()
 
-  override def toString = "⊤"
+  override def toString: String =  "⊤"
 
   def apply(t: Term): Term = t
 
@@ -201,7 +201,7 @@ private case class TopInstance(implicit eenv: Environment) extends Truth(true) w
 }
 
 private case class BottomInstance(implicit eenv: Environment) extends Truth(false) with pattern.Bottom {
-  override def toString = "⊥"
+  override def toString: String =  "⊥"
 
   // FOR KORE
   override def build(): pattern.Bottom = this
@@ -274,14 +274,14 @@ trait PurelyFunctionalLabel4 extends Label4 with FunctionLabel {
 
 // Fixed-arity
 
-trait Label0 extends Function0[Term] with NodeLabel {
+trait Label0 extends (() => Term) with NodeLabel {
   val arity = 0
 
   def apply(): Term
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply()
 
-  override def toString = super[NodeLabel].toString
+  override def toString: String =  super[NodeLabel].toString
 }
 
 trait Label1 extends (Term => Term) with NodeLabel {
@@ -291,7 +291,7 @@ trait Label1 extends (Term => Term) with NodeLabel {
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head)
 
-  override def toString = super[NodeLabel].toString
+  override def toString: String =  super[NodeLabel].toString
 }
 
 trait Label2 extends ((Term, Term) => Term) with NodeLabel {
@@ -306,7 +306,7 @@ trait Label2 extends ((Term, Term) => Term) with NodeLabel {
     case _ => None
   }
 
-  override def toString = super[NodeLabel].toString
+  override def toString: String =  super[NodeLabel].toString
 }
 
 trait Label3 extends NodeLabel {
@@ -316,7 +316,7 @@ trait Label3 extends NodeLabel {
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head)
 
-  override def toString = super[NodeLabel].toString
+  override def toString: String =  super[NodeLabel].toString
 }
 
 trait Label4 extends NodeLabel {
@@ -326,7 +326,7 @@ trait Label4 extends NodeLabel {
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head)
 
-  override def toString = super[NodeLabel].toString
+  override def toString: String =  super[NodeLabel].toString
 }
 
 trait Label5 extends NodeLabel {
@@ -336,7 +336,7 @@ trait Label5 extends NodeLabel {
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head, l.tail.tail.tail.tail.head)
 
-  override def toString = super[NodeLabel].toString
+  override def toString: String =  super[NodeLabel].toString
 }
 
 trait Label6 extends NodeLabel {
@@ -346,7 +346,7 @@ trait Label6 extends NodeLabel {
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head, l.tail.tail.tail.tail.head, l.tail.tail.tail.tail.tail.head)
 
-  override def toString = super[NodeLabel].toString
+  override def toString: String =  super[NodeLabel].toString
 }
 
 trait Node0 extends Node {
@@ -356,7 +356,7 @@ trait Node0 extends Node {
 
   def innerUpdateAt(i: Int, t: Term): Term = throw new AssertionError("unreachable code")
 
-  def iterator = Iterator.empty
+  def iterator(): Iterator[Term] = Iterator.empty
 
   def copy(): Term = label().setAtts(updatedAttributes())
 }
@@ -364,13 +364,13 @@ trait Node0 extends Node {
 trait Node1 extends Node with Product1[Term] {
   val label: Label1
 
-  val isGround = _1.isGround
+  val isGround: Boolean = _1.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 0 => label(t)
   }
 
-  def iterator = Iterator(_1)
+  def iterator() = Iterator(_1)
 
   def copy(_1: Term): Term = label(_1).setAtts(updatedAttributes(_1))
 
@@ -381,14 +381,14 @@ trait Node1 extends Node with Product1[Term] {
 trait Node2 extends Node with Product2[Term, Term] {
   val label: Label2
 
-  lazy val isGround = _1.isGround && _2.isGround
+  lazy val isGround: Boolean = _1.isGround && _2.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 0 => label(t, _2)
     case 1 => label(_1, t)
   }
 
-  def iterator = Iterator(_1, _2)
+  def iterator() = Iterator(_1, _2)
 
   def copy(_1: Term, _2: Term): Term = label(_1, _2).setAtts(updatedAttributes(_1, _2))
 
@@ -399,7 +399,7 @@ trait Node2 extends Node with Product2[Term, Term] {
 trait Node3 extends Node with Product3[Term, Term, Term] {
   val label: Label3
 
-  val isGround = _1.isGround && _2.isGround && _3.isGround
+  val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 0 => label(t, _2, _3)
@@ -409,13 +409,13 @@ trait Node3 extends Node with Product3[Term, Term, Term] {
 
   def copy(_1: Term, _2: Term, _3: Term): Term = label(_1, _2, _3).setAtts(updatedAttributes(_1, _2, _3))
 
-  def iterator = Iterator(_1, _2, _3)
+  def iterator() = Iterator(_1, _2, _3)
 }
 
 trait Node4 extends Node with Product4[Term, Term, Term, Term] {
   val label: Label4
 
-  val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround
+  val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 0 => label(t, _2, _3, _4)
@@ -426,13 +426,13 @@ trait Node4 extends Node with Product4[Term, Term, Term, Term] {
 
   def copy(_1: Term, _2: Term, _3: Term, _4: Term): Term = label(_1, _2, _3, _4).setAtts(updatedAttributes(_1, _2, _3, _4))
 
-  def iterator = Iterator(_1, _2, _3, _4)
+  def iterator() = Iterator(_1, _2, _3, _4)
 }
 
 trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
   val label: Label5
 
-  val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround
+  val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 0 => label(t, _2, _3, _4, _5)
@@ -444,13 +444,13 @@ trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
 
   def copy(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term): Term = label(_1, _2, _3, _4, _5).setAtts(updatedAttributes(_1, _2, _3, _4, _5))
 
-  def iterator = Iterator(_1, _2, _3, _4, _5)
+  def iterator() = Iterator(_1, _2, _3, _4, _5)
 }
 
 trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
   val label: Label6
 
-  val isGround = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround && _6.isGround
+  val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround && _6.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 0 => label(t, _2, _3, _4, _5, _6)
@@ -463,7 +463,7 @@ trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
 
   def copy(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term): Term = label(_1, _2, _3, _4, _5, _6).setAtts(updatedAttributes(_1, _2, _3, _4, _5, _6))
 
-  def iterator = Iterator(_1, _2, _3, _4, _5, _6)
+  def iterator() = Iterator(_1, _2, _3, _4, _5, _6)
 }
 
 // AC stuff
@@ -475,7 +475,7 @@ trait HasId {
 trait AssocLabel extends Label2 {
   def apply(l: Iterable[Term]): Term
 
-  val thisthis = this
+  private val thisthis = this
 
   def asList(t: Term): Iterable[Term] = t.label match {
     case `thisthis` => t.asInstanceOf[Assoc].assocIterable
@@ -491,7 +491,7 @@ trait AssocLabel extends Label2 {
 trait AssocWithIdLabel extends AssocLabel with HasId {
 
   // normalizing
-  def apply(_1: Term, _2: Term) = {
+  def apply(_1: Term, _2: Term): Term = {
     val l1 = asIterable(_1)
     val l2 = asIterable(_2)
     construct(l1 ++ l2)
@@ -574,7 +574,7 @@ abstract class Named(val name: String)
 
 trait BinaryInfix {
   self: Node2 =>
-  override def toString = _1 + " " + label.name + " " + _2
+  override def toString: String =  _1 + " " + label.name + " " + _2
 }
 
 // Free nodes
