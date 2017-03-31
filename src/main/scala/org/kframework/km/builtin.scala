@@ -163,6 +163,11 @@ object builtin {
 //    object eqBool extends eq { override val name: String = "_==Bool_"; override val signature: Type = (Seq(SortBool, SortBool), SortBool) }
   }
 
+  /*
+     general Map[K,K] doesn't work.
+     suppose we have a symbolic map M, and we lookup a key X, which returns M[X].
+     now the expression M[X] is of sort K, and can be matched any kind of statements on the top of the <k> cell.
+   */
   object MAP {
     case class NotFound() extends ControlThrowable
 
