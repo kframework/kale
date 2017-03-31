@@ -68,6 +68,8 @@ trait Term extends Iterable[Term] with pattern.Pattern {
 
   // TODO: better implementation
   override def hashCode: Int = this.label.hashCode
+
+  def copy(children: Seq[Term]): Term
 }
 
 object Node {
@@ -83,7 +85,7 @@ trait Node extends Term with Product with tree.Node {
 
   override def build(children: Seq[pattern.Pattern]): pattern.Pattern = {
     // downcasting to Term, but it will fail somewhere in Label
-    label(children.asInstanceOf[Seq[Term]])
+    copy(children.asInstanceOf[Seq[Term]])
   }
 
   // /FOR KORE
@@ -101,6 +103,8 @@ trait Node extends Term with Product with tree.Node {
   def iterator(): Iterator[Term]
 
   override def toString: String = label + "(" + iterator().mkString(", ") + ")"
+
+  def copy(children: Seq[Term]): Term
 }
 
 trait Leaf[T] extends Term {
@@ -114,6 +118,11 @@ trait Leaf[T] extends Term {
   override def toString: String = label + "(" + value.toString + ")"
 
   def copy(): Term = label(value).updatePostProcess(this)
+
+  def copy(children: Seq[Term]): Term = {
+    assert(children.isEmpty)
+    copy()
+  }
 }
 
 trait NameFromObject {
@@ -366,6 +375,11 @@ trait Node0 extends Node {
   def iterator(): Iterator[Term] = Iterator.empty
 
   def copy(): Term = label().updatePostProcess(this)
+
+  override def copy(children: Seq[Term]): Term = {
+    assert(children.isEmpty)
+    copy()
+  }
 }
 
 trait Node1 extends Node with Product1[Term] {
@@ -380,6 +394,11 @@ trait Node1 extends Node with Product1[Term] {
   def iterator() = Iterator(_1)
 
   def copy(_1: Term): Term = label(_1).updatePostProcess(this)
+
+  override def copy(children: Seq[Term]): Term = {
+    assert(children.size == 1)
+    copy(children.head)
+  }
 
   // FOR KORE
   def build(_1: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label2](_1.asInstanceOf[Term])
@@ -399,6 +418,11 @@ trait Node2 extends Node with Product2[Term, Term] {
 
   def copy(_1: Term, _2: Term): Term = label(_1, _2).updatePostProcess(this)
 
+  override def copy(children: Seq[Term]): Term = {
+    assert(children.size == 2)
+    copy(children.head, children(1))
+  }
+
   // FOR KORE
   def build(_1: pattern.Pattern, _2: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label2](_1.asInstanceOf[Term], _2.asInstanceOf[Term])
 }
@@ -416,6 +440,11 @@ trait Node3 extends Node with Product3[Term, Term, Term] {
 
   def copy(_1: Term, _2: Term, _3: Term): Term = label(_1, _2, _3).updatePostProcess(this)
 
+  override def copy(children: Seq[Term]): Term = {
+    assert(children.size == 3)
+    copy(children.head, children(1), children(2))
+  }
+
   def iterator() = Iterator(_1, _2, _3)
 }
 
@@ -432,6 +461,11 @@ trait Node4 extends Node with Product4[Term, Term, Term, Term] {
   }
 
   def copy(_1: Term, _2: Term, _3: Term, _4: Term): Term = label(_1, _2, _3, _4).updatePostProcess(this)
+
+  override def copy(children: Seq[Term]): Term = {
+    assert(children.size == 4)
+    copy(children.head, children(1), children(2), children(3))
+  }
 
   def iterator() = Iterator(_1, _2, _3, _4)
 }
@@ -451,6 +485,11 @@ trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
 
   def copy(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term): Term = label(_1, _2, _3, _4, _5).updatePostProcess(this)
 
+  override def copy(children: Seq[Term]): Term = {
+    assert(children.size == 5)
+    copy(children.head, children(1), children(2), children(3), children(4))
+  }
+
   def iterator() = Iterator(_1, _2, _3, _4, _5)
 }
 
@@ -469,6 +508,11 @@ trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
   }
 
   def copy(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term): Term = label(_1, _2, _3, _4, _5, _6).updatePostProcess(this)
+
+  override def copy(children: Seq[Term]): Term = {
+    assert(children.size == 6)
+    copy(children.head, children(1), children(2), children(3), children(4), children(5))
+  }
 
   def iterator() = Iterator(_1, _2, _3, _4, _5, _6)
 }
