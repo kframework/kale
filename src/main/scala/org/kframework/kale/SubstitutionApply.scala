@@ -1,10 +1,12 @@
 package org.kframework.kale
 
+import org.kframework.kale.ac.CurrentEnvironment
 import org.kframework.kale.transformer.Unary
 
 import scala.collection.Set
-import context._
+import org.kframework.kale.context._
 import org.kframework.kale.transformer.Unary.ProcessingFunction
+import org.kframework.kale.util.Util
 
 object SubstitutionApply {
   def apply(processingFunction: Label => ProcessingFunction[_ <: Term, SubstitutionApply], env: CurrentEnvironment)(s: Substitution): SubstitutionApply = new SubstitutionApply(processingFunction, env)(s)

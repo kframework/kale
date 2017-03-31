@@ -1,7 +1,8 @@
-package org.kframework.kale
+package org.kframework.kale.util
 
 import org.kframework.kale.transformer.Unary
 import org.kframework.kale.transformer.Unary.ProcessingFunction
+import org.kframework.kale.{Environment, Label, Term}
 
 object BUMapper {
   def apply(processingFunction: Label => ProcessingFunction[_ <: Term, BUMapper], env: Environment)(func: PartialFunction[Term, Term]): BUMapper = new BUMapper(processingFunction, env)(func)

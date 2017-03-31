@@ -1,5 +1,8 @@
 package org.kframework.kale
 
+import org.kframework.kale.ac.CurrentEnvironment
+import org.kframework.kale.free.{FreeLabel0, FreeLabel1, FreeLabel2, FreeLabel3}
+import org.kframework.kale.util.Implicits
 import org.scalatest.FreeSpec
 
 /*
@@ -93,7 +96,7 @@ object IMP {
   val seq = FreeLabel2("__")
   val program = FreeLabel2("_;_")
   val emptyIntList = FreeLabel0(".List{Int}")
-  val ints = new default.AssocWithIdListLabel("_,_", emptyIntList())
+  val ints = new ac.AssocWithIdListLabel("_,_", emptyIntList())
 
   val T = FreeLabel2("<T>")
   val k = FreeLabel1("<k>")
@@ -107,13 +110,13 @@ object IMP {
   }, emptyStates())
 
   val emptyk = FreeLabel0(".K")
-  val kseq = new default.AssocWithIdListLabel("_~>_", emptyk())
+  val kseq = new ac.AssocWithIdListLabel("_~>_", emptyk())
 
   val intDiv = PrimitiveFunction2("_/Int_", INT, (a: Int, b: Int) => a / b)
 
   case class isSort(label: LeafLabel[_])(implicit val env: Environment) extends {
     val name: String = "is" + label.name
-  } with PurelyFunctionalLabel1 {
+  } with FunctionLabel1 {
     def f(_1: Term): Option[Term] = Some(Truth(_1.label == label))
   }
 

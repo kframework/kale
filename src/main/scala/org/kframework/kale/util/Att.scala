@@ -1,4 +1,6 @@
-package org.kframework.kale
+package org.kframework.kale.util
+
+import org.kframework.kale.Term
 
 import scala.collection._
 

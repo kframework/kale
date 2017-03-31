@@ -1,5 +1,6 @@
-package org.kframework.kale
+package org.kframework.kale.util
 
+import org.kframework.kale.{AssocLabel, Term}
 
 /**
   * works only for non-comm

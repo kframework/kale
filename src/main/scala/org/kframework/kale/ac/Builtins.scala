@@ -1,8 +1,9 @@
-package org.kframework.kale
+package org.kframework.kale.ac
 
-import collection._
+import org.kframework.kale._
+import org.kframework.kale.free.FreeLabel0
 
-import default._
+import scala.collection._
 
 class Builtins(implicit val env: CurrentEnvironment) {
 
@@ -12,7 +13,9 @@ class Builtins(implicit val env: CurrentEnvironment) {
     val env = eenv
   }
 
-  sealed trait PrimordialConstantLabel[T] extends HasEnvironment with ConstantLabel[T]
+  sealed trait PrimordialConstantLabel[T] extends HasEnvironment with ConstantLabel[T] {
+    def apply(v: T): Constant[T] = free.SimpleConstant(this, v)
+  }
 
   abstract class ReferenceLabel[T](val name: String) extends HasEnvironment with PrimordialConstantLabel[T]
 
@@ -61,7 +64,7 @@ class Builtins(implicit val env: CurrentEnvironment) {
 
     object in extends {
       val name = SetLabel.this.name + ".in"
-    } with HasEnvironment with PurelyFunctionalLabel2 {
+    } with HasEnvironment with FunctionLabel2 {
       def f(s: Term, key: Term) = s match {
         case set(elements) => Some(BOOLEAN(elements.contains(key)))
       }
@@ -114,7 +117,7 @@ class Builtins(implicit val env: CurrentEnvironment) {
     // returns the entire object that has been indexed
     object lookupByKey extends {
       val name = MapLabel.this.name + ".lookupByKey"
-    } with HasEnvironment with PurelyFunctionalLabel2 {
+    } with HasEnvironment with FunctionLabel2 {
       def f(m: Term, key: Term) = m match {
         case map(scalaMap, restOfElements) =>
           scalaMap.get(key).orElse(
@@ -126,7 +129,7 @@ class Builtins(implicit val env: CurrentEnvironment) {
     // the classic map lookup
     object lookup extends {
       val name = MapLabel.this.name + ".lookup"
-    } with HasEnvironment with PurelyFunctionalLabel2 {
+    } with HasEnvironment with FunctionLabel2 {
       def f(m: Term, key: Term) = m match {
         case map(scalaMap, restOfElements) =>
           scalaMap.get(key).map(_.iterator().toList(1)).orElse(
@@ -137,7 +140,7 @@ class Builtins(implicit val env: CurrentEnvironment) {
 
     object keys extends {
       val name = MapLabel.this.name + ".keys"
-    } with HasEnvironment with PurelyFunctionalLabel1 {
+    } with HasEnvironment with FunctionLabel1 {
       def f(m: Term) = m match {
         case map(scalaMap, restOfElements) =>
           Some(BuiltinSet(scalaMap.keys))

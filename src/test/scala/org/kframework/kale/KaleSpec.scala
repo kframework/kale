@@ -1,5 +1,7 @@
 package org.kframework.kale
 
+import org.kframework.kale.ac.CurrentEnvironment
+import org.kframework.kale.util.Implicits
 import org.scalatest.FreeSpec
 
 class KaleSpec extends FreeSpec {

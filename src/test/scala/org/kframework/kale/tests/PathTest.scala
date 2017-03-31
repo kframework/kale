@@ -1,6 +1,7 @@
 package org.kframework.kale.tests
 
-import org.kframework.kale.{Path, Term}
+import org.kframework.kale.Term
+import org.kframework.kale.util.Path
 import org.scalatest.FreeSpec
 
 class PathTest extends FreeSpec with TestSetup {

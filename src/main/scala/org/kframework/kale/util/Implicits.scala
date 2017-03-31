@@ -1,12 +1,14 @@
-package org.kframework.kale
+package org.kframework.kale.util
+
+import org.kframework.kale._
+import org.kframework.kale.ac.CurrentEnvironment
+import org.kframework.kale.free.FreeLabel2
 
 import scala.language.implicitConversions
 
 class Implicits(implicit env: CurrentEnvironment) extends StaticImplicits {
 
   import env.builtin._
-
-  import default._
 
   implicit def intConstant(x: Int): Constant[Int] = INT(x)
   implicit def doubleConstant(x: Double): Constant[Double] = DOUBLE(x)

@@ -1,7 +1,7 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
-import context._
+import org.kframework.kale.context._
 import org.scalactic.Prettifier
 import org.scalatest.FreeSpec
 
