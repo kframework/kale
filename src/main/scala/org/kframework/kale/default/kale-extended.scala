@@ -6,7 +6,7 @@ import org.kframework.kale.context.Context1ApplicationLabel
 
 import scala.collection._
 import scala.Iterable
-import org.kframework.minikore.interfaces.{pattern, tree}
+import org.kframework.minikore.interfaces.pattern
 
 case class SimpleEqualityLabel(implicit val env: CurrentEnvironment) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
@@ -24,7 +24,7 @@ case class SimpleEqualityLabel(implicit val env: CurrentEnvironment) extends Nam
     }
   }
 
-  def createBinding(_1: Variable, _2: Term) = {
+  def createBinding(_1: Variable, _2: Term): Binding = {
     import StaticImplicits._
     assert(!_2.contains(_1))
     new Binding(_1.asInstanceOf[Variable], _2)
@@ -34,7 +34,7 @@ case class SimpleEqualityLabel(implicit val env: CurrentEnvironment) extends Nam
 private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 with BinaryInfix with pattern.Equals {
   val label = env.Equality
 
-  override def equals(other: Any) = other match {
+  override def equals(other: Any): Boolean = other match {
     case that: Equality => this._1 == that._1 && this._2 == that._2
     case _ => false
   }
@@ -43,7 +43,7 @@ private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environme
 private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: CurrentEnvironment) extends Equality(variable, term) with Substitution with BinaryInfix {
   assert(_1.isInstanceOf[Variable])
 
-  def get(v: Variable) = if (_1 == v) Some(_2) else None
+  def get(v: Variable): Option[Term] = if (_1 == v) Some(_2) else None
 
   def asMap = Map(variable -> term)
 
@@ -59,7 +59,7 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
       } else {
         l(contextVar, apply(cs.next))
       }
-    case n@Node(l, cs) =>
+    case Node(l, cs) =>
       val newTerms = (cs map apply).toIterable
       l(newTerms).updatePostProcess(this)
     case _ => t
@@ -122,7 +122,7 @@ case class DNFAndLabel(implicit val env: CurrentEnvironment) extends {
   /**
     * not-normalizing
     */
-  def apply(m: Map[Variable, Term]) = substitution(m)
+  def apply(m: Map[Variable, Term]): Substitution = substitution(m)
 
   /**
     * normalizing
@@ -261,7 +261,7 @@ private[kale] final class AndOfTerms(val terms: Set[Term])(implicit env: Environ
 
   override def _2: Term = if (terms.size == 2) terms.tail.head else new AndOfTerms(terms.tail)
 
-  override def equals(other: Any) = other match {
+  override def equals(other: Any): Boolean = other match {
     case that: AndOfTerms => this.terms == that.terms
     case _ => false
   }
@@ -297,7 +297,7 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
 
   val label = And
   lazy val _1 = Equality(m.head._1, m.head._2)
-  lazy val _2 = And.substitution(m.tail)
+  lazy val _2: Substitution = And.substitution(m.tail)
 
   override def equals(other: Any): Boolean = other match {
     case that: SubstitutionWithMultipleBindings => m == that.m
@@ -306,9 +306,9 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
 
   override val hashCode: Int = label.hashCode
 
-  def get(v: Variable) = m.get(v)
+  def get(v: Variable): Option[Term] = m.get(v)
 
-  def asMap = m
+  override def asMap: Map[Variable, Term] = m
 
   override val assocIterable: Iterable[Term] = And.asList(this)
 
@@ -362,7 +362,7 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
 
   val label = Or
 
-  lazy val _1 = terms.head
+  lazy val _1: Term = terms.head
   lazy val _2 = Or(terms.tail.toSeq)
   override val assocIterable: Iterable[Term] = terms
 
@@ -375,7 +375,7 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
 }
 
 class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
-  override def construct(l: Iterable[Term]): Term = new AssocWithIdList(this, l)
+  override def construct(l: Iterable[Term]): Term = AssocWithIdList(this, l)
 }
 
 case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term]) extends Assoc {
@@ -390,7 +390,7 @@ case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term
 case class SimpleRewriteLabel(implicit val env: Environment) extends {
   val name = "=>"
 } with RewriteLabel {
-  def apply(_1: Term, _2: Term) = new Rewrite(_1, _2)
+  def apply(_1: Term, _2: Term) = Rewrite(_1, _2)
 }
 
 case class Rewrite(_1: Term, _2: Term)(implicit env: Environment) extends kale.Rewrite {
@@ -399,7 +399,7 @@ case class Rewrite(_1: Term, _2: Term)(implicit env: Environment) extends kale.R
 
 class InvokeLabel(implicit val env: Environment) extends NameFromObject with Label1 {
   // the rewriter is initialized after the creation of the label to break the cycle when creating the rewriter for applying functions
-  var rewriter: Rewriter = null
+  var rewriter: Rewriter = _
 
   override def apply(obj: Term): Term = Invoke(this, obj)
 }
