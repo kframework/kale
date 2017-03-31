@@ -122,7 +122,19 @@ object builtin {
   }
 
   object EQ {
-    private case class eq(name: String, sort: Sort) extends Symbol {
+    // private val symbols: Map[Sort, Symbol] = Map()
+    // TODO: not thread safe
+    private val symbols: mutable.Map[Sort, Symbol] = mutable.Map()
+    def of(sort: Sort): Symbol = {
+      if (symbols.contains(sort)) symbols(sort)
+      else {
+        val symbol = Eq(sort)
+        symbols.put(sort, symbol)
+        symbol
+      }
+    }
+    private case class Eq(sort: Sort) extends Symbol {
+      override val name: String = "_==" + sort.name + "_"
       override val smt: String = "="
       override val smtBuiltin: Boolean = true
       override val signature: Type = (Seq(sort, sort), SortBool)
@@ -132,18 +144,6 @@ object builtin {
         val (t1,t2) = (children(0), children(1))
         if (t1 == t2) BOOL(true)
         else Application(this, children)
-      }
-    }
-
- // private val symbols: Map[Sort, Symbol] = Map()
-    private val symbols: mutable.Map[Sort, Symbol] = mutable.Map()
-    // TODO: not thread safe
-    def of(sort: Sort): Symbol = {
-      if (symbols.contains(sort)) symbols(sort)
-      else {
-        val symbol = eq("_==" + sort.name + "_", sort)
-        symbols.put(sort, symbol)
-        symbol
       }
     }
 
@@ -163,31 +163,42 @@ object builtin {
 //    object eqBool extends eq { override val name: String = "_==Bool_"; override val signature: Type = (Seq(SortBool, SortBool), SortBool) }
   }
 
-  object MAP_K {
+  object MAP {
     case class NotFound() extends ControlThrowable
 
-    object select extends Symbol {
-      override val name: String = "selectMapK"
+    // TODO: not thread safe
+    private val selects: mutable.Map[SortMap, Symbol] = mutable.Map()
+    def selectOf(sort: SortMap): Symbol = {
+      if (selects.contains(sort)) selects(sort)
+      else {
+        val symbol = Select(sort)
+        selects.put(sort, symbol)
+        symbol
+      }
+    }
+    private case class Select(sort: SortMap) extends Symbol {
+      override val name: String = "selectMap" + sort.key + sort.value
       override val smt: String = "select"
       override val smtBuiltin: Boolean = true
-      override val signature: Type = (Seq(SortMapK, SortK), SortK)
+      override val signature: Type = (Seq(sort, sort.key), sort.value)
       override val isFunctional: Boolean = true
       override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 2)
-        val default = Application(this, children)
+        lazy val default = Application(this, children)
         val (m,k) = (children(0), children(1))
         if (k.isSymbolic) default
         else {
-          def _select(m1: Term, k1: Term): Term = {
+          def select(m1: Term, k1: Term): Term = {
             m1 match {
-              case Application(`store`, Seq(m2, k2, v2)) =>
+              case Application(st:Store, Seq(m2, k2, v2)) =>
+                assert(st.sort == sort)
                 if (k1 == k2) v2
-                else _select(m2, k1)
+                else select(m2, k1)
               case _ => throw NotFound()
             }
           }
           try {
-            _select(m,k)
+            select(m,k)
           } catch {
             case NotFound() => default
           }
@@ -195,30 +206,41 @@ object builtin {
       }
     }
 
-    object store extends Symbol {
-      override val name: String = "storeMapK"
+    // TODO: not thread safe
+    private val stores: mutable.Map[SortMap, Symbol] = mutable.Map()
+    def storeOf(sort: SortMap): Symbol = {
+      if (stores.contains(sort)) stores(sort)
+      else {
+        val symbol = Store(sort)
+        stores.put(sort, symbol)
+        symbol
+      }
+    }
+    private case class Store(sort: SortMap) extends Symbol {
+      override val name: String = "storeMap" + sort.key + sort.value
       override val smt: String = "store"
       override val smtBuiltin: Boolean = true
-      override val signature: Type = (Seq(SortMapK, SortK, SortK), SortMapK)
+      override val signature: Type = (Seq(sort, sort.key, sort.value), sort)
       override val isFunctional: Boolean = true
       override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 3)
-        val default = Application(this, children)
+        lazy val default = Application(this, children)
         val (m,k,v) = (children(0), children(1), children(2))
         if (k.isSymbolic) default
         else {
-          def _store(m1: Term, k1: Term, v1: Term): Term = {
+          def store(m1: Term, k1: Term, v1: Term): Term = {
             m1 match {
-              case Application(`store`, Seq(m2, k2, v2)) =>
+              case Application(st:Store, Seq(m2, k2, v2)) =>
+                assert(st.sort == sort)
                 if (k1 == k2)
-                  Application(store, Seq(m2, k2, v1))
+                  Application(this, Seq(m2, k2, v1))
                 else
-                  Application(store, Seq(_store(m2, k1, v1), k2, v2))
+                  Application(this, Seq(store(m2, k1, v1), k2, v2))
               case _ => throw NotFound()
             }
           }
           try {
-            _store(m,k,v)
+            store(m,k,v)
           } catch {
             case NotFound() => default
           }
@@ -254,7 +276,7 @@ object builtin {
       override val isFunctional: Boolean = true
       override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 2)
-        val default = Application(this, children)
+        lazy val default = Application(this, children)
         val (l1,l2) = (children(0), children(1))
         (l1, l2) match {
           case (_, Application(`nil`, _)) => l1

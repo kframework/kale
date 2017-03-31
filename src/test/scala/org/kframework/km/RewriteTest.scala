@@ -123,7 +123,7 @@ class RewriteTest extends FreeSpec {
     val rewriter = new rewrite(declareDatatypes)
     import rewriter._
     val res = search(rules, SimplePattern(tcell, BOOL(true)))
-    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(INT(0)))))) /\\ BOOL(true))")
+    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),INT(0)))) /\\ BOOL(true))")
   }
 
   "1.imp" in {
@@ -138,7 +138,7 @@ class RewriteTest extends FreeSpec {
     val rewriter = new rewrite(declareDatatypes)
     import rewriter._
     val res = search(rules, SimplePattern(tcell, BOOL(true)))
-    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(INT(0)))),_(_(_(STRING(y)))),_(_(INT(1)))))) /\\ BOOL(true))")
+    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),INT(0)),_(STRING(y)),INT(1)))) /\\ BOOL(true))")
   }
 
   "2.imp" in {
@@ -151,15 +151,15 @@ class RewriteTest extends FreeSpec {
     val N = Variable("N", SortInt)
     val kcell = k(kCons(ifx0, kNil()))
  // val scell = state(M) // TODO: why just state(m) doesn't work?
-    val scell = state(MAP_K.store(M, KAExp(AExpId(x)), KAExp(AExpInt(N)))) // <state> M[x <- N] </state>
+    val scell = state(MAP.storeOf(SortMapIdInt)(M, x, N)) // <state> M[x <- N] </state>
     val tcell = T(kcell,scell)
     val rewriter = new rewrite(declareDatatypes)
     rewriter.datatypes = datatypes
     import rewriter._
     val res = search(rules, SimplePattern(tcell, BOOL(true)))
-    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(N:Int))),_(_(_(STRING(y)))),_(_(INT(0)))))) /\\ _==Bool_(BOOL(true),_<=Int_(N:Int,INT(0))), <T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(N:Int))),_(_(_(STRING(y)))),_(_(INT(1)))))) /\\ _==Bool_(BOOL(false),_<=Int_(N:Int,INT(0))))")
-    // <T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(N:Int))),_(_(_(STRING(y)))),_(_(INT(0)))))) /\ _==Bool_(BOOL(true),_<=Int_(N:Int,INT(0)))
-    // <T>(<k>(.K()),<state>(storeMapK(storeMapK(M:MapK,_(_(_(STRING(x)))),_(_(N:Int))),_(_(_(STRING(y)))),_(_(INT(1)))))) /\ _==Bool_(BOOL(false),_<=Int_(N:Int,INT(0)))
+    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),N:Int),_(STRING(y)),INT(0)))) /\\ _==Bool_(BOOL(true),_<=Int_(N:Int,INT(0))), <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),N:Int),_(STRING(y)),INT(1)))) /\\ _==Bool_(BOOL(false),_<=Int_(N:Int,INT(0))))")
+    // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),N:Int),_(STRING(y)),INT(0)))) /\ _==Bool_(BOOL(true),_<=Int_(N:Int,INT(0)))
+    // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),N:Int),_(STRING(y)),INT(1)))) /\ _==Bool_(BOOL(false),_<=Int_(N:Int,INT(0)))
   }
 
 }
