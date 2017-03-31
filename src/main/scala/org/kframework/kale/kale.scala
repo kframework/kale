@@ -50,7 +50,7 @@ trait LeafLabel[T] extends Label {
   }
 }
 
-trait Term extends Iterable[Term] with pattern.Pattern with HasAtt {
+trait Term extends Iterable[Term] with pattern.Pattern {
   def updateAt(i: Int)(t: Term): Term
 
   val label: Label
@@ -58,6 +58,13 @@ trait Term extends Iterable[Term] with pattern.Pattern with HasAtt {
   val isGround: Boolean
 
   def iterator(): Iterator[Term]
+
+  /**
+    * This method is called after `oldTerm` is updated resulting in `this` term.
+    * Subclasses can override the method to attach functionality related to updating, e.g., updating attributes.
+    * Should return `this`.
+    */
+  def updatePostProcess(oldTerm: Term): Term = this
 
   // TODO: better implementation
   override def hashCode: Int = this.label.hashCode
@@ -106,7 +113,7 @@ trait Leaf[T] extends Term {
 
   override def toString: String = label + "(" + value.toString + ")"
 
-  def copy(): Term = label(value).setAtts(attributes)
+  def copy(): Term = label(value).updatePostProcess(this)
 }
 
 trait NameFromObject {
@@ -358,7 +365,7 @@ trait Node0 extends Node {
 
   def iterator(): Iterator[Term] = Iterator.empty
 
-  def copy(): Term = label().setAtts(updatedAttributes())
+  def copy(): Term = label().updatePostProcess(this)
 }
 
 trait Node1 extends Node with Product1[Term] {
@@ -372,7 +379,7 @@ trait Node1 extends Node with Product1[Term] {
 
   def iterator() = Iterator(_1)
 
-  def copy(_1: Term): Term = label(_1).setAtts(updatedAttributes(_1))
+  def copy(_1: Term): Term = label(_1).updatePostProcess(this)
 
   // FOR KORE
   def build(_1: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label2](_1.asInstanceOf[Term])
@@ -390,7 +397,7 @@ trait Node2 extends Node with Product2[Term, Term] {
 
   def iterator() = Iterator(_1, _2)
 
-  def copy(_1: Term, _2: Term): Term = label(_1, _2).setAtts(updatedAttributes(_1, _2))
+  def copy(_1: Term, _2: Term): Term = label(_1, _2).updatePostProcess(this)
 
   // FOR KORE
   def build(_1: pattern.Pattern, _2: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label2](_1.asInstanceOf[Term], _2.asInstanceOf[Term])
@@ -407,7 +414,7 @@ trait Node3 extends Node with Product3[Term, Term, Term] {
     case 2 => label(_1, _2, t)
   }
 
-  def copy(_1: Term, _2: Term, _3: Term): Term = label(_1, _2, _3).setAtts(updatedAttributes(_1, _2, _3))
+  def copy(_1: Term, _2: Term, _3: Term): Term = label(_1, _2, _3).updatePostProcess(this)
 
   def iterator() = Iterator(_1, _2, _3)
 }
@@ -424,7 +431,7 @@ trait Node4 extends Node with Product4[Term, Term, Term, Term] {
     case 3 => label(_1, _2, _3, t)
   }
 
-  def copy(_1: Term, _2: Term, _3: Term, _4: Term): Term = label(_1, _2, _3, _4).setAtts(updatedAttributes(_1, _2, _3, _4))
+  def copy(_1: Term, _2: Term, _3: Term, _4: Term): Term = label(_1, _2, _3, _4).updatePostProcess(this)
 
   def iterator() = Iterator(_1, _2, _3, _4)
 }
@@ -442,7 +449,7 @@ trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
     case 4 => label(_1, _2, _3, _4, t)
   }
 
-  def copy(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term): Term = label(_1, _2, _3, _4, _5).setAtts(updatedAttributes(_1, _2, _3, _4, _5))
+  def copy(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term): Term = label(_1, _2, _3, _4, _5).updatePostProcess(this)
 
   def iterator() = Iterator(_1, _2, _3, _4, _5)
 }
@@ -461,7 +468,7 @@ trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
     case 5 => label(_1, _2, _3, _4, _5, t)
   }
 
-  def copy(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term): Term = label(_1, _2, _3, _4, _5, _6).setAtts(updatedAttributes(_1, _2, _3, _4, _5, _6))
+  def copy(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term): Term = label(_1, _2, _3, _4, _5, _6).updatePostProcess(this)
 
   def iterator() = Iterator(_1, _2, _3, _4, _5, _6)
 }

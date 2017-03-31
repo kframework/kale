@@ -52,4 +52,8 @@ trait HasAtt {
     attributes = atts
     this
   }
+
+  def updatePostProcess(oldTerm: Term): Unit = {
+
+  }
 }

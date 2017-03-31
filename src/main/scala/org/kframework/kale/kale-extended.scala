@@ -61,7 +61,7 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
       }
     case n@Node(l, cs) =>
       val newTerms = (cs map apply).toIterable
-      l(newTerms).setAtts(n.updatedAttributes(newTerms.toSeq: _*))
+      l(newTerms).updatePostProcess(this)
     case _ => t
   }
 
@@ -325,7 +325,7 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
 
     case n@Node(l, cs) =>
       val newTerms = (cs map apply).toIterable
-      l(newTerms).setAtts(n.updatedAttributes(newTerms.toSeq: _*))
+      l(newTerms).updatePostProcess(this)
     case _ => t
   }
 
