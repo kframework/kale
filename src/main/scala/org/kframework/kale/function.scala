@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.free._
+import org.kframework.kale.standard._
 
 trait FunctionLabel {
   val name: String

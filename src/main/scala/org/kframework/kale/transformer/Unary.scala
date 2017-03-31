@@ -1,9 +1,6 @@
 package org.kframework.kale.transformer
 
-import org.kframework.kale.{Term, _}
-import org.kframework.kale.context.Context1ApplicationLabel
-
-import scala.collection.Set
+import org.kframework.kale._
 
 /**
   * Abstract stateful transformer from Term to Term

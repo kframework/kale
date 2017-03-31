@@ -1,7 +1,6 @@
-package org.kframework.kale.ac
+package org.kframework.kale.standard
 
 import org.kframework.kale._
-import org.kframework.kale.free.FreeLabel0
 
 import scala.collection._
 
@@ -14,7 +13,7 @@ class Builtins(implicit val env: CurrentEnvironment) {
   }
 
   sealed trait PrimordialConstantLabel[T] extends HasEnvironment with ConstantLabel[T] {
-    def apply(v: T): Constant[T] = free.SimpleConstant(this, v)
+    def apply(v: T): Constant[T] = SimpleConstant(this, v)
   }
 
   abstract class ReferenceLabel[T](val name: String) extends HasEnvironment with PrimordialConstantLabel[T]

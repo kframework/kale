@@ -1,6 +1,7 @@
 package org.kframework.kale.kore
 
 import org.kframework.kale._
+import org.kframework.kale.standard.SimpleVariable
 import org.kframework.minikore.interfaces.build.Builders
 import org.kframework.minikore.interfaces.pattern
 
@@ -10,7 +11,7 @@ class KoreBuilders(implicit val env: Environment) extends Builders {
 
   def Symbol(str: String): pattern.Symbol = env.label(str)
 
-  def Variable(_1: pattern.Name, _2: pattern.Sort): pattern.Variable = free.SimpleVariable(_1)
+  def Variable(_1: pattern.Name, _2: pattern.Sort): pattern.Variable = SimpleVariable(_1)
 
   def DomainValue(_1: pattern.Symbol, _2: pattern.Value): pattern.DomainValue = _1.asInstanceOf[ConstantLabel[_]].interpret(_2)
 

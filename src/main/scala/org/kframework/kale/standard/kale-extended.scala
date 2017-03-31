@@ -1,9 +1,8 @@
-package org.kframework.kale.ac
+package org.kframework.kale.standard
 
 import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.context.Context1ApplicationLabel
-import org.kframework.kale.free._
 import org.kframework.kale.util.{NameFromObject, Named, unreachable}
 
 import scala.collection._
@@ -417,7 +416,7 @@ trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel {
   //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
 
   def setRules(rules: Set[Rewrite]): Unit = {
-    p_rewriter = Some(Rewriter(SubstitutionApply(env), Matcher(env).applier, env)(rules))
+    p_rewriter = Some(Rewriter(StandardSubstitution(env), Matcher(env).applier, env)(rules))
   }
 
   def tryToApply(res: Term): Option[Term] =

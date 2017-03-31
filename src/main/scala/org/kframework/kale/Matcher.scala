@@ -1,7 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.ac.CurrentEnvironment
-import org.kframework.kale.free._
+import org.kframework.kale.standard.CurrentEnvironment
 import org.kframework.kale.transformer.Binary
 
 import scala.collection._
@@ -175,7 +174,7 @@ case class Matcher(val env: CurrentEnvironment) {
     val variableXlabel = labels.map(Piece(Variable, _, VarLeft))
     val andXlabel = labels.map(Piece(And, _, AndTerm))
 
-    import ac._
+    import standard._
 
     val freeLikeLabelXfreeLikeLabel = labels.collect({
       case l: FreeLabel0 => Piece(l, l, FreeNode0FreeNode0)

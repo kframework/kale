@@ -1,6 +1,6 @@
-package org.kframework.kale.ac
+package org.kframework.kale.standard
 
-import org.kframework.kale._
+import org.kframework.kale.{standard, _}
 import org.kframework.kale.context.{AnywhereContextApplicationLabel, PatternContextApplicationLabel}
 import org.kframework.kale.util.Util
 import org.kframework.minikore.interfaces.pattern
@@ -11,16 +11,16 @@ import org.kframework.minikore.interfaces.pattern
 class CurrentEnvironment extends Environment {
   implicit private val tthis = this
 
-  import ac._
+  import standard._
 
-  val Variable = free.SimpleVariableLabel()
+  val Variable = standard.SimpleVariableLabel()
 
-  val Truth = free.SimpleTruthLabel()
+  val Truth = standard.SimpleTruthLabel()
 
   val Hole = Variable("☐")
 
-  val Top: Top = free.TopInstance()
-  val Bottom: Bottom = free.BottomInstance()
+  val Top: Top = standard.TopInstance()
+  val Bottom: Bottom = standard.BottomInstance()
 
   val Equality = SimpleEqualityLabel()
   val And = DNFAndLabel()

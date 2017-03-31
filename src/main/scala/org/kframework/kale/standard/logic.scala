@@ -1,8 +1,8 @@
-package org.kframework.kale.free
+package org.kframework.kale.standard
 
-import org.kframework.kale.util.NameFromObject
 import org.kframework.kale
 import org.kframework.kale._
+import org.kframework.kale.util.NameFromObject
 import org.kframework.minikore.interfaces.pattern
 
 import scala.collection.Map

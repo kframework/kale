@@ -1,7 +1,7 @@
 package org.kframework.kale.context
 
 import org.kframework.kale._
-import org.kframework.kale.ac.CurrentEnvironment
+import org.kframework.kale.standard.CurrentEnvironment
 import org.kframework.kale.util.{Named, Util}
 
 import scala.collection._

@@ -1,8 +1,8 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
-import org.kframework.kale.ac.CurrentEnvironment
-import org.kframework.kale.free.{FreeLabel0, FreeLabel1, FreeLabel2}
+import org.kframework.kale.standard.{CurrentEnvironment, FreeLabel0, FreeLabel1, FreeLabel2}
+import org.kframework.kale.free.{FreeLabel1, FreeLabel2}
 import org.kframework.kale.util.Implicits
 import org.scalactic.Prettifier
 
@@ -19,7 +19,7 @@ trait TestSetup {
   val Y = Variable("Y")
 
   val emptyList = FreeLabel0("emptyList")
-  val listLabel = new ac.AssocWithIdListLabel("listLabel", emptyList())
+  val listLabel = new standard.AssocWithIdListLabel("listLabel", emptyList())
 
   implicit class WithListConcat(t: Term) {
     def ~~(o: Term): Term = listLabel(t, o)
@@ -35,7 +35,7 @@ trait TestSetup {
   val traversed = FreeLabel1("traversed")
   val andMatchingY = FreeLabel0("andMatchingY")
 
-  val a2b = ac.FunctionDefinedByRewritingLabel1("a2b")
+  val a2b = standard.FunctionDefinedByRewritingLabel1("a2b")
 
   val a2bRules = Set(Rewrite(a2b(a), b))
 
