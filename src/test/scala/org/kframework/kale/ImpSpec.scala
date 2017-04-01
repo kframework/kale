@@ -177,7 +177,7 @@ object IMP {
 
   env.seal()
 
-  val matcher = Matcher(env).applier
+  val matcher = Matcher(env)
   val rewrite = Rewriter(SubstitutionWithContext(_), matcher, env)(rules)
 }
 

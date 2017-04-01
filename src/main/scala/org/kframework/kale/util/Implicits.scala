@@ -21,7 +21,7 @@ class Implicits(implicit env: CurrentEnvironment) extends StaticImplicits {
   }
 
   implicit class RichTerm(t: Term)(implicit env: Environment) {
-    def :=(tt: Term)(implicit m: transformer.Binary.Apply): Term = m(t, tt)
+    def :=(tt: Term)(implicit m: transformer.Binary.Solver): Term = m(t, tt)
   }
 
 }

@@ -2,6 +2,8 @@ package org.kframework.kale.context
 
 import org.kframework.kale._
 import org.kframework.kale.standard.CurrentEnvironment
+import org.kframework.kale.transformer.Binary
+import org.kframework.kale.transformer.Binary.TypedWith
 import org.kframework.kale.util.{Named, Util}
 
 import scala.collection._
@@ -87,13 +89,13 @@ case class ContextContentVariable(basedOn: Variable, index: Int) extends Variabl
   override val name: String = basedOn.name + "_" + index
 }
 
-class PatternContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[PatternContextApplication, Term, Term] {
+class PatternContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Solver] with TypedWith[PatternContextApplication, Term] {
 
   import org.kframework.kale.util.StaticImplicits._
   import env._
 
-  override def f(solver: transformer.Binary.State)(contextApplication: PatternContextApplication, term: Term): Term = {
-    val leftContextLabel = contextApplication.label.asInstanceOf[PatternContextApplicationLabel]
+  override def f(solver: Binary.Solver)(contextApplication: PatternContextApplication, term: Term): Term = {
+    val leftContextLabel = contextApplication.label
     val contextVar = contextApplication.contextVar
     val redex = contextApplication.redex
 
@@ -130,11 +132,11 @@ class PatternContextMatcher(implicit env: CurrentEnvironment) extends transforme
   }
 }
 
-class AnywhereContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Context1Application, Term, Term] {
+class AnywhereContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Solver] with TypedWith[Context1Application, Term] {
 
   import env._
 
-  override def f(solver: transformer.Binary.State)(contextApplication: Context1Application, term: Term): Term = {
+  override def f(solver: Binary.Solver)(contextApplication: Context1Application, term: Term): Term = {
     assert(contextApplication.label == AnywhereContext)
     val contextVar = contextApplication.contextVar
 
