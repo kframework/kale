@@ -5,18 +5,18 @@ import org.kframework.kale.transformer.Unary.ProcessingFunction
 import org.kframework.kale.{Environment, Label, Term}
 
 object BUMapper {
-  def apply(processingFunction: Label => ProcessingFunction[_ <: Term, BUMapper], env: Environment)(func: PartialFunction[Term, Term]): BUMapper = new BUMapper(processingFunction, env)(func)
+  def apply(processingFunction: Label => ProcessingFunction[BUMapper], env: Environment)(func: PartialFunction[Term, Term]): BUMapper = new BUMapper(func)(env)
 
   def apply(env: Environment): PartialFunction[Term, Term] => BUMapper = {
 
-    BUMapper(Unary.defaultMapping, env)
+    BUMapper(env)
   }
 }
 
-class BUMapper(val processingFunction: Label => ProcessingFunction[_ <: Term, BUMapper], val env: Environment)(val func: PartialFunction[Term, Term]) extends Unary.Apply[BUMapper](env) with (Term => Term) {
+class BUMapper(val func: PartialFunction[Term, Term])(implicit env: Environment) extends Unary.Solver(env) {
   val liftedF = func.lift
 
-  def apply(t: Term) =
+  override def apply(t: Term) =
     arr(t.label.id) match {
       case f =>
         val processedT = f(t)

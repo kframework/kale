@@ -1,6 +1,7 @@
 package org.kframework.kale.transformer
 
 import org.kframework.kale._
+import org.kframework.kale.util.Util
 
 /**
   * Abstract stateful transformer from Term to Term
@@ -13,72 +14,94 @@ object Unary {
   /**
     * Extend this class to define the transformation by implementing f.
     */
-  trait ProcessingFunction[-Element <: Term, US <: State] extends (US => Term => Term) {
-    def apply(unaryState: US) = { t: Term => f(unaryState)(t.asInstanceOf[Element]) }
+  trait ProcessingFunction[-SpecificSolver <: Solver] extends (SpecificSolver => Term => Term) {
+    type Element <: Term
 
-    def f(state: US)(t: Element): Term
+    def apply(unarySolver: SpecificSolver): (Term => Term) = { t: Term => f(unarySolver)(t.asInstanceOf[Element]) }
+
+    def f(state: SpecificSolver)(t: Element): Term
   }
 
-  trait State {
-    def apply(t: Term): Term
+
+  object Node0 extends Unary.ProcessingFunction[Solver] {
+    type Element = Node0
+
+    def f(solver: Solver)(t: Node0) = t.copy()
+  }
+
+  object Node1 extends Unary.ProcessingFunction[Solver] {
+    type Element = Node1
+
+    def f(solver: Solver)(t: Node1) = t.copy(solver(t._1))
+  }
+
+  object Node2 extends Unary.ProcessingFunction[Solver] {
+    type Element = Node2
+
+    def f(solver: Solver)(t: Node2) = t.copy(solver(t._1), solver(t._2))
+  }
+
+  object Node3 extends Unary.ProcessingFunction[Solver] {
+    type Element = Node3
+
+    def f(solver: Solver)(t: Node3) = t.copy(solver(t._1), solver(t._2), solver(t._3))
+  }
+
+  object Node4 extends Unary.ProcessingFunction[Solver] {
+    type Element = Node4
+
+    def f(solver: Solver)(t: Node4) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4))
+  }
+
+  object Node5 extends Unary.ProcessingFunction[Solver] {
+    type Element = Node5
+
+    def f(solver: Solver)(t: Node5) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5))
+  }
+
+  object Node6 extends Unary.ProcessingFunction[Solver] {
+    type Element = Node6
+
+    def f(solver: Solver)(t: Node6) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5), solver(t._6))
+  }
+
+  object DoNothing extends Unary.ProcessingFunction[Solver] {
+    type Element = Term
+
+    def f(solver: Solver)(a: Term) = a
   }
 
 
-  def Node0[S <: State] = new Unary.ProcessingFunction[Node0, S] {
-    def f(solver: S)(t: Node0) = t.copy()
-  }
+  abstract class Solver(env: Environment) extends (Term => Term) {
 
-  def Node1[S <: State] = new Unary.ProcessingFunction[Node1, S] {
-    def f(solver: S)(t: Node1) = t.copy(solver(t._1))
-  }
+    type ProcessingFunctions = PartialFunction[Label, ProcessingFunction[this.type]]
 
-  def Node2[S <: State] = new Unary.ProcessingFunction[Node2, S] {
-    def f(solver: S)(t: Node2) = t.copy(solver(t._1), solver(t._2))
-  }
+    protected def definePartialFunction(f: ProcessingFunctions): ProcessingFunctions = f
 
-  def Node3[S <: State] = new Unary.ProcessingFunction[Node3, S] {
-    def f(solver: S)(t: Node3) = t.copy(solver(t._1), solver(t._2), solver(t._3))
-  }
-
-  def Node4[S <: State] = new Unary.ProcessingFunction[Node4, S] {
-    def f(solver: S)(t: Node4) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4))
-  }
-
-  def Node5[S <: State] = new Unary.ProcessingFunction[Node5, S] {
-    def f(solver: S)(t: Node5) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5))
-  }
-
-  def Node6[S <: State] = new Unary.ProcessingFunction[Node6, S] {
-    def f(solver: S)(t: Node6) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5), solver(t._6))
-  }
-
-  def DoNothing[S <: State] = new Unary.ProcessingFunction[Term, S] {
-    def f(solver: S)(a: Term) = a
-  }
-
-  def defaultMapping[US <: State]: PartialFunction[Label, ProcessingFunction[_ <: Term, US]] = {
-    case l: Label0 => Node0
-    case l: Label1 => Node1
-    case l: Label2 => Node2
-    case l: Label3 => Node3
-    case l: Label4 => Node4
-    case l: Label5 => Node5
-    case l: Label6 => Node6
-    case l: LeafLabel[_] => DoNothing
-  }
-
-  abstract class Apply[US <: State](env: Environment) extends State {
-    this: US =>
-
-    val arr = new Array[Term => Term](env.labels.size + 1)
-
-    for (label <- env.labels) {
-      arr(label.id) = processingFunction(label)(this)
+    protected def processingFunctions: ProcessingFunctions = {
+      case l: Label0 => Node0
+      case l: Label1 => Node1
+      case l: Label2 => Node2
+      case l: Label3 => Node3
+      case l: Label4 => Node4
+      case l: Label5 => Node5
+      case l: Label6 => Node6
+      case l: LeafLabel[_] => DoNothing
     }
 
-    def apply(t: Term): Term
+    protected lazy val arr: Array[(Term) => Term] = {
+      val pf = processingFunctions
 
-    val processingFunction: Label => ProcessingFunction[_ <: Term, US]
+      val a = new Array[Term => Term](env.labels.size + 1)
+      for (label <- env.labels) {
+        a(label.id) = pf(label)(this)
+      }
+      a
+    }
+
+    def apply(t: Term): Term = arr(t.label.id)(t)
+
+    def fixpoint(t: Term): Term = Util.fixpoint(apply)(t)
   }
 
 }

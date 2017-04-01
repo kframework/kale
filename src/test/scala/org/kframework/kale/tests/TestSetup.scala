@@ -53,7 +53,7 @@ trait TestSetup {
 
   implicit val unifier = new Matcher(env).applier
 
-  val substitutionApplier = StandardSubstitution(env)
+  val substitutionApplier = SubstitutionWithContext(_)
 
   val X_1 = AnywhereContext.hole(X)
 

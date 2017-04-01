@@ -7,11 +7,11 @@ import scala.collection.immutable.TreeSet
 import scala.collection.{Set, mutable}
 
 object Rewriter {
-  def apply(substitutioner: Substitution => SubstitutionApply, matcher: Binary.Apply, env: Environment)(rules: Set[_ <: Rewrite]) =
+  def apply(substitutioner: Substitution => (Term => Term), matcher: Binary.Apply, env: Environment)(rules: Set[_ <: Rewrite]) =
     new Rewriter(substitutioner, matcher, rules, env)
 }
 
-class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment) {
+class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment) {
   assert(env.isSealed)
   assert(rules != null)
 

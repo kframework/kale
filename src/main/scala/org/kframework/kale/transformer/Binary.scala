@@ -17,6 +17,7 @@ object Binary {
   }
 
   /**
+    *
     * f specifies how to process a pair of terms with labels (leftLabel, rightLabel).
     * f is automatically hooked and applied via Apply.
     */
@@ -24,8 +25,6 @@ object Binary {
 
   class Apply(pieces: Set[Piece], env: Environment) extends State {
     assert(env.isSealed)
-
-    import env._
 
     val arr: Array[Array[(Term, Term) => Term]] =
       (0 until env.labels.size + 1).map({ i =>
@@ -47,9 +46,9 @@ object Binary {
         val res = if (u != null)
           u(left, right)
         else
-          Bottom
+          env.Bottom
 
-        assert(!(left == right && res == Bottom), left.toString)
+        assert(!(left == right && res == env.Bottom), left.toString)
         res
       } catch {
         case _: IndexOutOfBoundsException => throw new AssertionError("No processing function registered for: " + left + " and " + right)
