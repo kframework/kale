@@ -221,4 +221,32 @@ class RewriteTest extends FreeSpec {
     assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(n)),INT(0)),_(STRING(sum)),INT(55)))) /\\ BOOL(true))")
   }
 
+  "sum.imp.symbolic" in {
+    import Imp._
+    val i = IdOf(STRING("i"))
+    val n = IdOf(STRING("n"))
+    val sum = IdOf(STRING("sum"))
+    val suminc = StmtAssign(sum, AExpPlus(AExpId(sum), AExpId(i))) // sum = sum + i;
+    val iinc = StmtAssign(i, AExpPlus(AExpId(i), AExpInt(INT(1)))) // i = i + 1;
+    val ilen = BExpLeq(AExpId(i), AExpId(n)) // i <= n
+    val ifsum = StmtIf(ilen, StmtSeq(suminc, iinc), StmtSkip()) // if(i <= n) { sum = sum + i; i = i + 1; } else { ; }
+    val kcell = k(kCons(KStmt(ifsum), kNil()))
+    val I = Variable("I", SortInt)
+    val N = Variable("N", SortInt)
+//    val S = Variable("S", SortInt)
+    val S = INT.div(INT.mult(I, INT.minus(I, INT(1))), INT(2)) // I(I-1) / 2
+    val scell = state(MAP.storeOf(SortMapIdInt)(MAP.storeOf(SortMapIdInt)(MAP.storeOf(SortMapIdInt)(M, i, I), n, N), sum, S)) // <state> M[i <- I][n <- N][sum <- I(I-1)/2] </state>
+//    val scell = state(M)
+    val tcell = T(kcell, scell)
+    val rewriter = new rewrite(declareDatatypes)
+    rewriter.datatypes = datatypes
+    import rewriter._
+    val begin = java.lang.System.nanoTime()
+    val res = search(rules, SimplePattern(tcell, INT.gt(N, INT(0))))
+    val end = java.lang.System.nanoTime(); println(end - begin) // 1114485111 (~ 1s)
+    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(i)),I:Int),_(STRING(n)),N:Int),_(STRING(sum)),_/Int_(_*Int_(I:Int,_-Int_(I:Int,INT(1))),INT(2))))) /\\ _andBool_(_>Int_(N:Int,INT(0)),_==Bool_(BOOL(false),_<=Int_(I:Int,N:Int))), <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(i)),_+Int_(I:Int,INT(1))),_(STRING(n)),N:Int),_(STRING(sum)),_+Int_(_/Int_(_*Int_(I:Int,_-Int_(I:Int,INT(1))),INT(2)),I:Int)))) /\\ _andBool_(_>Int_(N:Int,INT(0)),_==Bool_(BOOL(true),_<=Int_(I:Int,N:Int))))")
+    // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(i)),I:Int),_(STRING(n)),N:Int),_(STRING(sum)),_/Int_(_*Int_(I:Int,_-Int_(I:Int,INT(1))),INT(2))))) /\ _andBool_(_>Int_(N:Int,INT(0)),_==Bool_(BOOL(false),_<=Int_(I:Int,N:Int)))
+    // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(i)),_+Int_(I:Int,INT(1))),_(STRING(n)),N:Int),_(STRING(sum)),_+Int_(_/Int_(_*Int_(I:Int,_-Int_(I:Int,INT(1))),INT(2)),I:Int)))) /\ _andBool_(_>Int_(N:Int,INT(0)),_==Bool_(BOOL(true),_<=Int_(I:Int,N:Int)))
+  }
+
 }
