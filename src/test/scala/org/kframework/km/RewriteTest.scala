@@ -215,7 +215,9 @@ class RewriteTest extends FreeSpec {
     val rewriter = new rewrite(declareDatatypes)
     rewriter.datatypes = datatypes
     import rewriter._
+    val begin = java.lang.System.nanoTime()
     val res = search(rules, SimplePattern(tcell, BOOL(true)))
+    val end = java.lang.System.nanoTime(); println(end - begin) // 10293112084 (~ 10s)
     assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(n)),INT(0)),_(STRING(sum)),INT(55)))) /\\ BOOL(true))")
   }
 
