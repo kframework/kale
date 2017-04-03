@@ -179,6 +179,10 @@ object Imp {
       T(k(KStmt(StmtWhile(Be, S)) ~>: Ks), state(M)),
       T(k(KStmt(StmtIf(Be, StmtSeq(S, StmtWhile(Be, S)), StmtSkip())) ~>: Ks), state(M)),
       tt)
+    , SimpleRewrite(
+      T(k(KStmt(StmtSkip()) ~>: Ks), state(M)),
+      T(k(Ks), state(M)),
+      tt)
     // Pgm
     , SimpleRewrite(
       T(k(KPgm(PgmOf(IdsCons(X, Xs), S)) ~>: Ks), state(M)),

@@ -199,4 +199,24 @@ class RewriteTest extends FreeSpec {
     // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(y)),INT(20)),_(STRING(z)),INT(200)))) /\ _==Bool_(BOOL(false),_<=Int_(selectMapIdInt(M:Map{Id,Int},_(STRING(x))),INT(0)))
   }
 
+  "sum.imp" in {
+    import Imp._
+    val n = IdOf(STRING("n"))
+    val sum = IdOf(STRING("sum"))
+    val n10 = StmtAssign(n, AExpInt(INT(10))) // n = 10;
+    val suminc = StmtAssign(sum, AExpPlus(AExpId(sum), AExpId(n))) // sum = sum + n;
+    val ndec = StmtAssign(n, AExpPlus(AExpId(n), AExpInt(INT(-1)))) // n = n - 1;
+    val ngt0 = BExpNot(BExpLeq(AExpId(n), AExpInt(INT(0)))) // !(n <= 0)
+    val whilesum = StmtWhile(ngt0, StmtSeq(suminc, ndec)) // while(!(n <= 0)) { sum = sum + n; n = n -1; }
+    val pgm = PgmOf(IdsCons(n, IdsCons(sum, IdsNil())), StmtSeq(n10, whilesum)) // int n, sum; n = 10; while(...) { ... }
+    val kcell = k(kCons(KPgm(pgm), kNil()))
+    val scell = state(M)
+    val tcell = T(kcell, scell)
+    val rewriter = new rewrite(declareDatatypes)
+    rewriter.datatypes = datatypes
+    import rewriter._
+    val res = search(rules, SimplePattern(tcell, BOOL(true)))
+    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(n)),INT(0)),_(STRING(sum)),INT(55)))) /\\ BOOL(true))")
+  }
+
 }
