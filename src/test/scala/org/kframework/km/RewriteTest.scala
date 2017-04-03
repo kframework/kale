@@ -168,4 +168,35 @@ class RewriteTest extends FreeSpec {
     // <T>(<k>(.K()),<state>(storeMapIdInt(M:Map{Id,Int},_(STRING(y)),INT(1)))) /\ _==Bool_(BOOL(false),_<=Int_(selectMapIdInt(M:Map{Id,Int},_(STRING(x))),INT(0)))
   }
 
+  "3.imp" in {
+    import Imp._
+    val x = IdOf(STRING("x"))
+    val y = IdOf(STRING("y"))
+    val z = IdOf(STRING("z"))
+    val y10 = StmtAssign(y, AExpInt(INT(10))) // y = 10;
+    val y20 = StmtAssign(y, AExpInt(INT(20))) // y = 20;
+    val z100 = StmtAssign(z, AExpInt(INT(100))) // z = 100;
+    val z200 = StmtAssign(z, AExpInt(INT(200))) // z = 200;
+    val ifxle0 = StmtIf(BExpLeq(AExpId(x), AExpInt(INT(0))), y10, y20) // if(x <= 0) { y = 10; } else { y = 20; }
+    val ifyle15 = StmtIf(BExpLeq(AExpId(y), AExpInt(INT(15))), z100, z200) // if(y <= 15) { z = 100; } else { z = 200; }
+    val N = Variable("N", SortInt)
+    val kcell = k(kCons(KStmt(StmtSeq(ifxle0, ifyle15)), kNil()))
+    val scell = state(MAP.storeOf(SortMapIdInt)(M, x, N)) // <state> M[x <- N] </state>
+    val tcell = T(kcell,scell)
+    val rewriter = new rewrite(declareDatatypes)
+    rewriter.datatypes = datatypes
+    import rewriter._
+    val res = search(rules, SimplePattern(tcell, BOOL(true)))
+    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),N:Int),_(STRING(y)),INT(10)),_(STRING(z)),INT(100)))) /\\ _==Bool_(BOOL(true),_<=Int_(N:Int,INT(0))), <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),N:Int),_(STRING(y)),INT(20)),_(STRING(z)),INT(200)))) /\\ _==Bool_(BOOL(false),_<=Int_(N:Int,INT(0))))")
+    // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),N:Int),_(STRING(y)),INT(10)),_(STRING(z)),INT(100)))) /\ _==Bool_(BOOL(true),_<=Int_(N:Int,INT(0)))
+    // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),N:Int),_(STRING(y)),INT(20)),_(STRING(z)),INT(200)))) /\ _==Bool_(BOOL(false),_<=Int_(N:Int,INT(0)))
+
+    val scell2 = state(M)
+    val tcell2 = T(kcell,scell2)
+    val res2 = search(rules, SimplePattern(tcell2, BOOL(true)))
+    assert(res2.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(y)),INT(10)),_(STRING(z)),INT(100)))) /\\ _==Bool_(BOOL(true),_<=Int_(selectMapIdInt(M:Map{Id,Int},_(STRING(x))),INT(0))), <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(y)),INT(20)),_(STRING(z)),INT(200)))) /\\ _==Bool_(BOOL(false),_<=Int_(selectMapIdInt(M:Map{Id,Int},_(STRING(x))),INT(0))))")
+    // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(y)),INT(10)),_(STRING(z)),INT(100)))) /\ _==Bool_(BOOL(true),_<=Int_(selectMapIdInt(M:Map{Id,Int},_(STRING(x))),INT(0)))
+    // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(y)),INT(20)),_(STRING(z)),INT(200)))) /\ _==Bool_(BOOL(false),_<=Int_(selectMapIdInt(M:Map{Id,Int},_(STRING(x))),INT(0)))
+  }
+
 }
