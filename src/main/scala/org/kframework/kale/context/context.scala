@@ -89,12 +89,12 @@ case class ContextContentVariable(basedOn: Variable, index: Int) extends Variabl
   override val name: String = basedOn.name + "_" + index
 }
 
-class PatternContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Solver] with TypedWith[PatternContextApplication, Term] {
+class PatternContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Apply] with TypedWith[PatternContextApplication, Term] {
 
   import org.kframework.kale.util.StaticImplicits._
   import env._
 
-  override def f(solver: Binary.Solver)(contextApplication: PatternContextApplication, term: Term): Term = {
+  override def f(solver: Binary.Apply)(contextApplication: PatternContextApplication, term: Term): Term = {
     val leftContextLabel = contextApplication.label
     val contextVar = contextApplication.contextVar
     val redex = contextApplication.redex
@@ -132,11 +132,11 @@ class PatternContextMatcher(implicit env: CurrentEnvironment) extends transforme
   }
 }
 
-class AnywhereContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Solver] with TypedWith[Context1Application, Term] {
+class AnywhereContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Apply] with TypedWith[Context1Application, Term] {
 
   import env._
 
-  override def f(solver: Binary.Solver)(contextApplication: Context1Application, term: Term): Term = {
+  override def f(solver: Binary.Apply)(contextApplication: Context1Application, term: Term): Term = {
     assert(contextApplication.label == AnywhereContext)
     val contextVar = contextApplication.contextVar
 

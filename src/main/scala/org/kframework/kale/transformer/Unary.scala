@@ -14,7 +14,7 @@ object Unary {
   /**
     * Extend this class to define the transformation by implementing f.
     */
-  trait ProcessingFunction[-SpecificSolver <: Solver] extends (SpecificSolver => Term => Term) {
+  trait ProcessingFunction[-SpecificSolver <: Apply] extends (SpecificSolver => Term => Term) {
     type Element <: Term
 
     def apply(unarySolver: SpecificSolver): (Term => Term) = { t: Term => f(unarySolver)(t.asInstanceOf[Element]) }
@@ -23,56 +23,56 @@ object Unary {
   }
 
 
-  object Node0 extends Unary.ProcessingFunction[Solver] {
+  object Node0 extends Unary.ProcessingFunction[Apply] {
     type Element = Node0
 
-    def f(solver: Solver)(t: Node0) = t.copy()
+    def f(solver: Apply)(t: Node0) = t.copy()
   }
 
-  object Node1 extends Unary.ProcessingFunction[Solver] {
+  object Node1 extends Unary.ProcessingFunction[Apply] {
     type Element = Node1
 
-    def f(solver: Solver)(t: Node1) = t.copy(solver(t._1))
+    def f(solver: Apply)(t: Node1) = t.copy(solver(t._1))
   }
 
-  object Node2 extends Unary.ProcessingFunction[Solver] {
+  object Node2 extends Unary.ProcessingFunction[Apply] {
     type Element = Node2
 
-    def f(solver: Solver)(t: Node2) = t.copy(solver(t._1), solver(t._2))
+    def f(solver: Apply)(t: Node2) = t.copy(solver(t._1), solver(t._2))
   }
 
-  object Node3 extends Unary.ProcessingFunction[Solver] {
+  object Node3 extends Unary.ProcessingFunction[Apply] {
     type Element = Node3
 
-    def f(solver: Solver)(t: Node3) = t.copy(solver(t._1), solver(t._2), solver(t._3))
+    def f(solver: Apply)(t: Node3) = t.copy(solver(t._1), solver(t._2), solver(t._3))
   }
 
-  object Node4 extends Unary.ProcessingFunction[Solver] {
+  object Node4 extends Unary.ProcessingFunction[Apply] {
     type Element = Node4
 
-    def f(solver: Solver)(t: Node4) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4))
+    def f(solver: Apply)(t: Node4) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4))
   }
 
-  object Node5 extends Unary.ProcessingFunction[Solver] {
+  object Node5 extends Unary.ProcessingFunction[Apply] {
     type Element = Node5
 
-    def f(solver: Solver)(t: Node5) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5))
+    def f(solver: Apply)(t: Node5) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5))
   }
 
-  object Node6 extends Unary.ProcessingFunction[Solver] {
+  object Node6 extends Unary.ProcessingFunction[Apply] {
     type Element = Node6
 
-    def f(solver: Solver)(t: Node6) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5), solver(t._6))
+    def f(solver: Apply)(t: Node6) = t.copy(solver(t._1), solver(t._2), solver(t._3), solver(t._4), solver(t._5), solver(t._6))
   }
 
-  object DoNothing extends Unary.ProcessingFunction[Solver] {
+  object DoNothing extends Unary.ProcessingFunction[Apply] {
     type Element = Term
 
-    def f(solver: Solver)(a: Term) = a
+    def f(solver: Apply)(a: Term) = a
   }
 
 
-  abstract class Solver(env: Environment) extends (Term => Term) {
+  abstract class Apply(env: Environment) extends (Term => Term) {
 
     type ProcessingFunctions = PartialFunction[Label, ProcessingFunction[this.type]]
 

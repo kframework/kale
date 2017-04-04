@@ -51,7 +51,7 @@ trait TestSetup {
 
   a2b.setRules(a2bRules)
 
-  implicit val unifier = new Matcher(env)
+  implicit val unifier = Matcher()
 
   val substitutionApplier = SubstitutionWithContext(_)
 

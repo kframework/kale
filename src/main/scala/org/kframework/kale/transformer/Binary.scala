@@ -14,7 +14,7 @@ object Binary {
     * f specifies how to process a pair of terms with labels (leftLabel, rightLabel).
     * f is automatically hooked and applied via Apply.
     */
-  trait ProcessingFunction[-SpecificSolver <: Solver] extends (SpecificSolver => ((Term, Term) => Term)) {
+  trait ProcessingFunction[-SpecificSolver <: Apply] extends (SpecificSolver => ((Term, Term) => Term)) {
     type Left <: Term
     type Right <: Term
 
@@ -26,7 +26,7 @@ object Binary {
   }
 
 
-  class Solver(env: Environment) extends ((Term, Term) => Term) {
+  class Apply(env: Environment) extends ((Term, Term) => Term) {
     assert(env.isSealed)
 
     type ProcessingFunctions = PartialFunction[(Label, Label), ProcessingFunction[this.type]]
@@ -72,5 +72,4 @@ object Binary {
       }
     }
   }
-
 }

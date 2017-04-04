@@ -408,7 +408,7 @@ class InvokeLabel(implicit val env: Environment) extends NameFromObject with Lab
 case class Invoke(label: InvokeLabel, _1: Term) extends Node1
 
 trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel {
-  val env: CurrentEnvironment
+  implicit val env: CurrentEnvironment
   private var p_rewriter: Option[Rewriter] = None
 
   def rewriter: Rewriter = p_rewriter.get
@@ -416,7 +416,7 @@ trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel {
   //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
 
   def setRules(rules: Set[Rewrite]): Unit = {
-    p_rewriter = Some(Rewriter(SubstitutionWithContext(_)(env), Matcher(env), env)(rules))
+    p_rewriter = Some(Rewriter(SubstitutionWithContext(_)(env), Matcher(), env)(rules))
   }
 
   def tryToApply(res: Term): Option[Term] =

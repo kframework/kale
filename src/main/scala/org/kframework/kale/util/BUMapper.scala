@@ -13,7 +13,7 @@ object BUMapper {
   }
 }
 
-class BUMapper(val func: PartialFunction[Term, Term])(implicit env: Environment) extends Unary.Solver(env) {
+class BUMapper(val func: PartialFunction[Term, Term])(implicit env: Environment) extends Unary.Apply(env) {
   val liftedF = func.lift
 
   override def apply(t: Term) =

@@ -8,7 +8,7 @@ object Var extends Unary.ProcessingFunction[SubstitutionApply] {
   def f(solver: SubstitutionApply)(v: Variable): Term = solver.substitution.get(v).getOrElse(v)
 }
 
-class SubstitutionApply(val substitution: Substitution)(implicit env: Environment) extends Unary.Solver(env) {
+class SubstitutionApply(val substitution: Substitution)(implicit env: Environment) extends Unary.Apply(env) {
 
   import env._
 

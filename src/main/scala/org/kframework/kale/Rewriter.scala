@@ -1,17 +1,16 @@
 package org.kframework.kale
 
 import org.kframework.kale.transformer.Binary
-import org.kframework.kale.transformer.Binary.Solver
 
 import scala.collection.immutable.TreeSet
 import scala.collection.{Set, mutable}
 
 object Rewriter {
-  def apply(substitutioner: Substitution => (Term => Term), matcher: Binary.Solver, env: Environment)(rules: Set[_ <: Rewrite]) =
+  def apply(substitutioner: Substitution => (Term => Term), matcher: Matcher, env: Environment)(rules: Set[_ <: Rewrite]) =
     new Rewriter(substitutioner, matcher, rules, env)
 }
 
-class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Solver, val rules: Set[_ <: Rewrite], val env: Environment) {
+class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment) {
   assert(env.isSealed)
   assert(rules != null)
 
