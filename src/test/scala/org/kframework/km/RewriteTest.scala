@@ -217,7 +217,7 @@ class RewriteTest extends FreeSpec {
     import rewriter._
     val begin = java.lang.System.nanoTime()
     val res = search(rules, SimplePattern(tcell, BOOL(true)))
-    val end = java.lang.System.nanoTime(); println(end - begin) // 10293112084 (~ 10s)
+    val end = java.lang.System.nanoTime(); println((end - begin) / Math.pow(10, 9)) // 0.320054682
     assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(n)),INT(0)),_(STRING(sum)),INT(55)))) /\\ BOOL(true))")
   }
 
@@ -243,7 +243,7 @@ class RewriteTest extends FreeSpec {
     import rewriter._
     val begin = java.lang.System.nanoTime()
     val res = search(rules, SimplePattern(tcell, INT.gt(N, INT(0))))
-    val end = java.lang.System.nanoTime(); println(end - begin) // 1114485111 (~ 1s)
+    val end = java.lang.System.nanoTime(); println((end - begin) / Math.pow(10, 9)) // 0.703666167
     assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(i)),I:Int),_(STRING(n)),N:Int),_(STRING(sum)),_/Int_(_*Int_(I:Int,_-Int_(I:Int,INT(1))),INT(2))))) /\\ _andBool_(_>Int_(N:Int,INT(0)),_==Bool_(BOOL(false),_<=Int_(I:Int,N:Int))), <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(i)),_+Int_(I:Int,INT(1))),_(STRING(n)),N:Int),_(STRING(sum)),_+Int_(_/Int_(_*Int_(I:Int,_-Int_(I:Int,INT(1))),INT(2)),I:Int)))) /\\ _andBool_(_>Int_(N:Int,INT(0)),_==Bool_(BOOL(true),_<=Int_(I:Int,N:Int))))")
     // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(i)),I:Int),_(STRING(n)),N:Int),_(STRING(sum)),_/Int_(_*Int_(I:Int,_-Int_(I:Int,INT(1))),INT(2))))) /\ _andBool_(_>Int_(N:Int,INT(0)),_==Bool_(BOOL(false),_<=Int_(I:Int,N:Int)))
     // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(i)),_+Int_(I:Int,INT(1))),_(STRING(n)),N:Int),_(STRING(sum)),_+Int_(_/Int_(_*Int_(I:Int,_-Int_(I:Int,INT(1))),INT(2)),I:Int)))) /\ _andBool_(_>Int_(N:Int,INT(0)),_==Bool_(BOOL(true),_<=Int_(I:Int,N:Int)))

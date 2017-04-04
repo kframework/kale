@@ -34,8 +34,14 @@ object z3 {
 
   case class Fail(msg: String) extends Exception
 
+  def sat(declareDatatypes: String, datatypes: Set[Sort])(term: Term): Boolean = term match {
+    case BOOL(true) => true
+    case BOOL(false) => false
+    case _ => satZ3(declareDatatypes, datatypes)(term)
+  }
+
   @throws(classOf[Fail])
-  def sat(declareDatatypes: String, datatypes: Set[Sort])(term: Term): Boolean = {
+  def satZ3(declareDatatypes: String, datatypes: Set[Sort])(term: Term): Boolean = {
     val query = declare(declareDatatypes, datatypes)(term) + "\n(assert " + encode(term) + ")\n" + "(check-sat)\n"
     val (exitValue, stdout, stderr) = run(query)
     if (exitValue == 0) stdout == "sat"
