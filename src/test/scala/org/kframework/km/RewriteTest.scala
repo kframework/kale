@@ -203,7 +203,7 @@ class RewriteTest extends FreeSpec {
     import Imp._
     val n = IdOf(STRING("n"))
     val sum = IdOf(STRING("sum"))
-    val n10 = StmtAssign(n, AExpInt(INT(10))) // n = 10;
+    val n10 = StmtAssign(n, AExpInt(INT(100))) // n = 10;
     val suminc = StmtAssign(sum, AExpPlus(AExpId(sum), AExpId(n))) // sum = sum + n;
     val ndec = StmtAssign(n, AExpPlus(AExpId(n), AExpInt(INT(-1)))) // n = n - 1;
     val ngt0 = BExpNot(BExpLeq(AExpId(n), AExpInt(INT(0)))) // !(n <= 0)
@@ -217,8 +217,8 @@ class RewriteTest extends FreeSpec {
     import rewriter._
     val begin = java.lang.System.nanoTime()
     val res = search(rules, SimplePattern(tcell, BOOL(true)))
-    val end = java.lang.System.nanoTime(); println((end - begin) / Math.pow(10, 9)) // 0.320054682
-    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(n)),INT(0)),_(STRING(sum)),INT(55)))) /\\ BOOL(true))")
+    val end = java.lang.System.nanoTime(); println((end - begin) / Math.pow(10, 9)) // 1.07162443
+    assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(n)),INT(0)),_(STRING(sum)),INT(5050)))) /\\ BOOL(true))")
   }
 
   "sum.imp.symbolic" in {
@@ -243,7 +243,7 @@ class RewriteTest extends FreeSpec {
     import rewriter._
     val begin = java.lang.System.nanoTime()
     val res = search(rules, SimplePattern(tcell, INT.gt(N, INT(0))))
-    val end = java.lang.System.nanoTime(); println((end - begin) / Math.pow(10, 9)) // 0.703666167
+    val end = java.lang.System.nanoTime(); println((end - begin) / Math.pow(10, 9)) // 0.661640726
     assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(i)),I:Int),_(STRING(n)),N:Int),_(STRING(sum)),_/Int_(_*Int_(I:Int,_-Int_(I:Int,INT(1))),INT(2))))) /\\ _andBool_(_>Int_(N:Int,INT(0)),_==Bool_(BOOL(false),_<=Int_(I:Int,N:Int))), <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(i)),_+Int_(I:Int,INT(1))),_(STRING(n)),N:Int),_(STRING(sum)),_+Int_(_/Int_(_*Int_(I:Int,_-Int_(I:Int,INT(1))),INT(2)),I:Int)))) /\\ _andBool_(_>Int_(N:Int,INT(0)),_==Bool_(BOOL(true),_<=Int_(I:Int,N:Int))))")
     // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(i)),I:Int),_(STRING(n)),N:Int),_(STRING(sum)),_/Int_(_*Int_(I:Int,_-Int_(I:Int,INT(1))),INT(2))))) /\ _andBool_(_>Int_(N:Int,INT(0)),_==Bool_(BOOL(false),_<=Int_(I:Int,N:Int)))
     // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(i)),_+Int_(I:Int,INT(1))),_(STRING(n)),N:Int),_(STRING(sum)),_+Int_(_/Int_(_*Int_(I:Int,_-Int_(I:Int,INT(1))),INT(2)),I:Int)))) /\ _andBool_(_>Int_(N:Int,INT(0)),_==Bool_(BOOL(true),_<=Int_(I:Int,N:Int)))
