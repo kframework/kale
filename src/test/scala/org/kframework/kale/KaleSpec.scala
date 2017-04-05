@@ -1,10 +1,12 @@
 package org.kframework.kale
 
+import org.kframework.kale.standard.CurrentEnvironment
+import org.kframework.kale.util.Implicits
 import org.scalatest.FreeSpec
 
 class KaleSpec extends FreeSpec {
 
-  implicit val env = new Environment
+  implicit val env = new CurrentEnvironment
   import env._
   import env.builtin._
   val impl = new Implicits()
@@ -26,10 +28,10 @@ class KaleSpec extends FreeSpec {
     val x: Constant[Int] = 2
     val y: Constant[Int] = 3
 
-    assert(x == INT(2))
-    assert(x != y)
-
     "Int" in {
+      assert(x == INT(2))
+      assert(x != y)
+
       assert(x.value == 2)
       assert(x.label == INT)
     }

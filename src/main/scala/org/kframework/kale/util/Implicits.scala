@@ -1,8 +1,11 @@
-package org.kframework.kale
+package org.kframework.kale.util
+
+import org.kframework.kale._
+import org.kframework.kale.standard.{CurrentEnvironment, FreeLabel2}
 
 import scala.language.implicitConversions
 
-class Implicits(implicit env: Environment) extends StaticImplicits {
+class Implicits(implicit env: CurrentEnvironment) extends StaticImplicits {
 
   import env.builtin._
 
@@ -18,7 +21,7 @@ class Implicits(implicit env: Environment) extends StaticImplicits {
   }
 
   implicit class RichTerm(t: Term)(implicit env: Environment) {
-    def :=(tt: Term)(implicit m: transformer.Binary.Apply): Term = m(t, tt)
+    def :=(tt: Term)(implicit m: Matcher): Term = m(t, tt)
   }
 
 }
@@ -29,6 +32,9 @@ trait StaticImplicits {
     def contains(subterm: Term): Boolean = if (t == subterm) true else t.exists(_.contains(subterm))
   }
 
+  implicit class StaticRichAssocLabel(label: AssocLabel) {
+    def apply(args: Term*): Term = label.apply(args)
+  }
 }
 
 object StaticImplicits extends StaticImplicits

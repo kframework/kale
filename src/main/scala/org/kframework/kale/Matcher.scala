@@ -1,19 +1,20 @@
 package org.kframework.kale
 
+import org.kframework.kale.standard.{CurrentEnvironment, FreeLabel0, FreeLabel1, FreeLabel2}
 import org.kframework.kale.transformer.Binary
+import org.kframework.kale.transformer.Binary.Apply
 
 import scala.collection._
 
-case class Matcher(env: Environment) {
+case class Matcher()(implicit val env: CurrentEnvironment) extends Binary.Apply(env) {
 
-  import context._
+  import org.kframework.kale.context._
   import Binary._
-
-  implicit val envv = env
-
   import env._
 
-  def shortCircuitAnd(solver: State)(toEqual: (Term, Term)*): Term = {
+  import org.kframework.kale.util.StaticImplicits._
+
+  def shortCircuitAnd(solver: Apply)(toEqual: (Term, Term)*): Term = {
     toEqual.foldLeft(Top: Term)({
       case (Bottom, _) => Bottom
       case (soFar, (l, r)) =>
@@ -25,27 +26,27 @@ case class Matcher(env: Environment) {
     })
   }
 
-  object FreeNode0FreeNode0 extends ProcessingFunction[Node0, Node0, Top.type] {
-    def f(solver: State)(a: Node0, b: Node0) = Top
+  object FreeNode0FreeNode0 extends ProcessingFunction[Apply] with TypedWith[Node0, Node0] {
+    def f(solver: Apply)(a: Node0, b: Node0) = Top
   }
 
-  object FreeNode1FreeNode1 extends ProcessingFunction[Node1, Node1, Term] {
-    def f(solver: State)(a: Node1, b: Node1) = shortCircuitAnd(solver)((a._1, b._1))
+  object FreeNode1FreeNode1 extends ProcessingFunction[Apply] with TypedWith[Node1, Node1] {
+    def f(solver: Apply)(a: Node1, b: Node1) = shortCircuitAnd(solver)((a._1, b._1))
   }
 
-  object FreeNode2FreeNode2 extends ProcessingFunction[Node2, Node2, Term] {
-    def f(solver: State)(a: Node2, b: Node2) = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2))
+  object FreeNode2FreeNode2 extends ProcessingFunction[Apply] with TypedWith[Node2, Node2] {
+    def f(solver: Apply)(a: Node2, b: Node2) = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2))
   }
 
-  object FreeNode3FreeNode3 extends ProcessingFunction[Node3, Node3, Term] {
-    def f(solver: State)(a: Node3, b: Node3) = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2), (a._3, b._3))
+  object FreeNode3FreeNode3 extends ProcessingFunction[Apply] with TypedWith[Node3, Node3] {
+    def f(solver: Apply)(a: Node3, b: Node3) = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2), (a._3, b._3))
   }
 
-  object FreeNode4FreeNode4 extends ProcessingFunction[Node4, Node4, Term] {
-    def f(solver: State)(a: Node4, b: Node4) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3), solver(a._4, b._4)))
+  object FreeNode4FreeNode4 extends ProcessingFunction[Apply] with TypedWith[Node4, Node4] {
+    def f(solver: Apply)(a: Node4, b: Node4) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3), solver(a._4, b._4)))
   }
 
-  def matchContents(l: AssocLabel, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: State): Term = {
+  def matchContents(l: AssocLabel, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = {
     val res = (ksLeft.toSeq, ksRight.toSeq) match {
       case (Seq(), Seq()) => Top
       case ((v: Variable) +: tailL, ksR) =>
@@ -65,8 +66,8 @@ case class Matcher(env: Environment) {
     res
   }
 
-  object AssocTerm extends ProcessingFunction[Assoc, Term, Term] {
-    def f(solver: State)(a: Assoc, b: Term) = {
+  object AssocTerm extends ProcessingFunction[Apply] with TypedWith[Assoc, Term] {
+    def f(solver: Apply)(a: Assoc, b: Term) = {
       val asList = a.label.asList _
       val l1 = asList(a)
       val l2 = asList(b)
@@ -74,8 +75,8 @@ case class Matcher(env: Environment) {
     }
   }
 
-  object TermAssoc extends ProcessingFunction[Term, Assoc, Term] {
-    def f(solver: State)(a: Term, b: Assoc) = {
+  object TermAssoc extends ProcessingFunction[Apply] with TypedWith[Term, Assoc] {
+    def f(solver: Apply)(a: Term, b: Assoc) = {
       val asList = b.label.asList _
       val l1 = asList(a)
       val l2 = asList(b)
@@ -86,8 +87,8 @@ case class Matcher(env: Environment) {
   case class MatchNotSupporteredError(l: Term, r: Term, message: String = "") extends
     AssertionError("Trying to match " + l + " with " + r + " not supported yet. " + message)
 
-  object MapTerm extends ProcessingFunction[Term, Term, Term] {
-    override def f(solver: State)(a: Term, b: Term): Term = a.label match {
+  object MapTerm extends ProcessingFunction[Apply] with TypedWith[Term, Term] {
+    override def f(solver: Apply)(a: Term, b: Term): Term = a.label match {
       case mapLabel: builtin.MapLabel =>
         val mapLabel.map(left, leftUnindexed) = a
         val mapLabel.map(right, rightUnindexed) = b
@@ -151,57 +152,41 @@ case class Matcher(env: Environment) {
     }
   }
 
-  object VarLeft extends ProcessingFunction[Variable, Term, Term] {
-    def f(solver: State)(a: Variable, b: Term) = Equality(a.asInstanceOf[Variable], b)
+  object VarLeft extends ProcessingFunction[Apply] with TypedWith[Variable, Term] {
+    def f(solver: Apply)(a: Variable, b: Term) = Equality(a.asInstanceOf[Variable], b)
   }
 
-  object Constants extends ProcessingFunction[Constant[_], Constant[_], Term] {
-    override def f(solver: State)(a: Constant[_], b: Constant[_]) =
+  object Constants extends ProcessingFunction[Apply] with TypedWith[Constant[_], Constant[_]] {
+    override def f(solver: Apply)(a: Constant[_], b: Constant[_]) =
       Truth(a.value == b.value)
   }
 
-  object AndTerm extends ProcessingFunction[And, Term, Term] {
-    override def f(solver: State)(a: And, b: Term): Term = {
+  object AndTerm extends ProcessingFunction[Apply] with TypedWith[And, Term] {
+    override def f(solver: Apply)(a: And, b: Term): Term = {
       val solution = solver(a.nonFormula.get, b)
       And(a.formulas, solution)
     }
   }
 
-  def default = {
-    val variableXlabel = labels.map(Piece(Variable, _, VarLeft))
-    val andXlabel = labels.map(Piece(And, _, AndTerm))
+  import standard._
 
-    val freeLikeLabelXfreeLikeLabel = labels.collect({
-      case l: FreeLabel0 => Piece(l, l, FreeNode0FreeNode0)
-      case l: FunctionDefinedByRewritingLabel0 => Piece(l, l, FreeNode0FreeNode0)
-      case l: FreeLabel1 => Piece(l, l, FreeNode1FreeNode1)
-      case l: FunctionDefinedByRewritingLabel1 => Piece(l, l, FreeNode1FreeNode1)
-      case l: FreeLabel2 => Piece(l, l, FreeNode2FreeNode2)
-      case l: FunctionDefinedByRewritingLabel2 => Piece(l, l, FreeNode2FreeNode2)
-      case l: FreeLabel3 => Piece(l, l, FreeNode3FreeNode3)
-      case l: FunctionDefinedByRewritingLabel3 => Piece(l, l, FreeNode3FreeNode3)
-      case l: FreeLabel4 => Piece(l, l, FreeNode4FreeNode4)
-      case l: FunctionDefinedByRewritingLabel4 => Piece(l, l, FreeNode4FreeNode4)
-      case l: ConstantLabel[_] => Piece(l, l, Constants)
-    })
-
-    val assoc = labels.flatMap({
-      case m: env.builtin.MapLabel =>
-        labels.collect({
-          case ll if !ll.isInstanceOf[Variable] => Piece(m, ll, MapTerm)
-        })
-      case l: AssocLabel if l != And =>
-        labels.collect({
-          case ll if !ll.isInstanceOf[Variable] => Piece(l, ll, AssocTerm)
-        })
-      case _ => Set[Piece]()
-    })
-
-    val anywhereContextMatchers = labels.map(Piece(AnywhereContext, _, new AnywhereContextMatcher()))
-
-    val contextMatchers = labels.map(Piece(CAPP, _, new PatternContextMatcher()))
-
-    new Apply(variableXlabel | andXlabel | freeLikeLabelXfreeLikeLabel | assoc | anywhereContextMatchers | contextMatchers, env)
-  }
-
+  override def processingFunctions: ProcessingFunctions = definePartialFunction({
+    case (Variable, _) => VarLeft
+    case (And, _) => AndTerm
+    case (`AnywhereContext`, _) => new AnywhereContextMatcher()
+    case (`CAPP`, _) => new PatternContextMatcher()
+    case (_: FreeLabel0, _: FreeLabel0) => FreeNode0FreeNode0
+    case (_: FreeLabel1, _: FreeLabel1) => FreeNode1FreeNode1
+    case (_: FreeLabel2, _: FreeLabel2) => FreeNode2FreeNode2
+    case (_: FreeLabel3, _: FreeLabel3) => FreeNode3FreeNode3
+    case (_: FreeLabel4, _: FreeLabel4) => FreeNode4FreeNode4
+    case (_: FunctionDefinedByRewritingLabel0, _: FunctionDefinedByRewritingLabel0) => FreeNode0FreeNode0
+    case (_: FunctionDefinedByRewritingLabel1, _: FunctionDefinedByRewritingLabel1) => FreeNode1FreeNode1
+    case (_: FunctionDefinedByRewritingLabel2, _: FunctionDefinedByRewritingLabel2) => FreeNode2FreeNode2
+    case (_: FunctionDefinedByRewritingLabel3, _: FunctionDefinedByRewritingLabel3) => FreeNode3FreeNode3
+    case (_: FunctionDefinedByRewritingLabel4, _: FunctionDefinedByRewritingLabel4) => FreeNode4FreeNode4
+    case (_: ConstantLabel[_], _: ConstantLabel[_]) => Constants
+    case (_: builtin.MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm
+    case (_: AssocLabel, right) if !right.isInstanceOf[Variable] => AssocTerm
+  }) orElse super.processingFunctions
 }

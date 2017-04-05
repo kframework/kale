@@ -1,5 +1,7 @@
 package org.kframework.kale
 
+import org.kframework.kale.standard._
+import org.kframework.kale.util.Implicits
 import org.scalatest.FreeSpec
 
 /*
@@ -75,7 +77,7 @@ endmodule
  */
 
 object IMP {
-  implicit val env = new Environment
+  implicit val env = new CurrentEnvironment
 
   import env._
   import builtin._
@@ -93,7 +95,7 @@ object IMP {
   val seq = FreeLabel2("__")
   val program = FreeLabel2("_;_")
   val emptyIntList = FreeLabel0(".List{Int}")
-  val ints = new AssocWithIdListLabel("_,_", emptyIntList())
+  val ints = new standard.AssocWithIdListLabel("_,_", emptyIntList())
 
   val T = FreeLabel2("<T>")
   val k = FreeLabel1("<k>")
@@ -107,13 +109,13 @@ object IMP {
   }, emptyStates())
 
   val emptyk = FreeLabel0(".K")
-  val kseq = new AssocWithIdListLabel("_~>_", emptyk())
+  val kseq = new standard.AssocWithIdListLabel("_~>_", emptyk())
 
   val intDiv = PrimitiveFunction2("_/Int_", INT, (a: Int, b: Int) => a / b)
 
   case class isSort(label: LeafLabel[_])(implicit val env: Environment) extends {
     val name: String = "is" + label.name
-  } with PurelyFunctionalLabel1 {
+  } with FunctionLabel1 {
     def f(_1: Term): Option[Term] = Some(Truth(_1.label == label))
   }
 
@@ -175,9 +177,8 @@ object IMP {
 
   env.seal()
 
-  val matcher = Matcher(env).default
-  val substitutionApplier = SubstitutionApply(env)
-  val rewrite = Rewriter(substitutionApplier, matcher, env)(rules)
+  val matcher = Matcher()
+  val rewrite = Rewriter(SubstitutionWithContext(_), matcher, env)(rules)
 }
 
 //object IMP {

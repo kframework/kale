@@ -1,8 +1,10 @@
-package org.kframework.kale
+package org.kframework.kale.standard
 
-import collection._
+import org.kframework.kale._
 
-class Builtins(implicit val env: Environment) {
+import scala.collection._
+
+class Builtins(implicit val env: CurrentEnvironment) {
 
   val eenv = env
 
@@ -10,7 +12,9 @@ class Builtins(implicit val env: Environment) {
     val env = eenv
   }
 
-  sealed trait PrimordialConstantLabel[T] extends HasEnvironment with ConstantLabel[T]
+  sealed trait PrimordialConstantLabel[T] extends HasEnvironment with ConstantLabel[T] {
+    def apply(v: T): Constant[T] = SimpleConstant(this, v)
+  }
 
   abstract class ReferenceLabel[T](val name: String) extends HasEnvironment with PrimordialConstantLabel[T]
 
@@ -59,7 +63,7 @@ class Builtins(implicit val env: Environment) {
 
     object in extends {
       val name = SetLabel.this.name + ".in"
-    } with HasEnvironment with PurelyFunctionalLabel2 {
+    } with HasEnvironment with FunctionLabel2 {
       def f(s: Term, key: Term) = s match {
         case set(elements) => Some(BOOLEAN(elements.contains(key)))
       }
@@ -73,7 +77,9 @@ class Builtins(implicit val env: Environment) {
 
   case class SET(label: SetLabel, elements: Set[Term]) extends Assoc {
     val assocIterable: Iterable[Term] = elements
+
     override def _1: Term = elements.head
+
     override def _2: Term = SET(label, elements.tail)
   }
 
@@ -81,9 +87,11 @@ class Builtins(implicit val env: Environment) {
     def isIndexable(t: Term) = !t.label.isInstanceOf[VariableLabel] && !t.isInstanceOf[FunctionLabel]
 
     override def construct(l: Iterable[Term]): Term = {
-      val indexed = l collect {
-        case t if isIndexable(t) => (indexFunction(t), t)
-      } toMap
+      val indexed = l
+        .collect {
+          case t if isIndexable(t) => (indexFunction(t), t)
+        }
+        .toMap
       val unindexed = (l filterNot isIndexable).toSet
       new MAP(this, indexed, unindexed)
     }
@@ -108,7 +116,7 @@ class Builtins(implicit val env: Environment) {
     // returns the entire object that has been indexed
     object lookupByKey extends {
       val name = MapLabel.this.name + ".lookupByKey"
-    } with HasEnvironment with PurelyFunctionalLabel2 {
+    } with HasEnvironment with FunctionLabel2 {
       def f(m: Term, key: Term) = m match {
         case map(scalaMap, restOfElements) =>
           scalaMap.get(key).orElse(
@@ -120,7 +128,7 @@ class Builtins(implicit val env: Environment) {
     // the classic map lookup
     object lookup extends {
       val name = MapLabel.this.name + ".lookup"
-    } with HasEnvironment with PurelyFunctionalLabel2 {
+    } with HasEnvironment with FunctionLabel2 {
       def f(m: Term, key: Term) = m match {
         case map(scalaMap, restOfElements) =>
           scalaMap.get(key).map(_.iterator().toList(1)).orElse(
@@ -131,7 +139,7 @@ class Builtins(implicit val env: Environment) {
 
     object keys extends {
       val name = MapLabel.this.name + ".keys"
-    } with HasEnvironment with PurelyFunctionalLabel1 {
+    } with HasEnvironment with FunctionLabel1 {
       def f(m: Term) = m match {
         case map(scalaMap, restOfElements) =>
           Some(BuiltinSet(scalaMap.keys))

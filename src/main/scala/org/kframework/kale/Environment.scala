@@ -1,14 +1,9 @@
 package org.kframework.kale
 
-import org.kframework.kale.context.{AnywhereContextApplicationLabel, PatternContextApplicationLabel}
-
 import scala.collection.mutable
 import org.kframework.minikore.interfaces.pattern
 
-/**
-  * Created by cos on 3/15/17.
-  */
-case class Environment() {
+trait Environment extends KORELabels {
   val uniqueLabels = mutable.Map[String, Label]()
 
   def labels = uniqueLabels.values.toSet
@@ -35,51 +30,19 @@ case class Environment() {
   override def toString = {
     "nextId: " + uniqueLabels.size + "\n" + uniqueLabels.mkString("\n")
   }
-
-  implicit private val tthis = this
-
-  val Variable = VariableLabel()
-
-  val Truth = TruthLabel()
-
-  val Hole = Variable("☐")
-
-  val Top: Truth with Substitution with pattern.Top = TopInstance()
-  val Bottom: Truth with pattern.Bottom = BottomInstance()
-
-  val Equality = EqualityLabel()
-  val And = AndLabel()
-  val Or = OrLabel()
-  val Rewrite = RewriteLabel()
-
-  val AnywhereContext = AnywhereContextApplicationLabel()
-  val CAPP = PatternContextApplicationLabel("CAPP")
-
-  val builtin = new Builtins()(this)
-
-  def bottomize(_1: Term)(f: => Term): Term = {
-    if (Bottom == _1)
-      Bottom
-    else
-      f
-  }
-
-  def bottomize(_1: Term, _2: Term)(f: => Term): Term = {
-    if (Bottom == _1 || Bottom == _2)
-      Bottom
-    else
-      f
-  }
-
-  def bottomize(terms: Term*)(f: => Term): Term = {
-    if (terms.contains(Bottom))
-      Bottom
-    else
-      f
-  }
-
-  def renameVariables[T <: Term](t: T): T = {
-    val rename = And.substitution((Util.variables(t) map (v => (v, v.label(v.name + Math.random().toInt)))).toMap)
-    rename(t).asInstanceOf[T]
-  }
 }
+
+trait KORELabels {
+  // Labels
+  val Variable: VariableLabel
+  val And: AndLabel
+  val Or: OrLabel
+  val Rewrite: RewriteLabel
+  val Equality: EqualityLabel
+  val Truth: TruthLabel
+
+  // Constants
+  val Bottom: Truth with pattern.Bottom
+  val Top: Truth with Substitution with pattern.Top
+}
+

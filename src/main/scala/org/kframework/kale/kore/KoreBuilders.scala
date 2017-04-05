@@ -1,5 +1,7 @@
-package org.kframework.kale
+package org.kframework.kale.kore
 
+import org.kframework.kale._
+import org.kframework.kale.standard.SimpleVariable
 import org.kframework.minikore.interfaces.build.Builders
 import org.kframework.minikore.interfaces.pattern
 
