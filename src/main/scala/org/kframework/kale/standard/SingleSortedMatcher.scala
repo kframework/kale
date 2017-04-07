@@ -1,17 +1,15 @@
-package org.kframework.kale
+package org.kframework.kale.standard
 
-import org.kframework.kale.standard._
+import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
-import org.kframework.kale.transformer.Binary.Apply
 
-import scala.collection._
+import scala.collection.{+:, Iterable, Seq}
 
-case class Matcher()(implicit val env: CurrentEnvironment) extends Binary.Apply(env) {
+case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends MatcherOrUnifier {
 
-  import org.kframework.kale.context._
   import Binary._
   import env._
-
+  import org.kframework.kale.context._
   import org.kframework.kale.util.StaticImplicits._
 
   def shortCircuitAnd(solver: Apply)(toEqual: (Term, Term)*): Term = {

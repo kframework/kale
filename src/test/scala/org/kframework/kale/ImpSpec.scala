@@ -142,7 +142,7 @@ object IMP {
 
   env.seal()
 
-  val matcher = Matcher()
+  val matcher = SingleSortedMatcher()
   val rewrite = Rewriter(SubstitutionWithContext(_), matcher, env)(rules)
 }
 

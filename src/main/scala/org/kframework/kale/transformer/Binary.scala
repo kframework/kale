@@ -26,7 +26,8 @@ object Binary {
   }
 
 
-  class Apply(env: Environment) extends ((Term, Term) => Term) {
+  trait Apply extends ((Term, Term) => Term) {
+    val env: Environment
     assert(env.isSealed)
 
     type ProcessingFunctions = PartialFunction[(Label, Label), ProcessingFunction[this.type]]

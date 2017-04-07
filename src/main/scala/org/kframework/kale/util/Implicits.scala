@@ -22,7 +22,7 @@ class Implicits(implicit val env: CurrentEnvironment) extends StaticImplicits {
   }
 
   implicit class RichTerm(t: Term) {
-    def :=(tt: Term)(implicit m: Matcher): Term = m(t, tt)
+    def :=(tt: Term)(implicit m: MatcherOrUnifier): Term = m(t, tt)
   }
 }
 

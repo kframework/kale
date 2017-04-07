@@ -430,7 +430,7 @@ trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel {
   //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
 
   def setRules(rules: Set[Rewrite]): Unit = {
-    p_rewriter = Some(Rewriter(SubstitutionWithContext(_), Matcher(), env)(rules))
+    p_rewriter = Some(Rewriter(SubstitutionWithContext(_), SingleSortedMatcher(), env)(rules))
   }
 
   def tryToApply(res: Term): Option[Term] =
