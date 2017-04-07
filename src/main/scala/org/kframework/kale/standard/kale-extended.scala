@@ -9,6 +9,11 @@ import scala.collection._
 import scala.Iterable
 import org.kframework.minikore.interfaces.pattern
 
+trait DNFEnvironment extends Environment with Bottomize {
+  override val And: DNFAndLabel = DNFAndLabel()(this)
+  override val Or: DNFOrLabel = DNFOrLabel()(this)
+}
+
 case class SimpleEqualityLabel(implicit val env: CurrentEnvironment) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
     if (_1 == _2)
@@ -32,7 +37,7 @@ case class SimpleEqualityLabel(implicit val env: CurrentEnvironment) extends Nam
   }
 }
 
-private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends Node2 with BinaryInfix with pattern.Equals {
+private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends kale.Equality {
   val label = env.Equality
 
   override def equals(other: Any): Boolean = other match {
@@ -41,7 +46,7 @@ private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environme
   }
 }
 
-private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: CurrentEnvironment) extends Equality(variable, term) with Substitution with BinaryInfix {
+private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: DNFEnvironment) extends Equality(variable, term) with kale.Binding {
   assert(_1.isInstanceOf[Variable])
 
   def get(v: Variable): Option[Term] = if (_1 == v) Some(_2) else None
@@ -53,10 +58,12 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
     */
   def apply(t: Term): Term = t match {
     case `variable` => term
+
+      // TODO: Cosmin: move this to .context
     case Node(l: Context1ApplicationLabel, cs) =>
       val contextVar = cs.next.asInstanceOf[Variable]
       if (variable == contextVar) {
-        apply(env.And.substitution(Map(env.Hole -> cs.next))(term))
+        apply(env.And.substitution(Map(env.Variable("☐", Sort.K) -> cs.next))(term))
       } else {
         l(contextVar, apply(cs.next))
       }
@@ -65,11 +72,9 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
       l(newTerms).updatePostProcess(this)
     case _ => t
   }
-
-  override def toString: String = super[BinaryInfix].toString
 }
 
-case class DNFAndLabel(implicit val env: CurrentEnvironment) extends {
+case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
   val name = "∧"
 } with AssocWithIdLabel with AndLabel {
 
@@ -237,7 +242,7 @@ case class DNFAndLabel(implicit val env: CurrentEnvironment) extends {
   }
 }
 
-private[kale] final class AndOfTerms(val terms: Set[Term])(implicit env: Environment) extends And with Assoc {
+private[kale] final class AndOfTerms(val terms: Set[Term])(implicit val env: Environment) extends And with Assoc {
 
   import env._
 
@@ -291,7 +296,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
   override lazy val assocIterable: Iterable[Term] = And.asList(s) ++ And.asList(terms)
 }
 
-final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implicit env: CurrentEnvironment) extends And with Substitution with BinaryInfix {
+final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implicit env: DNFEnvironment) extends And with Substitution with BinaryInfix {
   assert(m.size >= 2)
 
   import env._
@@ -318,10 +323,11 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
     */
   def apply(t: Term): Term = t match {
     case v: Variable => m.getOrElse(v, v)
+    // TODO: Cosmin: move this to .context
     case Node(l: Context1ApplicationLabel, cs) =>
       val contextVar = cs.next.asInstanceOf[Variable]
       m.get(contextVar).map({ context =>
-        apply(And.substitution(Map(Hole -> cs.next))(context))
+        apply(And.substitution(Map(Variable("☐", Sort.K) -> cs.next))(context))
       }).getOrElse(l(contextVar, apply(cs.next)))
 
     case n@Node(l, cs) =>
@@ -416,7 +422,7 @@ trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel {
   //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
 
   def setRules(rules: Set[Rewrite]): Unit = {
-    p_rewriter = Some(Rewriter(SubstitutionWithContext(_)(env), Matcher(), env)(rules))
+    p_rewriter = Some(Rewriter(SubstitutionWithContext(_), Matcher(), env)(rules))
   }
 
   def tryToApply(res: Term): Option[Term] =

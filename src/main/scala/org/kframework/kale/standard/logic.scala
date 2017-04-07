@@ -2,24 +2,25 @@ package org.kframework.kale.standard
 
 import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kale.util.NameFromObject
+import org.kframework.kale.util.{NameFromObject, Named}
 import org.kframework.minikore.interfaces.pattern
 
 import scala.collection.Map
 
 case class SimpleConstant[T](label: ConstantLabel[T], value: T) extends Constant[T]
 
-case class SimpleVariableLabel(implicit val env: Environment) extends NameFromObject with VariableLabel {
-  def apply(name: String): Variable = SimpleVariable(name)
+case class SimpleVariableLabel(implicit val env: Environment) extends Named("#Variable") with VariableLabel {
+  def apply(name: String): Variable = apply(name, Sort.K)
+  def apply(nameAndSort: (String, kale.Sort)): Variable = SimpleVariable(nameAndSort._1, nameAndSort._2)
 }
 
-case class SimpleVariable(name: String)(implicit env: Environment) extends Variable with pattern.Variable {
+case class SimpleVariable(name: String, sort: kale.Sort)(implicit env: Environment) extends Variable with pattern.Variable {
   val label = env.Variable
 
   // FOR KORE
   override def build(_1: pattern.Name, _2: pattern.Sort): SimpleVariable = {
     assert(_2.str == "K")
-    SimpleVariable(_1)
+    SimpleVariable(_1, _2.asInstanceOf[kale.Sort])
   }
 
   override def _1: pattern.Name = name

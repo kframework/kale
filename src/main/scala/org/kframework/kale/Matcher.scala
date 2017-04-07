@@ -173,8 +173,8 @@ case class Matcher()(implicit val env: CurrentEnvironment) extends Binary.Apply(
   override def processingFunctions: ProcessingFunctions = definePartialFunction({
     case (Variable, _) => VarLeft
     case (And, _) => AndTerm
-    case (`AnywhereContext`, _) => new AnywhereContextMatcher()
-    case (`CAPP`, _) => new PatternContextMatcher()
+    case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
+    case (`CAPP`, _) => new PatternContextMatcher()(env)
     case (_: FreeLabel0, _: FreeLabel0) => FreeNode0FreeNode0
     case (_: FreeLabel1, _: FreeLabel1) => FreeNode1FreeNode1
     case (_: FreeLabel2, _: FreeLabel2) => FreeNode2FreeNode2

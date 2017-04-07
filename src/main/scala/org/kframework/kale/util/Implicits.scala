@@ -5,7 +5,7 @@ import org.kframework.kale.standard.{CurrentEnvironment, FreeLabel2}
 
 import scala.language.implicitConversions
 
-class Implicits(implicit env: CurrentEnvironment) extends StaticImplicits {
+class Implicits(implicit val env: CurrentEnvironment) extends StaticImplicits {
 
   import env.builtin._
 
@@ -20,10 +20,9 @@ class Implicits(implicit env: CurrentEnvironment) extends StaticImplicits {
     def +(y: Term): Term = plus(x, y)
   }
 
-  implicit class RichTerm(t: Term)(implicit env: Environment) {
+  implicit class RichTerm(t: Term) {
     def :=(tt: Term)(implicit m: Matcher): Term = m(t, tt)
   }
-
 }
 
 trait StaticImplicits {

@@ -1,6 +1,5 @@
 package org.kframework.kale
 
-import org.kframework.kale.standard.Binding
 import org.kframework.minikore.interfaces.pattern
 
 trait FormulaLabel
@@ -34,14 +33,29 @@ trait Constant[T] extends Leaf[T] with pattern.DomainValue {
   def _2: String = value.toString
 }
 
-trait VariableLabel extends LeafLabel[String] {
-  def apply(v: String): Variable
+trait Sort extends pattern.Sort {
+  val name: String
+
+  override def equals(other: Any): Boolean = other match {
+    case that: Sort => that.name == name
+    case _ => false
+  }
+
+  override def hashCode(): Int = name.hashCode
+
+  // FOR KORE
+  val str = name
 }
 
-trait Variable extends Leaf[String] {
+trait VariableLabel extends LeafLabel[(String, Sort)] {
+  def apply(v: (String, Sort)): Variable
+}
+
+trait Variable extends Leaf[(String, Sort)] {
   val label: VariableLabel
   val name: String
-  lazy val value: String = name
+  val sort: Sort
+  lazy val value = (name, sort)
   val isGround = false
 
   override def toString: String = name
@@ -67,6 +81,10 @@ trait RewriteLabel extends Label2
 trait EqualityLabel extends Label2 with FormulaLabel {
   def binding(_1: Variable, _2: Term): Binding
 }
+
+trait Equality extends Node2 with BinaryInfix with pattern.Equals
+
+trait Binding extends Equality with Substitution
 
 trait And extends Assoc with pattern.And {
   val formulas: Term

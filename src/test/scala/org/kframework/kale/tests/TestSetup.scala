@@ -58,7 +58,7 @@ trait TestSetup {
   val X_1 = AnywhereContext.hole(X)
 
   def toAssert(t: Term): String = t match {
-    case Variable(name) => name
+    case Variable((name, _)) => name
     case t: Node => t.toString
   }
 

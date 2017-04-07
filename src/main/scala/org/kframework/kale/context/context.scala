@@ -1,7 +1,8 @@
 package org.kframework.kale.context
 
+import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kale.standard.CurrentEnvironment
+import org.kframework.kale.standard.{CurrentEnvironment}
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.TypedWith
 import org.kframework.kale.util.{Named, Util}
@@ -87,6 +88,7 @@ case class ContextContentVariable(basedOn: Variable, index: Int) extends Variabl
   val label: VariableLabel = basedOn.label
 
   override val name: String = basedOn.name + "_" + index
+  override val sort: Sort = standard.Sort.K
 }
 
 class PatternContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Apply] with TypedWith[PatternContextApplication, Term] {

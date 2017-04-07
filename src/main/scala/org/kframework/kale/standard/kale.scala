@@ -1,10 +1,17 @@
 package org.kframework.kale.standard
 
+import org.kframework.kale
 import org.kframework.kale._
 
 import scala.language.implicitConversions
 
 trait FreeLabel
+
+case class Sort(name: String) extends kale.Sort
+
+object Sort {
+  object K extends Sort("K")
+}
 
 case class FreeLabel0(name: String)(implicit val env: Environment) extends Label0 with FreeLabel {
   def apply(): Term = FreeNode0(this)
