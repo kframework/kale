@@ -7,14 +7,22 @@ import org.kframework.kale.util.{NameFromObject, Named, unreachable}
 
 import scala.collection._
 import scala.Iterable
-import org.kframework.minikore.interfaces.pattern
 
 trait DNFEnvironment extends Environment with Bottomize {
-  override val And: DNFAndLabel = DNFAndLabel()(this)
-  override val Or: DNFOrLabel = DNFOrLabel()(this)
+  private implicit val env = this
+
+  override val And: DNFAndLabel = DNFAndLabel()
+  override val Or: DNFOrLabel = DNFOrLabel()
+  override val Variable: SimpleVariableLabel = standard.SimpleVariableLabel()
+  override val Equality: EqualityLabel = standard.SimpleEqualityLabel()
+  override val Truth: TruthLabel = standard.SimpleTruthLabel()
+  override val Top: Top = standard.TopInstance()
+  override val Bottom: Bottom = standard.BottomInstance()
+
+  override val Rewrite = SimpleRewriteLabel()
 }
 
-case class SimpleEqualityLabel(implicit val env: CurrentEnvironment) extends Named("=") with EqualityLabel {
+case class SimpleEqualityLabel(implicit val env: DNFEnvironment) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
     if (_1 == _2)
       env.Top

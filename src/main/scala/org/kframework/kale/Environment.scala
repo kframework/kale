@@ -4,6 +4,10 @@ import scala.collection.mutable
 import org.kframework.minikore.interfaces.pattern
 
 trait Environment extends KORELabels {
+  trait HasEnvironment {
+    val env = Environment.this
+  }
+
   val uniqueLabels = mutable.Map[String, Label]()
 
   def labels = uniqueLabels.values.toSet

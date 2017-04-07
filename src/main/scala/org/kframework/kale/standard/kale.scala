@@ -13,23 +13,23 @@ object Sort {
   object K extends Sort("K")
 }
 
-case class FreeLabel0(name: String)(implicit val env: Environment) extends Label0 with FreeLabel {
+case class FreeLabel0 private(name: String)(implicit val env: Environment) extends Label0 with FreeLabel {
   def apply(): Term = FreeNode0(this)
 }
 
-case class FreeLabel1(name: String)(implicit val env: Environment) extends Label1 with FreeLabel {
+case class FreeLabel1 private(name: String)(implicit val env: Environment) extends Label1 with FreeLabel {
   def apply(_1: Term): Term = FreeNode1(this, _1)
 }
 
-case class FreeLabel2(name: String)(implicit val env: Environment) extends Label2 with FreeLabel {
+case class FreeLabel2 private(name: String)(implicit val env: Environment) extends Label2 with FreeLabel {
   def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
 }
 
-case class FreeLabel3(name: String)(implicit val env: Environment) extends Label3 with FreeLabel {
+case class FreeLabel3 private(name: String)(implicit val env: Environment) extends Label3 with FreeLabel {
   def apply(_1: Term, _2: Term, _3: Term): Term = FreeNode3(this, _1, _2, _3)
 }
 
-case class FreeLabel4(name: String)(implicit val env: Environment) extends Label4 with FreeLabel {
+case class FreeLabel4 private(name: String)(implicit val env: Environment) extends Label4 with FreeLabel {
   def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term = FreeNode4(this, _1, _2, _3, _4)
 }
 

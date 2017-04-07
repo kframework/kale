@@ -30,20 +30,10 @@ trait Bottomize {
   }
 }
 
-class CurrentEnvironment extends DNFEnvironment {
+class CurrentEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING {
   implicit val env = this
 
-  val Variable = standard.SimpleVariableLabel()
-
-  val Truth = standard.SimpleTruthLabel()
-
   val Hole = Variable("☐", Sort.K)
-
-  val Top: Top = standard.TopInstance()
-  val Bottom: Bottom = standard.BottomInstance()
-
-  val Equality = SimpleEqualityLabel()
-  val Rewrite = SimpleRewriteLabel()
 
   val AnywhereContext = AnywhereContextApplicationLabel()
   val CAPP = PatternContextApplicationLabel("CAPP")

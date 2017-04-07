@@ -76,42 +76,19 @@ endmodule
 
  */
 
+
+
 object IMP {
   implicit val env = new CurrentEnvironment
+
+  val signature = new IMPCommonSignature()
+  import signature._
 
   import env._
   import builtin._
 
-  val div = FreeLabel2("_/_")
-  val plus = FreeLabel2("_+_")
-  val leq = FreeLabel2("_<=_")
-  val not = FreeLabel2("!_")
-  val and = FreeLabel2("_&&_")
-  val emptyBlock = FreeLabel0("{}")
-  val block = FreeLabel1("{_}")
-  val assign = FreeLabel2("_:=_")
-  val ifthenelse = FreeLabel3("if_then_else_")
-  val whiledo = FreeLabel2("while(_)_")
-  val seq = FreeLabel2("__")
-  val program = FreeLabel2("_;_")
-  val emptyIntList = FreeLabel0(".List{Int}")
   val ints = new standard.AssocWithIdListLabel("_,_", emptyIntList())
-
-  val T = FreeLabel2("<T>")
-  val k = FreeLabel1("<k>")
-  val state = FreeLabel1("<state>")
-
-  val varBinding = FreeLabel2("_->_")
-
-  val emptyStates = FreeLabel0("emptyStates")
-  val statesMap = MapLabel("_StatesMap_", {
-    case varBinding(variable, _) => variable
-  }, emptyStates())
-
-  val emptyk = FreeLabel0(".K")
   val kseq = new standard.AssocWithIdListLabel("_~>_", emptyk())
-
-  val intDiv = PrimitiveFunction2("_/Int_", INT, (a: Int, b: Int) => a / b)
 
   case class isSort(label: LeafLabel[_])(implicit val env: Environment) extends {
     val name: String = "is" + label.name
@@ -152,18 +129,6 @@ object IMP {
   val S = Variable("S")
   val SO = Variable("SO")
   val R = Variable("R")
-
-  def lhs(t: Term): Term = t match {
-    case Rewrite(l, r) => l
-    case Node(label, children) => label(children.toSeq map lhs)
-    case o => o
-  }
-
-  def rhs(t: Term): Term = t match {
-    case Rewrite(l, r) => r
-    case Node(label, children) => label(children.toSeq map rhs)
-    case o => o
-  }
 
   val implicits = new Implicits()
   import implicits._
@@ -222,6 +187,7 @@ class ImpSpec extends FreeSpec {
     import IMP._
     import IMP.env._
     import IMP.env.builtin._
+    import IMP.signature._
     import implicits._
 
     val term = T(k(ID("foo")), state(varBinding(ID("foo"), 5)))

@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.standard.{CurrentEnvironment, FreeLabel0, FreeLabel1, FreeLabel2}
+import org.kframework.kale.standard._
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
 
@@ -89,7 +89,7 @@ case class Matcher()(implicit val env: CurrentEnvironment) extends Binary.Apply(
 
   object MapTerm extends ProcessingFunction[Apply] with TypedWith[Term, Term] {
     override def f(solver: Apply)(a: Term, b: Term): Term = a.label match {
-      case mapLabel: builtin.MapLabel =>
+      case mapLabel: MapLabel =>
         val mapLabel.map(left, leftUnindexed) = a
         val mapLabel.map(right, rightUnindexed) = b
 
@@ -186,7 +186,7 @@ case class Matcher()(implicit val env: CurrentEnvironment) extends Binary.Apply(
     case (_: FunctionDefinedByRewritingLabel3, _: FunctionDefinedByRewritingLabel3) => FreeNode3FreeNode3
     case (_: FunctionDefinedByRewritingLabel4, _: FunctionDefinedByRewritingLabel4) => FreeNode4FreeNode4
     case (_: ConstantLabel[_], _: ConstantLabel[_]) => Constants
-    case (_: builtin.MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm
+    case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm
     case (_: AssocLabel, right) if !right.isInstanceOf[Variable] => AssocTerm
   }) orElse super.processingFunctions
 }
