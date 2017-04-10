@@ -43,7 +43,7 @@ class MatchSpec extends FreeSpec with TestSetup {
       assert((foo(a, AnywhereContext(X, b)) := foo(a, traversed(b))) === Equality(X, traversed(X_1)))
     }
 
-    "with traversal" ignore {
+    "with traversal" in {
       assert(
         (foo(a, AnywhereContext(X, matched(Y))) := foo(a, traversed(matched(andMatchingY()))))
           ===
@@ -114,7 +114,7 @@ class MatchSpec extends FreeSpec with TestSetup {
         And.substitution(Map(C -> foo(1, bar(Hole)), X -> 2))))
     }
 
-    "stops traversal when encountering unknown" ignore {
+    "stops traversal when encountering unknown" in {
       assert((CAPP(C, bar(X)) := foo(1, bar(buz(3, bar(2)))))
         === And.substitution(Map(C -> foo(1, Hole), X -> buz(3, bar(2)))))
     }

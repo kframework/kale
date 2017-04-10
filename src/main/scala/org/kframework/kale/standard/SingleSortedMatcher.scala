@@ -166,6 +166,10 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
     }
   }
 
+  object NoMatch extends ProcessingFunction[Apply] with TypedWith[Term, Term] {
+    override def f(solver: Apply)(a: Term, b: Term): Term = Bottom
+  }
+
   import standard._
 
   override def processingFunctions: ProcessingFunctions = definePartialFunction({
@@ -173,6 +177,7 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
     case (And, _) => AndTerm
     case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
     case (`CAPP`, _) => new PatternContextMatcher()(env)
+    case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 => NoMatch
     case (_: FreeLabel0, _: FreeLabel0) => FreeNode0FreeNode0
     case (_: FreeLabel1, _: FreeLabel1) => FreeNode1FreeNode1
     case (_: FreeLabel2, _: FreeLabel2) => FreeNode2FreeNode2
