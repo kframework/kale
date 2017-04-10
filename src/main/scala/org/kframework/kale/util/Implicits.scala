@@ -28,6 +28,7 @@ class Implicits(implicit val env: CurrentEnvironment) extends StaticImplicits {
 
   implicit class RichTerm(t: Term) {
     def :=(tt: Term)(implicit m: MatcherOrUnifier): Term = m(t, tt)
+    def =:=(tt: Term)(implicit m: MatcherOrUnifier): Term = m(t, tt)
   }
 
 }
@@ -51,7 +52,6 @@ trait StaticImplicits {
 
     def apply(_1: Term, _2: Term): Term = label.asInstanceOf[Label2](_1, _2)
   }
-
 }
 
 object StaticImplicits extends StaticImplicits

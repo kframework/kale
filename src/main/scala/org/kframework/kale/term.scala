@@ -31,6 +31,8 @@ trait Term extends Iterable[Term] with pattern.Pattern {
 
   val isGround: Boolean
 
+  lazy val sort: Sort = label.env.sort(label, this.toSeq)
+
   def iterator(): Iterator[Term]
 
   /**

@@ -31,6 +31,8 @@ trait Environment extends KORELabels {
 
   def label(labelName: String): Label = uniqueLabels(labelName)
 
+  def sort(l: Label, children: Seq[Term]): Sort
+
   override def toString = {
     "nextId: " + uniqueLabels.size + "\n" + uniqueLabels.mkString("\n")
   }

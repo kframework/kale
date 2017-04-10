@@ -88,7 +88,6 @@ case class ContextContentVariable(basedOn: Variable, index: Int) extends Variabl
   val label: VariableLabel = basedOn.label
 
   override val name: String = basedOn.name + "_" + index
-  override val sort: Sort = standard.Sort.K
 }
 
 class PatternContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Apply] with TypedWith[PatternContextApplication, Term] {

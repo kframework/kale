@@ -11,10 +11,13 @@ case class SimpleConstant[T](label: ConstantLabel[T], value: T) extends Constant
 
 case class SimpleVariableLabel(implicit val env: Environment) extends Named("#Variable") with VariableLabel {
   def apply(name: String): Variable = apply(name, Sort.K)
+
   def apply(nameAndSort: (String, kale.Sort)): Variable = SimpleVariable(nameAndSort._1, nameAndSort._2)
 }
 
-case class SimpleVariable(name: String, sort: kale.Sort)(implicit env: Environment) extends Variable with pattern.Variable {
+case class SimpleVariable(name: String, givenSort: kale.Sort)(implicit env: Environment) extends Variable with pattern.Variable {
+  override lazy val sort = givenSort
+
   val label = env.Variable
 
   // FOR KORE
@@ -41,7 +44,7 @@ case class TopInstance(implicit eenv: Environment) extends Truth(true) with kale
 
   def asMap = Map()
 
-  override def toString: String =  "⊤"
+  override def toString: String = "⊤"
 
   def apply(t: Term): Term = t
 
@@ -50,7 +53,7 @@ case class TopInstance(implicit eenv: Environment) extends Truth(true) with kale
 }
 
 case class BottomInstance(implicit eenv: Environment) extends Truth(false) with kale.Bottom {
-  override def toString: String =  "⊥"
+  override def toString: String = "⊥"
 
   // FOR KORE
   override def build(): pattern.Bottom = this

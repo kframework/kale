@@ -20,7 +20,7 @@ class IMPCommonSignature(implicit val env: Environment with HasINT with HasINTdi
   val div = FreeLabel2("_/_")
   val plus = FreeLabel2("_+_")
   val leq = FreeLabel2("_<=_")
-  val not = FreeLabel2("!_")
+  val not = FreeLabel1("!_")
   val and = FreeLabel2("_&&_")
   val emptyBlock = FreeLabel0("{}")
   val block = FreeLabel1("{_}")
