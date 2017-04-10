@@ -80,6 +80,8 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
       l(newTerms).updatePostProcess(this)
     case _ => t
   }
+
+  override def toString: String = super[Equality].toString
 }
 
 case class DNFAndLabel(implicit val env: DNFEnvironment) extends {

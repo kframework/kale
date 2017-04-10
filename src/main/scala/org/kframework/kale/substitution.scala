@@ -2,7 +2,7 @@ package org.kframework.kale
 
 import scala.collection.Map
 
-trait Substitution extends Term with (Term => Term) {
+trait Substitution extends (Term => Term) with Term {
   def get(v: Variable): Option[Term]
 
   def apply(t: Term): Term
