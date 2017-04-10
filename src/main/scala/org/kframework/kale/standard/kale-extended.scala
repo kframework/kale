@@ -290,9 +290,9 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
   val label = And
 
   lazy val formulas: Term = terms match {
-    case a: AndOfTerms => a.formulas
-    case t if t.label.isInstanceOf[FormulaLabel] => t
-    case _ => Top
+    case a: AndOfTerms => And(s, a.formulas)
+    case t if t.label.isInstanceOf[FormulaLabel] => And(s, t)
+    case _ => s
   }
 
   lazy val nonFormula: Option[Term] = terms match {
