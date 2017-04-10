@@ -198,11 +198,11 @@ case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
     }
   }
 
-  def asSubstitutionAndTerms(t: Term): (Substitution, Iterable[Term]) = t match {
-    case s: Substitution => (s, Iterable.empty)
-    case and: AndOfSubstitutionAndTerms => (and.s, and.terms)
+  def asSubstitutionAndTerms(t: Term): (Substitution, Set[Term]) = t match {
+    case s: Substitution => (s, Set.empty)
+    case and: AndOfSubstitutionAndTerms => (and.s, And.asSet(and.terms))
     case and: AndOfTerms => (Top, and.terms)
-    case o => (Top, Iterable(o))
+    case o => (Top, Set(o))
   }
 
   /**
