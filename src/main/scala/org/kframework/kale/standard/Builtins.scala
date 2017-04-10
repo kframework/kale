@@ -14,7 +14,7 @@ class Builtins(implicit val env: CurrentEnvironment) {
 
   // just for forcing initialization of "object" references
 
-  object ID extends ReferenceLabel[String]("Id")(env) {
+  val ID = new ReferenceLabel[String]("Id")(env) {
     override def internalInterpret(s: String): String = s.toString
   }
 

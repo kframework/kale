@@ -129,4 +129,9 @@ class MatchSpec extends FreeSpec with TestSetup {
       assert(a2b(a) === b)
     }
   }
+
+  "or match" in {
+    assert((Or(a, b) := a) === Top)
+    assert((a := Or(a, b)) === Top)
+  }
 }

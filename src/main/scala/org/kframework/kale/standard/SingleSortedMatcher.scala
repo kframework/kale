@@ -82,6 +82,7 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
     }
   }
 
+
   case class MatchNotSupporteredError(l: Term, r: Term, message: String = "") extends
     AssertionError("Trying to match " + l + " with " + r + " not supported yet. " + message)
 
@@ -166,6 +167,18 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
     }
   }
 
+  object OrTerm extends ProcessingFunction[Apply] with TypedWith[Or, Term] {
+    def f(solver: Apply)(a: Or, b: Term) = {
+      a.label(a.asSet map (solver(_, b)))
+    }
+  }
+
+  object TermOr extends ProcessingFunction[Apply] with TypedWith[Term, Or] {
+    def f(solver: Apply)(a: Term, b: Or) = {
+      b.label(b.asSet map (solver(a, _)))
+    }
+  }
+
   object NoMatch extends ProcessingFunction[Apply] with TypedWith[Term, Term] {
     override def f(solver: Apply)(a: Term, b: Term): Term = Bottom
   }
@@ -175,6 +188,8 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
   override def processingFunctions: ProcessingFunctions = definePartialFunction({
     case (Variable, _) => VarLeft
     case (And, _) => AndTerm
+    case (Or, _) => OrTerm
+    case (_, Or) => TermOr
     case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
     case (`CAPP`, _) => new PatternContextMatcher()(env)
     case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 => NoMatch
