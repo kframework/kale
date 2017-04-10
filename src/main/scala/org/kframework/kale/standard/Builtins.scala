@@ -12,11 +12,6 @@ class Builtins(implicit val env: CurrentEnvironment) {
 
   val eenv = env
 
-  // just for forcing initialization of "object" references
-
-  val ID = new ReferenceLabel[String]("Id")(env) {
-    override def internalInterpret(s: String): String = s.toString
-  }
 
   case class Sort(name: String)
 
