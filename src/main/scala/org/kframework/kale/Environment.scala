@@ -46,6 +46,7 @@ trait KORELabels {
   val Rewrite: RewriteLabel
   val Equality: EqualityLabel
   val Truth: TruthLabel
+  val Not: NotLabel
 
   // Constants
   val Bottom: Truth with pattern.Bottom

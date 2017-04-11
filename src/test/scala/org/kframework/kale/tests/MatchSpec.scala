@@ -1,9 +1,8 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
-import org.kframework.kale.context._
-import org.scalactic.Prettifier
-import org.scalatest.{FreeSpec, Ignore}
+import org.scalatest.FreeSpec
+import collection._
 
 class MatchSpec extends FreeSpec with TestSetup {
 
@@ -117,6 +116,13 @@ class MatchSpec extends FreeSpec with TestSetup {
     "stops traversal when encountering unknown" in {
       assert((CAPP(C, bar(X)) := foo(1, bar(buz(3, bar(2)))))
         === And.substitution(Map(C -> foo(1, Hole), X -> buz(3, bar(2)))))
+    }
+  }
+
+  "of multiple contexts" - {
+    "pattern context in anywhere context" in {
+      val ACx = Variable("ACx")
+      println(AnywhereContext(ACx, CAPP(C, bar(X))) := buz(1, foo(2, bar(3))))
     }
   }
 

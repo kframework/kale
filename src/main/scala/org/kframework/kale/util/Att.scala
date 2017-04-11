@@ -57,6 +57,6 @@ trait HasAtt {
   }
 
   def updatePostProcess(oldTerm: Term): Term = {
-    this.setAtts(updatedAttributes(oldTerm.iterator().toSeq: _*))
+    this.setAtts(updatedAttributes(oldTerm.children.toSeq: _*))
   }
 }

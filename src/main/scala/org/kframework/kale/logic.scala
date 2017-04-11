@@ -82,6 +82,8 @@ trait EqualityLabel extends Label2 with FormulaLabel {
   def binding(_1: Variable, _2: Term): Binding
 }
 
+trait NotLabel extends Label1 with FormulaLabel
+
 trait Equality extends Node2 with BinaryInfix with pattern.Equals
 
 trait Binding extends Equality with Substitution

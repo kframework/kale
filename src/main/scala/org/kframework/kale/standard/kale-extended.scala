@@ -6,13 +6,13 @@ import org.kframework.kale.context.Context1ApplicationLabel
 import org.kframework.kale.util.{NameFromObject, Named, unreachable}
 
 import scala.collection._
-import scala.Iterable
 
 trait DNFEnvironment extends Environment with Bottomize {
   private implicit val env = this
 
   override val And: DNFAndLabel = DNFAndLabel()
   override val Or: DNFOrLabel = DNFOrLabel()
+  override val Not: NotLabel = NotLabel()
   override val Variable: SimpleVariableLabel = standard.SimpleVariableLabel()
   override val Equality: EqualityLabel = standard.SimpleEqualityLabel()
   override val Truth: TruthLabel = standard.SimpleTruthLabel()
@@ -54,6 +54,7 @@ private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environme
   }
 }
 
+
 private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: DNFEnvironment) extends Equality(variable, term) with kale.Binding {
   assert(_1.isInstanceOf[Variable])
 
@@ -67,8 +68,9 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
   def apply(t: Term): Term = t match {
     case `variable` => term
 
-      // TODO: Cosmin: move this to .context
-    case Node(l: Context1ApplicationLabel, cs) =>
+    // TODO: Cosmin: move this to .context
+    case Node(l: Context1ApplicationLabel, children) =>
+      val cs = children.iterator
       val contextVar = cs.next.asInstanceOf[Variable]
       if (variable == contextVar) {
         apply(env.And.substitution(Map(env.Variable("☐", Sort.K) -> cs.next))(term))
@@ -76,7 +78,7 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
         l(contextVar, apply(cs.next))
       }
     case Node(l, cs) =>
-      val newTerms = (cs map apply).toIterable
+      val newTerms = cs map apply
       l(newTerms).updatePostProcess(this)
     case _ => t
   }
@@ -334,7 +336,8 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
   def apply(t: Term): Term = t match {
     case v: Variable => m.getOrElse(v, v)
     // TODO: Cosmin: move this to .context
-    case Node(l: Context1ApplicationLabel, cs) =>
+    case Node(l: Context1ApplicationLabel, children) =>
+      val cs = children.iterator
       val contextVar = cs.next.asInstanceOf[Variable]
       m.get(contextVar).map({ context =>
         apply(And.substitution(Map(Variable("☐", Sort.K) -> cs.next))(context))
@@ -422,6 +425,17 @@ class InvokeLabel(implicit val env: Environment) extends NameFromObject with Lab
 }
 
 case class Invoke(label: InvokeLabel, _1: Term) extends Node1
+
+case class NotLabel(implicit val env: Environment) extends Named("¬") with kale.NotLabel with FunctionLabel1 {
+
+  import env._
+
+  override def f(_1: Term): Option[Term] = _1 match {
+    case `Top` => Some(Bottom)
+    case `Bottom` => Some(Top)
+    case _ => None
+  }
+}
 
 trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel {
   implicit val env: CurrentEnvironment

@@ -24,16 +24,21 @@ trait Label extends MemoizedHashCode with pattern.Symbol {
   def str: String = name
 }
 
-trait Term extends Iterable[Term] with pattern.Pattern {
+trait Term extends pattern.Pattern {
   def updateAt(i: Int)(t: Term): Term
 
   val label: Label
 
   val isGround: Boolean
 
-  lazy val sort: Sort = label.env.sort(label, this.toSeq)
+  lazy val sort: Sort = label.env.sort(label, this.children.toSeq)
 
-  def iterator(): Iterator[Term]
+  def children: Iterable[Term]
+
+  def canEqual(that: Any): Boolean = that match {
+    case t: Term => t.label == this.label
+    case _ => false
+  }
 
   /**
     * This method is called after `oldTerm` is updated resulting in `this` term.
@@ -58,7 +63,7 @@ trait LeafLabel[T] extends Label {
 }
 
 trait Leaf[T] extends Term {
-  def iterator(): Iterator[Term] = Iterator.empty
+  def children: Iterable[Term] = Iterable.empty
 
   def updateAt(i: Int)(t: Term): Term = throw new IndexOutOfBoundsException("Leaves have no children. Trying to update index _" + i)
 
@@ -77,7 +82,7 @@ trait Leaf[T] extends Term {
 
 trait NodeLabel extends Label {
   def unapplySeq(t: Term): Option[Seq[Term]] = t match {
-    case t: Node if t.label == this => Some(t.iterator().toSeq)
+    case t: Node if t.label == this => Some(t.children.toSeq)
     case _ => None
   }
 
@@ -94,7 +99,7 @@ trait NodeLabel extends Label {
 
 trait Node extends Term with Product with tree.Node {
   // FOR KORE
-  override def args: Seq[pattern.Pattern] = iterator().toSeq
+  override def args: Seq[pattern.Pattern] = children.toSeq
 
   override def build(children: Seq[pattern.Pattern]): pattern.Pattern = {
     // downcasting to Term, but it will fail somewhere in Label
@@ -113,16 +118,16 @@ trait Node extends Term with Product with tree.Node {
 
   protected def innerUpdateAt(i: Int, t: Term): Term
 
-  def iterator(): Iterator[Term]
+  def children: Iterable[Term]
 
-  override def toString: String = label + "(" + iterator().mkString(", ") + ")"
+  override def toString: String = label + "(" + children.mkString(", ") + ")"
 
   def copy(children: Seq[Term]): Term
 }
 
 object Node {
-  def unapply(t: Term): Option[(NodeLabel, Iterator[Term])] = t match {
-    case t: Node => Some(t.label, t.iterator())
+  def unapply(t: Term): Option[(NodeLabel, Iterable[Term])] = t match {
+    case t: Node => Some(t.label, t.children)
     case _ => None
   }
 }

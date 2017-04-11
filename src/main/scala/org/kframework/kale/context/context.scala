@@ -31,6 +31,8 @@ case class AnywhereContextApplicationLabel(implicit val env: Environment) extend
 
 case class PatternContextApplicationLabel(name: String)(implicit val env: CurrentEnvironment) extends Context1ApplicationLabel {
 
+//  val C = env.Variable("GENERIC_CONTEXT_VAR")
+
   var patterns: Term = null
 
   def setPatterns(ps: Term) {
@@ -53,6 +55,7 @@ case class PatternContextApplicationLabel(name: String)(implicit val env: Curren
 
 trait Context extends Term {
   val contextVar: Variable
+  val redex: Term
 }
 
 case class PatternContextApplication(label: PatternContextApplicationLabel, contextVar: Variable, redex: Term) extends Node2 with Context {
@@ -141,7 +144,7 @@ class AnywhereContextMatcher(implicit env: CurrentEnvironment) extends transform
     assert(contextApplication.label == AnywhereContext)
     val contextVar = contextApplication.contextVar
 
-    def solutionFor(subterms: List[Term], reconstruct: (Int, Term) => Term) = {
+    def solutionFor(subterms: Seq[Term], reconstruct: (Int, Term) => Term) = {
       Or(subterms.indices map { i =>
         // calling f directly instead of solver because we know contextApplication is hooked to the current f
         val solutionForSubtermI = f(solver)(contextApplication, subterms(i))
@@ -160,7 +163,7 @@ class AnywhereContextMatcher(implicit env: CurrentEnvironment) extends transform
         def findMatches(t: Term): Term = {
           Or(t match {
             case AnywhereContext(_, tt) => solver(contextApplication.redex, tt)
-            case tt => Or(t.map(findMatches))
+            case tt => Or(t.children.map(findMatches))
           }, solver(contextApplication.redex, t))
         }
 
@@ -181,8 +184,8 @@ class AnywhereContextMatcher(implicit env: CurrentEnvironment) extends transform
           solver(contextApplication.redex, term),
           // C -> HOLE
           Equality(contextApplication.contextVar, contextApplication.hole))
-        val subterms = term.toList
-        val recursive = solutionFor(subterms, (pos: Int, tt: Term) => term.updateAt(pos)(tt))
+        val subterms = term.children
+        val recursive = solutionFor(subterms.toSeq, (pos: Int, tt: Term) => term.updateAt(pos)(tt))
         Or(recursive, zeroLevel)
     }
   }

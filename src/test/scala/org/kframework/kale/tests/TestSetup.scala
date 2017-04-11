@@ -39,7 +39,7 @@ trait TestSetup {
   val a2bRules = Set(Rewrite(a2b(a), b))
 
   val C = Variable("C")
-  val C1 = Variable("C")
+  val C1 = Variable("C1")
 
   CAPP.setPatterns(Or(List(
     Equality(CAPP(C, Hole), Hole),

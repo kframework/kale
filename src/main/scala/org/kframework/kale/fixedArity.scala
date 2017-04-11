@@ -86,7 +86,7 @@ trait Node0 extends Node {
 
   def innerUpdateAt(i: Int, t: Term): Term = throw new AssertionError("unreachable code")
 
-  def iterator(): Iterator[Term] = Iterator.empty
+  override def children: Iterable[Term] = Iterable.empty
 
   def copy(): Term = label().updatePostProcess(this)
 
@@ -105,7 +105,7 @@ trait Node1 extends Node with Product1[Term] {
     case 0 => label(t)
   }
 
-  def iterator() = Iterator(_1)
+  override def children: Iterable[Term] = Iterable(_1)
 
   def copy(_1: Term): Term = label(_1).updatePostProcess(this)
 
@@ -115,7 +115,7 @@ trait Node1 extends Node with Product1[Term] {
   }
 
   // FOR KORE
-  def build(_1: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label2](_1.asInstanceOf[Term])
+  def build(_1: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label1](_1.asInstanceOf[Term])
 }
 
 trait Node2 extends Node with Product2[Term, Term] {
@@ -128,7 +128,7 @@ trait Node2 extends Node with Product2[Term, Term] {
     case 1 => label(_1, t)
   }
 
-  def iterator() = Iterator(_1, _2)
+  override def children: Iterable[Term] = Iterable(_1, _2)
 
   def copy(_1: Term, _2: Term): Term = label(_1, _2).updatePostProcess(this)
 
@@ -159,7 +159,7 @@ trait Node3 extends Node with Product3[Term, Term, Term] {
     copy(children.head, children(1), children(2))
   }
 
-  def iterator() = Iterator(_1, _2, _3)
+  override def children: Iterable[Term] = Iterable(_1, _2, _3)
 }
 
 trait Node4 extends Node with Product4[Term, Term, Term, Term] {
@@ -181,7 +181,7 @@ trait Node4 extends Node with Product4[Term, Term, Term, Term] {
     copy(children.head, children(1), children(2), children(3))
   }
 
-  def iterator() = Iterator(_1, _2, _3, _4)
+  override def children: Iterable[Term] = Iterable(_1, _2, _3, _4)
 }
 
 trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
@@ -204,7 +204,7 @@ trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
     copy(children.head, children(1), children(2), children(3), children(4))
   }
 
-  def iterator() = Iterator(_1, _2, _3, _4, _5)
+  override def children: Iterable[Term] = Iterable(_1, _2, _3, _4, _5)
 }
 
 trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
@@ -228,5 +228,5 @@ trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
     copy(children.head, children(1), children(2), children(3), children(4), children(5))
   }
 
-  def iterator() = Iterator(_1, _2, _3, _4, _5, _6)
+  override def children: Iterable[Term] = Iterable(_1, _2, _3, _4, _5, _6)
 }

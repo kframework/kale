@@ -7,7 +7,7 @@ trait HasId {
 }
 
 trait AssocLabel extends Label2 {
-  def apply(l: Iterable[Term]): Term
+  override def apply(l: Iterable[Term]): Term
 
   private val thisthis = this
 

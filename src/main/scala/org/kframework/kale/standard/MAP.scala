@@ -57,7 +57,7 @@ case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(i
   } with HasEnvironment with FunctionLabel2 {
     def f(m: Term, key: Term) = m match {
       case map(scalaMap, restOfElements) =>
-        scalaMap.get(key).map(_.iterator().toList(1)).orElse(
+        scalaMap.get(key).map(_.children.toList(1)).orElse(
           if (restOfElements.isEmpty && key.isGround && scalaMap.keys.forall(_.isGround)) Some(env.Bottom) else None)
       case _ => None
     }
@@ -75,7 +75,7 @@ class KeysFunction(mapLabel: MapLabel, returnedSetLabel: SetLabel)(implicit val 
   }
 }
 
-class MAP(val label: MapLabel, val map: collection.Map[Term, Term], val unindexable: Set[Term]) extends Assoc {
+case class MAP(label: MapLabel, map: collection.Map[Term, Term], unindexable: Set[Term]) extends Assoc {
   lazy val assocIterable = unindexable ++ map.values
 
   override def _1: Term = unindexable.headOption.getOrElse(map.head._2)

@@ -46,19 +46,22 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
 
   def matchContents(l: AssocLabel, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = {
     val res = (ksLeft.toSeq, ksRight.toSeq) match {
-      case (Seq(), Seq()) => Top
+      case (Seq(), Seq()) =>
+        Top
       case ((v: Variable) +: tailL, ksR) =>
         (0 to ksR.size)
           .map {
             index => (ksR.take(index), ksR.drop(index))
           }
           .map {
-            case (prefix, suffix) => And(Equality(v, l(prefix)), matchContents(l, tailL, suffix))
+            case (prefix, suffix) =>
+              And(Equality(v, l(prefix)), matchContents(l, tailL, suffix))
           }
           .fold(Bottom)({
             (a, b) => Or(a, b)
           })
-      case (left, right) if left.nonEmpty && right.nonEmpty => And(solver(left.head, right.head), matchContents(l, left.tail, right.tail): Term)
+      case (left, right) if left.nonEmpty && right.nonEmpty =>
+        And(solver(left.head, right.head), matchContents(l, left.tail, right.tail): Term)
       case other => Bottom
     }
     res

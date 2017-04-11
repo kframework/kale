@@ -13,7 +13,7 @@ case class Path(positions: Seq[Int]) {
     case head :: tail =>
       val elements = t.label match {
         case label: AssocLabel => label.asList(t).toSeq
-        case _ => t.iterator().toSeq
+        case _ => t.children.toSeq
       }
       Path(tail)(elements(positions.head))
     case Nil => t
