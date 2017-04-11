@@ -16,10 +16,10 @@ object outer {
     }
   }
 
-  type Terms = Seq[Term]
-
   case class SimpleRewrite(l: Term, r: Term, c: Term) {
     assert(c.sort == SortBool)
   }
+
+  type Terms = Seq[Term]
 
 }

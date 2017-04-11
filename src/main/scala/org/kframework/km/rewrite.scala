@@ -2,9 +2,8 @@ package org.kframework.km
 
 class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
 
-  import term._
-  import outer._
   import builtin._
+  import outer._
   import unification._
 
   val z3 = new z3(symbols)

@@ -2,42 +2,6 @@ package org.kframework.km
 
 object term {
 
-  sealed trait Sort {
-    val name: String
-    def smt: String = name
-    val smtBuiltin: Boolean
-    override def toString: String = name
-  }
-  case class SortOf(name: String) extends Sort {
-    val smtBuiltin: Boolean = false
-  }
-  case class SortMap(key: Sort, value: Sort) extends Sort {
-    val name: String = "Map{" + key.name + "," + value.name + "}"
-    override val smt: String = "(Array " + key.smt + " " + value.smt + ")"
-    val smtBuiltin: Boolean = true
-  }
-  case class SortList(elem: Sort) extends Sort {
-    val name: String = "List{" + elem.name + "}"
-    override val smt: String = "(List " + elem.smt + ")"
-    val smtBuiltin: Boolean = true
-  }
-  // TODO: prevent duplicate builtin sorts
-  val SortBool = new SortOf("Bool") {
-    override val smtBuiltin: Boolean = true
-  }
-  val SortInt = new SortOf("Int") {
-    override val smtBuiltin: Boolean = true
-  }
-  val SortString = new SortOf("String") { // TODO: altenative z3 encoding? (e.g., int)?
-    override val smtBuiltin: Boolean = true
-  }
-  // TODO: SortReal, SortMInt, etc
-  //
-  val SortK = SortOf("K")
-  val SortListK = SortList(SortK)
-
-  type Type = Product2[Seq[Sort], Sort]
-
   trait Symbol {
     val name: String
     val signature: Type
@@ -54,8 +18,6 @@ object term {
     val smtBuiltin: Boolean = false
     def applySeq(children: Seq[Term]): Term = Application(this, children)
   }
-
-  type Substitution = Map[Variable, Term]
 
   sealed trait Term {
     val sort: Sort
@@ -92,6 +54,30 @@ object term {
     override val isFunctional: Boolean = false
     override def subst(m: Substitution): Term = this
     override def rename(cnt: Int): Term = this
+  }
+
+  type Substitution = Map[Variable, Term]
+
+  type Type = Product2[Seq[Sort], Sort]
+
+  sealed trait Sort {
+    val name: String
+    def smt: String = name
+    val smtBuiltin: Boolean
+    override def toString: String = name
+  }
+  case class SortOf(name: String) extends Sort {
+    val smtBuiltin: Boolean = false
+  }
+  case class SortMap(key: Sort, value: Sort) extends Sort {
+    val name: String = "Map{" + key.name + "," + value.name + "}"
+    override val smt: String = "(Array " + key.smt + " " + value.smt + ")"
+    val smtBuiltin: Boolean = true
+  }
+  case class SortList(elem: Sort) extends Sort {
+    val name: String = "List{" + elem.name + "}"
+    override val smt: String = "(List " + elem.smt + ")"
+    val smtBuiltin: Boolean = true
   }
 
 }

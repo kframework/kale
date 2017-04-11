@@ -7,6 +7,23 @@ object builtin {
 
   import term._
 
+  // TODO: prevent duplicate builtin sorts
+  val SortBool = new SortOf("Bool") {
+    override val smtBuiltin: Boolean = true
+  }
+  val SortInt = new SortOf("Int") {
+    override val smtBuiltin: Boolean = true
+  }
+  val SortString = new SortOf("String") { // TODO: altenative z3 encoding? (e.g., int)?
+  override val smtBuiltin: Boolean = true
+  }
+  // TODO: SortReal, SortMInt, etc
+  //
+  val SortK = SortOf("K")
+  val SortListK = SortList(SortK)
+
+
+
   case class INT(v: Int) extends Constant {
     val sort: Sort = SortInt
     val smt: String = v.toString
