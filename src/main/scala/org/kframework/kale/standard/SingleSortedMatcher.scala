@@ -170,6 +170,13 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
     }
   }
 
+  object TermAnd extends ProcessingFunction[Apply] with TypedWith[Term, And] {
+    override def f(solver: Apply)(a: Term, b: And): Term = {
+      val solution = solver(a, b.nonFormula.get)
+      And(solution, b.formulas)
+    }
+  }
+
   object OrTerm extends ProcessingFunction[Apply] with TypedWith[Or, Term] {
     def f(solver: Apply)(a: Or, b: Term) = {
       a.label(a.asSet map (solver(_, b)))
@@ -189,10 +196,11 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
   import standard._
 
   override def processingFunctions: ProcessingFunctions = definePartialFunction({
-    case (Variable, _) => VarLeft
     case (And, _) => AndTerm
+    case (_, And) => TermAnd
     case (Or, _) => OrTerm
     case (_, Or) => TermOr
+    case (Variable, _) => VarLeft
     case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
     case (`CAPP`, _) => new PatternContextMatcher()(env)
     case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 => NoMatch

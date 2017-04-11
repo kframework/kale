@@ -143,8 +143,28 @@ class MatchSpec extends FreeSpec with TestSetup {
     }
   }
 
-  "or match" in {
+  "or" in {
     assert((Or(a, b) := a) === Top)
     assert((a := Or(a, b)) === Top)
+
+    assert((bar(Or(a, b)) := bar(a))
+      === Top)
+
+    assert((bar(Or(a, b)) := bar(c))
+      === Bottom)
+
+    assert((bar(Or(X, Y)) := bar(c))
+      === Or(Equality(X, c), Equality(Y, c)))
+
+    assert((bar(Or(X, Y)) := Or(bar(a), bar(b)))
+      === Or(Equality(X, a), Equality(Y, a), Equality(X, b), Equality(Y, b)))
+
+    assert((bar(Or(X, Y)) := bar(And(a, Equality(Y, b))))
+      === And(Equality(X, a), Equality(Y, b)))
+  }
+
+  "and" in {
+    assert((X := And(a, Equality(X, a))) === Equality(X, a))
+    assert((X := And(a, Equality(X, b))) === Bottom)
   }
 }
