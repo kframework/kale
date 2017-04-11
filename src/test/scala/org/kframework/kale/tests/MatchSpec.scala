@@ -188,5 +188,11 @@ class MatchSpec extends FreeSpec with TestSetup {
 
     assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2), Equality(Y, 3)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), bar(2)))
       === Bottom)
+
+    assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), Or(bar(2), bar(3))))
+      === And.substitution(Map(C -> foo(1, Hole), X -> 2, Y -> 2)))
+
+    assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2)), And(bar(Y), Equality(Y, 3))) := buz(foo(1, bar(2)), Or(bar(2), bar(3))))
+      === And.substitution(Map(C -> foo(1, Hole), X -> 2, Y -> 3)))
   }
 }
