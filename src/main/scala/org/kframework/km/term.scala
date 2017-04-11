@@ -90,7 +90,7 @@ object term {
 
   ////
 
-  class Constructor(val name: String, val signature: Type) extends Symbol {
+  case class Constructor(name: String, signature: Type) extends Symbol {
     val isFunctional: Boolean = false
     val smt: String = name
     val smtBuiltin: Boolean = false
