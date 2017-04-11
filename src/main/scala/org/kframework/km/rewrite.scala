@@ -3,6 +3,7 @@ package org.kframework.km
 class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
 
   import term._
+  import outer._
   import builtin._
   import unification._
 

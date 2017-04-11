@@ -48,6 +48,12 @@ object term {
     def applySeq(children: Seq[Term]): Term
     override def toString: String = name
   }
+  case class Constructor(name: String, signature: Type) extends Symbol {
+    val isFunctional: Boolean = false
+    val smt: String = name
+    val smtBuiltin: Boolean = false
+    def applySeq(children: Seq[Term]): Term = Application(this, children)
+  }
 
   type Substitution = Map[Variable, Term]
 
@@ -86,32 +92,6 @@ object term {
     override val isFunctional: Boolean = false
     override def subst(m: Substitution): Term = this
     override def rename(cnt: Int): Term = this
-  }
-
-  ////
-
-  case class Constructor(name: String, signature: Type) extends Symbol {
-    val isFunctional: Boolean = false
-    val smt: String = name
-    val smtBuiltin: Boolean = false
-    def applySeq(children: Seq[Term]): Term = Application(this, children)
-  }
-
-  case class SimplePattern(term: Term, constraint: Term) {
-    assert(constraint.sort == SortBool)
-    val counter: Int = 0
-    override def toString: String = term + " /\\ " + constraint
-  }
-  object SimplePattern {
-    def apply(term: Term, constraint: Term, cnt: Int): SimplePattern = new SimplePattern(term, constraint) {
-      override val counter: Int = cnt
-    }
-  }
-
-  type Terms = Seq[Term]
-
-  case class SimpleRewrite(l: Term, r: Term, c: Term) {
-    assert(c.sort == SortBool)
   }
 
 }

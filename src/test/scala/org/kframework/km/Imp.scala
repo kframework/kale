@@ -3,6 +3,7 @@ package org.kframework.km
 object Imp {
 
   import term._
+  import outer._
   import builtin._
 
   object Constructor1 {

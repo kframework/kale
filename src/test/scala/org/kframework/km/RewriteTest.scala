@@ -5,6 +5,7 @@ import org.scalatest.FreeSpec
 class RewriteTest extends FreeSpec {
 
   import term._
+  import outer._
   import builtin._
 
   "simple" in {
