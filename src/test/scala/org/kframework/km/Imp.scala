@@ -95,11 +95,7 @@ object Imp {
 
   val constructors1 = Seq(IdOf, AExpInt, AExpId, AExpDiv, AExpPlus, BExpBool, BExpLeq, BExpNot, BExpAnd, StmtAssign, StmtIf, StmtWhile, StmtSeq, StmtSkip, PgmOf, IdsCons, IdsNil, KAExp, KBExp, KStmt, KPgm, kCons, kNil, freezerDiv0, freezerDiv1, freezerPlus0, freezerPlus1, freezerLeq0, freezerLeq1, freezerNot0, freezerAnd0, freezerAssign1, freezerIf0)
   val constructors2 = Seq(T, k, state)
-  val declareDatatypes1 = z3.declareDatatypes(constructors1)
-  val declareDatatypes2 = z3.declareDatatypes(constructors2)
-  val declareDatatypes = declareDatatypes1 + declareDatatypes2
-  val constructors = constructors1 ++ constructors2
-  val datatypes = constructors.flatMap(s => s.signature._1.toSet + s.signature._2).toSet
+  val constructors = Seq(constructors1, constructors2)
 
   object isKResult extends Symbol {
     override val name: String = "isKResult"

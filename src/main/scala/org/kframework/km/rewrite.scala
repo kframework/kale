@@ -1,15 +1,14 @@
 package org.kframework.km
 
-class rewrite(val declareDatatypes: String) {
+class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
 
   import term._
   import builtin._
   import unification._
 
-  private var cntRename: Int = 0
-  var datatypes: Set[Sort] = Set()
+  val z3 = new z3(symbols)
 
-  def applyRule(rule: SimpleRewrite, term: SimplePattern): Seq[SimplePattern] = { cntRename += 1
+  def applyRule(rule: SimpleRewrite, term: SimplePattern): Seq[SimplePattern] = { val cntRename = term.counter + 1
     // rule:  l => r if c
     lazy val l = rule.l.rename(cntRename)
     lazy val r = rule.r.rename(cntRename)
@@ -25,9 +24,9 @@ class rewrite(val declareDatatypes: String) {
         val _c = c.subst(u.subst)
         val _p_c_u = BOOL.and(BOOL.and(_p, _c), u.constraint)
 
-        if (z3.sat(declareDatatypes, datatypes)(_p_c_u)) {
+        if (z3.sat(_p_c_u)) {
           val _r = r.subst(u.subst)
-          Seq(SimplePattern(_r, _p_c_u))
+          Seq(SimplePattern(_r, _p_c_u, cntRename))
         } else {
           Seq()
         }
