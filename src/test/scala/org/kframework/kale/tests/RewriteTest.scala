@@ -49,6 +49,43 @@ class RewriteTest extends FreeSpec with TestSetup {
       Or(List(el ~~ 4 ~~ 0 ~~ 5, el ~~ 0 ~~ 4 ~~ 5, el ~~ 4 ~~ 5 ~~ 0)))
   }
 
+  "contexts" - {
+
+    "zero-level" in {
+      assertRewrite(foo(a, AnywhereContext(X, Rewrite(Y, bar(Y)))))(
+        foo(a, b),
+        foo(a, bar(b)))
+    }
+
+    "a bit more" in {
+      assertRewrite(foo(a, AnywhereContext(X, Rewrite(Y, bar(Y)))))(
+        foo(a, traversed(b)),
+        Or(
+          foo(a, traversed(bar(b))),
+          foo(a, bar(traversed(b)))
+        )
+      )
+    }
+
+    "with traversal" in {
+      assertRewrite(foo(a, AnywhereContext(X, Rewrite(matched(Y), bar(Y)))))(
+        foo(a, traversed(matched(andMatchingY()))),
+        foo(a, traversed(bar(andMatchingY()))))
+    }
+
+    "with traversal outer rewrite" in {
+      assertRewrite(foo(a, Rewrite(AnywhereContext(X, matched(Y)), bar(Y))))(
+        foo(a, traversed(matched(andMatchingY()))),
+        foo(a, bar(andMatchingY())))
+    }
+
+    "referring to context" in {
+      assertRewrite(foo(a, Rewrite(AnywhereContext(X, matched(Y)), bar(X))))(
+        foo(a, traversed(matched(andMatchingY()))),
+        foo(a, bar(traversed(X_1))))
+    }
+  }
+
   "of pattern contexts" - {
 
     val XX = Variable("XX")
