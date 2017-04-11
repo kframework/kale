@@ -21,28 +21,20 @@ object term {
     override val smt: String = "(List " + elem.smt + ")"
     val smtBuiltin: Boolean = true
   }
-  object SortBool extends Sort {
-    val name: String = "Bool"
-    val smtBuiltin: Boolean = true
+  // TODO: prevent duplicate builtin sorts
+  val SortBool = new SortOf("Bool") {
+    override val smtBuiltin: Boolean = true
   }
-  object SortInt extends Sort {
-    val name: String = "Int"
-    val smtBuiltin: Boolean = true
+  val SortInt = new SortOf("Int") {
+    override val smtBuiltin: Boolean = true
   }
-  object SortString extends Sort {
-    val name: String = "String" // TODO: altenative z3 encoding? (e.g., int)?
-    val smtBuiltin: Boolean = true
+  val SortString = new SortOf("String") { // TODO: altenative z3 encoding? (e.g., int)?
+    override val smtBuiltin: Boolean = true
   }
-//object SortReal extends Sort
-//object SortMInt extends Sort
+  // TODO: SortReal, SortMInt, etc
   //
-  object SortK extends SortOf("K")
-  object SortMapK extends SortMap(SortK, SortK) {
-    override val name: String = "MapK"
-  }
-  object SortListK extends SortList(SortK) {
-    override val name: String = "ListK"
-  }
+  val SortK = SortOf("K")
+  val SortListK = SortList(SortK)
 
   type Type = Product2[Seq[Sort], Sort]
 
