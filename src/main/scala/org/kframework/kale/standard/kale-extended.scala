@@ -10,14 +10,15 @@ import scala.collection._
 trait DNFEnvironment extends Environment with Bottomize {
   private implicit val env = this
 
+  override val Top: Top = standard.TopInstance()
+  override val Bottom: Bottom = standard.BottomInstance()
+
   override val And: DNFAndLabel = DNFAndLabel()
   override val Or: DNFOrLabel = DNFOrLabel()
   override val Not: NotLabel = NotLabel()
   override val Variable: SimpleVariableLabel = standard.SimpleVariableLabel()
   override val Equality: EqualityLabel = standard.SimpleEqualityLabel()
   override val Truth: TruthLabel = standard.SimpleTruthLabel()
-  override val Top: Top = standard.TopInstance()
-  override val Bottom: Bottom = standard.BottomInstance()
 
   override val Rewrite = SimpleRewriteLabel()
 }
@@ -245,13 +246,6 @@ case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
   }
 
   override def construct(l: Iterable[Term]): Term = ???
-
-  override val identity: Term = Top
-
-  override def asSet(t: Term): Set[Term] = t match {
-    case ac: AssocComm => ac.asSet
-    case _ => Set(t)
-  }
 }
 
 private[kale] final class AndOfTerms(val terms: Set[Term])(implicit val env: Environment) extends And with Assoc {
@@ -283,6 +277,8 @@ private[kale] final class AndOfTerms(val terms: Set[Term])(implicit val env: Env
     case that: AndOfTerms => this.terms == that.terms
     case _ => false
   }
+
+  override def asSet: Set[Term] = terms
 }
 
 private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val terms: Term)(implicit env: Environment) extends And with Assoc {
@@ -306,6 +302,8 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
   lazy val _1: Term = s
   lazy val _2: Term = terms
   override lazy val assocIterable: Iterable[Term] = And.asList(s) ++ And.asList(terms)
+
+  override def asSet: Set[Term] = And.asSet(terms) | And.asSet(s)
 }
 
 final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implicit env: DNFEnvironment) extends And with Substitution with BinaryInfix {
@@ -353,6 +351,8 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
 
   override val formulas: Term = this
   override val nonFormula: Option[Term] = None
+
+  override def asSet: Set[Term] = m.map({ case (k, v) => Equality.binding(k, v) }).toSet
 }
 
 case class DNFOrLabel(implicit val env: Environment) extends Named("∨") with OrLabel {
@@ -365,12 +365,6 @@ case class DNFOrLabel(implicit val env: Environment) extends Named("∨") with O
       case s if s.size == 1 => s.head
       case s => new OrWithAtLeastTwoElements(s)
     }
-
-  def asSet(t: Term): Set[Term] = t match {
-    case o: OrWithAtLeastTwoElements => o.terms
-    case `Bottom` => Set()
-    case o => Set(o)
-  }
 
   override def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
 }

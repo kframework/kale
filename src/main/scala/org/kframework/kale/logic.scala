@@ -1,6 +1,7 @@
 package org.kframework.kale
 
 import org.kframework.minikore.interfaces.pattern
+import collection._
 
 trait FormulaLabel
 
@@ -59,6 +60,13 @@ trait Variable extends Leaf[(String, Sort)] {
   val isGround = false
 
   override def toString: String = name
+
+  override def canEqual(o: Any): Boolean = o.isInstanceOf[Variable]
+
+  override def equals(o: Any): Boolean = o match {
+    case v: Variable => v.name == this.name
+    case _ => false
+  }
 }
 
 trait TruthLabel extends LeafLabel[Boolean] with FormulaLabel
@@ -72,9 +80,15 @@ trait Top extends Truth with Substitution with pattern.Top
 trait Bottom extends Truth with pattern.Bottom
 
 
-trait AndLabel extends AssocCommLabel with FormulaLabel
+trait AndLabel extends AssocCommWithIdLabel with FormulaLabel {
+  override val identity = env.Top
+  assert(identity != null)
+}
 
-trait OrLabel extends AssocCommLabel with FormulaLabel
+trait OrLabel extends AssocCommWithIdLabel with FormulaLabel {
+  override val identity = env.Bottom
+  assert(identity != null)
+}
 
 trait RewriteLabel extends Label2
 
@@ -88,7 +102,8 @@ trait Equality extends Node2 with BinaryInfix with pattern.Equals
 
 trait Binding extends Equality with Substitution
 
-trait And extends Assoc with pattern.And {
+trait And extends AssocComm with pattern.And {
+  self: And =>
   val formulas: Term
   val nonFormula: Option[Term]
 }

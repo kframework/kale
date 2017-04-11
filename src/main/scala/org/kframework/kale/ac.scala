@@ -59,16 +59,30 @@ trait Assoc extends Node2 with BinaryInfix {
 trait Comm
 
 trait AssocComm extends Assoc with Comm {
+  override val label: AssocCommLabel
+
   def asSet: Set[Term]
 }
 
 trait CommLabel
 
 trait AssocCommLabel extends AssocLabel with CommLabel {
-  def asSet(t: Term): Set[Term]
+  def asSet(t: Term): Set[Term] = t match {
+    case t: AssocComm if t.label == this => t.asSet
+    case _ => Set(t)
+  }
 
   object set {
     def unapply(t: Term): Option[Set[Term]] = Some(asSet(t))
   }
 
+}
+
+trait AssocCommWithIdLabel extends AssocCommLabel with HasId {
+  override def asSet(t: Term): Set[Term] =
+    if (t == identity) {
+      Set()
+    } else {
+      super.asSet(t)
+    }
 }

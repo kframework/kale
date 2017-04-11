@@ -122,7 +122,14 @@ class MatchSpec extends FreeSpec with TestSetup {
   "of multiple contexts" - {
     "pattern context in anywhere context" in {
       val ACx = Variable("ACx")
-      println(AnywhereContext(ACx, CAPP(C, bar(X))) := buz(1, foo(2, bar(3))))
+      val ACx_1 = Variable("ACx_1")
+      val res = (AnywhereContext(ACx, CAPP(C, bar(X))) := buz(1, foo(2, bar(3))))
+
+      assert((AnywhereContext(ACx, CAPP(C, bar(X))) := buz(1, foo(2, bar(3))))
+        === Or(
+        And.substitution(Map(C -> Hole, X -> 3, ACx -> buz(1, foo(2, ACx_1)))),
+        And.substitution(Map(C -> foo(2, Hole), X -> 3, ACx -> buz(1, ACx_1)))
+      ))
     }
   }
 

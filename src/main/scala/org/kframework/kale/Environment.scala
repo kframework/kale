@@ -39,6 +39,10 @@ trait Environment extends KORELabels {
 }
 
 trait KORELabels {
+  // Constants
+  val Bottom: Truth with pattern.Bottom
+  val Top: Truth with Substitution with pattern.Top
+
   // Labels
   val Variable: VariableLabel
   val And: AndLabel
@@ -47,9 +51,5 @@ trait KORELabels {
   val Equality: EqualityLabel
   val Truth: TruthLabel
   val Not: NotLabel
-
-  // Constants
-  val Bottom: Truth with pattern.Bottom
-  val Top: Truth with Substitution with pattern.Top
 }
 

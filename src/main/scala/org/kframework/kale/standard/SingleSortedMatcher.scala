@@ -5,6 +5,9 @@ import org.kframework.kale.transformer.Binary
 
 import scala.collection.{+:, Iterable, Seq}
 
+case class MatchNotSupporteredError(l: Term, r: Term, message: String = "") extends
+  AssertionError("Trying to match " + l + " with " + r + " not supported yet. " + message)
+
 case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends MatcherOrUnifier {
 
   import Binary._
@@ -85,9 +88,6 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
     }
   }
 
-
-  case class MatchNotSupporteredError(l: Term, r: Term, message: String = "") extends
-    AssertionError("Trying to match " + l + " with " + r + " not supported yet. " + message)
 
   object MapTerm extends ProcessingFunction[Apply] with TypedWith[Term, Term] {
     override def f(solver: Apply)(a: Term, b: Term): Term = a.label match {
