@@ -9,21 +9,30 @@ import org.kframework.kale.util.Util
 trait Bottomize {
   self: Environment =>
 
+  var bottomizeIsActive = false
+
   def bottomize(_1: Term)(f: => Term): Term = {
-    if (Bottom == _1)
+    if (Bottom == _1 && bottomizeIsActive)
       Bottom
     else
       f
   }
 
   def bottomize(_1: Term, _2: Term)(f: => Term): Term = {
-    if (Bottom == _1 || Bottom == _2)
+    if (Bottom == _1 || Bottom == _2 && bottomizeIsActive)
       Bottom
     else
       f
   }
 
   def bottomize(terms: Term*)(f: => Term): Term = {
+    if (bottomizeIsActive)
+      strongBottomize(terms: _*)(f)
+    else
+      f
+  }
+
+  def strongBottomize(terms: Term*)(f: => Term): Term = {
     if (terms.contains(Bottom))
       Bottom
     else

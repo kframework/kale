@@ -227,7 +227,7 @@ case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
         others.head
       } else {
         val terms = if (others.size > 1) new AndOfTerms(others.toSet) else others.head
-        bottomize(others.toSeq: _*) {
+        strongBottomize(others.toSeq: _*) {
           if (pureSubstitution == Top) {
             terms
           } else {
@@ -285,6 +285,8 @@ private[kale] final class AndOfTerms(val terms: Set[Term])(implicit val env: Env
 private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val terms: Term)(implicit env: Environment) extends And with Assoc {
 
   import env._
+
+  assert(terms != Bottom)
 
   val label = And
 
