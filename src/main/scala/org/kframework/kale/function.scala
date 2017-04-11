@@ -19,25 +19,33 @@ trait FunctionLabel0 extends Label0 with FunctionLabel {
 trait FunctionLabel1 extends Label1 with FunctionLabel {
   def f(_1: Term): Option[Term]
 
-  override def apply(_1: Term): Term = env.bottomize(_1) { f(_1) getOrElse FreeNode1(this, _1) }
+  override def apply(_1: Term): Term = env.bottomize(_1) {
+    f(_1) getOrElse FreeNode1(this, _1)
+  }
 }
 
 trait FunctionLabel2 extends Label2 with FunctionLabel {
   def f(_1: Term, _2: Term): Option[Term]
 
-  override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) { f(_1, _2) getOrElse FreeNode2(this, _1, _2) }
+  override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
+    f(_1, _2) getOrElse FreeNode2(this, _1, _2)
+  }
 }
 
 trait FunctionLabel3 extends Label3 with FunctionLabel {
   def f(_1: Term, _2: Term, _3: Term): Option[Term]
 
-  override def apply(_1: Term, _2: Term, _3: Term): Term = f(_1, _2, _3) getOrElse FreeNode3(this, _1, _2, _3)
+  override def apply(_1: Term, _2: Term, _3: Term): Term = env.bottomize(_1, _2, _3) {
+    f(_1, _2, _3) getOrElse FreeNode3(this, _1, _2, _3)
+  }
 }
 
 trait FunctionLabel4 extends Label4 with FunctionLabel {
   def f(_1: Term, _2: Term, _3: Term, _4: Term): Option[Term]
 
-  override def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term = f(_1, _2, _3, _4) getOrElse FreeNode4(this, _1, _2, _3, _4)
+  override def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term = env.bottomize(_1, _2, _3, _4) {
+    f(_1, _2, _3, _4) getOrElse FreeNode4(this, _1, _2, _3, _4)
+  }
 }
 
 case class PrimitiveFunction1[A, R](name: String, aLabel: LeafLabel[A], rLabel: LeafLabel[R], primitiveF: A => R)(implicit val env: Environment) extends FunctionLabel1 with PureFunctionLabel {
