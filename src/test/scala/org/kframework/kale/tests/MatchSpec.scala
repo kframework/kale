@@ -167,4 +167,26 @@ class MatchSpec extends FreeSpec with TestSetup {
     assert((X := And(a, Equality(X, a))) === Equality(X, a))
     assert((X := And(a, Equality(X, b))) === Bottom)
   }
+
+  "context and and" in {
+    assert((And(CAPP(C, bar(X)),  Equality(X, 2)) := foo(1, bar(2)))
+      === And.substitution(Map(C -> foo(1, Hole), X -> 2)))
+
+    assert((And(CAPP(C, bar(X)),  Equality(X, 3)) := foo(1, bar(2)))
+      === Bottom)
+  }
+
+  "mix contexts and logical operators" in {
+    assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2)), bar(X)) := buz(foo(1, bar(2)), bar(2)))
+      === And.substitution(Map(C -> foo(1, Hole), X -> 2)))
+
+    assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), bar(2)))
+      === And.substitution(Map(C -> foo(1, Hole), X -> 2, Y -> 2)))
+
+    assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2), Equality(Y, 2)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), bar(2)))
+      === And.substitution(Map(C -> foo(1, Hole), X -> 2, Y -> 2)))
+
+    assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2), Equality(Y, 3)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), bar(2)))
+      === Bottom)
+  }
 }

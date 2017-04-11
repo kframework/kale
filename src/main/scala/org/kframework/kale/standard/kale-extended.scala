@@ -10,6 +10,8 @@ import scala.collection._
 trait DNFEnvironment extends Environment with Bottomize {
   private implicit val env = this
 
+  override val Truth: TruthLabel = standard.SimpleTruthLabel()
+
   override val Top: Top = standard.TopInstance()
   override val Bottom: Bottom = standard.BottomInstance()
 
@@ -18,7 +20,6 @@ trait DNFEnvironment extends Environment with Bottomize {
   override val Not: NotLabel = NotLabel()
   override val Variable: SimpleVariableLabel = standard.SimpleVariableLabel()
   override val Equality: EqualityLabel = standard.SimpleEqualityLabel()
-  override val Truth: TruthLabel = standard.SimpleTruthLabel()
 
   override val Rewrite = SimpleRewriteLabel()
 }
