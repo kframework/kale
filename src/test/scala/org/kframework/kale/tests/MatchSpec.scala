@@ -169,30 +169,42 @@ class MatchSpec extends FreeSpec with TestSetup {
   }
 
   "context and and" in {
-    assert((And(CAPP(C, bar(X)),  Equality(X, 2)) := foo(1, bar(2)))
+    assert((And(CAPP(C, bar(X)), Equality(X, 2)) := foo(1, bar(2)))
       === And.substitution(Map(C -> foo(1, Hole), X -> 2)))
 
-    assert((And(CAPP(C, bar(X)),  Equality(X, 3)) := foo(1, bar(2)))
+    assert((And(CAPP(C, bar(X)), Equality(X, 3)) := foo(1, bar(2)))
       === Bottom)
   }
 
   "mix contexts and logical operators" in {
-    assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2)), bar(X)) := buz(foo(1, bar(2)), bar(2)))
+    assert((buz(And(CAPP(C, bar(X)), Equality(X, 2)), bar(X)) := buz(foo(1, bar(2)), bar(2)))
       === And.substitution(Map(C -> foo(1, Hole), X -> 2)))
 
-    assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), bar(2)))
+    assert((buz(And(CAPP(C, bar(X)), Equality(X, 2)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), bar(2)))
       === And.substitution(Map(C -> foo(1, Hole), X -> 2, Y -> 2)))
 
-    assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2), Equality(Y, 2)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), bar(2)))
+    assert((buz(And(CAPP(C, bar(X)), Equality(X, 2), Equality(Y, 2)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), bar(2)))
       === And.substitution(Map(C -> foo(1, Hole), X -> 2, Y -> 2)))
 
-    assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2), Equality(Y, 3)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), bar(2)))
+    assert((buz(And(CAPP(C, bar(X)), Equality(X, 2), Equality(Y, 3)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), bar(2)))
       === Bottom)
 
-    assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), Or(bar(2), bar(3))))
+    assert((buz(And(CAPP(C, bar(X)), Equality(X, 2)), And(bar(X), Equality(Y, 2))) := buz(foo(1, bar(2)), Or(bar(2), bar(3))))
       === And.substitution(Map(C -> foo(1, Hole), X -> 2, Y -> 2)))
 
-    assert((buz(And(CAPP(C, bar(X)),  Equality(X, 2)), And(bar(Y), Equality(Y, 3))) := buz(foo(1, bar(2)), Or(bar(2), bar(3))))
+    assert((buz(And(CAPP(C, bar(X)), Equality(X, 2)), And(bar(Y), Equality(Y, 3))) := buz(foo(1, bar(2)), Or(bar(2), bar(3))))
       === And.substitution(Map(C -> foo(1, Hole), X -> 2, Y -> 3)))
+  }
+
+  "not" in {
+    assert((X := And(a, Not(Equality(X, b)))) === Equality(X, a))
+    assert((X := And(a, Not(Equality(X, a)))) === Bottom)
+
+    assert((X := Or(a, Not(Equality(X, a)))) === Or(Equality(X, a), And(X, Not(Equality(X, a)))))
+  }
+
+  "if then else" in {
+    assert((IfThenElse(a, Equality(X, a), Equality(X, b)) := a) === Equality(X, a))
+    assert((IfThenElse(a, Equality(X, a), Equality(X, b)) := b) === Equality(X, b))
   }
 }

@@ -1,6 +1,7 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
+import org.kframework.kale.util.Util
 import org.scalatest.FreeSpec
 
 import scala.collection._
@@ -11,12 +12,23 @@ class RewriteTest extends FreeSpec with TestSetup {
   import env._
   import implicits._
 
+  def assertRewrite(rule: Rewrite)(obj: Term, expected: Term) {
+    val unificationRes = unifier(rule._1, obj)
+    val res = Or.asSet(unificationRes) map (s => substitutionApplier(s.asInstanceOf[Substitution])(rule._2))
+    assert(Or(res) === expected)
+  }
+
+  def assertRewrite(rule0: Term)(obj: Term, expected: Term) {
+    val rule = Util.moveRewriteSymbolToTop(rule0)(env)
+    assertRewrite(rule)(obj, expected)
+  }
+
   "X + 0 => X" in {
-    assert(substitutionApplier(unifier(X + 0, (5: Term) + 0).asInstanceOf[Substitution])(X) === (5: Term))
+    assertRewrite(Rewrite(X + 0, X))((5: Term) + 0, 5: Term)
   }
 
   "2 + X + 3 => 5 + X" in {
-    assert(substitutionApplier(unifier((2: Term) + X + 3, (2: Term) + 4 + 3).asInstanceOf[Substitution])((5: Term) + X) === (5: Term) + 4)
+    assertRewrite(Rewrite((2: Term) + X + 3, (5: Term) + X))((2: Term) + 4 + 3, (5: Term) + 4)
   }
 
   val rewriter = Rewriter(substitutionApplier, unifier, env)(Set(
@@ -35,5 +47,31 @@ class RewriteTest extends FreeSpec with TestSetup {
     assert(rewriter.searchStep(1: Term) === Bottom)
     assert(rewriter.searchStep(el ~~ 3 ~~ 4 ~~ 5 ~~ 6) ===
       Or(List(el ~~ 4 ~~ 0 ~~ 5, el ~~ 0 ~~ 4 ~~ 5, el ~~ 4 ~~ 5 ~~ 0)))
+  }
+
+  "of pattern contexts" - {
+
+    val XX = Variable("XX")
+    val YY = Variable("YY")
+
+    "zero level" in {
+      assertRewrite(CAPP(C, Rewrite(1, 2)))(1, 2)
+    }
+
+    "one level" in {
+      assertRewrite(CAPP(C, Rewrite(bar(X), X)))(bar(1), 1)
+    }
+
+    "two levels" in {
+      assertRewrite(CAPP(C, Rewrite(bar(X), buz(X, X))))(
+        foo(1, bar(bar(2))),
+        Or(foo(1, buz(bar(2), bar(2))), foo(1, bar(buz(2, 2)))))
+    }
+
+    "stops traversal when encountering unknown" in {
+      assertRewrite(CAPP(C, Rewrite(bar(X), buz(X, X))))(
+        foo(1, bar(buz(3, bar(2)))),
+        foo(1, buz(buz(3, bar(2)), buz(3, bar(2)))))
+    }
   }
 }

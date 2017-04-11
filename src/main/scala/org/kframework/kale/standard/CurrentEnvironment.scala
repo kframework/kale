@@ -45,6 +45,8 @@ class CurrentEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with
 
   val Hole = Variable("☐", Sort.K)
 
+  val IfThenElse = new IfThenElseLabel()
+
   val AnywhereContext = AnywhereContextApplicationLabel()
   val CAPP = PatternContextApplicationLabel("CAPP")
 

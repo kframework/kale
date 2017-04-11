@@ -83,64 +83,34 @@ class ParsingDisambiguationTest extends FreeSpec {
     )
   )
 
-  "small match part"
+  val asMult = StmtList(
+    block(typedef(ID("a"))),
+    theAmbiguity
+  )
 
-  "X + 0 => X" in {
-    val asMult = StmtList(
-      block(typedef(ID("a"))),
-      theAmbiguity
-    )
+  val asDecl = StmtList(
+    typedef(ID("a")),
+    theAmbiguity
+  )
 
-    val asDecl = StmtList(
-      typedef(ID("a")),
-      theAmbiguity
-    )
+  val isDecl = Equality.binding(Variable("AMB"), ID("isDecl"))
+  val isMult = Equality.binding(Variable("AMB"), ID("isMult"))
 
-    val A = Variable("A")
-    val B = Variable("B")
-    val C = Variable("C")
+  val A = Variable("A")
+  val B = Variable("B")
+  val C = Variable("C")
 
-    val isDecl = Equality.binding(Variable("AMB"), ID("isDecl"))
-
-    val disambRule = AnywhereContext(
+  "match part" in {
+    val pattern = AnywhereContext(
       Variable("ANYWHERE0"),
       StmtList(
-        And(
-          CAPP(
-            CX,
-            typedef(A)
-          ), isDecl),
-        Or(
-          Rewrite(
-            And(ExpList(
-              mult(A, B),
-              readPointer(C)
-            ), isDecl),
-            Bottom
-          ),
-          Rewrite(
-            And(VarDecl(
-              A,
-              DeclList(
-                Pointer(B),
-                Pointer(C))
-            ), Not(isDecl)),
-            Bottom
-          )
-        )
-      )
-    )
-
-    val partial = AnywhereContext(
-      Variable("ANYWHERE0"),
-      StmtList(
-        And(
+        IfThenElse(
           CAPP(
             CX,
             typedef(A)
           ),
-          isDecl
-        ),
+          isDecl,
+          isMult),
         Or(
           And(ExpList(
             mult(A, B),
@@ -151,7 +121,50 @@ class ParsingDisambiguationTest extends FreeSpec {
             DeclList(
               Pointer(B),
               Pointer(C))
-          ), Not(isDecl))
+          ), isMult)
+        )
+      )
+    )
+
+    // as mult
+    assert(unifier(pattern, asMult).asInstanceOf[And].asSet
+      === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
+      Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), isMult)).asInstanceOf[And].asSet)
+
+
+    // as decl
+    assert(unifier(pattern, asDecl)
+      === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
+      Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), isDecl, Equality(CX, Hole))))
+  }
+
+  "rewrite" in {
+
+    val disambRule = AnywhereContext(
+      Variable("ANYWHERE0"),
+      StmtList(
+        IfThenElse(
+          CAPP(
+            CX,
+            typedef(A)
+          ),
+          isDecl,
+          isMult),
+        Or(
+          Rewrite(
+            And(ExpList(
+              mult(A, B),
+              readPointer(C)
+            ), isDecl),
+            Bottom),
+          Rewrite(
+            And(VarDecl(
+              A,
+              DeclList(
+                Pointer(B),
+                Pointer(C))
+            ), isMult),
+            Bottom)
         )
       )
     )
@@ -159,13 +172,6 @@ class ParsingDisambiguationTest extends FreeSpec {
     val rewriteOnTop = Util.moveRewriteSymbolToTop(disambRule)(env)
 
     val rewriter = Rewriter(substitutionApplier, unifier, env)(Set(rewriteOnTop))
-
-    println("as mult:")
-    println(Or.asSet(unifier(partial, asMult)).mkString("\n"))
-    println()
-    println("as decl:")
-    println(Or.asSet(unifier(partial, asDecl)).mkString("\n"))
-    println()
 
     println(rewriter.searchStep(asMult))
     println(rewriter.searchStep(asDecl))

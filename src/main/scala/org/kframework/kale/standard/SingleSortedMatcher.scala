@@ -189,13 +189,31 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
     }
   }
 
+  // TODO: something is not quite right with FormulaLabel -- make sure it is correct
+  object OneIsFormula extends ProcessingFunction[Apply] with TypedWith[Term, Term] {
+    def f(solver: Apply)(a: Term, b: Term) = And(a, b)
+  }
+
   object NoMatch extends ProcessingFunction[Apply] with TypedWith[Term, Term] {
     override def f(solver: Apply)(a: Term, b: Term): Term = Bottom
+  }
+
+  object IfThenElseTerm extends ProcessingFunction[Apply] with TypedWith[Node3, Term] {
+    override def f(solver: Apply)(a: Node3, b: Term): Term = {
+      val c = solver(a._1, b)
+      if (c == Bottom)
+        a._3
+      else
+        And(c, a._2)
+    }
   }
 
   import standard._
 
   override def processingFunctions: ProcessingFunctions = definePartialFunction({
+    case (IfThenElse, _) => IfThenElseTerm
+    case (_, Not) => OneIsFormula
+    case (Not, _) => OneIsFormula
     case (And, _) => AndTerm
     case (_, And) => TermAnd
     case (Or, _) => OrTerm

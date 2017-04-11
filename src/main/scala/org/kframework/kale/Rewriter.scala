@@ -71,7 +71,8 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
       case (Bottom, _) => Set[Term]()
       case (or, rhs) =>
         val substitutions: Set[Substitution] = Or.asSet(or).asInstanceOf[Set[Substitution]]
-        substitutions.map(substitutioner).map(_ (rhs))
+        val res = substitutions.map(substitutioner).map(_ (rhs))
+        res
     }))
   }
 }

@@ -226,8 +226,8 @@ case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
       } else if (pureSubstitution == Top && others.size == 1) {
         others.head
       } else {
-        val terms = if (others.size > 1) new AndOfTerms(others.toSet) else others.head
         strongBottomize(others.toSeq: _*) {
+          val terms = if (others.size > 1) new AndOfTerms(others.toSet) else others.head
           if (pureSubstitution == Top) {
             terms
           } else {
@@ -404,6 +404,11 @@ case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term
   override def _2: Term = label(assocIterable.tail)
 }
 
+// implements: X and (M = (c = X) and (M = Bot implies t) and (not(m = Bot) implies e)
+class IfThenElseLabel(implicit val env: Environment) extends Named("if_then_else") with Label3 {
+  def apply(c: Term, t: Term, e: Term) = FreeNode3(this, c, t, e)
+}
+
 case class SimpleRewriteLabel(implicit val env: Environment) extends {
   val name = "=>"
 } with RewriteLabel {
@@ -418,7 +423,9 @@ class InvokeLabel(implicit val env: Environment) extends NameFromObject with Lab
   // the rewriter is initialized after the creation of the label to break the cycle when creating the rewriter for applying functions
   var rewriter: Rewriter = _
 
-  override def apply(obj: Term): Term = env.bottomize(obj) { Invoke(this, obj) }
+  override def apply(obj: Term): Term = env.bottomize(obj) {
+    Invoke(this, obj)
+  }
 }
 
 case class Invoke(label: InvokeLabel, _1: Term) extends Node1
