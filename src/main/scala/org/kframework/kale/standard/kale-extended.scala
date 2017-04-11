@@ -7,7 +7,7 @@ import org.kframework.kale.util.{NameFromObject, Named, unreachable}
 
 import scala.collection._
 
-trait DNFEnvironment extends Environment with Bottomize {
+trait DNFEnvironment extends Environment {
   private implicit val env = this
 
   override val Truth: TruthLabel = standard.SimpleTruthLabel()
@@ -416,7 +416,7 @@ class InvokeLabel(implicit val env: Environment) extends NameFromObject with Lab
   // the rewriter is initialized after the creation of the label to break the cycle when creating the rewriter for applying functions
   var rewriter: Rewriter = _
 
-  override def apply(obj: Term): Term = Invoke(this, obj)
+  override def apply(obj: Term): Term = env.bottomize(obj) { Invoke(this, obj) }
 }
 
 case class Invoke(label: InvokeLabel, _1: Term) extends Node1

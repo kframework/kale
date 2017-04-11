@@ -6,7 +6,7 @@ import org.kframework.kale.standard._
 
 import collection._
 
-class KMEnvironment extends DNFEnvironment with Bottomize with HasINT with HasINTdiv with HasID {
+class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasID {
   implicit protected val env = this
 
   private var sorts = Map[Label, Signature]()

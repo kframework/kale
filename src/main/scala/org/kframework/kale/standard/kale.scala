@@ -10,7 +10,9 @@ trait FreeLabel
 case class Sort(name: String) extends kale.Sort
 
 object Sort {
+
   object K extends Sort("K")
+
 }
 
 case class FreeLabel0 private(name: String)(implicit val env: Environment) extends Label0 with FreeLabel {
@@ -18,19 +20,27 @@ case class FreeLabel0 private(name: String)(implicit val env: Environment) exten
 }
 
 case class FreeLabel1 private(name: String)(implicit val env: Environment) extends Label1 with FreeLabel {
-  def apply(_1: Term): Term = FreeNode1(this, _1)
+  def apply(_1: Term): Term = env.bottomize(_1) {
+    FreeNode1(this, _1)
+  }
 }
 
 case class FreeLabel2 private(name: String)(implicit val env: Environment) extends Label2 with FreeLabel {
-  def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
+  def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
+    FreeNode2(this, _1, _2)
+  }
 }
 
 case class FreeLabel3 private(name: String)(implicit val env: Environment) extends Label3 with FreeLabel {
-  def apply(_1: Term, _2: Term, _3: Term): Term = FreeNode3(this, _1, _2, _3)
+  def apply(_1: Term, _2: Term, _3: Term): Term = env.bottomize(_1, _2, _3) {
+    FreeNode3(this, _1, _2, _3)
+  }
 }
 
 case class FreeLabel4 private(name: String)(implicit val env: Environment) extends Label4 with FreeLabel {
-  def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term = FreeNode4(this, _1, _2, _3, _4)
+  def apply(_1: Term, _2: Term, _3: Term, _4: Term): Term = env.bottomize(_1, _2, _3, _4) {
+    FreeNode4(this, _1, _2, _3, _4)
+  }
 }
 
 case class FreeNode0(label: Label0) extends Node0

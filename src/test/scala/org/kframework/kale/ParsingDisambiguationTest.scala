@@ -17,24 +17,33 @@ class ParsingDisambiguationTest extends FreeSpec {
 
   val implicits = new Implicits()
 
+  val ExpId = FreeLabel1("ExpId")
+  val readPointer = FreeLabel1("readPointer")
   val mult = FreeLabel2("mult")
-  val dereference = FreeLabel1("dereference")
+  val plus = FreeLabel2("plus")
 
-  val emptyExp = FreeLabel0("emptyList")
-  val exps = new standard.AssocWithIdListLabel("_,_", emptyExp())
+  val dotExp = FreeLabel0("dotExp")
+  val ExpList = new standard.AssocWithIdListLabel("_,_", dotExp())
 
-  val stmt = FreeLabel1("_;")
-  val emptyStmt = FreeLabel0(";")
-  val stmts = new standard.AssocWithIdListLabel("_ _", emptyStmt())
-
+  val ExpStmt = FreeLabel1("_;")
   val block = FreeLabel1("block")
   val typedef = FreeLabel1("typedef")
 
-  val declaration = FreeLabel2("declaration")
-  val pointer = FreeLabel1("pointer")
+  val VarDecl = FreeLabel2("VarDecl")
+
+  val TypeId = FreeLabel1("TypeId")
+
+  val Pointer = FreeLabel1("Pointer")
+
+  // we don't have non-empty lists for now
+  val emptyTypeNeList = FreeLabel0("emptyTypeNeList")
+  val TypeNeList = new standard.AssocWithIdListLabel("TypeNeList", emptyTypeNeList())
 
   val emptyDeclList = FreeLabel0("emptyDeclList")
-  val declarationVarList = new standard.AssocWithIdListLabel("declVarList", emptyDeclList())
+  val DeclList = new standard.AssocWithIdListLabel("DeclList", emptyDeclList())
+
+  val emptyStmtList = FreeLabel0("emptyStmtList")
+  val StmtList = new standard.AssocWithIdListLabel("StmtList", emptyStmtList())
 
   //  val ANYWHERE_NOT_BLOCK = PatternContextApplicationLabel("ANYWHERE_NOT_BLOCK")
 
@@ -62,25 +71,27 @@ class ParsingDisambiguationTest extends FreeSpec {
   val substitutionApplier = SubstitutionWithContext(_)
 
   val theAmbiguity: Term = Or(
-    exps(
+    ExpList(
       mult(ID("a"), ID("b")),
-      dereference(ID("c"))
+      readPointer(ID("c"))
     ),
-    declaration(
+    VarDecl(
       ID("a"),
-      declarationVarList(
-        pointer(ID("b")),
-        pointer(ID("c")))
+      DeclList(
+        Pointer(ID("b")),
+        Pointer(ID("c")))
     )
   )
 
+  "small match part"
+
   "X + 0 => X" in {
-    val asMult = stmts(
+    val asMult = StmtList(
       block(typedef(ID("a"))),
       theAmbiguity
     )
 
-    val asDecl = stmts(
+    val asDecl = StmtList(
       typedef(ID("a")),
       theAmbiguity
     )
@@ -93,7 +104,7 @@ class ParsingDisambiguationTest extends FreeSpec {
 
     val disambRule = AnywhereContext(
       Variable("ANYWHERE0"),
-      stmts(
+      StmtList(
         And(
           CAPP(
             CX,
@@ -101,18 +112,18 @@ class ParsingDisambiguationTest extends FreeSpec {
           ), isDecl),
         Or(
           Rewrite(
-            And(exps(
+            And(ExpList(
               mult(A, B),
-              dereference(C)
+              readPointer(C)
             ), isDecl),
             Bottom
           ),
           Rewrite(
-            And(declaration(
+            And(VarDecl(
               A,
-              declarationVarList(
-                pointer(B),
-                pointer(C))
+              DeclList(
+                Pointer(B),
+                Pointer(C))
             ), Not(isDecl)),
             Bottom
           )
@@ -122,7 +133,7 @@ class ParsingDisambiguationTest extends FreeSpec {
 
     val partial = AnywhereContext(
       Variable("ANYWHERE0"),
-      stmts(
+      StmtList(
         And(
           CAPP(
             CX,
@@ -131,15 +142,15 @@ class ParsingDisambiguationTest extends FreeSpec {
           isDecl
         ),
         Or(
-          And(exps(
+          And(ExpList(
             mult(A, B),
-            dereference(C)
+            readPointer(C)
           ), isDecl),
-          And(declaration(
+          And(VarDecl(
             A,
-            declarationVarList(
-              pointer(B),
-              pointer(C))
+            DeclList(
+              Pointer(B),
+              Pointer(C))
           ), Not(isDecl))
         )
       )
