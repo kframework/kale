@@ -6,6 +6,8 @@ object builtin {
 
   import term._
 
+  // sorts
+
   // TODO: prevent duplicate builtin sorts
   val SortInt = new SortOf("Int") {
     override val smtBuiltin: Boolean = true
@@ -14,19 +16,38 @@ object builtin {
     override val smtBuiltin: Boolean = true
   }
   val SortString = new SortOf("String") { // TODO: altenative z3 encoding? (e.g., int)?
-  override val smtBuiltin: Boolean = true
+    override val smtBuiltin: Boolean = true
   }
   // TODO: SortReal, SortMInt, etc
-  //
+
   val SortK = SortOf("K")
   val SortListK = SortList(SortK)
 
-  ////
+  // terms
 
   case class INT(v: Int) extends Constant {
     val sort: Sort = SortInt
     val smt: String = v.toString
   }
+  case class BOOL(v: Boolean) extends Constant {
+    val sort: Sort = SortBool
+    val smt: String = v.toString
+  }
+  case class STRING(v: String) extends Constant {
+    val sort: Sort = SortString
+    val smt: String = "\"" + v + "\""
+  }
+  /* TODO: support string, real, float, and bit-vector
+  case class REAL(v: Double) extends Constant {
+    val sort: Sort = SortReal
+  }
+  case class MINT(v: BitVector) extends Constant {
+    val sort: Sort = SortMInt
+  }
+   */
+
+  // symbols
+
   object INT {
     sealed trait bop extends Symbol {
       def f(i1: Int, i2: Int): Int
@@ -66,10 +87,6 @@ object builtin {
     object le extends cmp { override val name: String = "_<=Int_"; override val smt: String = "<="; override def f(i1: Int, i2: Int): Boolean = i1 <= i2 }
   }
 
-  case class BOOL(v: Boolean) extends Constant {
-    val sort: Sort = SortBool
-    val smt: String = v.toString
-  }
   object BOOL {
     sealed trait bop extends Symbol {
       override val smtBuiltin: Boolean = true
@@ -280,20 +297,5 @@ object builtin {
       }
     }
   }
-
-  case class STRING(v: String) extends Constant {
-    val sort: Sort = SortString
-    val smt: String = "\"" + v + "\""
-  }
-
-  /* TODO: support string, real, float, and bit-vector
-  case class REAL(v: Double) extends Constant {
-    val sort: Sort = SortReal
-  }
-
-  case class MINT(v: BitVector) extends Constant {
-    val sort: Sort = SortMInt
-  }
-   */
 
 }
