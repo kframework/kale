@@ -406,7 +406,14 @@ case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term
 
 // implements: X and (M = (c = X) and (M = Bot implies t) and (not(m = Bot) implies e)
 class IfThenElseLabel(implicit val env: Environment) extends Named("if_then_else") with Label3 {
-  def apply(c: Term, t: Term, e: Term) = FreeNode3(this, c, t, e)
+  def apply(c: Term, t: Term, e: Term) = {
+    if (c == env.Top)
+      t
+    else if (c == env.Bottom)
+      e
+    else
+      FreeNode3(this, c, t, e)
+  }
 }
 
 case class SimpleRewriteLabel(implicit val env: Environment) extends {

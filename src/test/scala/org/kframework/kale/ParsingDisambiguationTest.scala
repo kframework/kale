@@ -13,7 +13,6 @@ class ParsingDisambiguationTest extends FreeSpec {
   implicit val env = new CurrentEnvironment
 
   import env._
-  import env.builtin._
 
   val implicits = new Implicits()
 
@@ -93,12 +92,10 @@ class ParsingDisambiguationTest extends FreeSpec {
     theAmbiguity
   )
 
-  val isDecl = Equality.binding(Variable("AMB"), ID("isDecl"))
-  val isMult = Equality.binding(Variable("AMB"), ID("isMult"))
-
   val A = Variable("A")
   val B = Variable("B")
   val C = Variable("C")
+  val IsDecl = Variable("IsDecl")
 
   "match part" in {
     val pattern = AnywhereContext(
@@ -109,33 +106,37 @@ class ParsingDisambiguationTest extends FreeSpec {
             CX,
             typedef(A)
           ),
-          isDecl,
-          isMult),
-        Or(
-          And(ExpList(
-            mult(A, B),
-            readPointer(C)
-          ), isDecl),
-          And(VarDecl(
+          Equality(IsDecl, Top),
+          Equality(IsDecl, Bottom)
+        ),
+        IfThenElse(
+          IsDecl,
+          VarDecl(
             A,
             DeclList(
               Pointer(B),
               Pointer(C))
-          ), isMult)
+          ),
+          ExpList(
+            mult(A, B),
+            readPointer(C)
+          )
         )
       )
     )
 
+    println(pattern)
+
     // as mult
-    assert(unifier(pattern, asMult).asInstanceOf[And].asSet
+    assert(unifier(pattern, asMult)
       === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
-      Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), isMult)).asInstanceOf[And].asSet)
+      Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Bottom))))
 
 
     // as decl
     assert(unifier(pattern, asDecl)
       === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
-      Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), isDecl, Equality(CX, Hole))))
+      Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Top), Equality(CX, Hole))))
   }
 
   "rewrite" in {
@@ -148,23 +149,25 @@ class ParsingDisambiguationTest extends FreeSpec {
             CX,
             typedef(A)
           ),
-          isDecl,
-          isMult),
-        Or(
-          Rewrite(
-            And(ExpList(
-              mult(A, B),
-              readPointer(C)
-            ), isDecl),
-            Bottom),
-          Rewrite(
-            And(VarDecl(
+          Equality(IsDecl, Top),
+          Equality(IsDecl, Bottom)
+        ),
+        Or(IfThenElse(
+          IsDecl,
+          Rewrite(ExpList(
+            mult(A, B),
+            readPointer(C)
+          ), Bottom), _V)
+          ,
+          IfThenElse(
+            IsDecl,
+            _V,
+            Rewrite(VarDecl(
               A,
               DeclList(
                 Pointer(B),
                 Pointer(C))
-            ), isMult),
-            Bottom)
+            ), Bottom))
         )
       )
     )

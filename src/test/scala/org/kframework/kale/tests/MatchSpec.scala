@@ -206,5 +206,9 @@ class MatchSpec extends FreeSpec with TestSetup {
   "if then else" in {
     assert((IfThenElse(a, Equality(X, a), Equality(X, b)) := a) === Equality(X, a))
     assert((IfThenElse(a, Equality(X, a), Equality(X, b)) := b) === Equality(X, b))
+    assert((foo(X, IfThenElse(Equality(X, a), a, b)) := foo(a, a)) === Equality(X, a))
+    assert((foo(X, IfThenElse(Equality(X, a), a, b)) := foo(b, b)) === Equality(X, b))
+    assert((foo(X, IfThenElse(Equality(X, a), a, b)) := foo(a, b)) === Bottom)
+    assert((foo(X, IfThenElse(Equality(X, a), a, b)) := foo(b, a)) === Bottom)
   }
 }

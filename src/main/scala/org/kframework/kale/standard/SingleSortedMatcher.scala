@@ -47,10 +47,10 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
     def f(solver: Apply)(a: Node4, b: Node4) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3), solver(a._4, b._4)))
   }
 
-  def matchContents(l: AssocLabel, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = {
+  def matchContents(l: AssocLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = {
     val res = (ksLeft.toSeq, ksRight.toSeq) match {
       case (Seq(), Seq()) =>
-        Top
+        soFar
       case ((v: Variable) +: tailL, ksR) =>
         (0 to ksR.size)
           .map {
@@ -58,13 +58,15 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
           }
           .map {
             case (prefix, suffix) =>
-              And(Equality(v, l(prefix)), matchContents(l, tailL, suffix))
+              val bind = And(soFar, Equality(v, l(prefix)))
+              matchContents(l, bind, tailL, suffix)
           }
           .fold(Bottom)({
             (a, b) => Or(a, b)
           })
       case (left, right) if left.nonEmpty && right.nonEmpty =>
-        And(solver(left.head, right.head), matchContents(l, left.tail, right.tail): Term)
+        val headSolution: Term = solver(And(soFar, left.head), right.head)
+        matchContents(l, headSolution, left.tail, right.tail)
       case other => Bottom
     }
     res
@@ -75,7 +77,7 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
       val asList = a.label.asList _
       val l1 = asList(a)
       val l2 = asList(b)
-      matchContents(a.label, l1, l2)(solver)
+      matchContents(a.label, Top, l1, l2)(solver)
     }
   }
 
@@ -84,7 +86,7 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
       val asList = b.label.asList _
       val l1 = asList(a)
       val l2 = asList(b)
-      matchContents(b.label, l1, l2)(solver)
+      matchContents(b.label, Top, l1, l2)(solver)
     }
   }
 
