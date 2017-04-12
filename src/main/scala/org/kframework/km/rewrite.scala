@@ -67,6 +67,11 @@ class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
     searchDepth(-1)(rules, term)
   }
 
+  // [ (t1,t2), (u1,u2), ... ] => t1 = t2 /\ u1 = u2 /\ ...
+  def and(tts: Seq[(Term,Term)]): Term = {
+    tts.map({case (t1,t2) => eq(t1.sort)(t1,t2)})
+      .foldLeft(BOOL(true).asInstanceOf[Term])((b,t) => BOOL.and(b,t))
+  }
   // TODO: not thread safe
   private val eqs: mutable.Map[Sort, Symbol] = mutable.Map()
   def eq(sort: Sort): Symbol = {
@@ -76,12 +81,6 @@ class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
       eqs.put(sort, symbol)
       symbol
     }
-  }
-
-  // [ (t1,t2), (u1,u2), ... ] => t1 = t2 /\ u1 = u2 /\ ...
-  def and(tts: Seq[(Term,Term)]): Term = {
-    tts.map({case (t1,t2) => eq(t1.sort)(t1,t2)})
-      .foldLeft(BOOL(true).asInstanceOf[Term])((b,t) => BOOL.and(b,t))
   }
 
 }
