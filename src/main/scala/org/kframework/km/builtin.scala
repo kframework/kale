@@ -260,40 +260,41 @@ object builtin {
     }
   }
 
-  object LIST_K {
-    object nil extends Symbol {
-      override val name: String = "nilListK"
+  object LIST {
+    case class nil(sort: SortList) extends Symbol {
+      override val name: String = "nilList" + sort.elem
       override val smt: String = "nil"
       override val smtBuiltin: Boolean = true
-      override val signature: Type = (Seq(), SortListK)
+      override val signature: Type = (Seq(), sort)
       override val isFunctional: Boolean = false
       override def applySeq(children: Seq[Term]): Term = Application(this, children)
     }
 
-    object insert extends Symbol {
-      override val name: String = "insertListK"
+    case class insert(sort: SortList) extends Symbol {
+      override val name: String = "insertList" + sort.elem
       override val smt: String = "insert"
       override val smtBuiltin: Boolean = true
-      override val signature: Type = (Seq(SortK, SortListK), SortListK)
+      override val signature: Type = (Seq(sort.elem, sort), sort)
       override val isFunctional: Boolean = false
       override def applySeq(children: Seq[Term]): Term = Application(this, children)
     }
 
-    object append extends Symbol {
-      override val name: String = "appendListK"
+    case class append(sort: SortList) extends Symbol {
+      override val name: String = "appendList" + sort.elem
       override val smt: String = "append"
       override val smtBuiltin: Boolean = false
-      override val signature: Type = (Seq(SortListK, SortListK), SortListK)
+      override val signature: Type = (Seq(sort, sort), sort)
       override val isFunctional: Boolean = true
       override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 2)
         lazy val default = Application(this, children)
         val (l1,l2) = (children(0), children(1))
         (l1, l2) match {
-          case (_, Application(`nil`, _)) => l1
-          case (Application(`nil`, _), _) => l2
-          case (Application(`insert`, Seq(l11, l12)), _) =>
-            Application(insert, Seq(l11, append(l12, l2)))
+          case (_, Application(n:nil, _)) => assert(n.sort == sort); l1
+          case (Application(n:nil, _), _) => assert(n.sort == sort); l2
+          case (Application(ins:insert, Seq(l11, l12)), _) =>
+            assert(ins.sort == sort)
+            Application(ins, Seq(l11, this(l12, l2)))
           case _ => default
         }
       }
