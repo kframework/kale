@@ -181,13 +181,15 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
 
   object OrTerm extends ProcessingFunction[Apply] with TypedWith[Or, Term] {
     def f(solver: Apply)(a: Or, b: Term) = {
-      a.label(a.asSet map (solver(_, b)))
+      val sol = a.asSet map (solver(_, b))
+      Or(sol)
     }
   }
 
   object TermOr extends ProcessingFunction[Apply] with TypedWith[Term, Or] {
     def f(solver: Apply)(a: Term, b: Or) = {
-      b.label(b.asSet map (solver(a, _)))
+      val sol = b.asSet map (solver(a, _))
+      Or(sol)
     }
   }
 
@@ -210,19 +212,31 @@ case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends M
     }
   }
 
+  object BindMatchMatcher extends ProcessingFunction[Apply] with TypedWith[Node2, Term] {
+    override def f(solver: Apply)(a: Node2, b: Term): Term = {
+      val v = a._1.asInstanceOf[Variable]
+      val p = a._2
+      Or(Or.asSet(b) map { bx =>
+        val sol = solver(p, bx)
+        And(Equality(v, bx), sol)
+      })
+    }
+  }
+
   import standard._
 
   override def processingFunctions: ProcessingFunctions = definePartialFunction({
-    case (IfThenElse, _) => IfThenElseTerm
-    case (_, Not) => OneIsFormula
-    case (Not, _) => OneIsFormula
-    case (And, _) => AndTerm
-    case (_, And) => TermAnd
-    case (Or, _) => OrTerm
-    case (_, Or) => TermOr
-    case (Variable, _) => VarLeft
+    case (`BindMatch`, _) => BindMatchMatcher
+    case (`IfThenElse`, _) => IfThenElseTerm
+    case (_, `Not`) => OneIsFormula
+    case (`Not`, _) => OneIsFormula
+    case (`And`, _) => AndTerm
+    case (_, `And`) => TermAnd
+    case (`Or`, _) => OrTerm
+    case (_, `Or`) => TermOr
+    case (`Variable`, _) => VarLeft
     case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
-    case (`CAPP`, _) => new PatternContextMatcher()(env)
+    case (capp: PatternContextApplicationLabel, _) => new PatternContextMatcher()(env)
     case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 => NoMatch
     case (_: FreeLabel0, _: FreeLabel0) => FreeNode0FreeNode0
     case (_: FreeLabel1, _: FreeLabel1) => FreeNode1FreeNode1

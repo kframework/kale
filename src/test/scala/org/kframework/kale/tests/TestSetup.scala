@@ -1,6 +1,7 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
+import org.kframework.kale.context.PatternContextApplicationLabel
 import org.kframework.kale.standard.{Rewrite => _, _}
 import org.kframework.kale.util.Implicits
 import org.scalactic.Prettifier
@@ -40,6 +41,8 @@ trait TestSetup {
 
   val C = Variable("C")
   val C1 = Variable("C1")
+
+  val CAPP = PatternContextApplicationLabel("CAPP")
 
   CAPP.setPatterns(Or(List(
     Equality(CAPP(C, Hole), Hole),

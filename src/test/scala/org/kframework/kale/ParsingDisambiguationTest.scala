@@ -56,9 +56,19 @@ class ParsingDisambiguationTest extends FreeSpec {
     Variable("_" + counter)
   }
 
-  CAPP.setPatterns(Or(List(
-    Equality(CAPP(CX, Hole), Hole)
-    //    Equality(CAPP(CX, Hole), dereference(CAPP(CX1, Hole)))
+  val NO_BLOCK = PatternContextApplicationLabel("NO_BLOCK")
+
+  NO_BLOCK.setPatterns(Or(List(
+    Equality(NO_BLOCK(CX, Hole), Hole),
+    Equality(NO_BLOCK(CX, Hole), Pointer(NO_BLOCK(CX1, Hole)))
+//    TODO: figure out how to make it lazy (we probalby need some side condition)
+//    Equality(NO_BLOCK(CX, Hole), ExpList(NO_BLOCK(CX1, Hole), _V))
+  )))
+
+  val MULT = PatternContextApplicationLabel("MULT")
+
+  MULT.setPatterns(Or(List(
+    Equality(MULT(CX, Hole), Hole)
   )))
 
   //  val amb = FreeLabel2("amb")
@@ -84,93 +94,96 @@ class ParsingDisambiguationTest extends FreeSpec {
 
   val asMult = StmtList(
     block(typedef(ID("a"))),
-    theAmbiguity
+    ExpList(ID("whatever"),
+      theAmbiguity)
   )
 
   val asDecl = StmtList(
     typedef(ID("a")),
-    theAmbiguity
+    ExpList(
+      ID("whatever"),
+      theAmbiguity
+    )
   )
 
   val A = Variable("A")
   val B = Variable("B")
   val C = Variable("C")
+  val DeclOrNot = Variable("DeclOrNot")
   val IsDecl = Variable("IsDecl")
 
-  "match part" in {
+  val Mult = Variable("Mult")
+  val Decl = Variable("Decl")
+
+  "match part" ignore {
     val pattern = AnywhereContext(
       Variable("ANYWHERE0"),
       StmtList(
-        IfThenElse(
-          CAPP(
+        BindMatch(DeclOrNot,
+          IfThenElse(NO_BLOCK(
             CX,
             typedef(A)
-          ),
-          Equality(IsDecl, Top),
-          Equality(IsDecl, Bottom)
+          ), Equality(IsDecl, Top), Equality(IsDecl, Bottom))
         ),
-        IfThenElse(
-          IsDecl,
-          VarDecl(
-            A,
-            DeclList(
-              Pointer(B),
-              Pointer(C))
+        Or(
+          And(Not(IsDecl),
+            BindMatch(Mult, ExpList(
+              mult(A, B),
+              readPointer(C)
+            ))
           ),
-          ExpList(
-            mult(A, B),
-            readPointer(C)
+          And(IsDecl,
+            BindMatch(Decl, VarDecl(
+              A,
+              DeclList(
+                Pointer(B),
+                Pointer(C))
+            ))
           )
         )
       )
     )
 
-    println(pattern)
+    // as decl
+    assert(unifier(pattern, asDecl)
+      === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
+      Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Top), Equality(CX, Hole))))
 
     // as mult
     assert(unifier(pattern, asMult)
       === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
       Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Bottom))))
 
+  }
 
-    // as decl
-    assert(unifier(pattern, asDecl)
-      === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
-      Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Top), Equality(CX, Hole))))
+  var anywhereCounter = 0
+
+  def ANYWHERE(p: Term) = {
+    anywhereCounter += 1
+    AnywhereContext(
+      Variable("ANYWHERE" + anywhereCounter), p)
   }
 
   "rewrite" in {
 
-    val disambRule = AnywhereContext(
-      Variable("ANYWHERE0"),
+    val disambRule = ANYWHERE(
       StmtList(
-        IfThenElse(
-          CAPP(
-            CX,
-            typedef(A)
-          ),
-          Equality(IsDecl, Top),
-          Equality(IsDecl, Bottom)
-        ),
-        Or(IfThenElse(
-          IsDecl,
-          Rewrite(ExpList(
-            mult(A, B),
-            readPointer(C)
-          ), Bottom), _V)
-          ,
-          IfThenElse(
-            IsDecl,
-            _V,
-            Rewrite(VarDecl(
-              A,
-              DeclList(
-                Pointer(B),
-                Pointer(C))
-            ), Bottom))
-        )
-      )
-    )
+        Rewrite(
+          BindMatch(DeclOrNot,
+            IfThenElse(NO_BLOCK(CX, typedef(A)), Equality(IsDecl, Top), Equality(IsDecl, Bottom))),
+          DeclOrNot),
+        Or(
+          And(Not(IsDecl),
+            ANYWHERE(
+              Rewrite(
+                BindMatch(Mult, MULT(Variable("CxMult"), mult(A, _V))),
+                Mult))),
+          And(IsDecl,
+            ANYWHERE(
+              Rewrite(
+                BindMatch(Decl, VarDecl(A, _V)),
+                Decl))
+          ))))
 
     val rewriteOnTop = Util.moveRewriteSymbolToTop(disambRule)(env)
 

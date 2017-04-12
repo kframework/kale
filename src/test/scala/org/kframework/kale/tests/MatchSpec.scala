@@ -211,4 +211,11 @@ class MatchSpec extends FreeSpec with TestSetup {
     assert((foo(X, IfThenElse(Equality(X, a), a, b)) := foo(a, b)) === Bottom)
     assert((foo(X, IfThenElse(Equality(X, a), a, b)) := foo(b, a)) === Bottom)
   }
+
+  "bind match" in {
+    assert((BindMatch(X, bar(Y)) := bar(3)) === And(Equality(X, bar(3)), Equality(Y, 3)))
+    assert((BindMatch(X, bar(Y)) := 3) === Bottom)
+
+    assert((BindMatch(X, bar(Y)) := Or(bar(1), 2)) === And(Equality(X, bar(1)), Equality(Y, 1)))
+  }
 }

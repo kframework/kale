@@ -25,7 +25,7 @@ trait DNFEnvironment extends Environment {
 }
 
 case class SimpleEqualityLabel(implicit val env: DNFEnvironment) extends Named("=") with EqualityLabel {
-  override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
+  override def apply(_1: Term, _2: Term): Term = {
     if (_1 == _2)
       env.Top
     else if (_1.isGround && _2.isGround) {
@@ -414,6 +414,10 @@ class IfThenElseLabel(implicit val env: Environment) extends Named("if_then_else
     else
       FreeNode3(this, c, t, e)
   }
+}
+
+class BindMatchLabel(implicit val env: Environment) extends Named("BindMatch") with Label2 {
+  def apply(v: Term, p: Term) = FreeNode2(this, v.asInstanceOf[Variable], p)
 }
 
 case class SimpleRewriteLabel(implicit val env: Environment) extends {

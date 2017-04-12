@@ -31,7 +31,7 @@ case class AnywhereContextApplicationLabel(implicit val env: Environment) extend
 
 case class PatternContextApplicationLabel(name: String)(implicit val env: CurrentEnvironment) extends Context1ApplicationLabel {
 
-//  val C = env.Variable("GENERIC_CONTEXT_VAR")
+  //  val C = env.Variable("GENERIC_CONTEXT_VAR")
 
   var patterns: Term = null
 
@@ -171,6 +171,12 @@ class AnywhereContextMatcher(implicit env: CurrentEnvironment) extends transform
         Or(Or.asSet(recursive) map {
           case And.substitution(m) => And.substitution(m.updated(contextVar, rightContextVar))
         })
+      case `Or` => {
+        Or(Or.asSet(term) map (solver(contextApplication, _)))
+      }
+      case `And` => {
+        ???
+      }
       case l: AssocLabel =>
         val zeroLevel: Term = And(solver(contextApplication.redex, term), Equality(contextApplication.contextVar, contextApplication.hole))
         val subresults = l.asList(term).toList
