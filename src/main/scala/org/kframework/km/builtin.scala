@@ -185,7 +185,8 @@ object builtin {
         symbol
       }
     }
-    private */ case class Select(sort: SortMap) extends Symbol {
+    private */
+    case class select(sort: SortMap) extends Symbol {
       override val name: String = "selectMap" + sort.key + sort.value
       override val smt: String = "select"
       override val smtBuiltin: Boolean = true
@@ -199,7 +200,7 @@ object builtin {
         else {
           def select(m1: Term, k1: Term): Term = {
             m1 match {
-              case Application(st:Store, Seq(m2, k2, v2)) =>
+              case Application(st:store, Seq(m2, k2, v2)) =>
                 assert(st.sort == sort)
                 if (k1 == k2) v2
                 else select(m2, k1)
@@ -225,7 +226,8 @@ object builtin {
         symbol
       }
     }
-    private */ case class Store(sort: SortMap) extends Symbol {
+    private */
+    case class store(sort: SortMap) extends Symbol {
       override val name: String = "storeMap" + sort.key + sort.value
       override val smt: String = "store"
       override val smtBuiltin: Boolean = true
@@ -239,7 +241,7 @@ object builtin {
         else {
           def store(m1: Term, k1: Term, v1: Term): Term = {
             m1 match {
-              case Application(st:Store, Seq(m2, k2, v2)) =>
+              case Application(st:store, Seq(m2, k2, v2)) =>
                 assert(st.sort == sort)
                 if (k1 == k2)
                   Application(this, Seq(m2, k2, v1))

@@ -131,7 +131,7 @@ object Imp {
     // AExp
       SimpleRewrite(
       T(k(KAExp(AExpId(X)) ~>: Ks), state(M)),
-      T(k(KAExp(AExpInt(MAP.Select(SortMapIdInt)(M, X))) ~>: Ks), state(M)),
+      T(k(KAExp(AExpInt(MAP.select(SortMapIdInt)(M, X))) ~>: Ks), state(M)),
       tt)
     , SimpleRewrite(
       T(k(KAExp(AExpDiv(AExpInt(I1), AExpInt(I2))) ~>: Ks), state(M)),
@@ -161,7 +161,7 @@ object Imp {
     // Stmt
     , SimpleRewrite(
       T(k(KStmt(StmtAssign(X, AExpInt(I))) ~>: Ks), state(M)),
-      T(k(Ks), state(MAP.Store(SortMapIdInt)(M, X, I))),
+      T(k(Ks), state(MAP.store(SortMapIdInt)(M, X, I))),
       tt)
     , SimpleRewrite(
       T(k(KStmt(StmtSeq(S1,S2)) ~>: Ks), state(M)),
@@ -186,7 +186,7 @@ object Imp {
     // Pgm
     , SimpleRewrite(
       T(k(KPgm(PgmOf(IdsCons(X, Xs), S)) ~>: Ks), state(M)),
-      T(k(KPgm(PgmOf(Xs, S)) ~>: Ks), state(MAP.Store(SortMapIdInt)(M, X, INT(0)))),
+      T(k(KPgm(PgmOf(Xs, S)) ~>: Ks), state(MAP.store(SortMapIdInt)(M, X, INT(0)))),
       tt)
     , SimpleRewrite(
       T(k(KPgm(PgmOf(IdsNil(), S)) ~>: Ks), state(M)),
