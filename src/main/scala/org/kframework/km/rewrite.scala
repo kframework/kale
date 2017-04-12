@@ -37,7 +37,7 @@ class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
   }
 
   def applyRules(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
-    rules.flatMap(rule => applyRule(rule, term))
+    rules.flatMap(applyRule(_, term))
   }
 
   def searchDepth(depth: Int)(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
@@ -80,7 +80,7 @@ class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
 
   // [ (t1,t2), (u1,u2), ... ] => t1 = t2 /\ u1 = u2 /\ ...
   def and(tts: Seq[(Term,Term)]): Term = {
-    tts.map(tt => eq(tt._1.sort)(tt._1,tt._2))
+    tts.map({case (t1,t2) => eq(t1.sort)(t1,t2)})
       .foldLeft(BOOL(true).asInstanceOf[Term])((b,t) => BOOL.and(b,t))
   }
 

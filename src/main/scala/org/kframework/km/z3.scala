@@ -63,7 +63,7 @@ class z3(val symbolsSeq: Seq[Seq[term.Symbol]]) {
       .map(sort => if (sort.smtBuiltin) "" else "(declare-sort " + sort.smt + ")\n").mkString
     declareSorts + declDatatypes + declareFuns
   }
-  lazy val datatypes: Set[Sort] = symbolsSeq.flatMap(ss => ss.flatMap(s => s.signature._1.toSet + s.signature._2).toSet).toSet
+  lazy val datatypes: Set[Sort] = symbolsSeq.flatMap(_.flatMap(s => s.signature._1.toSet + s.signature._2).toSet).toSet
   lazy val declDatatypes: String = declareDatatypesSeq(symbolsSeq)
 
   // symbolsSeq: SCCs of symbols in topological order

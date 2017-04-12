@@ -27,15 +27,15 @@ object term {
     def rename(cnt: Int) : Term
   }
   case class Application(symbol: Symbol, children: Seq[Term]) extends Term {
-    assert(symbol.signature._1 == children.map(t => t.sort))
+    assert(symbol.signature._1 == children.map(_.sort))
     val sort: Sort = symbol.signature._2
-    val isSymbolic: Boolean = children.exists(t => t.isSymbolic)
+    val isSymbolic: Boolean = children.exists(_.isSymbolic)
     val isFunctional: Boolean = symbol.isFunctional
     def subst(m: Substitution): Term = {
-      symbol.applySeq(children.map(t => t.subst(m))) // TODO: return this if no children are changed
+      symbol.applySeq(children.map(_.subst(m))) // TODO: return this if no children are changed
     }
     def rename(cnt: Int): Term = {
-      symbol.applySeq(children.map(t => t.rename(cnt)))
+      symbol.applySeq(children.map(_.rename(cnt)))
     }
     override def toString: String = symbol + "(" + children.map(_.toString).mkString(",") + ")"
   }

@@ -75,13 +75,13 @@ object unification {
         if (v1 == v2) true
         else if (u.subst.contains(v2)) occur(v1, u.subst(v2), u)
         else false
-      case Application(_, ts2) => ts2.exists(t => occur(v1,t,u))
+      case Application(_, ts2) => ts2.exists(occur(v1,_,u))
       case _ => false
     }
   }
 
   def subst(constraint: Seq[(Term,Term)], subst: Substitution): Seq[(Term,Term)] = {
-    constraint.map(tt => (tt._1.subst(subst), tt._2.subst(subst)))
+    constraint.map({case (t1,t2) => (t1.subst(subst), t2.subst(subst))})
   }
 
 }
