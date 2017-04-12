@@ -25,11 +25,11 @@ class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasID
   }
 
   // TODO: move the util functions below somewhere else
-  def sorted(l: LeafLabel[_], sort: Sort): Unit = sorted(l, Signature(Seq(), sort))
+  def sorted(l: LeafLabel[_], target: Sort): Unit = sorted(l, Signature(Seq(), target))
 
-  def sorted(l: Label0, sort: Sort): Unit = sorted(l, Signature(Seq(), sort))
+  def sorted(l: Label0, target: Sort): Unit = sorted(l, Signature(Seq(), target))
 
-  def sorted(l: Label1, arg: Sort, target: Sort): Unit = sorted(l, Signature(Seq(arg), target))
+  def sorted(l: Label1, arg1: Sort, target: Sort): Unit = sorted(l, Signature(Seq(arg1), target))
 
   def sorted(l: Label2, arg1: Sort, arg2: Sort, target: Sort): Unit = sorted(l, Signature(Seq(arg1, arg2), target))
 
