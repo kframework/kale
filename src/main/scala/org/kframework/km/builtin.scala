@@ -1,16 +1,53 @@
 package org.kframework.km
 
-import scala.collection.mutable
 import scala.util.control.ControlThrowable
 
 object builtin {
 
   import term._
 
+  // sorts
+
+  // TODO: prevent duplicate builtin sorts
+  val SortInt = new SortOf("Int") {
+    override val smtBuiltin: Boolean = true
+  }
+  val SortBool = new SortOf("Bool") {
+    override val smtBuiltin: Boolean = true
+  }
+  val SortString = new SortOf("String") { // TODO: altenative z3 encoding? (e.g., int)?
+    override val smtBuiltin: Boolean = true
+  }
+  // TODO: SortReal, SortMInt, etc
+
+  val SortK = SortOf("K")
+  val SortListK = SortList(SortK)
+
+  // terms
+
   case class INT(v: Int) extends Constant {
     val sort: Sort = SortInt
     val smt: String = v.toString
   }
+  case class BOOL(v: Boolean) extends Constant {
+    val sort: Sort = SortBool
+    val smt: String = v.toString
+  }
+  case class STRING(v: String) extends Constant {
+    val sort: Sort = SortString
+    val smt: String = "\"" + v + "\""
+  }
+  /* TODO: support string, real, float, and bit-vector
+  case class REAL(v: Double) extends Constant {
+    val sort: Sort = SortReal
+  }
+  case class MINT(v: BitVector) extends Constant {
+    val sort: Sort = SortMInt
+  }
+   */
+
+  // symbols
+
   object INT {
     sealed trait bop extends Symbol {
       def f(i1: Int, i2: Int): Int
@@ -50,10 +87,6 @@ object builtin {
     object le extends cmp { override val name: String = "_<=Int_"; override val smt: String = "<="; override def f(i1: Int, i2: Int): Boolean = i1 <= i2 }
   }
 
-  case class BOOL(v: Boolean) extends Constant {
-    val sort: Sort = SortBool
-    val smt: String = v.toString
-  }
   object BOOL {
     sealed trait bop extends Symbol {
       override val smtBuiltin: Boolean = true
@@ -119,21 +152,7 @@ object builtin {
         }
       }
     }
-  }
-
-  object EQ {
-    // private val symbols: Map[Sort, Symbol] = Map()
-    // TODO: not thread safe
-    private val symbols: mutable.Map[Sort, Symbol] = mutable.Map()
-    def of(sort: Sort): Symbol = {
-      if (symbols.contains(sort)) symbols(sort)
-      else {
-        val symbol = Eq(sort)
-        symbols.put(sort, symbol)
-        symbol
-      }
-    }
-    private case class Eq(sort: Sort) extends Symbol {
+    case class eq(sort: Sort) extends Symbol {
       override val name: String = "_==" + sort.name + "_"
       override val smt: String = "="
       override val smtBuiltin: Boolean = true
@@ -146,21 +165,6 @@ object builtin {
         else Application(this, children)
       }
     }
-
-    // TODO: initialize symbols map in the beginning by making the builtin be class
-//    val sorts: Seq[Sort] = Seq(SortK, SortInt, SortBool)
-//
-//    val map: Map[Sort, Symbol] = {
-//      val m0: Map[Sort, Symbol] = Map()
-//      sorts.foldLeft(m0)((m,s) => m + (s -> eq("_==" + s.toString + "_", s)))
-//    }
-
-    // old
-//    val eqK = eq("_==K_", SortK)
-//
-//    object eqK    extends eq { override val name: String = "_==K_";    override val signature: Type = (Seq(SortK,    SortK),    SortBool) }
-//    object eqInt  extends eq { override val name: String = "_==Int_";  override val signature: Type = (Seq(SortInt,  SortInt),  SortBool) }
-//    object eqBool extends eq { override val name: String = "_==Bool_"; override val signature: Type = (Seq(SortBool, SortBool), SortBool) }
   }
 
   /*
@@ -171,7 +175,7 @@ object builtin {
   object MAP {
     case class NotFound() extends ControlThrowable
 
-    // TODO: not thread safe
+    /* // TODO: not thread safe
     private val selects: mutable.Map[SortMap, Symbol] = mutable.Map()
     def selectOf(sort: SortMap): Symbol = {
       if (selects.contains(sort)) selects(sort)
@@ -181,7 +185,8 @@ object builtin {
         symbol
       }
     }
-    private case class Select(sort: SortMap) extends Symbol {
+    private */
+    case class select(sort: SortMap) extends Symbol {
       override val name: String = "selectMap" + sort.key + sort.value
       override val smt: String = "select"
       override val smtBuiltin: Boolean = true
@@ -195,7 +200,7 @@ object builtin {
         else {
           def select(m1: Term, k1: Term): Term = {
             m1 match {
-              case Application(st:Store, Seq(m2, k2, v2)) =>
+              case Application(st:store, Seq(m2, k2, v2)) =>
                 assert(st.sort == sort)
                 if (k1 == k2) v2
                 else select(m2, k1)
@@ -211,7 +216,7 @@ object builtin {
       }
     }
 
-    // TODO: not thread safe
+    /* // TODO: not thread safe
     private val stores: mutable.Map[SortMap, Symbol] = mutable.Map()
     def storeOf(sort: SortMap): Symbol = {
       if (stores.contains(sort)) stores(sort)
@@ -221,7 +226,8 @@ object builtin {
         symbol
       }
     }
-    private case class Store(sort: SortMap) extends Symbol {
+    private */
+    case class store(sort: SortMap) extends Symbol {
       override val name: String = "storeMap" + sort.key + sort.value
       override val smt: String = "store"
       override val smtBuiltin: Boolean = true
@@ -235,7 +241,7 @@ object builtin {
         else {
           def store(m1: Term, k1: Term, v1: Term): Term = {
             m1 match {
-              case Application(st:Store, Seq(m2, k2, v2)) =>
+              case Application(st:store, Seq(m2, k2, v2)) =>
                 assert(st.sort == sort)
                 if (k1 == k2)
                   Application(this, Seq(m2, k2, v1))
@@ -254,59 +260,45 @@ object builtin {
     }
   }
 
-  object LIST_K {
-    object nil extends Symbol {
-      override val name: String = "nilListK"
+  object LIST {
+    case class nil(sort: SortList) extends Symbol {
+      override val name: String = "nilList" + sort.elem
       override val smt: String = "nil"
       override val smtBuiltin: Boolean = true
-      override val signature: Type = (Seq(), SortListK)
+      override val signature: Type = (Seq(), sort)
       override val isFunctional: Boolean = false
       override def applySeq(children: Seq[Term]): Term = Application(this, children)
     }
 
-    object insert extends Symbol {
-      override val name: String = "insertListK"
+    case class insert(sort: SortList) extends Symbol {
+      override val name: String = "insertList" + sort.elem
       override val smt: String = "insert"
       override val smtBuiltin: Boolean = true
-      override val signature: Type = (Seq(SortK, SortListK), SortListK)
+      override val signature: Type = (Seq(sort.elem, sort), sort)
       override val isFunctional: Boolean = false
       override def applySeq(children: Seq[Term]): Term = Application(this, children)
     }
 
-    object append extends Symbol {
-      override val name: String = "appendListK"
+    case class append(sort: SortList) extends Symbol {
+      override val name: String = "appendList" + sort.elem
       override val smt: String = "append"
       override val smtBuiltin: Boolean = false
-      override val signature: Type = (Seq(SortListK, SortListK), SortListK)
+      override val signature: Type = (Seq(sort, sort), sort)
       override val isFunctional: Boolean = true
       override def applySeq(children: Seq[Term]): Term = {
         assert(children.size == 2)
         lazy val default = Application(this, children)
         val (l1,l2) = (children(0), children(1))
         (l1, l2) match {
-          case (_, Application(`nil`, _)) => l1
-          case (Application(`nil`, _), _) => l2
-          case (Application(`insert`, Seq(l11, l12)), _) =>
-            Application(insert, Seq(l11, append(l12, l2)))
+          case (_, Application(n:nil, _)) => assert(n.sort == sort); l1
+          case (Application(n:nil, _), _) => assert(n.sort == sort); l2
+          case (Application(ins:insert, Seq(l11, l12)), _) =>
+            assert(ins.sort == sort)
+            Application(ins, Seq(l11, this(l12, l2)))
           case _ => default
         }
       }
     }
   }
-
-  case class STRING(v: String) extends Constant {
-    val sort: Sort = SortString
-    val smt: String = "\"" + v + "\""
-  }
-
-  /* TODO: support string, real, float, and bit-vector
-  case class REAL(v: Double) extends Constant {
-    val sort: Sort = SortReal
-  }
-
-  case class MINT(v: BitVector) extends Constant {
-    val sort: Sort = SortMInt
-  }
-   */
 
 }

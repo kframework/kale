@@ -2,50 +2,6 @@ package org.kframework.km
 
 object term {
 
-  sealed trait Sort {
-    val name: String
-    def smt: String = name
-    val smtBuiltin: Boolean
-    override def toString: String = name
-  }
-  case class SortOf(name: String) extends Sort {
-    val smtBuiltin: Boolean = false
-  }
-  case class SortMap(key: Sort, value: Sort) extends Sort {
-    val name: String = "Map{" + key.name + "," + value.name + "}"
-    override val smt: String = "(Array " + key.smt + " " + value.smt + ")"
-    val smtBuiltin: Boolean = true
-  }
-  case class SortList(elem: Sort) extends Sort {
-    val name: String = "List{" + elem.name + "}"
-    override val smt: String = "(List " + elem.smt + ")"
-    val smtBuiltin: Boolean = true
-  }
-  object SortBool extends Sort {
-    val name: String = "Bool"
-    val smtBuiltin: Boolean = true
-  }
-  object SortInt extends Sort {
-    val name: String = "Int"
-    val smtBuiltin: Boolean = true
-  }
-  object SortString extends Sort {
-    val name: String = "String" // TODO: altenative z3 encoding? (e.g., int)?
-    val smtBuiltin: Boolean = true
-  }
-//object SortReal extends Sort
-//object SortMInt extends Sort
-  //
-  object SortK extends SortOf("K")
-  object SortMapK extends SortMap(SortK, SortK) {
-    override val name: String = "MapK"
-  }
-  object SortListK extends SortList(SortK) {
-    override val name: String = "ListK"
-  }
-
-  type Type = Product2[Seq[Sort], Sort]
-
   trait Symbol {
     val name: String
     val signature: Type
@@ -56,8 +12,12 @@ object term {
     def applySeq(children: Seq[Term]): Term
     override def toString: String = name
   }
-
-  type Substitution = Map[Variable, Term]
+  case class Constructor(name: String, signature: Type) extends Symbol {
+    val isFunctional: Boolean = false
+    val smt: String = name
+    val smtBuiltin: Boolean = false
+    def applySeq(children: Seq[Term]): Term = Application(this, children)
+  }
 
   sealed trait Term {
     val sort: Sort
@@ -67,15 +27,15 @@ object term {
     def rename(cnt: Int) : Term
   }
   case class Application(symbol: Symbol, children: Seq[Term]) extends Term {
-    assert(symbol.signature._1 == children.map(t => t.sort))
+    assert(symbol.signature._1 == children.map(_.sort))
     val sort: Sort = symbol.signature._2
-    val isSymbolic: Boolean = children.exists(t => t.isSymbolic)
+    val isSymbolic: Boolean = children.exists(_.isSymbolic)
     val isFunctional: Boolean = symbol.isFunctional
     def subst(m: Substitution): Term = {
-      symbol.applySeq(children.map(t => t.subst(m))) // TODO: return this if no children are changed
+      symbol.applySeq(children.map(_.subst(m))) // TODO: return this if no children are changed
     }
     def rename(cnt: Int): Term = {
-      symbol.applySeq(children.map(t => t.rename(cnt)))
+      symbol.applySeq(children.map(_.rename(cnt)))
     }
     override def toString: String = symbol + "(" + children.map(_.toString).mkString(",") + ")"
   }
@@ -96,24 +56,28 @@ object term {
     override def rename(cnt: Int): Term = this
   }
 
-  ////
+  type Substitution = Map[Variable, Term]
 
-  class Constructor(val name: String, val signature: Type) extends Symbol {
-    val isFunctional: Boolean = false
-    val smt: String = name
+  type Type = Product2[Seq[Sort], Sort]
+
+  sealed trait Sort {
+    val name: String
+    def smt: String = name
+    val smtBuiltin: Boolean
+    override def toString: String = name
+  }
+  case class SortOf(name: String) extends Sort {
     val smtBuiltin: Boolean = false
-    def applySeq(children: Seq[Term]): Term = Application(this, children)
   }
-
-  case class SimplePattern(term: Term, constraint: Term) {
-    assert(constraint.sort == SortBool)
-    override def toString: String = term + " /\\ " + constraint
+  case class SortMap(key: Sort, value: Sort) extends Sort {
+    val name: String = "Map{" + key.name + "," + value.name + "}"
+    override val smt: String = "(Array " + key.smt + " " + value.smt + ")"
+    val smtBuiltin: Boolean = true
   }
-
-  type Terms = Seq[Term]
-
-  case class SimpleRewrite(l: Term, r: Term, c: Term) {
-    assert(c.sort == SortBool)
+  case class SortList(elem: Sort) extends Sort {
+    val name: String = "List{" + elem.name + "}"
+    override val smt: String = "(List " + elem.smt + ")"
+    val smtBuiltin: Boolean = true
   }
 
 }

@@ -4,9 +4,13 @@ object Imp {
 
   import term._
   import builtin._
+  import outer._
 
-  class Constructor1(override val name: String, override val smt: String, override val signature: Type) extends Constructor(name, signature) {
-    override def toString: String = if (name.contains(':')) name.substring(0, name.indexOf(':')) else name
+  object Constructor1 {
+    def apply(name: String, _smt: String, signature: Type): Constructor = new Constructor(name, signature) {
+      override val smt: String = _smt
+      override def toString: String = if (name.contains(':')) name.substring(0, name.indexOf(':')) else name
+    }
   }
 
   // signature
@@ -21,45 +25,45 @@ object Imp {
   val Stmt = SortOf("Stmt")
   val Pgm = SortOf("Pgm")
 
-  val IdOf = new Constructor1("_:String->Id", "idOf", (Seq(SortString), Id))
+  val IdOf = Constructor1("_:String->Id", "idOf", (Seq(SortString), Id))
 
-  val AExpInt = new Constructor1("_:Int->AExp", "aExpInt", (Seq(SortInt), AExp))
-  val AExpId = new Constructor1("_:Id->AExp", "aExpId", (Seq(Id), AExp))
-  val AExpDiv = new Constructor1("_/_:AExp*AExp->AExp", "aExpDiv", (Seq(AExp, AExp), AExp))
-  val AExpPlus = new Constructor1("_+_:AExp*AExp->AExp", "aExpPlus", (Seq(AExp, AExp), AExp))
+  val AExpInt = Constructor1("_:Int->AExp", "aExpInt", (Seq(SortInt), AExp))
+  val AExpId = Constructor1("_:Id->AExp", "aExpId", (Seq(Id), AExp))
+  val AExpDiv = Constructor1("_/_:AExp*AExp->AExp", "aExpDiv", (Seq(AExp, AExp), AExp))
+  val AExpPlus = Constructor1("_+_:AExp*AExp->AExp", "aExpPlus", (Seq(AExp, AExp), AExp))
 
-  val BExpBool = new Constructor1("_:Bool->BExp", "bExpBool", (Seq(SortBool), BExp))
-  val BExpLeq = new Constructor1("_<=_:AExp*AExp->BExp", "bExpLeq", (Seq(AExp, AExp), BExp))
-  val BExpNot = new Constructor1("!_:BExp->BExp", "bExpNot", (Seq(BExp), BExp))
-  val BExpAnd = new Constructor1("_&&_:BExp*BExp->BExp", "bExpAnd", (Seq(BExp, BExp), BExp))
+  val BExpBool = Constructor1("_:Bool->BExp", "bExpBool", (Seq(SortBool), BExp))
+  val BExpLeq = Constructor1("_<=_:AExp*AExp->BExp", "bExpLeq", (Seq(AExp, AExp), BExp))
+  val BExpNot = Constructor1("!_:BExp->BExp", "bExpNot", (Seq(BExp), BExp))
+  val BExpAnd = Constructor1("_&&_:BExp*BExp->BExp", "bExpAnd", (Seq(BExp, BExp), BExp))
 
-  val StmtAssign = new Constructor1("_=_;:Id*AExp->Stmt", "stmtAssign", (Seq(Id, AExp), Stmt))
-  val StmtIf = new Constructor1("if(_){_}else{_}:BExp*Stmt*Stmt->Stmt", "stmtIf", (Seq(BExp, Stmt, Stmt), Stmt))
-  val StmtWhile = new Constructor1("while(_){_}:BExp*Stmt->Stmt", "stmtWhile", (Seq(BExp, Stmt), Stmt))
-  val StmtSeq = new Constructor1("__:Stmt*Stmt->Stmt", "stmtSeq", (Seq(Stmt, Stmt), Stmt))
-  val StmtSkip = new Constructor1("skip;:->Stmt", "stmtSkip", (Seq(), Stmt))
+  val StmtAssign = Constructor1("_=_;:Id*AExp->Stmt", "stmtAssign", (Seq(Id, AExp), Stmt))
+  val StmtIf = Constructor1("if(_){_}else{_}:BExp*Stmt*Stmt->Stmt", "stmtIf", (Seq(BExp, Stmt, Stmt), Stmt))
+  val StmtWhile = Constructor1("while(_){_}:BExp*Stmt->Stmt", "stmtWhile", (Seq(BExp, Stmt), Stmt))
+  val StmtSeq = Constructor1("__:Stmt*Stmt->Stmt", "stmtSeq", (Seq(Stmt, Stmt), Stmt))
+  val StmtSkip = Constructor1("skip;:->Stmt", "stmtSkip", (Seq(), Stmt))
 
-  val PgmOf = new Constructor1("int_;_:List{Id}*Stmt->Pgm", "pgmOf", (Seq(ListId, Stmt), Pgm))
+  val PgmOf = Constructor1("int_;_:List{Id}*Stmt->Pgm", "pgmOf", (Seq(ListId, Stmt), Pgm))
 
-  val IdsCons = new Constructor1("_,_:Id*List{Id}->List{Id}", "idsCons", (Seq(Id, ListId), ListId))
-  val IdsNil = new Constructor1(".List:->List{Id}", "idsNil", (Seq(), ListId))
+  val IdsCons = Constructor1("_,_:Id*List{Id}->List{Id}", "idsCons", (Seq(Id, ListId), ListId))
+  val IdsNil = Constructor1(".List:->List{Id}", "idsNil", (Seq(), ListId))
 
-  val KAExp = new Constructor1("_:AExp->K", "kAExp", (Seq(AExp), SortK))
-  val KBExp = new Constructor1("_:BExp->K", "kBExp", (Seq(BExp), SortK))
-  val KStmt = new Constructor1("_:Stmt->K", "kStmt", (Seq(Stmt), SortK))
-  val KPgm = new Constructor1("_:Pgm->K", "kPgm", (Seq(Pgm), SortK))
+  val KAExp = Constructor1("_:AExp->K", "kAExp", (Seq(AExp), SortK))
+  val KBExp = Constructor1("_:BExp->K", "kBExp", (Seq(BExp), SortK))
+  val KStmt = Constructor1("_:Stmt->K", "kStmt", (Seq(Stmt), SortK))
+  val KPgm = Constructor1("_:Pgm->K", "kPgm", (Seq(Pgm), SortK))
 
   // configuration
 
   val Cell = SortOf("Cell")
   val SortMapIdInt = SortMap(Id, SortInt)
 
-  val T = new Constructor1("<T>:Cell*Cell->Cell", "tCell", (Seq(Cell, Cell), Cell))
-  val k = new Constructor1("<k>:List{K}->Cell", "kCell", (Seq(ListK), Cell))
-  val state = new Constructor1("<state>:Map{Id,Int}->Cell", "stateCell", (Seq(SortMapIdInt), Cell))
+  val T = Constructor1("<T>:Cell*Cell->Cell", "tCell", (Seq(Cell, Cell), Cell))
+  val k = Constructor1("<k>:List{K}->Cell", "kCell", (Seq(ListK), Cell))
+  val state = Constructor1("<state>:Map{Id,Int}->Cell", "stateCell", (Seq(SortMapIdInt), Cell))
 
-  val kCons = new Constructor1("_~>_:K*List{K}->List{K}", "kCons", (Seq(SortK, ListK), ListK))
-  val kNil = new Constructor1(".K:->List{K}", "kNil", (Seq(), ListK))
+  val kCons = Constructor1("_~>_:K*List{K}->List{K}", "kCons", (Seq(SortK, ListK), ListK))
+  val kNil = Constructor1(".K:->List{K}", "kNil", (Seq(), ListK))
 
   // rules
 
@@ -82,24 +86,20 @@ object Imp {
 
   val tt = BOOL(true)
 
-  val freezerDiv0    = new Constructor1("freezer_/_0:AExp->K",                "freezerDiv0"   , (Seq(AExp), SortK))
-  val freezerDiv1    = new Constructor1("freezer_/_1:AExp->K",                "freezerDiv1"   , (Seq(AExp), SortK))
-  val freezerPlus0   = new Constructor1("freezer_+_0:AExp->K",                "freezerPlus0"  , (Seq(AExp), SortK))
-  val freezerPlus1   = new Constructor1("freezer_+_1:AExp->K",                "freezerPlus1"  , (Seq(AExp), SortK))
-  val freezerLeq0    = new Constructor1("freezer_<=_0:AExp->K",               "freezerLeq0"   , (Seq(AExp), SortK))
-  val freezerLeq1    = new Constructor1("freezer_<=_1:AExp->K",               "freezerLeq1"   , (Seq(AExp), SortK))
-  val freezerNot0    = new Constructor1("freezer!_0:->K",                     "freezerNot0"   , (Seq(), SortK))
-  val freezerAnd0    = new Constructor1("freezer_&&_0:BExp->K",               "freezerAnd0"   , (Seq(BExp), SortK))
-  val freezerAssign1 = new Constructor1("freezer_=_;1:Id->K",                 "freezerAssign1", (Seq(Id), SortK))
-  val freezerIf0     = new Constructor1("freezerif(_){_}else{_}0:Stmt*Stmt->K", "freezerIf0"    , (Seq(Stmt, Stmt), SortK))
+  val freezerDiv0    = Constructor1("freezer_/_0:AExp->K",                "freezerDiv0"   , (Seq(AExp), SortK))
+  val freezerDiv1    = Constructor1("freezer_/_1:AExp->K",                "freezerDiv1"   , (Seq(AExp), SortK))
+  val freezerPlus0   = Constructor1("freezer_+_0:AExp->K",                "freezerPlus0"  , (Seq(AExp), SortK))
+  val freezerPlus1   = Constructor1("freezer_+_1:AExp->K",                "freezerPlus1"  , (Seq(AExp), SortK))
+  val freezerLeq0    = Constructor1("freezer_<=_0:AExp->K",               "freezerLeq0"   , (Seq(AExp), SortK))
+  val freezerLeq1    = Constructor1("freezer_<=_1:AExp->K",               "freezerLeq1"   , (Seq(AExp), SortK))
+  val freezerNot0    = Constructor1("freezer!_0:->K",                     "freezerNot0"   , (Seq(), SortK))
+  val freezerAnd0    = Constructor1("freezer_&&_0:BExp->K",               "freezerAnd0"   , (Seq(BExp), SortK))
+  val freezerAssign1 = Constructor1("freezer_=_;1:Id->K",                 "freezerAssign1", (Seq(Id), SortK))
+  val freezerIf0     = Constructor1("freezerif(_){_}else{_}0:Stmt*Stmt->K", "freezerIf0"    , (Seq(Stmt, Stmt), SortK))
 
   val constructors1 = Seq(IdOf, AExpInt, AExpId, AExpDiv, AExpPlus, BExpBool, BExpLeq, BExpNot, BExpAnd, StmtAssign, StmtIf, StmtWhile, StmtSeq, StmtSkip, PgmOf, IdsCons, IdsNil, KAExp, KBExp, KStmt, KPgm, kCons, kNil, freezerDiv0, freezerDiv1, freezerPlus0, freezerPlus1, freezerLeq0, freezerLeq1, freezerNot0, freezerAnd0, freezerAssign1, freezerIf0)
   val constructors2 = Seq(T, k, state)
-  val declareDatatypes1 = z3.declareDatatypes(constructors1)
-  val declareDatatypes2 = z3.declareDatatypes(constructors2)
-  val declareDatatypes = declareDatatypes1 + declareDatatypes2
-  val constructors = constructors1 ++ constructors2
-  val datatypes = constructors.flatMap(s => s.signature._1.toSet + s.signature._2).toSet
+  val constructors = Seq(constructors1, constructors2)
 
   object isKResult extends Symbol {
     override val name: String = "isKResult"
@@ -131,12 +131,12 @@ object Imp {
     // AExp
       SimpleRewrite(
       T(k(KAExp(AExpId(X)) ~>: Ks), state(M)),
-      T(k(KAExp(AExpInt(MAP.selectOf(SortMapIdInt)(M, X))) ~>: Ks), state(M)),
+      T(k(KAExp(AExpInt(MAP.select(SortMapIdInt)(M, X))) ~>: Ks), state(M)),
       tt)
     , SimpleRewrite(
       T(k(KAExp(AExpDiv(AExpInt(I1), AExpInt(I2))) ~>: Ks), state(M)),
       T(k(KAExp(AExpInt(INT.div(I1, I2))) ~>: Ks), state(M)),
-      BOOL.not(EQ.of(SortInt)(I1, INT(0))))
+      BOOL.not(BOOL.eq(SortInt)(I1, INT(0))))
     , SimpleRewrite(
       T(k(KAExp(AExpPlus(AExpInt(I1), AExpInt(I2))) ~>: Ks), state(M)),
       T(k(KAExp(AExpInt(INT.plus(I1, I2))) ~>: Ks), state(M)),
@@ -161,7 +161,7 @@ object Imp {
     // Stmt
     , SimpleRewrite(
       T(k(KStmt(StmtAssign(X, AExpInt(I))) ~>: Ks), state(M)),
-      T(k(Ks), state(MAP.storeOf(SortMapIdInt)(M, X, I))),
+      T(k(Ks), state(MAP.store(SortMapIdInt)(M, X, I))),
       tt)
     , SimpleRewrite(
       T(k(KStmt(StmtSeq(S1,S2)) ~>: Ks), state(M)),
@@ -186,7 +186,7 @@ object Imp {
     // Pgm
     , SimpleRewrite(
       T(k(KPgm(PgmOf(IdsCons(X, Xs), S)) ~>: Ks), state(M)),
-      T(k(KPgm(PgmOf(Xs, S)) ~>: Ks), state(MAP.storeOf(SortMapIdInt)(M, X, INT(0)))),
+      T(k(KPgm(PgmOf(Xs, S)) ~>: Ks), state(MAP.store(SortMapIdInt)(M, X, INT(0)))),
       tt)
     , SimpleRewrite(
       T(k(KPgm(PgmOf(IdsNil(), S)) ~>: Ks), state(M)),

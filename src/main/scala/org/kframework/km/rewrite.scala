@@ -1,15 +1,17 @@
 package org.kframework.km
 
-class rewrite(val declareDatatypes: String) {
+import scala.collection.mutable
+
+class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
 
   import term._
-  import builtin._
   import unification._
+  import builtin._
+  import outer._
 
-  private var cntRename: Int = 0
-  var datatypes: Set[Sort] = Set()
+  val z3 = new z3(symbols)
 
-  def applyRule(rule: SimpleRewrite, term: SimplePattern): Seq[SimplePattern] = { cntRename += 1
+  def applyRule(rule: SimpleRewrite, term: SimplePattern): Seq[SimplePattern] = { val cntRename = term.counter + 1
     // rule:  l => r if c
     lazy val l = rule.l.rename(cntRename)
     lazy val r = rule.r.rename(cntRename)
@@ -23,11 +25,11 @@ class rewrite(val declareDatatypes: String) {
       case Some(u) =>
         val _p = p.subst(u.subst)
         val _c = c.subst(u.subst)
-        val _p_c_u = BOOL.and(BOOL.and(_p, _c), u.constraint)
+        val _p_c_u = BOOL.and(BOOL.and(_p, _c), and(u.constraint))
 
-        if (z3.sat(declareDatatypes, datatypes)(_p_c_u)) {
+        if (z3.sat(_p_c_u)) {
           val _r = r.subst(u.subst)
-          Seq(SimplePattern(_r, _p_c_u))
+          Seq(SimplePattern(_r, _p_c_u, cntRename))
         } else {
           Seq()
         }
@@ -35,7 +37,7 @@ class rewrite(val declareDatatypes: String) {
   }
 
   def applyRules(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
-    rules.flatMap(rule => applyRule(rule, term))
+    rules.flatMap(applyRule(_, term))
   }
 
   def searchDepth(depth: Int)(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
@@ -63,6 +65,22 @@ class rewrite(val declareDatatypes: String) {
 
   def search(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
     searchDepth(-1)(rules, term)
+  }
+
+  // [ (t1,t2), (u1,u2), ... ] => t1 = t2 /\ u1 = u2 /\ ...
+  def and(tts: Seq[(Term,Term)]): Term = {
+    tts.map({case (t1,t2) => eq(t1.sort)(t1,t2)})
+      .foldLeft(BOOL(true).asInstanceOf[Term])((b,t) => BOOL.and(b,t))
+  }
+  // TODO: not thread safe
+  private val eqs: mutable.Map[Sort, Symbol] = mutable.Map()
+  def eq(sort: Sort): Symbol = {
+    if (eqs.contains(sort)) eqs(sort)
+    else {
+      val symbol = BOOL.eq(sort)
+      eqs.put(sort, symbol)
+      symbol
+    }
   }
 
 }

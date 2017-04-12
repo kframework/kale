@@ -8,7 +8,7 @@ class UnificationTest extends FreeSpec {
   import builtin._
   import unification._
 
-  val tt = BOOL(true)
+  val tt = Seq() // BOOL(true)
 
   val x = Variable("x", SortK)
   val y = Variable("y", SortK)
