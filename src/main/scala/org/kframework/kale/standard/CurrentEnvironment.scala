@@ -1,44 +1,9 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale
-import org.kframework.kale.{standard, _}
-import standard._
-import org.kframework.kale.context.{AnywhereContextApplicationLabel, PatternContextApplicationLabel}
+import org.kframework.kale._
+import org.kframework.kale.context.AnywhereContextApplicationLabel
 import org.kframework.kale.util.Util
-
-trait Bottomize {
-  self: Environment =>
-
-  var bottomizeIsActive = false
-
-  def bottomize(_1: Term)(f: => Term): Term = {
-    if (Bottom == _1 && bottomizeIsActive)
-      Bottom
-    else
-      f
-  }
-
-  def bottomize(_1: Term, _2: Term)(f: => Term): Term = {
-    if (Bottom == _1 || Bottom == _2 && bottomizeIsActive)
-      Bottom
-    else
-      f
-  }
-
-  def bottomize(terms: Term*)(f: => Term): Term = {
-    if (bottomizeIsActive)
-      strongBottomize(terms: _*)(f)
-    else
-      f
-  }
-
-  def strongBottomize(terms: Term*)(f: => Term): Term = {
-    if (terms.contains(Bottom))
-      Bottom
-    else
-      f
-  }
-}
 
 class CurrentEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID {
   implicit val env = this
