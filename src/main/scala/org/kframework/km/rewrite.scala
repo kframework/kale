@@ -1,10 +1,13 @@
 package org.kframework.km
 
+import scala.collection.mutable
+
 class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
 
+  import term._
+  import unification._
   import builtin._
   import outer._
-  import unification._
 
   val z3 = new z3(symbols)
 
@@ -22,7 +25,7 @@ class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
       case Some(u) =>
         val _p = p.subst(u.subst)
         val _c = c.subst(u.subst)
-        val _p_c_u = BOOL.and(BOOL.and(_p, _c), u.constraint)
+        val _p_c_u = BOOL.and(BOOL.and(_p, _c), and(u.constraint))
 
         if (z3.sat(_p_c_u)) {
           val _r = r.subst(u.subst)
@@ -62,6 +65,23 @@ class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
 
   def search(rules: Seq[SimpleRewrite], term: SimplePattern): Seq[SimplePattern] = {
     searchDepth(-1)(rules, term)
+  }
+
+  // TODO: not thread safe
+  private val eqs: mutable.Map[Sort, Symbol] = mutable.Map()
+  def eq(sort: Sort): Symbol = {
+    if (eqs.contains(sort)) eqs(sort)
+    else {
+      val symbol = BOOL.eq(sort)
+      eqs.put(sort, symbol)
+      symbol
+    }
+  }
+
+  // [ (t1,t2), (u1,u2), ... ] => t1 = t2 /\ u1 = u2 /\ ...
+  def and(tts: Seq[(Term,Term)]): Term = {
+    tts.map(tt => eq(tt._1.sort)(tt._1,tt._2))
+      .foldLeft(BOOL(true).asInstanceOf[Term])((b,t) => BOOL.and(b,t))
   }
 
 }

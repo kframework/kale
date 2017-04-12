@@ -1,6 +1,5 @@
 package org.kframework.km
 
-import scala.collection.mutable
 import scala.util.control.ControlThrowable
 
 object builtin {
@@ -8,10 +7,10 @@ object builtin {
   import term._
 
   // TODO: prevent duplicate builtin sorts
-  val SortBool = new SortOf("Bool") {
+  val SortInt = new SortOf("Int") {
     override val smtBuiltin: Boolean = true
   }
-  val SortInt = new SortOf("Int") {
+  val SortBool = new SortOf("Bool") {
     override val smtBuiltin: Boolean = true
   }
   val SortString = new SortOf("String") { // TODO: altenative z3 encoding? (e.g., int)?
@@ -22,7 +21,7 @@ object builtin {
   val SortK = SortOf("K")
   val SortListK = SortList(SortK)
 
-
+  ////
 
   case class INT(v: Int) extends Constant {
     val sort: Sort = SortInt
@@ -136,21 +135,7 @@ object builtin {
         }
       }
     }
-  }
-
-  object EQ {
-    // private val symbols: Map[Sort, Symbol] = Map()
-    // TODO: not thread safe
-    private val symbols: mutable.Map[Sort, Symbol] = mutable.Map()
-    def of(sort: Sort): Symbol = {
-      if (symbols.contains(sort)) symbols(sort)
-      else {
-        val symbol = Eq(sort)
-        symbols.put(sort, symbol)
-        symbol
-      }
-    }
-    private case class Eq(sort: Sort) extends Symbol {
+    case class eq(sort: Sort) extends Symbol {
       override val name: String = "_==" + sort.name + "_"
       override val smt: String = "="
       override val smtBuiltin: Boolean = true
@@ -163,21 +148,6 @@ object builtin {
         else Application(this, children)
       }
     }
-
-    // TODO: initialize symbols map in the beginning by making the builtin be class
-//    val sorts: Seq[Sort] = Seq(SortK, SortInt, SortBool)
-//
-//    val map: Map[Sort, Symbol] = {
-//      val m0: Map[Sort, Symbol] = Map()
-//      sorts.foldLeft(m0)((m,s) => m + (s -> eq("_==" + s.toString + "_", s)))
-//    }
-
-    // old
-//    val eqK = eq("_==K_", SortK)
-//
-//    object eqK    extends eq { override val name: String = "_==K_";    override val signature: Type = (Seq(SortK,    SortK),    SortBool) }
-//    object eqInt  extends eq { override val name: String = "_==Int_";  override val signature: Type = (Seq(SortInt,  SortInt),  SortBool) }
-//    object eqBool extends eq { override val name: String = "_==Bool_"; override val signature: Type = (Seq(SortBool, SortBool), SortBool) }
   }
 
   /*
@@ -188,7 +158,7 @@ object builtin {
   object MAP {
     case class NotFound() extends ControlThrowable
 
-    // TODO: not thread safe
+    /* // TODO: not thread safe
     private val selects: mutable.Map[SortMap, Symbol] = mutable.Map()
     def selectOf(sort: SortMap): Symbol = {
       if (selects.contains(sort)) selects(sort)
@@ -198,7 +168,7 @@ object builtin {
         symbol
       }
     }
-    private case class Select(sort: SortMap) extends Symbol {
+    private */ case class Select(sort: SortMap) extends Symbol {
       override val name: String = "selectMap" + sort.key + sort.value
       override val smt: String = "select"
       override val smtBuiltin: Boolean = true
@@ -228,7 +198,7 @@ object builtin {
       }
     }
 
-    // TODO: not thread safe
+    /* // TODO: not thread safe
     private val stores: mutable.Map[SortMap, Symbol] = mutable.Map()
     def storeOf(sort: SortMap): Symbol = {
       if (stores.contains(sort)) stores(sort)
@@ -238,7 +208,7 @@ object builtin {
         symbol
       }
     }
-    private case class Store(sort: SortMap) extends Symbol {
+    private */ case class Store(sort: SortMap) extends Symbol {
       override val name: String = "storeMap" + sort.key + sort.value
       override val smt: String = "store"
       override val smtBuiltin: Boolean = true

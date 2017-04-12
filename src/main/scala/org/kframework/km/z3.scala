@@ -2,35 +2,6 @@ package org.kframework.km
 
 import scala.sys.process._
 
-object z3 {
-  // TODO: set proper z3 path
-  private val z3 = "../z3/bin/z3"
-
-  val cmd = Seq(z3, "-smt2", "-in")
-
-  def run(query: String): (Int, String, String) = {
-    val stdinJob: (java.io.OutputStream) => Unit = out => {
-      out.write(query.getBytes())
-      out.close()
-    }
-    var stdout: String = ""
-    val stdoutJob: (java.io.InputStream) => Unit = in => {
-      stdout = scala.io.Source.fromInputStream(in).getLines.mkString("\n")
-      in.close()
-    }
-    var stderr: String = ""
-    val stderrJob: (java.io.InputStream) => Unit = in => {
-      stderr = scala.io.Source.fromInputStream(in).getLines.mkString("\n")
-      in.close()
-    }
-    val pio = new ProcessIO(stdinJob, stdoutJob, stderrJob)
-    val exitValue = Process(cmd).run(pio).exitValue()
-    (exitValue, stdout, stderr)
-  }
-
-  case class Fail(msg: String) extends Exception
-}
-
 class z3(val symbolsSeq: Seq[Seq[term.Symbol]]) {
 
   import term._
@@ -111,4 +82,33 @@ class z3(val symbolsSeq: Seq[Seq[term.Symbol]]) {
     "))\n"
   }
 
+}
+
+object z3 {
+  // TODO: set proper z3 path
+  private val z3 = "/Users/daejunpark/work/z3/z3-4.5.0-x64-osx-10.11.6/bin/z3"
+
+  val cmd = Seq(z3, "-smt2", "-in")
+
+  def run(query: String): (Int, String, String) = {
+    val stdinJob: (java.io.OutputStream) => Unit = out => {
+      out.write(query.getBytes())
+      out.close()
+    }
+    var stdout: String = ""
+    val stdoutJob: (java.io.InputStream) => Unit = in => {
+      stdout = scala.io.Source.fromInputStream(in).getLines.mkString("\n")
+      in.close()
+    }
+    var stderr: String = ""
+    val stderrJob: (java.io.InputStream) => Unit = in => {
+      stderr = scala.io.Source.fromInputStream(in).getLines.mkString("\n")
+      in.close()
+    }
+    val pio = new ProcessIO(stdinJob, stdoutJob, stderrJob)
+    val exitValue = Process(cmd).run(pio).exitValue()
+    (exitValue, stdout, stderr)
+  }
+
+  case class Fail(msg: String) extends Exception
 }
