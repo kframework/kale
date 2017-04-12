@@ -9,7 +9,7 @@ import collection._
 class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasID {
   implicit protected val env = this
 
-  private var sorts = Map[Label, Signature]()
+  private val sorts = mutable.Map[Label, Signature]()
 
   case class Signature(args: Seq[Sort], target: Sort)
 
@@ -21,7 +21,7 @@ class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasID
   })
 
   def sorted(l: Label, signature: Signature): Unit = {
-    sorts += (l -> signature)
+    sorts.put(l, signature)
   }
 
   // TODO: move the util functions below somewhere else
