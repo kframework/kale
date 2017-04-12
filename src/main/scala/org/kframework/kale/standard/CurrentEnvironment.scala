@@ -2,8 +2,8 @@ package org.kframework.kale.standard
 
 import org.kframework.kale
 import org.kframework.kale.builtin._
+import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
 import org.kframework.kale.{standard, _}
-import org.kframework.kale.context.AnywhereContextApplicationLabel
 import org.kframework.kale.util.Util
 
 

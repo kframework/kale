@@ -2,6 +2,8 @@ package org.kframework.kale.standard
 
 import org.kframework.kale._
 import org.kframework.kale.builtin.MapLabel
+import org.kframework.kale.context.anywhere.AnywhereContextMatcher
+import org.kframework.kale.context.pattern.{PatternContextApplicationLabel, PatternContextMatcher}
 import org.kframework.kale.transformer.Binary
 
 import scala.collection.{+:, Iterable, Seq}

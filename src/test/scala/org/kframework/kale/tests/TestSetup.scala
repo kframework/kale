@@ -1,7 +1,7 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
-import org.kframework.kale.context.PatternContextApplicationLabel
+import org.kframework.kale.context.pattern.PatternContextApplicationLabel
 import org.kframework.kale.standard.{Rewrite => _, _}
 import org.kframework.kale.util.Implicits
 import org.scalactic.Prettifier
