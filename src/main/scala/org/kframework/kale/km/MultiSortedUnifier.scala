@@ -1,8 +1,8 @@
 package org.kframework.kale.km
 
 import org.kframework.kale
-import org.kframework.kale.{Term, Variable}
 import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunction, TypedWith}
+import org.kframework.kale.{Term, Variable}
 
 class MultiSortedUnifier(val env: KMEnvironment) extends kale.MatcherOrUnifier {
   import env._

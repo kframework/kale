@@ -1,9 +1,9 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard.Bottomize
+import org.kframework.minikore.interfaces.pattern
 
 import scala.collection.mutable
-import org.kframework.minikore.interfaces.pattern
 
 trait Environment extends KORELabels with Bottomize {
   trait HasEnvironment {

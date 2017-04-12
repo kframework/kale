@@ -1,8 +1,7 @@
 package org.kframework.kale.context
 
-import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kale.standard.{CurrentEnvironment}
+import org.kframework.kale.standard.CurrentEnvironment
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.TypedWith
 import org.kframework.kale.util.{Named, Util}
@@ -95,8 +94,8 @@ case class ContextContentVariable(basedOn: Variable, index: Int) extends Variabl
 
 class PatternContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Apply] with TypedWith[PatternContextApplication, Term] {
 
-  import org.kframework.kale.util.StaticImplicits._
   import env._
+  import org.kframework.kale.util.StaticImplicits._
 
   override def f(solver: Binary.Apply)(contextApplication: PatternContextApplication, term: Term): Term = {
     val leftContextLabel = contextApplication.label

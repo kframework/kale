@@ -2,7 +2,6 @@ package org.kframework.kale.standard
 
 import org.kframework.kale._
 import org.kframework.kale.context._
-import org.kframework.minikore.interfaces.pattern.Pattern
 
 case class SubstitutionWithContext(override val substitution: Substitution)(implicit val env: CurrentEnvironment) extends SubstitutionApply(substitution)(env) {
 

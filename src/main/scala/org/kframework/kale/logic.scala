@@ -1,7 +1,6 @@
 package org.kframework.kale
 
 import org.kframework.minikore.interfaces.pattern
-import collection._
 
 trait FormulaLabel
 

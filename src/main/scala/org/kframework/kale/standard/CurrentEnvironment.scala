@@ -1,9 +1,11 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale
-import org.kframework.kale._
+import org.kframework.kale.{standard, _}
 import org.kframework.kale.context.AnywhereContextApplicationLabel
 import org.kframework.kale.util.Util
+
+
 
 class CurrentEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID {
   implicit val env = this

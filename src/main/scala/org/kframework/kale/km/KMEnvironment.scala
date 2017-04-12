@@ -1,10 +1,10 @@
 package org.kframework.kale.km
 
 import org.kframework.kale
-import org.kframework.kale.{Sort => _, _}
 import org.kframework.kale.standard._
+import org.kframework.kale.{Sort => _, _}
 
-import collection._
+import scala.collection._
 
 class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasID {
   implicit protected val env = this

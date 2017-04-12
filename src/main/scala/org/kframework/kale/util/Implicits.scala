@@ -8,7 +8,6 @@ import scala.language.implicitConversions
 class Implicits(implicit val env: CurrentEnvironment) extends StaticImplicits {
 
   import env._
-  import env.builtin._
 
   implicit def intConstant(x: Int): Constant[Int] = INT(x)
 

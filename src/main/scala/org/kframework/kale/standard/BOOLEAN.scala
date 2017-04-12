@@ -1,6 +1,6 @@
 package org.kframework.kale.standard
 
-import org.kframework.kale.{ConstantLabel, Environment}
+import org.kframework.kale.Environment
 
 trait HasBOOLEAN {
   self: Environment =>

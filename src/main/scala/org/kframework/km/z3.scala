@@ -4,8 +4,8 @@ import scala.sys.process._
 
 class z3(val symbolsSeq: Seq[Seq[term.Symbol]]) {
 
-  import term._
   import builtin._
+  import term._
 
   @throws(classOf[z3.Fail])
   def sat(term: Term): Boolean = term match {
