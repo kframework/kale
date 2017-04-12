@@ -85,8 +85,9 @@ class z3(val symbolsSeq: Seq[Seq[term.Symbol]]) {
 }
 
 object z3 {
+
   // TODO: set proper z3 path
-  private val z3 = "/Users/daejunpark/work/z3/z3-4.5.0-x64-osx-10.11.6/bin/z3"
+  private val z3 = "./z3" // "/Users/daejunpark/work/z3/z3-4.5.0-x64-osx-10.11.6/bin/z3"
 
   val cmd = Seq(z3, "-smt2", "-in")
 
@@ -111,4 +112,5 @@ object z3 {
   }
 
   case class Fail(msg: String) extends Exception
+
 }
