@@ -1,6 +1,7 @@
 package org.kframework.kale.km
 
 import org.kframework.kale
+import org.kframework.kale.builtin.{HasID, HasINT, HasINTdiv}
 import org.kframework.kale.standard._
 import org.kframework.kale.{Sort => _, _}
 

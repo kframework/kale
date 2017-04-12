@@ -1,5 +1,6 @@
-package org.kframework.kale.standard
+package org.kframework.kale.builtin
 
+import org.kframework.kale.standard.ReferenceLabel
 import org.kframework.kale.{Environment, FunctionLabel2, Term}
 
 trait HasDOUBLE {

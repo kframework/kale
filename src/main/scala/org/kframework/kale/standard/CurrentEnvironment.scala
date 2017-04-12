@@ -1,6 +1,7 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale
+import org.kframework.kale.builtin._
 import org.kframework.kale.{standard, _}
 import org.kframework.kale.context.AnywhereContextApplicationLabel
 import org.kframework.kale.util.Util
@@ -16,8 +17,6 @@ class CurrentEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with
   val BindMatch = new BindMatchLabel()
 
   val AnywhereContext = AnywhereContextApplicationLabel()
-
-  val builtin = new Builtins()(this)
 
   override def sort(l: Label, children: Seq[Term]): kale.Sort = Sort.K
 

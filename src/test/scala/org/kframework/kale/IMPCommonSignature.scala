@@ -1,5 +1,6 @@
 package org.kframework.kale
 
+import org.kframework.kale.builtin.{HasINT, HasINTdiv, MapLabel}
 import org.kframework.kale.standard._
 
 class IMPCommonSignature(implicit val env: Environment with HasINT with HasINTdiv) {

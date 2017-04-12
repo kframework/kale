@@ -1,4 +1,4 @@
-package org.kframework.kale.standard
+package org.kframework.kale.builtin
 
 import org.kframework.kale._
 

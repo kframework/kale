@@ -11,7 +11,6 @@ trait TestSetup {
   implicit val env = new CurrentEnvironment
 
   import env._
-  import env.builtin._
 
   val implicits = new Implicits()
 

@@ -186,7 +186,6 @@ class ImpSpec extends FreeSpec {
 
     import IMP._
     import IMP.env._
-    import IMP.env.builtin._
     import IMP.signature._
     import implicits._
 

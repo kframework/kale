@@ -8,7 +8,6 @@ class KaleSpec extends FreeSpec {
 
   implicit val env = new CurrentEnvironment
   import env._
-  import env.builtin._
   val impl = new Implicits()
   import impl._
 
