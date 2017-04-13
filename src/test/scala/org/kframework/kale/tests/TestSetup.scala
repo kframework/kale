@@ -8,7 +8,7 @@ import org.scalactic.Prettifier
 
 trait TestSetup {
 
-  implicit val env = new CurrentEnvironment
+  implicit val env = new StandardEnvironment
 
   import env._
 
@@ -18,13 +18,14 @@ trait TestSetup {
   val Y = Variable("Y")
 
   val emptyList = FreeLabel0("emptyList")
-  val listLabel = new standard.AssocWithIdListLabel("listLabel", emptyList())
+
+  val el = emptyList()
+
+  val listLabel = new standard.AssocWithIdListLabel("listLabel", el)
 
   implicit class WithListConcat(t: Term) {
     def ~~(o: Term): Term = listLabel(t, o)
   }
-
-  val el = emptyList()
 
   val foo = FreeLabel2("foo")
   val bar = FreeLabel1("bar")

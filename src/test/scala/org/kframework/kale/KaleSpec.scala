@@ -1,12 +1,12 @@
 package org.kframework.kale
 
-import org.kframework.kale.standard.CurrentEnvironment
+import org.kframework.kale.standard.StandardEnvironment
 import org.kframework.kale.util.Implicits
 import org.scalatest.FreeSpec
 
 class KaleSpec extends FreeSpec {
 
-  implicit val env = new CurrentEnvironment
+  implicit val env = new StandardEnvironment
   import env._
   val impl = new Implicits()
   import impl._

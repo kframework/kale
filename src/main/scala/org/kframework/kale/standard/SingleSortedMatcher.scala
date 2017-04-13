@@ -11,7 +11,7 @@ import scala.collection.{+:, Iterable, Seq}
 case class MatchNotSupporteredError(l: Term, r: Term, message: String = "") extends
   AssertionError("Trying to match " + l + " with " + r + " not supported yet. " + message)
 
-case class SingleSortedMatcher()(implicit val env: CurrentEnvironment) extends MatcherOrUnifier {
+case class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends MatcherOrUnifier {
 
   import Binary._
   import env._

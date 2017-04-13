@@ -25,7 +25,6 @@ object Binary {
     def f(solver: SpecificSolver)(a: Left, b: Right): Term
   }
 
-
   trait Apply extends ((Term, Term) => Term) {
     val env: Environment
     assert(env.isSealed)

@@ -6,9 +6,7 @@ import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
 import org.kframework.kale.{standard, _}
 import org.kframework.kale.util.Util
 
-
-
-class CurrentEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID {
+class StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID {
   implicit val env = this
 
   val Hole = Variable("☐", Sort.K)

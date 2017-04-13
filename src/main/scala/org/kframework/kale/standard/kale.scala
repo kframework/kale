@@ -16,7 +16,8 @@ object Sort {
 }
 
 case class FreeLabel0 private(name: String)(implicit val env: Environment) extends Label0 with FreeLabel {
-  def apply(): Term = FreeNode0(this)
+  private lazy val uniqueInstance = FreeNode0(this)
+  def apply(): Term = uniqueInstance
 }
 
 case class FreeLabel1 private(name: String)(implicit val env: Environment) extends Label1 with FreeLabel {

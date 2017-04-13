@@ -1,11 +1,11 @@
 package org.kframework.kale.util
 
 import org.kframework.kale._
-import org.kframework.kale.standard.{CurrentEnvironment, FreeLabel2}
+import org.kframework.kale.standard.{StandardEnvironment, FreeLabel2}
 
 import scala.language.implicitConversions
 
-class Implicits(implicit val env: CurrentEnvironment) extends StaticImplicits {
+class Implicits(implicit val env: StandardEnvironment) extends StaticImplicits {
 
   import env._
 

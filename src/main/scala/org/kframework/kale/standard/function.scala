@@ -30,7 +30,7 @@ case class NotLabel(implicit val env: Environment) extends Named("¬") with kale
 }
 
 trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel {
-  implicit val env: CurrentEnvironment
+  implicit val env: StandardEnvironment
   private var p_rewriter: Option[Rewriter] = None
 
   def rewriter: Rewriter = p_rewriter.get
@@ -52,22 +52,22 @@ trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel {
     }
 }
 
-case class FunctionDefinedByRewritingLabel0(name: String)(implicit val env: CurrentEnvironment) extends FunctionDefinedByRewriting with FunctionLabel0 {
+case class FunctionDefinedByRewritingLabel0(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel0 {
   def f(): Option[Term] = tryToApply(FreeNode0(this))
 }
 
-case class FunctionDefinedByRewritingLabel1(name: String)(implicit val env: CurrentEnvironment) extends FunctionDefinedByRewriting with FunctionLabel1 {
+case class FunctionDefinedByRewritingLabel1(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel1 {
   def f(_1: Term): Option[Term] = tryToApply(FreeNode1(this, _1))
 }
 
-case class FunctionDefinedByRewritingLabel2(name: String)(implicit val env: CurrentEnvironment) extends FunctionDefinedByRewriting with FunctionLabel2 {
+case class FunctionDefinedByRewritingLabel2(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel2 {
   def f(_1: Term, _2: Term): Option[Term] = tryToApply(FreeNode2(this, _1, _2))
 }
 
-case class FunctionDefinedByRewritingLabel3(name: String)(implicit val env: CurrentEnvironment) extends FunctionDefinedByRewriting with FunctionLabel3 {
+case class FunctionDefinedByRewritingLabel3(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel3 {
   def f(_1: Term, _2: Term, _3: Term): Option[Term] = tryToApply(FreeNode3(this, _1, _2, _3))
 }
 
-case class FunctionDefinedByRewritingLabel4(name: String)(implicit val env: CurrentEnvironment) extends FunctionDefinedByRewriting with FunctionLabel4 {
+case class FunctionDefinedByRewritingLabel4(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel4 {
   def f(_1: Term, _2: Term, _3: Term, _4: Term): Option[Term] = tryToApply(FreeNode4(this, _1, _2, _3, _4))
 }

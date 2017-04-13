@@ -1,7 +1,7 @@
 package org.kframework.kale.context
 
 import org.kframework.kale._
-import org.kframework.kale.standard.{CurrentEnvironment, SubstitutionWithContext}
+import org.kframework.kale.standard.{StandardEnvironment, SubstitutionWithContext}
 import org.kframework.kale.transformer.{Binary, Unary}
 import org.kframework.kale.transformer.Binary.TypedWith
 import org.kframework.kale.util.Named
@@ -25,7 +25,7 @@ object anywhere {
   }
 
 
-  class AnywhereContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Apply] with TypedWith[AnywhereContextApplication, Term] {
+  class AnywhereContextMatcher(implicit env: StandardEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Apply] with TypedWith[AnywhereContextApplication, Term] {
 
     import env._
 
@@ -86,7 +86,7 @@ object anywhere {
     }
   }
 
-  class AnywhereContextProcessingFunction(implicit env: CurrentEnvironment) extends Unary.ProcessingFunction[SubstitutionApply] {
+  class AnywhereContextProcessingFunction(implicit env: StandardEnvironment) extends Unary.ProcessingFunction[SubstitutionApply] {
     type Element = AnywhereContextApplication
 
     import env._

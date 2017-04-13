@@ -2,7 +2,7 @@ package org.kframework.kale.context
 
 import org.kframework.kale._
 import org.kframework.kale.context.anywhere.ContextContentVariable
-import org.kframework.kale.standard.{CurrentEnvironment, SubstitutionWithContext}
+import org.kframework.kale.standard.{StandardEnvironment, SubstitutionWithContext}
 import org.kframework.kale.transformer.Binary.TypedWith
 import org.kframework.kale.transformer.{Binary, Unary}
 import org.kframework.kale.util.Util
@@ -11,7 +11,7 @@ import scala.collection.{Map, Set}
 
 object pattern {
 
-  case class PatternContextApplicationLabel(name: String)(implicit val env: CurrentEnvironment) extends Context1ApplicationLabel {
+  case class PatternContextApplicationLabel(name: String)(implicit val env: StandardEnvironment) extends Context1ApplicationLabel {
 
     //  val C = env.Variable("GENERIC_CONTEXT_VAR")
 
@@ -56,7 +56,7 @@ object pattern {
     }
   }
 
-  class PatternContextMatcher(implicit env: CurrentEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Apply] with TypedWith[PatternContextApplication, Term] {
+  class PatternContextMatcher(implicit env: StandardEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Apply] with TypedWith[PatternContextApplication, Term] {
 
     import env._
     import org.kframework.kale.util.StaticImplicits._
@@ -99,7 +99,7 @@ object pattern {
     }
   }
 
-  class PatternContextProcessingFunction(implicit env: CurrentEnvironment) extends Unary.ProcessingFunction[SubstitutionApply] {
+  class PatternContextProcessingFunction(implicit env: StandardEnvironment) extends Unary.ProcessingFunction[SubstitutionApply] {
     type Element = PatternContextApplication
 
     import env._
