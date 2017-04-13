@@ -1,6 +1,7 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale._
+import org.kframework.kale.util.Util
 
 trait DNFEnvironment extends Environment {
   private implicit val env = this
@@ -17,4 +18,9 @@ trait DNFEnvironment extends Environment {
   override val Equality: EqualityLabel = standard.SimpleEqualityLabel()
 
   override val Rewrite = SimpleRewriteLabel()
+
+  def renameVariables[T <: Term](t: T): T = {
+    val rename = And.substitution((Util.variables(t) map (v => (v, v.label(v.name + "!" + Math.random().toInt, v.sort)))).toMap)
+    rename(t).asInstanceOf[T]
+  }
 }
