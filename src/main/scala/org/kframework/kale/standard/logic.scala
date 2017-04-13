@@ -216,8 +216,8 @@ case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
   object formulasAndNonFormula {
     def unapply(t: Term): Some[(Term, Option[Term])] = t match {
       case tt: And => Some(tt.formulas, tt.nonFormula)
-      case tt if tt.label.isInstanceOf[FormulaLabel] => Some(tt, None)
-      case tt if !tt.label.isInstanceOf[FormulaLabel] => Some(Top, Some(tt))
+      case tt if tt.label.isInstanceOf[PredicateLabel] => Some(tt, None)
+      case tt if !tt.label.isInstanceOf[PredicateLabel] => Some(Top, Some(tt))
     }
   }
 
@@ -306,10 +306,10 @@ private[kale] final class AndOfTerms(val terms: Set[Term])(implicit val env: Env
 
   import env._
 
-  lazy val formulas: Term = And(terms filter (_.label.isInstanceOf[FormulaLabel]))
+  lazy val formulas: Term = And(terms filter (_.label.isInstanceOf[PredicateLabel]))
 
   lazy val nonFormula: Option[Term] = {
-    val nonFormulas = terms filter (!_.label.isInstanceOf[FormulaLabel])
+    val nonFormulas = terms filter (!_.label.isInstanceOf[PredicateLabel])
     if (nonFormulas.size > 1) {
       throw new NotImplementedError("only handle at most one term for now")
     }
@@ -345,13 +345,13 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
 
   lazy val formulas: Term = terms match {
     case a: AndOfTerms => And(s, a.formulas)
-    case t if t.label.isInstanceOf[FormulaLabel] => And(s, t)
+    case t if t.label.isInstanceOf[PredicateLabel] => And(s, t)
     case _ => s
   }
 
   lazy val nonFormula: Option[Term] = terms match {
     case a: AndOfTerms => a.nonFormula
-    case t if !t.label.isInstanceOf[FormulaLabel] => Some(t)
+    case t if !t.label.isInstanceOf[PredicateLabel] => Some(t)
     case _ => None
   }
 

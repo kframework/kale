@@ -18,7 +18,7 @@ class InvokeLabel(implicit val env: Environment) extends NameFromObject with Lab
 
 case class Invoke(label: InvokeLabel, _1: Term) extends Node1
 
-case class NotLabel(implicit val env: Environment) extends Named("¬") with kale.NotLabel with FunctionLabel1 {
+case class NotLabel(implicit val env: Environment) extends Named("¬") with kale.NotLabel with FunctionLabel1 with PredicateLabel {
 
   import env._
 
