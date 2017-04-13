@@ -21,8 +21,8 @@ class ParsingDisambiguationTest extends FreeSpec {
   val mult = FreeLabel2("mult")
   val plus = FreeLabel2("plus")
 
-  val dotExp = FreeLabel0("dotExp")
-  val ExpList = new standard.AssocWithIdListLabel("_,_", dotExp())
+  val emptyExpList = FreeLabel0("emptyExpList")
+  val ExpList = FreeLabel2("ExpList")
 
   val ExpStmt = FreeLabel1("_;")
   val block = FreeLabel1("block")
@@ -34,15 +34,16 @@ class ParsingDisambiguationTest extends FreeSpec {
 
   val Pointer = FreeLabel1("Pointer")
 
-  // we don't have non-empty lists for now
-  val emptyTypeNeList = FreeLabel0("emptyTypeNeList")
-  val TypeNeList = new standard.AssocWithIdListLabel("TypeNeList", emptyTypeNeList())
+  val emptyTypeList = FreeLabel0("emptyTypeList")
+  val TypeList = FreeLabel2("TypeList")
 
   val emptyDeclList = FreeLabel0("emptyDeclList")
-  val DeclList = new standard.AssocWithIdListLabel("DeclList", emptyDeclList())
+  val DeclList = FreeLabel2("DeclList")
 
   val emptyStmtList = FreeLabel0("emptyStmtList")
-  val StmtList = new standard.AssocWithIdListLabel("StmtList", emptyStmtList())
+  val StmtList = FreeLabel2("StmtList")
+
+  val amb = FreeLabel2("amb")
 
   //  val ANYWHERE_NOT_BLOCK = PatternContextApplicationLabel("ANYWHERE_NOT_BLOCK")
 
@@ -56,20 +57,19 @@ class ParsingDisambiguationTest extends FreeSpec {
     Variable("_" + counter)
   }
 
-  val NO_BLOCK = PatternContextApplicationLabel("NO_BLOCK")
+  val TYPEDEF_CONTEXT = PatternContextApplicationLabel("TO_DECL")
 
-  NO_BLOCK.setPatterns(Or(List(
-    Equality(NO_BLOCK(CX, Hole), Hole),
-    Equality(NO_BLOCK(CX, Hole), Pointer(NO_BLOCK(CX1, Hole)))
-//    TODO: figure out how to make it lazy (we probalby need some side condition)
-//    Equality(NO_BLOCK(CX, Hole), ExpList(NO_BLOCK(CX1, Hole), _V))
+  TYPEDEF_CONTEXT.setPatterns(Or(List(
+    Equality(TYPEDEF_CONTEXT(CX, Hole), Hole)
   )))
 
   val MULT = PatternContextApplicationLabel("MULT")
 
-  MULT.setPatterns(Or(List(
-    Equality(MULT(CX, Hole), Hole)
-  )))
+  //  MULT.setPatterns(Or(List(
+  //    Equality(MULT(CX, Hole), Hole),
+  //    Equality(MULT(CX, Hole), ExpStmt(MULT(CX1, Hole))),
+  //    Equality(MULT(CX, Hole), ExpStmt(MULT(CX1, Hole)))
+  //  ))
 
   //  val amb = FreeLabel2("amb")
 
@@ -79,30 +79,32 @@ class ParsingDisambiguationTest extends FreeSpec {
 
   val substitutionApplier = SubstitutionWithContext(_)
 
-  val theAmbiguity: Term = Or(
-    ExpList(
-      mult(ID("a"), ID("b")),
-      readPointer(ID("c"))
-    ),
+  val theAmbiguity: Term = amb(
     VarDecl(
-      ID("a"),
+      TypeList(TypeId(ID("a")), emptyTypeList()),
       DeclList(
         Pointer(ID("b")),
-        Pointer(ID("c")))
-    )
+        DeclList(Pointer(ID("c")), emptyDeclList()))),
+    ExpStmt(
+      ExpList(
+        mult(ExpId(ID("a")), ExpId(ID("b"))),
+        ExpList(
+          readPointer(ExpId(ID("c"))),
+          emptyExpList())))
   )
 
-  val asMult = StmtList(
-    block(typedef(ID("a"))),
-    ExpList(ID("whatever"),
-      theAmbiguity)
+  def asMult(amb: Term) = StmtList(
+    block(StmtList(typedef(ID("a")), emptyStmtList())),
+    ExpList(
+      ID("traversed"),
+      amb)
   )
 
-  val asDecl = StmtList(
+  def asDecl(amb: Term) = StmtList(
     typedef(ID("a")),
     ExpList(
-      ID("whatever"),
-      theAmbiguity
+      ID("traversed"),
+      amb
     )
   )
 
@@ -120,7 +122,7 @@ class ParsingDisambiguationTest extends FreeSpec {
       Variable("ANYWHERE0"),
       StmtList(
         BindMatch(DeclOrNot,
-          IfThenElse(NO_BLOCK(
+          IfThenElse(TYPEDEF_CONTEXT(
             CX,
             typedef(A)
           ), Equality(IsDecl, Top), Equality(IsDecl, Bottom))
@@ -145,12 +147,12 @@ class ParsingDisambiguationTest extends FreeSpec {
     )
 
     // as decl
-    assert(unifier(pattern, asDecl)
+    assert(unifier(pattern, asDecl(theAmbiguity))
       === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
       Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Top), Equality(CX, Hole))))
 
     // as mult
-    assert(unifier(pattern, asMult)
+    assert(unifier(pattern, asMult(theAmbiguity))
       === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
       Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Bottom))))
 
@@ -164,13 +166,13 @@ class ParsingDisambiguationTest extends FreeSpec {
       Variable("ANYWHERE" + anywhereCounter), p)
   }
 
-  "rewrite" in {
+  "rewrite" ignore {
 
     val disambRule = ANYWHERE(
       StmtList(
         Rewrite(
           BindMatch(DeclOrNot,
-            IfThenElse(NO_BLOCK(CX, typedef(A)), Equality(IsDecl, Top), Equality(IsDecl, Bottom))),
+            IfThenElse(TYPEDEF_CONTEXT(CX, typedef(A)), Equality(IsDecl, Top), Equality(IsDecl, Bottom))),
           DeclOrNot),
         Or(
           And(Not(IsDecl),
@@ -189,7 +191,32 @@ class ParsingDisambiguationTest extends FreeSpec {
 
     val rewriter = Rewriter(substitutionApplier, unifier, env)(Set(rewriteOnTop))
 
-    println(rewriter.searchStep(asMult))
-    println(rewriter.searchStep(asDecl))
+    println(rewriter.searchStep(asMult(theAmbiguity)))
+    println(rewriter.searchStep(asDecl(theAmbiguity)))
+  }
+
+  "with two rules and amb" in {
+    val keepVarDecl =
+      ANYWHERE(
+        StmtList(
+          TYPEDEF_CONTEXT(CX, typedef(A)),
+          ANYWHERE(
+            Rewrite(amb(BindMatch(B, ANYWHERE(TypeId(A))), _V), B)))
+      )
+
+    val keepMult =
+      ANYWHERE(
+        Rewrite(amb(_V, BindMatch(B, ANYWHERE(ExpId(A)))), B)
+      )
+
+    val rewriterVarDecl = Rewriter(substitutionApplier, unifier, env)(Set(Util.moveRewriteSymbolToTop(keepVarDecl)(env)))
+
+    println(rewriterVarDecl.searchStep(asMult(theAmbiguity)))
+    println(rewriterVarDecl.searchStep(asDecl(theAmbiguity)))
+
+    val rewriter = Rewriter(substitutionApplier, unifier, env)(Set(Util.moveRewriteSymbolToTop(keepMult)(env)))
+
+    println(rewriter.searchStep(asMult(theAmbiguity)))
+    println(rewriter.searchStep(asDecl(theAmbiguity)))
   }
 }
