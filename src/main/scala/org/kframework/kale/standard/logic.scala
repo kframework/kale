@@ -154,11 +154,14 @@ case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
     else {
+      apply(Set(_1,_2))
+    }
+    /*
       val substitutionAndTerms(sub1, terms1) = _1
       val substitutionAndTerms(sub2, terms2) = _2
       val allElements: Set[Term] = terms1.toSet ++ terms2 + sub1 + sub2
       Or(allElements map Or.asSet reduce cartezianProduct)
-    }
+     */
   }
 
   /**

@@ -169,9 +169,13 @@ class MatchSpec extends FreeSpec with TestSetup {
 
     val x = And.substitutionAndTerms.apply(Equality.binding(X, a), Seq(b))
     val y = And.substitutionAndTerms.apply(Equality.binding(Y, c), Seq(d))
+    // TODO: figure out why two are structually different
     assert(And.apply(x, y).toString == And(Equality(X, a), Equality(Y, c), b, d).toString)
 
     assert(And.apply(Or(a,b), Or(c,d)) == Or(And(a,c), And(a,d), And(b,c), And(b,d)))
+
+    // testing equivalence of DNFAndLabel.apply(Term,Term) vs DNFAndLabel.apply(Iterable[Term])
+    assert(And.apply(And(a,b), c) == And.apply(Seq(And(a,b), c)))
   }
 
   "context and and" in {
