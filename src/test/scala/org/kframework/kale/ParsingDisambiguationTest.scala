@@ -201,12 +201,12 @@ class ParsingDisambiguationTest extends FreeSpec {
         StmtList(
           TYPEDEF_CONTEXT(CX, typedef(A)),
           ANYWHERE(
-            Rewrite(amb(BindMatch(B, ANYWHERE(TypeId(A))), _V), B)))
-      )
+            Rewrite(amb(B, ANYWHERE(ExpId(A))), B)
+          )))
 
     val keepMult =
       ANYWHERE(
-        Rewrite(amb(_V, BindMatch(B, ANYWHERE(ExpId(A)))), B)
+        Rewrite(amb(ANYWHERE(TypeId(A)), B), B)
       )
 
     val rewriterVarDecl = Rewriter(substitutionApplier, unifier, env)(Set(Util.moveRewriteSymbolToTop(keepVarDecl)(env)))
