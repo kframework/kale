@@ -166,6 +166,12 @@ class MatchSpec extends FreeSpec with TestSetup {
   "and" in {
     assert((X := And(a, Equality(X, a))) === Equality(X, a))
     assert((X := And(a, Equality(X, b))) === Bottom)
+
+    val x = And.substitutionAndTerms.apply(Equality.binding(X, a), Seq(b))
+    val y = And.substitutionAndTerms.apply(Equality.binding(Y, c), Seq(d))
+    assert(And.apply(x, y).toString == And(Equality(X, a), Equality(Y, c), b, d).toString)
+
+    assert(And.apply(Or(a,b), Or(c,d)) == Or(And(a,c), And(a,d), And(b,c), And(b,d)))
   }
 
   "context and and" in {
