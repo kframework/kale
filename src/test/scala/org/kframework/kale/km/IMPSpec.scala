@@ -30,6 +30,9 @@ class IMPSpec extends FreeSpec {
     val Stmt = Sort("Stmt")
     val StateMap = Sort("StateMap")
     val KSeq = Sort("KSeq")
+    val Cell = Sort("Cell")
+    val K = Sort("K")
+    val IntList = Sort("IntList")
   }
 
   {
@@ -62,10 +65,22 @@ class IMPSpec extends FreeSpec {
     sorted(seq, Stmt, Stmt, Stmt)
 
     sorted(program, Ids, Stmt, Pgm)
+
+    sorted(T, Cell, Cell, Cell)
+    sorted(k, K, Cell)
+    sorted(state, StateMap, Cell)
+    sorted(varBinding, Id, Int, StateMap)
+    sorted(emptyIntList, IntList)
+    sorted(emptyStates, StateMap)
+    sorted(statesMap, StateMap, StateMap, StateMap)
+    sorted(emptyk, K)
+
+    sorted(ints, IntList, IntList, IntList)
   }
 
 
   val kseq = FreeLabel2("_~>_")
+  sorted(kseq, Sorts.K, Sorts.KSeq, Sorts.KSeq)
 
   val X = Variable("X", Sorts.Id)
   val I = Variable("I", Sorts.Int)
