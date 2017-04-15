@@ -1,5 +1,6 @@
 package org.kframework.kale
 
+import org.kframework.minikore.interfaces.tree.Leaf
 import org.kframework.minikore.interfaces.{pattern, tree}
 
 import scala.collection._
@@ -77,6 +78,11 @@ trait Leaf[T] extends Term {
   def copy(children: Seq[Term]): Term = {
     assert(children.isEmpty)
     copy()
+  }
+
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case that: Leaf[_] => that.label == this.label && that.value == this.value
+    case _ => false
   }
 }
 
