@@ -169,8 +169,9 @@ class MatchSpec extends FreeSpec with TestSetup {
 
     val x = And.substitutionAndTerms.apply(Equality.binding(X, a), Seq(b))
     val y = And.substitutionAndTerms.apply(Equality.binding(Y, c), Seq(d))
-    // TODO: figure out why two are structually different
-    assert(And.apply(x, y).toString == And(Equality(X, a), Equality(Y, c), b, d).toString)
+    val xy = And.apply(x, y)
+    assert(xy == And(Equality(X, a), Equality(Y, c), b, d))
+    assert(xy == And(Equality(X, a), Equality(Y, c), d, b))
 
     assert(And.apply(Or(a,b), Or(c,d)) == Or(And(a,c), And(a,d), And(b,c), And(b,d)))
 

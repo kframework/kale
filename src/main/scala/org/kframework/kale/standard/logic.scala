@@ -362,6 +362,11 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
   lazy val _2: Term = terms
   override lazy val assocIterable: Iterable[Term] = And.asList(s) ++ And.asList(terms)
 
+  override def equals(other: Any): Boolean = other match {
+    case that: AndOfSubstitutionAndTerms => this.s == that.s && this.terms == that.terms
+    case _ => false
+  }
+
   override def asSet: Set[Term] = And.asSet(terms) | And.asSet(s)
 }
 
