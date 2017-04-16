@@ -11,7 +11,11 @@ import scala.collection.{+:, Iterable, Seq}
 case class MatchNotSupporteredError(l: Term, r: Term, message: String = "") extends
   AssertionError("Trying to match " + l + " with " + r + " not supported yet. " + message)
 
-case class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends MatcherOrUnifier {
+object SingleSortedMatcher {
+  def apply()(implicit env: StandardEnvironment) = new SingleSortedMatcher()
+}
+
+class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends MatcherOrUnifier {
 
   import Binary._
   import env._
@@ -47,7 +51,15 @@ case class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends 
   }
 
   object FreeNode4FreeNode4 extends ProcessingFunction[Apply] with TypedWith[Node4, Node4] {
-    def f(solver: Apply)(a: Node4, b: Node4) = And(List(solver(a._1, b._1), solver(a._2, b._2), solver(a._3, b._3), solver(a._4, b._4)))
+    def f(solver: Apply)(a: Node4, b: Node4) = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2), (a._3, b._3), (a._4, b._4))
+  }
+
+  object FreeNode5FreeNode5 extends ProcessingFunction[Apply] with TypedWith[Node5, Node5] {
+    def f(solver: Apply)(a: Node5, b: Node5) = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2), (a._3, b._3), (a._4, b._4), (a._5, b._5))
+  }
+
+  object FreeNode6FreeNode6 extends ProcessingFunction[Apply] with TypedWith[Node6, Node6] {
+    def f(solver: Apply)(a: Node6, b: Node6) = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2), (a._3, b._3), (a._4, b._4), (a._5, b._5), (a._6, b._6))
   }
 
   def matchContents(l: AssocLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = {

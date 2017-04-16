@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.minikore.interfaces.tree.Leaf
+import org.kframework.kale.util.HasAtt
 import org.kframework.minikore.interfaces.{pattern, tree}
 
 import scala.collection._
@@ -25,7 +25,7 @@ trait Label extends MemoizedHashCode with pattern.Symbol {
   def str: String = name
 }
 
-trait Term extends pattern.Pattern {
+trait Term extends pattern.Pattern with HasAtt {
   def updateAt(i: Int)(t: Term): Term
 
   val label: Label
@@ -46,7 +46,7 @@ trait Term extends pattern.Pattern {
     * Subclasses can override the method to attach functionality related to updating, e.g., updating attributes.
     * Should return `this`.
     */
-  def updatePostProcess(oldTerm: Term): Term = this
+//  override def updatePostProcess(oldTerm: Term): Term = this
 
   // TODO: should experiment with other implementations
   override def hashCode: Int = this.label.hashCode

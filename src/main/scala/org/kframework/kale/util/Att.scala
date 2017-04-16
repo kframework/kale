@@ -13,30 +13,24 @@ trait Att[T] {
 
   def key: Class[_ <: Att[T]] = this.getClass.asInstanceOf[Class[Att[T]]]
 
-  def update(term: Term): Att[T]
+  def update(term: Term with HasAtt): Att[T]
 
-  def update(term: Term, oldChildren: Iterable[Term]): Att[T]
+  def update(term: Term with HasAtt, oldChildren: Iterable[Term with HasAtt]): Att[T]
 }
 
 case class SimpleAtt[T](value: T) extends Att[T] {
-  override def update(term: Term): Att[T] = this
+  override def update(term: Term with HasAtt): Att[T] = this
 
-  override def update(term: Term, oldChildren: Iterable[Term]): Att[T] = this
+  override def update(term: Term with HasAtt, oldChildren: Iterable[Term with HasAtt]): Att[T] = this
 }
 
 trait HasAtt {
   self: Term =>
 
-  private var att: Any = null
-
-  def setHiddenAttDONOTUSE(att: Any) = this.att = att
-
-  def getHiddenAttDONOTUSE = this.att
-
   //  protected[this]
   var attributes = Map[Class[_], Att[_]]()
 
-  def updatedAttributes(newTerms: Term*): Map[Class[_], Att[_]] = (this.attributes map {
+  def updatedAttributes(newTerms: Term with HasAtt*): Map[Class[_], Att[_]] = (this.attributes map {
     case (k, v) => (k, v.update(this, newTerms))
   }).toMap
 
@@ -57,6 +51,6 @@ trait HasAtt {
   }
 
   def updatePostProcess(oldTerm: Term): Term = {
-    this.setAtts(updatedAttributes(oldTerm.children.toSeq: _*))
+    this.setAtts(updatedAttributes(oldTerm.children.toSeq.asInstanceOf[Seq[Term with HasAtt]]: _*))
   }
 }
