@@ -122,9 +122,9 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
       } else {
         l(contextVar, apply(cs.next))
       }
-    case Node(l, cs) =>
+    case n@Node(l, cs) =>
       val newTerms = cs map apply
-      l(newTerms).updatePostProcess(this)
+      n.copy(newTerms.toSeq)
     case _ => t
   }
 
@@ -405,9 +405,9 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
         apply(And.substitution(Map(Variable("☐", Sort.K) -> cs.next))(context))
       }).getOrElse(l(contextVar, apply(cs.next)))
 
-    case n@Node(l, cs) =>
-      val newTerms = (cs map apply).toIterable
-      l(newTerms).updatePostProcess(this)
+    case n: Node if !n.isGround =>
+      val newTerms = n.children map apply
+      n.copy(newTerms.toSeq)
     case _ => t
   }
 

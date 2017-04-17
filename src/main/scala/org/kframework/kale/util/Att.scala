@@ -4,53 +4,56 @@ import org.kframework.kale.Term
 
 import scala.collection._
 
-trait Key[T] {
-  def name: String = this.getClass.getName
-}
-
 trait Att[T] {
-  def value: T
+  def default(): T
 
-  def key: Class[_ <: Att[T]] = this.getClass.asInstanceOf[Class[Att[T]]]
-
-  def update(term: Term with HasAtt): Att[T]
-
-  def update(term: Term with HasAtt, oldChildren: Iterable[Term with HasAtt]): Att[T]
+  def update(oldValue: T, term: Term, oldChildren: Iterable[Term]): T
 }
 
-case class SimpleAtt[T](value: T) extends Att[T] {
-  override def update(term: Term with HasAtt): Att[T] = this
+object MutableObj {
+  def apply[T](v: T) = new MutableObj[T](v)
+}
 
-  override def update(term: Term with HasAtt, oldChildren: Iterable[Term with HasAtt]): Att[T] = this
+final class MutableObj[T](private var v: T) extends Mutable {
+  def set(v: T): Unit = {
+    this.v = v
+  }
+
+  def value(): T = v
+
+  override def toString: String = "MutableObject(" + v + ")"
+
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case that: MutableObj[_] => this.value == that.value
+    case _ => false
+  }
+
+  override def hashCode(): Int = value.hashCode()
 }
 
 trait HasAtt {
   self: Term =>
 
   //  protected[this]
-  var attributes = Map[Class[_], Att[_]]()
+  var attributes = Map[Att[_], Any]()
 
-  def updatedAttributes(newTerms: Term with HasAtt*): Map[Class[_], Att[_]] = (this.attributes map {
-    case (k, v) => (k, v.update(this, newTerms))
-  }).toMap
-
-  def setAtt(value: Att[_]): Term = {
-    attributes = attributes + (value.getClass -> value)
-    this
+  def updateAttributes(oldChildren: Iterable[Term]): Unit = {
+    attributes = (this.attributes map {
+      case (k, v) => (k, k.asInstanceOf[Att[Any]].update(v, this, oldChildren))
+    }).toMap
   }
 
-  def getAtt[T <: Att[_]](key: Class[T]): T = attributes(key).asInstanceOf[T]
-
-  def getAttOption[T <: Att[_]](key: Class[T]): Option[T] = attributes.get(key).asInstanceOf[Option[T]]
-
-  def hasAtt[T <: Att[_]](key: Class[T]): Boolean = attributes.contains(key)
-
-  def setAtts(atts: Map[Class[_], Att[_]]): Term = {
-    attributes = atts
-    this
+  def att[T](att: Att[T]): T = {
+    if (!attributes.contains(att)) {
+      val newValue = att.update(att.default, this, this.children)
+      attributes = attributes + (att -> newValue)
+    }
+    attributes(att).asInstanceOf[T]
   }
 
   def updatePostProcess(oldTerm: Term): Term = {
-    this.setAtts(updatedAttributes(oldTerm.children.toSeq.asInstanceOf[Seq[Term with HasAtt]]: _*))
+    assert(oldTerm.label == this.label)
+    this.updateAttributes(oldTerm.children)
+    this
   }
 }

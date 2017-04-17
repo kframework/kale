@@ -7,20 +7,23 @@ import org.scalatest.FreeSpec
 class KaleSpec extends FreeSpec {
 
   implicit val env = new StandardEnvironment
+
   import env._
+
   val impl = new Implicits()
+
   import impl._
 
   val X = Variable("X")
 
 
-//  "SET" in {
-//    val set = new SET("_,_", 0)
-//    set.op(1, 2)
-//
-//    assert(set.op(1, 2) == set.op(2, 1))
-//    assert(set.op(0, 2) == (2: Term))
-//  }
+  //  "SET" in {
+  //    val set = new SET("_,_", 0)
+  //    set.op(1, 2)
+  //
+  //    assert(set.op(1, 2) == set.op(2, 1))
+  //    assert(set.op(0, 2) == (2: Term))
+  //  }
 
 
   "INT" - {
@@ -34,11 +37,12 @@ class KaleSpec extends FreeSpec {
       assert(x.value == 2)
       assert(x.label == INT)
     }
-//    "+" in {
-//      assert(x + y == INT(5))
-//      assert(x + X != INT(5))
-//      assert(x + 0 == INT(2))
-//      assert(x + 8 + 0 + y + X + 5 == (13: Term) + X + 5)
-//    }
+    //    "+" in {
+    //      assert(x + y == INT(5))
+    //      assert(x + X != INT(5))
+    //      assert(x + 0 == INT(2))
+    //      assert(x + 8 + 0 + y + X + 5 == (13: Term) + X + 5)
+    //    }
   }
+
 }
