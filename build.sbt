@@ -7,6 +7,8 @@ scalaVersion := "2.12.2"
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
+resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository"
+
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
-libraryDependencies += "org.kframework.k" % "minikore" % "1.0-SNAPSHOT"
+libraryDependencies += "org.kframework.k" % "kore" % "1.0-SNAPSHOT"
