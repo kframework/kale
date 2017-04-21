@@ -1,18 +1,26 @@
 package org.kframework.kale.standard
 
+import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kore
+import org.kframework.kore.implementation.DefaultBuilders
 
 import scala.collection.Seq
 
-class KoreBuilders(implicit val env: Environment) extends kore.Builders {
+class KoreBackend(d: kore.Definition, mainModule: kore.ModuleName) {
+  val env = new StandardEnvironment
+
+
+}
+
+class KoreBuilders(implicit val env: Environment) extends kore.Builders with DefaultOuterBuilders {
 
   override def Symbol(str: String): kore.Symbol = env.label(str)
 
   override def SortedVariable(_1: kore.Name, _2: kore.Sort): kore.Variable = StandardVariable(_1.asInstanceOf[Name], _2.asInstanceOf[Sort])
 
   override def DomainValue(_1: kore.Symbol, _2: kore.Value): kore.DomainValue = {
-    def instantiate[T]() = _1.asInstanceOf[DomainValueLabel[T]].interpret(_2.asInstanceOf[Value[T]])
+    def instantiate[T]() = _1.asInstanceOf[DomainValueLabel[T]].interpret(_2.str)
 
     instantiate()
   }
@@ -41,27 +49,35 @@ class KoreBuilders(implicit val env: Environment) extends kore.Builders {
 
   override def Application(_1: kore.Symbol, args: Seq[kore.Pattern]): kore.Pattern = _1.asInstanceOf[NodeLabel](args.asInstanceOf[Seq[Term]])
 
-  override def Definition(modules: Seq[kore.Module], att: kore.Attributes): kore.Definition = ???
+  def Sort(str: String): kore.Sort = standard.Sort(str)
 
-  override def Module(name: kore.ModuleName, sentences: Seq[kore.Sentence], att: kore.Attributes): kore.Module = ???
+  def Value(str: String): kore.Value = DefaultBuilders.Value(str)
 
-  override def Import(name: kore.ModuleName, att: kore.Attributes): kore.Import = ???
+  def Name(str: String): Name = standard.Name(str)
+}
 
-  override def SortDeclaration(sort: kore.Sort, att: kore.Attributes): kore.SortDeclaration = ???
+trait DefaultOuterBuilders {
+  def Definition(modules: Seq[kore.Module], att: kore.Attributes): kore.Definition = {
+    DefaultBuilders.Definition(modules, att)
+  }
 
-  override def SymbolDeclaration(sort: kore.Sort, symbol: kore.Symbol, args: Seq[kore.Sort], att: kore.Attributes): kore.SymbolDeclaration = ???
+  def Module(name: kore.ModuleName, sentences: Seq[kore.Sentence], att: kore.Attributes): kore.Module =
+    DefaultBuilders.Module(name, sentences, att)
 
-  override def Rule(p: kore.Pattern, att: kore.Attributes): kore.Rule = ???
+  def Import(name: kore.ModuleName, att: kore.Attributes): kore.Sentence =
+    DefaultBuilders.Import(name, att)
 
-  override def Axiom(p: kore.Pattern, att: kore.Attributes): kore.Axiom = ???
+  def SortDeclaration(sort: kore.Sort, att: kore.Attributes): kore.Sentence =
+    DefaultBuilders.SortDeclaration(sort, att)
 
-  override def Attributes(att: Seq[kore.Pattern]): kore.Attributes = ???
+  def SymbolDeclaration(sort: kore.Sort, symbol: kore.Symbol, args: Seq[kore.Sort], att: kore.Attributes): kore.Sentence =
+    DefaultBuilders.SymbolDeclaration(sort, symbol, args, att)
 
-  override def ModuleName(str: String): kore.ModuleName = ???
+  def Rule(p: kore.Pattern, att: kore.Attributes): kore.Sentence = DefaultBuilders.Rule(p, att)
 
-  override def Sort(str: String): kore.Sort = ???
+  def Axiom(p: kore.Pattern, att: kore.Attributes): kore.Sentence = DefaultBuilders.Axiom(p, att)
 
-  override def Value(str: String): kore.Value = ???
+  def Attributes(att: Seq[kore.Pattern]): kore.Attributes = DefaultBuilders.Attributes(att)
 
-  override def Name(str: String): Name = ???
+  def ModuleName(str: String): kore.ModuleName = DefaultBuilders.ModuleName(str)
 }

@@ -6,7 +6,9 @@ import org.kframework.kale.{Environment, FunctionLabel2, Term}
 trait HasDOUBLE {
   self: Environment =>
 
-  val DOUBLE = new ReferenceLabel[Double]("Double")(this)
+  val DOUBLE = new ReferenceLabel[Double]("Double")(this) {
+    override protected[this] def internalInterpret(s: String): Double = s.toDouble
+  }
 }
 
 trait HasDOUBLEdiv {

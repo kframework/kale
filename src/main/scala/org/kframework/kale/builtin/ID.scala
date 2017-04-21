@@ -6,5 +6,7 @@ import org.kframework.kale.standard.ReferenceLabel
 trait HasID {
   self: Environment =>
 
-  val ID = new ReferenceLabel[String]("ID")(this)
+  val ID = new ReferenceLabel[String]("ID")(this) {
+    override protected[this] def internalInterpret(s: String): String = s
+  }
 }

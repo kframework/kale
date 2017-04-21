@@ -9,7 +9,7 @@ import org.kframework.kore
 
 import scala.collection.{Iterable, Map, Seq, Set}
 
-class ReferenceLabel[T](val name: String)(val env: Environment) extends PrimordialDomainValueLabel[T]
+abstract class ReferenceLabel[T](val name: String)(val env: Environment) extends PrimordialDomainValueLabel[T]
 
 trait PrimordialDomainValueLabel[T] extends DomainValueLabel[T] {
   def apply(v: T): DomainValue[T] = StandardDomainValue(this, v)

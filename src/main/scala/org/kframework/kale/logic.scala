@@ -1,6 +1,7 @@
 package org.kframework.kale
 
-import org.kframework.kore
+import org.kframework.kore.implementation.DefaultBuilders
+import org.kframework.{kale, kore}
 
 trait PredicateLabel
 
@@ -10,12 +11,10 @@ trait DomainValueLabel[T] extends LeafLabel[T] {
 
   // FOR KORE
 
-  def interpret(v: Value[T]): DomainValue[T] = this(v.data)
-}
+  def interpret(str: String): DomainValue[T] = this (internalInterpret(str))
 
-// for KORE
-case class Value[T](data: T) extends kore.Value {
-  override def str: String = data.toString
+  // remove this and all descendants if getting rid of Constant.build
+  protected[this] def internalInterpret(s: String): T
 }
 
 trait DomainValue[T] extends Leaf[T] with kore.DomainValue {
@@ -27,7 +26,7 @@ trait DomainValue[T] extends Leaf[T] with kore.DomainValue {
 
   override def symbol = label
 
-  override def value = Value(data)
+  override def value = DefaultBuilders.Value(data.toString)
 }
 
 trait Sort extends kore.Sort {
