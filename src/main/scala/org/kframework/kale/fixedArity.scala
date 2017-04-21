@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.minikore.interfaces.pattern
+import org.kframework.kore
 
 import scala.collection._
 
@@ -79,7 +79,7 @@ trait Label6 extends NodeLabel {
   override def toString: String =  super[NodeLabel].toString
 }
 
-trait Node0 extends Node {
+trait Node0 extends Node with Application {
   val label: Label0
 
   val isGround = true
@@ -113,9 +113,6 @@ trait Node1 extends Node with Product1[Term] {
     assert(children.size == 1)
     copy(children.head)
   }
-
-  // FOR KORE
-  def build(_1: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label1](_1.asInstanceOf[Term])
 }
 
 trait Node2 extends Node with Product2[Term, Term] {
@@ -136,9 +133,6 @@ trait Node2 extends Node with Product2[Term, Term] {
     assert(children.size == 2)
     copy(children.head, children(1))
   }
-
-  // FOR KORE
-  def build(_1: pattern.Pattern, _2: pattern.Pattern): pattern.Pattern = label.asInstanceOf[Label2](_1.asInstanceOf[Term], _2.asInstanceOf[Term])
 }
 
 trait Node3 extends Node with Product3[Term, Term, Term] {

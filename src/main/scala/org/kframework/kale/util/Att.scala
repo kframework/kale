@@ -7,7 +7,7 @@ import scala.collection._
 trait Att[T] {
   def default(): T
 
-  def update(oldValue: T, term: Term, oldChildren: Iterable[Term]): T
+  def update(oldValue: T, term: Term, oldChildren: Option[Iterable[Term]]): T
 }
 
 object MutableObj {
@@ -37,7 +37,7 @@ trait HasAtt {
   //  protected[this]
   var attributes = Map[Att[_], Any]()
 
-  def updateAttributes(oldChildren: Iterable[Term]): Unit = {
+  def updateAttributes(oldChildren: Option[Iterable[Term]]): Unit = {
     attributes = (this.attributes map {
       case (k, v) => (k, k.asInstanceOf[Att[Any]].update(v, this, oldChildren))
     }).toMap
@@ -45,15 +45,20 @@ trait HasAtt {
 
   def att[T](att: Att[T]): T = {
     if (!attributes.contains(att)) {
-      val newValue = att.update(att.default, this, this.children)
+      val newValue = att.update(att.default(), this, None)
       attributes = attributes + (att -> newValue)
     }
     attributes(att).asInstanceOf[T]
   }
 
   def updatePostProcess(oldTerm: Term): Term = {
-    assert(oldTerm.label == this.label)
-    this.updateAttributes(oldTerm.children)
+    val oldChildren =
+      if (oldTerm.label == this.label)
+        Some(oldTerm.children)
+      else
+        None
+
+    this.updateAttributes(oldChildren)
     this
   }
 }

@@ -1,7 +1,7 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard.Bottomize
-import org.kframework.minikore.interfaces.pattern
+import org.kframework.kore
 
 import scala.collection.mutable
 
@@ -42,8 +42,8 @@ trait Environment extends KORELabels with Bottomize {
 
 trait KORELabels {
   // Constants
-  val Bottom: Truth with pattern.Bottom
-  val Top: Truth with Substitution with pattern.Top
+  val Bottom: Truth with kore.Bottom
+  val Top: Truth with Substitution with kore.Top
 
   // Labels
   val Variable: VariableLabel

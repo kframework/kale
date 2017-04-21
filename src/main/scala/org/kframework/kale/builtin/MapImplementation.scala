@@ -19,7 +19,7 @@ case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(i
       }
       .toMap
     val unindexed = (l filterNot isIndexable).toSet
-    new MAP(this, indexed, unindexed)
+    new MapImplementation(this, indexed, unindexed)
   }
 
 
@@ -27,12 +27,12 @@ case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(i
     case (0, 0) => identity
     case (1, 0) => map.head._2
     case (0, 1) => unindexable.head
-    case _ => new MAP(this, map, unindexable)
+    case _ => new MapImplementation(this, map, unindexable)
   }
 
   object map {
     def unapply(m: Term): Option[(Map[Term, Term], Set[Term])] = m match {
-      case m: MAP if m.label == MapLabel.this => Some(m.map, m.unindexable)
+      case m: MapImplementation if m.label == MapLabel.this => Some(m.map, m.unindexable)
       case `identity` => Some(Map[Term, Term](), Set[Term]())
       case t if isIndexable(t) => Some(Map(indexFunction(t) -> t), Set[Term]())
       case t if !isIndexable(t) => Some(Map[Term, Term](), Set(t))
@@ -75,7 +75,7 @@ class KeysFunction(mapLabel: MapLabel, returnedSetLabel: SetLabel)(implicit val 
   }
 }
 
-case class MAP(label: MapLabel, map: collection.Map[Term, Term], unindexable: Set[Term]) extends Assoc {
+case class MapImplementation(label: MapLabel, map: collection.Map[Term, Term], unindexable: Set[Term]) extends Assoc {
   lazy val assocIterable = unindexable ++ map.values
 
   override def _1: Term = unindexable.headOption.getOrElse(map.head._2)
@@ -88,7 +88,7 @@ case class MAP(label: MapLabel, map: collection.Map[Term, Term], unindexable: Se
 
 
   def equals(other: Term) = other match {
-    case that: MAP => this.label == that.label && this.map == that.map && this.unindexable == that.unindexable
+    case that: MapImplementation => this.label == that.label && this.map == that.map && this.unindexable == that.unindexable
     case _ => false
   }
 }

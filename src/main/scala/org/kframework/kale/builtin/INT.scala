@@ -6,9 +6,7 @@ import org.kframework.kale.{Environment, FunctionLabel2, Term}
 trait HasINT {
   self: Environment =>
 
-  val INT = new ReferenceLabel[Int]("Int")(this) {
-    override def internalInterpret(s: String): Int = s.toInt
-  }
+  val INT = new ReferenceLabel[Int]("Int")(this)
 }
 
 trait HasINTdiv extends HasINT {

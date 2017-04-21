@@ -1,7 +1,7 @@
 package org.kframework.kale.context
 
 import org.kframework.kale._
-import org.kframework.kale.standard.{StandardEnvironment, SubstitutionWithContext}
+import org.kframework.kale.standard.{Name, StandardEnvironment, SubstitutionWithContext}
 import org.kframework.kale.transformer.{Binary, Unary}
 import org.kframework.kale.transformer.Binary.TypedWith
 import org.kframework.kale.util.Named
@@ -107,7 +107,7 @@ object anywhere {
     //  assert(!basedOn.isInstanceOf[ContextContentVariable])
     val label: VariableLabel = basedOn.label
 
-    override val name: String = basedOn.name + "_" + index
+    override val name = Name(basedOn.name.str + "_" + index)
   }
 
 }

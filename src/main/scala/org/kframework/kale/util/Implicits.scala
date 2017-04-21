@@ -1,7 +1,8 @@
 package org.kframework.kale.util
 
 import org.kframework.kale._
-import org.kframework.kale.standard.{StandardEnvironment, FreeLabel2}
+import org.kframework.kale.builtin.HasINT
+import org.kframework.kale.standard.{FreeLabel2, StandardEnvironment}
 
 import scala.language.implicitConversions
 
@@ -9,13 +10,13 @@ class Implicits(implicit val env: StandardEnvironment) extends StaticImplicits {
 
   import env._
 
-  implicit def intConstant(x: Int): Constant[Int] = INT(x)
+  implicit def intConstant(x: Int): DomainValue[Int] = INT(x)
 
-  implicit def doubleConstant(x: Double): Constant[Double] = DOUBLE(x)
+  implicit def doubleConstant(x: Double): DomainValue[Double] = DOUBLE(x)
 
-  implicit def booleanConstant(x: Boolean): Constant[Boolean] = BOOLEAN(x)
+  implicit def booleanConstant(x: Boolean): DomainValue[Boolean] = BOOLEAN(x)
 
-  implicit def stringConstant(x: String): Constant[String] = STRING(x)
+  implicit def stringConstant(x: String): DomainValue[String] = STRING(x)
 
   val plus = FreeLabel2("+")
 
@@ -41,6 +42,8 @@ trait StaticImplicits {
   implicit class StaticRichAssocLabel(label: AssocLabel) {
     def apply(args: Term*): Term = label.apply(args.toSeq)
   }
+
+  implicit def intConstant(x: Int)(env: Environment with HasINT): DomainValue[Int] = env.INT(x)
 
   implicit def symbolWithApp(s: Symbol)(env: Environment) = new {
     val label = env.label(s.name)

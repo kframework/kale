@@ -1,39 +1,36 @@
 package org.kframework.kale
 
-import org.kframework.minikore.interfaces.pattern
+import org.kframework.kore
 
 trait PredicateLabel
 
-trait ConstantLabel[T] extends LeafLabel[T] {
+trait DomainValueLabel[T] extends LeafLabel[T] {
 
-  def apply(v: T): Constant[T]
+  def apply(v: T): DomainValue[T]
 
   // FOR KORE
 
-  def interpret(s: String): Constant[T] = this (internalInterpret(s))
-
-  // remove this and all descendants if getting rid of Constant.build
-  protected[this] def internalInterpret(s: String): T
+  def interpret(v: Value[T]): DomainValue[T] = this(v.data)
 }
 
-trait Constant[T] extends Leaf[T] with pattern.DomainValue {
-  val label: ConstantLabel[T]
+// for KORE
+case class Value[T](data: T) extends kore.Value {
+  override def str: String = data.toString
+}
+
+trait DomainValue[T] extends Leaf[T] with kore.DomainValue {
+  val label: DomainValueLabel[T]
 
   val isGround = true
 
-  override def toString: String = value.toString
+  override def toString: String = data.toString
 
-  // FOR KORE
-  def build(symbol: pattern.Symbol, content: pattern.Value): pattern.DomainValue = {
-    symbol.asInstanceOf[ConstantLabel[_]].interpret(content)
-  }
+  override def symbol = label
 
-  def _1: ConstantLabel[T] = label
-
-  def _2: String = value.toString
+  override def value = Value(data)
 }
 
-trait Sort extends pattern.Sort {
+trait Sort extends kore.Sort {
   val name: String
 
   override def equals(other: Any): Boolean = other match {
@@ -44,21 +41,25 @@ trait Sort extends pattern.Sort {
   override def hashCode(): Int = name.hashCode
 
   // FOR KORE
-  val str = name
+  override val str = name
 }
 
-trait VariableLabel extends LeafLabel[(String, Sort)] {
-  def apply(v: (String, Sort)): Variable
+trait VariableLabel extends LeafLabel[(Name, Sort)] {
+  def apply(v: (Name, Sort)): Variable
 }
 
-trait Variable extends Leaf[(String, Sort)] {
+trait Name extends kore.Name {
+  override def toString = str
+}
+
+trait Variable extends Leaf[(Name, Sort)] {
   val label: VariableLabel
-  val name: String
+  val name: Name
   val sort: Sort
-  lazy val value = (name, sort)
+  lazy val data = (name, sort)
   val isGround = false
 
-  override def toString: String = name
+  override def toString: String = name.str
 
   override def canEqual(o: Any): Boolean = o.isInstanceOf[Variable]
 
@@ -74,9 +75,9 @@ trait Truth extends Leaf[Boolean] {
   val isGround = true
 }
 
-trait Top extends Truth with Substitution with pattern.Top
+trait Top extends Truth with Substitution with kore.Top
 
-trait Bottom extends Truth with pattern.Bottom
+trait Bottom extends Truth with kore.Bottom
 
 
 trait AndLabel extends AssocCommWithIdLabel {
@@ -97,20 +98,24 @@ trait EqualityLabel extends Label2 with PredicateLabel {
 
 trait NotLabel extends Label1
 
-trait Equality extends Node2 with BinaryInfix with pattern.Equals
+trait Equals extends kore.Equals with Node2 with BinaryInfix
 
-trait Binding extends Equality with Substitution
+trait Binding extends Equals with Substitution
 
-trait And extends AssocComm with pattern.And {
+trait And extends kore.And with AssocComm {
   self: And =>
   val formulas: Term
   val nonFormula: Option[Term]
 }
 
-trait Or extends AssocComm with pattern.Or
+trait Or extends kore.Or with AssocComm
 
-trait Rewrite extends Node2 with BinaryInfix with pattern.Rewrite
+trait Rewrite extends kore.Rewrite with Node2 with BinaryInfix
 
-// Substitution
+trait Application extends Node with kore.Application {
 
+  // for KORE
+  override def symbol: kore.Symbol = label
 
+  override def args: Seq[kore.Pattern] = children.toSeq
+}

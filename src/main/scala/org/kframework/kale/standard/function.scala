@@ -30,15 +30,15 @@ case class NotLabel(implicit val env: Environment) extends Named("¬") with kale
 }
 
 trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel {
-  implicit val env: StandardEnvironment
+  implicit val env: Environment
   private var p_rewriter: Option[Rewriter] = None
 
   def rewriter: Rewriter = p_rewriter.get
 
   //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
 
-  def setRules(rules: Set[Rewrite]): Unit = {
-    p_rewriter = Some(Rewriter(SubstitutionWithContext(_), SingleSortedMatcher(), env)(rules))
+  def setRules(rules: Set[Rewrite])(implicit rewriterBuilder: (Set[_ <: kale.Rewrite]) => Rewriter): Unit = {
+    p_rewriter = Some(rewriterBuilder(rules))
   }
 
   def tryToApply(res: Term): Option[Term] =

@@ -27,14 +27,14 @@ class KaleSpec extends FreeSpec {
 
 
   "INT" - {
-    val x: Constant[Int] = 2
-    val y: Constant[Int] = 3
+    val x: DomainValue[Int] = 2
+    val y: DomainValue[Int] = 3
 
     "Int" in {
       assert(x == INT(2))
       assert(x != y)
 
-      assert(x.value == 2)
+      assert(x.data == 2)
       assert(x.label == INT)
     }
     //    "+" in {

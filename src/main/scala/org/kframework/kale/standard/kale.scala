@@ -1,7 +1,8 @@
 package org.kframework.kale.standard
 
-import org.kframework.kale
+import org.kframework.{kale, kore}
 import org.kframework.kale._
+import org.kframework.kore.Pattern
 
 import scala.language.implicitConversions
 
@@ -44,16 +45,16 @@ case class FreeLabel4 private(name: String)(implicit val env: Environment) exten
   }
 }
 
-case class FreeNode0(label: Label0) extends Node0
+case class FreeNode0(label: Label0) extends Node0 with Application
 
-case class FreeNode1(label: Label1, _1: Term) extends Node1
+case class FreeNode1(label: Label1, _1: Term) extends Node1 with Application
 
-case class FreeNode2(label: Label2, _1: Term, _2: Term) extends Node2
+case class FreeNode2(label: Label2, _1: Term, _2: Term) extends Node2 with Application
 
-case class FreeNode3(label: Label3, _1: Term, _2: Term, _3: Term) extends Node3
+case class FreeNode3(label: Label3, _1: Term, _2: Term, _3: Term) extends Node3 with Application
 
-case class FreeNode4(label: Label4, _1: Term, _2: Term, _3: Term, _4: Term) extends Node4
+case class FreeNode4(label: Label4, _1: Term, _2: Term, _3: Term, _4: Term) extends Node4 with Application
 
-case class FreeNode5(label: Label5, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term) extends Node5
+case class FreeNode5(label: Label5, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term) extends Node5 with Application
 
-case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term) extends Node6
+case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term) extends Node6 with Application

@@ -175,9 +175,9 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
     def f(solver: Apply)(a: Variable, b: Term) = Equality(a.asInstanceOf[Variable], b)
   }
 
-  object Constants extends ProcessingFunction[Apply] with TypedWith[Constant[_], Constant[_]] {
-    override def f(solver: Apply)(a: Constant[_], b: Constant[_]) =
-      Truth(a.value == b.value)
+  object Constants extends ProcessingFunction[Apply] with TypedWith[DomainValue[_], DomainValue[_]] {
+    override def f(solver: Apply)(a: DomainValue[_], b: DomainValue[_]) =
+      Truth(a.data == b.data)
   }
 
   object AndTerm extends ProcessingFunction[Apply] with TypedWith[And, Term] {
@@ -263,7 +263,7 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
     case (_: FunctionDefinedByRewritingLabel2, _: FunctionDefinedByRewritingLabel2) => FreeNode2FreeNode2
     case (_: FunctionDefinedByRewritingLabel3, _: FunctionDefinedByRewritingLabel3) => FreeNode3FreeNode3
     case (_: FunctionDefinedByRewritingLabel4, _: FunctionDefinedByRewritingLabel4) => FreeNode4FreeNode4
-    case (_: ConstantLabel[_], _: ConstantLabel[_]) => Constants
+    case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
     case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm
     case (_: AssocLabel, right) if !right.isInstanceOf[Variable] => AssocTerm
   }) orElse super.processingFunctions

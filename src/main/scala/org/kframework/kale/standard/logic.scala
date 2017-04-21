@@ -4,49 +4,44 @@ import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.context.Context1ApplicationLabel
 import org.kframework.kale.util.{NameFromObject, Named, unreachable}
-import org.kframework.minikore.interfaces.pattern
+import org.kframework.kore.implementation.DefaultBuilders
+import org.kframework.kore
 
 import scala.collection.{Iterable, Map, Seq, Set}
 
-abstract class ReferenceLabel[T](val name: String)(val env: Environment) extends PrimordialConstantLabel[T]
+class ReferenceLabel[T](val name: String)(val env: Environment) extends PrimordialDomainValueLabel[T]
 
-trait PrimordialConstantLabel[T] extends ConstantLabel[T] {
-  def apply(v: T): Constant[T] = SimpleConstant(this, v)
+trait PrimordialDomainValueLabel[T] extends DomainValueLabel[T] {
+  def apply(v: T): DomainValue[T] = StandardDomainValue(this, v)
 }
 
-case class SimpleConstant[T](label: ConstantLabel[T], value: T) extends Constant[T]
+private[standard] case class StandardDomainValue[T](label: DomainValueLabel[T], data: T) extends DomainValue[T]
 
-case class SimpleVariableLabel(implicit val env: Environment) extends Named("#Variable") with VariableLabel {
-  def apply(name: String): Variable = apply(name, Sort.K)
+private[standard] case class StandardVariableLabel(implicit val env: Environment) extends Named("#Variable") with VariableLabel {
+  def apply(name: String): Variable = apply((Name(name), Sort.K))
 
-  def apply(nameAndSort: (String, kale.Sort)): Variable = SimpleVariable(nameAndSort._1, nameAndSort._2)
+  def apply(name: String, sort: kale.Sort): Variable = apply((Name(name), sort))
+
+  def apply(name: kale.Name): Variable = apply((name, Sort.K))
+
+  def apply(nameAndSort: (kale.Name, kale.Sort)): Variable = StandardVariable(nameAndSort._1, nameAndSort._2)
 }
 
-case class SimpleVariable(name: String, givenSort: kale.Sort)(implicit env: Environment) extends Variable with pattern.Variable {
+private[standard] case class StandardVariable(name: kale.Name, givenSort: kale.Sort)(implicit env: Environment) extends Variable with kore.Variable {
   override lazy val sort = givenSort
 
   val label = env.Variable
-
-  // FOR KORE
-  override def build(_1: pattern.Name, _2: pattern.Sort): SimpleVariable = {
-    assert(_2.str == "K")
-    SimpleVariable(_1, _2.asInstanceOf[kale.Sort])
-  }
-
-  override def _1: pattern.Name = name
-
-  override def _2: pattern.Sort = pattern.Sort("K")
 }
 
-case class SimpleTruthLabel(implicit val env: Environment) extends NameFromObject with TruthLabel {
+private[standard] case class StandardTruthLabel(implicit val env: Environment) extends NameFromObject with TruthLabel {
   def apply(v: Boolean) = if (v) env.Top else env.Bottom
 }
 
-abstract class Truth(val value: Boolean)(implicit val env: Environment) extends kale.Truth {
+private[standard] abstract class Truth(val data: Boolean)(implicit val env: Environment) extends kale.Truth {
   val label = env.Truth
 }
 
-case class TopInstance(implicit eenv: Environment) extends Truth(true) with kale.Top {
+private[standard] case class TopInstance(implicit eenv: Environment) extends Truth(true) with kale.Top {
   override def get(v: Variable): Option[Term] = None
 
   def asMap = Map()
@@ -54,20 +49,14 @@ case class TopInstance(implicit eenv: Environment) extends Truth(true) with kale
   override def toString: String = "⊤"
 
   def apply(t: Term): Term = t
-
-  // FOR KORE
-  override def build(): pattern.Top = this
 }
 
-case class BottomInstance(implicit eenv: Environment) extends Truth(false) with kale.Bottom {
+private[standard] case class BottomInstance(implicit eenv: Environment) extends Truth(false) with kale.Bottom {
   override def toString: String = "⊥"
-
-  // FOR KORE
-  override def build(): pattern.Bottom = this
 }
 
 
-case class SimpleEqualityLabel(implicit val env: DNFEnvironment) extends Named("=") with EqualityLabel {
+private[standard] case class StandardEqualityLabel(implicit val env: DNFEnvironment) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = {
     if (_1 == _2)
       env.Top
@@ -78,7 +67,7 @@ case class SimpleEqualityLabel(implicit val env: DNFEnvironment) extends Named("
       val Variable = env.Variable
       _1.label match {
         case `Variable` if !_2.contains(_1) => binding(_1.asInstanceOf[Variable], _2)
-        case _ => new Equality(_1, _2)
+        case _ => new Equals(_1, _2)
       }
     }
   }
@@ -90,17 +79,17 @@ case class SimpleEqualityLabel(implicit val env: DNFEnvironment) extends Named("
   }
 }
 
-private[kale] class Equality(val _1: Term, val _2: Term)(implicit env: Environment) extends kale.Equality {
+private[kale] class Equals(val _1: Term, val _2: Term)(implicit env: Environment) extends kale.Equals {
   val label = env.Equality
 
   override def equals(other: Any): Boolean = other match {
-    case that: Equality => this._1 == that._1 && this._2 == that._2
+    case that: Equals => this._1 == that._1 && this._2 == that._2
     case _ => false
   }
 }
 
 
-private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: DNFEnvironment) extends Equality(variable, term) with kale.Binding {
+private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: DNFEnvironment) extends Equals(variable, term) with kale.Binding {
   assert(_1.isInstanceOf[Variable])
 
   def get(v: Variable): Option[Term] = if (_1 == v) Some(_2) else None
@@ -128,10 +117,10 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
     case _ => t
   }
 
-  override def toString: String = super[Equality].toString
+  override def toString: String = super[Equals].toString
 }
 
-case class SimpleRewriteLabel(implicit val env: Environment) extends {
+private[standard] case class StandardRewriteLabel(implicit val env: Environment) extends {
   val name = "=>"
 } with RewriteLabel {
   def apply(_1: Term, _2: Term) = Rewrite(_1, _2)
@@ -141,7 +130,7 @@ case class Rewrite(_1: Term, _2: Term)(implicit env: Environment) extends kale.R
   override val label = env.Rewrite
 }
 
-case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
+private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
   val name = "∧"
 } with AssocWithIdLabel with AndLabel {
 
@@ -213,7 +202,7 @@ case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
   def asMap(t: Substitution): Map[Variable, Term] = t match {
     case `Top` => Map[Variable, Term]()
     case b: Binding => Map(b.variable -> b.term)
-    case s: SubstitutionWithMultipleBindings => s.m
+    case s: MultipleBindings => s.m
   }
 
   object formulasAndNonFormula {
@@ -249,7 +238,7 @@ case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
     def apply(m: Map[Variable, Term]): Substitution = m.size match {
       case 0 => Top
       case 1 => new Binding(m.head._1, m.head._2)
-      case _ => new SubstitutionWithMultipleBindings(m)
+      case _ => new MultipleBindings(m)
     }
 
     def unapply(t: Term): Option[Map[Variable, Term]] = t match {
@@ -305,7 +294,7 @@ case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
   override def construct(l: Iterable[Term]): Term = ???
 }
 
-private[kale] final class AndOfTerms(val terms: Set[Term])(implicit val env: Environment) extends And with Assoc {
+private[standard] final class AndOfTerms(val terms: Set[Term])(implicit val env: Environment) extends And with Assoc {
 
   import env._
 
@@ -370,7 +359,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
   override def asSet: Set[Term] = And.asSet(terms) | And.asSet(s)
 }
 
-final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implicit env: DNFEnvironment) extends And with Substitution with BinaryInfix {
+private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit env: DNFEnvironment) extends And with Substitution with BinaryInfix {
   assert(m.size >= 2)
 
   import env._
@@ -380,7 +369,7 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
   lazy val _2: Substitution = And.substitution(m.tail)
 
   override def equals(other: Any): Boolean = other match {
-    case that: SubstitutionWithMultipleBindings => m == that.m
+    case that: MultipleBindings => m == that.m
     case _ => false
   }
 
@@ -419,7 +408,7 @@ final class SubstitutionWithMultipleBindings(val m: Map[Variable, Term])(implici
   override def asSet: Set[Term] = m.map({ case (k, v) => Equality.binding(k, v) }).toSet
 }
 
-case class DNFOrLabel(implicit val env: Environment) extends Named("∨") with OrLabel {
+private[standard] case class DNFOrLabel(implicit val env: Environment) extends Named("∨") with OrLabel {
 
   import env._
 
@@ -453,7 +442,7 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
 }
 
 // implements: X and (M = (c = X) and (M = Bot implies t) and (not(m = Bot) implies e)
-class IfThenElseLabel(implicit val env: Environment) extends Named("if_then_else") with Label3 {
+private[standard] class IfThenElseLabel(implicit val env: Environment) extends Named("if_then_else") with Label3 {
   def apply(c: Term, t: Term, e: Term) = {
     if (c == env.Top)
       t
@@ -464,6 +453,8 @@ class IfThenElseLabel(implicit val env: Environment) extends Named("if_then_else
   }
 }
 
-class BindMatchLabel(implicit val env: Environment) extends Named("BindMatch") with Label2 {
+case class Name(str: String) extends kale.Name
+
+private[standard] class BindMatchLabel(implicit val env: Environment) extends Named("BindMatch") with Label2 {
   def apply(v: Term, p: Term) = FreeNode2(this, v.asInstanceOf[Variable], p)
 }

@@ -1,11 +1,12 @@
 package org.kframework.kale
 
 import org.kframework.kale.util.HasAtt
-import org.kframework.minikore.interfaces.{pattern, tree}
+import org.kframework.kore
+import org.kframework.kore.implementation.DefaultBuilders
 
 import scala.collection._
 
-trait Label extends MemoizedHashCode with pattern.Symbol {
+trait Label extends MemoizedHashCode with kore.Symbol {
   val env: Environment
 
   val name: String
@@ -22,10 +23,10 @@ trait Label extends MemoizedHashCode with pattern.Symbol {
   override def toString: String = name
 
   // FOR KORE
-  def str: String = name
+  override val str: String = name
 }
 
-trait Term extends pattern.Pattern with HasAtt {
+trait Term extends kore.Pattern with HasAtt {
   def updateAt(i: Int)(t: Term): Term
 
   val label: Label
@@ -58,7 +59,7 @@ trait LeafLabel[T] extends Label {
   def apply(t: T): Term
 
   def unapply(t: Term): Option[T] = t match {
-    case t: Leaf[T] if t.label == this => Some(t.value)
+    case t: Leaf[T] if t.label == this => Some(t.data)
     case _ => None
   }
 }
@@ -69,11 +70,11 @@ trait Leaf[T] extends Term {
   def updateAt(i: Int)(t: Term): Term = throw new IndexOutOfBoundsException("Leaves have no children. Trying to update index _" + i)
 
   val label: LeafLabel[T]
-  val value: T
+  val data: T
 
-  override def toString: String = label + "(" + value.toString + ")"
+  override def toString: String = label + "(" + data.toString + ")"
 
-  def copy(): Term = label(value).updatePostProcess(this)
+  def copy(): Term = label(data).updatePostProcess(this)
 
   def copy(children: Seq[Term]): Term = {
     assert(children.isEmpty)
@@ -81,7 +82,7 @@ trait Leaf[T] extends Term {
   }
 
   override def equals(obj: scala.Any): Boolean = obj match {
-    case that: Leaf[_] => that.label == this.label && that.value == this.value
+    case that: Leaf[_] => that.label == this.label && that.data == this.data
     case _ => false
   }
 }
@@ -103,17 +104,7 @@ trait NodeLabel extends Label {
   protected def constructFromChildren(l: Iterable[Term]): Term
 }
 
-trait Node extends Term with Product with tree.Node {
-  // FOR KORE
-  override def args: Seq[pattern.Pattern] = children.toSeq
-
-  override def build(children: Seq[pattern.Pattern]): pattern.Pattern = {
-    // downcasting to Term, but it will fail somewhere in Label
-    copy(children.asInstanceOf[Seq[Term]])
-  }
-
-  // /FOR KORE
-
+trait Node extends Term with Product {
   val label: NodeLabel
 
   def updateAt(i: Int)(t: Term): Term = if (i < 0 || i >= productArity) {
