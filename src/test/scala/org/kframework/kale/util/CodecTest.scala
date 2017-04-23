@@ -27,18 +27,11 @@ class CodecTest extends FreeSpec {
     override def update(oldValue: Int, term: Term, oldChildren: Option[Iterable[Term]]): Int = oldValue
   }
 
-  implicit def attEncoder(att: Att[_ <: Any]): Encoder[_] = att match {
-    case TestAtt => Encoder.encodeInt.asInstanceOf[Encoder[Any]]
-  }
-
-  import org.kframework.kale.util.Codec._
-
-  val attCodecs: Set[AttCodec[_]] = Set(
+  val codec = new Codec(Set(
     AttCodec(TestAtt, Encoder.encodeInt, Decoder.decodeInt)
-  )
+  ))
 
-  implicit val termDec: Decoder[Term] = termDecoder(env, attCodecs)
-  implicit val termEnc: Encoder[Term] = termEncoder(attCodecs)
+  import codec._
 
   "encode" in {
     val actual = pattern.asJson.noSpaces
@@ -80,5 +73,11 @@ class CodecTest extends FreeSpec {
     val expectedJson = "{\"label\":\"Int\",\"att\":{\"test\":0},\"data\":\"3\"}"
 
     assertEncodings(expectedTerm, expectedJson)
+  }
+
+  "mutable obj encoding" in {
+    val x = new MutableObj(4)
+    assert(x.asJson.noSpaces === "4")
+    assert(decode[MutableObj[Int]]("4") === Right(new MutableObj(4)))
   }
 }

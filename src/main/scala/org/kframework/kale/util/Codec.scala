@@ -2,14 +2,15 @@ package org.kframework.kale.util
 
 import io.circe._
 import io.circe.syntax._
+import org.kframework.kale.Environment
 
-object Codec {
+case class AttCodec[T](att: Att[T], encoder: Encoder[T], decoder: Decoder[T])
+
+class Codec(attCodecs: Set[AttCodec[E] forSome {type E}])(implicit val env: Environment) {
 
   import org.kframework.kale._
 
-  case class AttCodec[T](att: Att[T], encoder: Encoder[T], decoder: Decoder[T])
-
-  implicit def termDecoder(implicit env: Environment, attCodecs: Set[AttCodec[E] forSome {type E}]): Decoder[Term] = {
+  implicit val termDecoder: Decoder[Term] = {
     val nameToAttDecoder: Map[String, AttCodec[E] forSome {type E}] = attCodecs map {
       case d@AttCodec(att, _, _) => (att.toString, d)
     } toMap
@@ -42,7 +43,7 @@ object Codec {
     }
   }
 
-  implicit def termEncoder(implicit attCodecs: Set[AttCodec[E] forSome {type E}]): Encoder[Term] = {
+  implicit val termEncoder: Encoder[Term] = {
 
     val nameToAttDecoder: Map[String, AttCodec[E] forSome {type E}] = attCodecs map {
       case d@AttCodec(att, _, _) => (att.toString, d)

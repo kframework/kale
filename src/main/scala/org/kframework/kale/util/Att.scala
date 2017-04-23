@@ -8,26 +8,9 @@ trait Att[T] {
   def update(oldValue: T, term: Term, oldChildren: Option[Iterable[Term]]): T
 }
 
-object MutableObj {
-  def apply[T](v: T) = new MutableObj[T](v)
-}
 
-final class MutableObj[T](private var v: T) extends Mutable {
-  def set(v: T): Unit = {
-    this.v = v
-  }
 
-  def value(): T = v
 
-  override def toString: String = "MutableObject(" + v + ")"
-
-  override def equals(obj: scala.Any): Boolean = obj match {
-    case that: MutableObj[_] => this.value == that.value
-    case _ => false
-  }
-
-  override def hashCode(): Int = value.hashCode()
-}
 
 trait HasAtt {
   self: Term =>
