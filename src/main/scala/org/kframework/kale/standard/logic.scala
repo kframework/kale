@@ -94,6 +94,7 @@ private[kale] class Equals(val _1: Term, val _2: Term)(implicit env: Environment
 
 
 private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: DNFEnvironment) extends Equals(variable, term) with kale.Binding {
+// TODO(Daejun):
 //  import org.kframework.kale.util.StaticImplicits._
 //  assert(!term.contains(variable))
   assert(_1.isInstanceOf[Variable])
@@ -106,7 +107,7 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
     * Inefficient -- replace with some default version of ApplySubstitution
     */
   def apply(t: Term): Term = t match {
-    case `variable` => term // occur check?
+    case `variable` => term // TODO(Daejun): occur check?
 
     // TODO: Cosmin: move this to .context
     case Node(l: Context1ApplicationLabel, children) =>
@@ -391,7 +392,7 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
     * Inefficient -- replace with some default version of ApplySubstitution
     */
   def apply(t: Term): Term = t match {
-    case v: Variable => m.getOrElse(v, v) // occur check?
+    case v: Variable => m.getOrElse(v, v) // TODO(Daejun): occur check?
     // TODO: Cosmin: move this to .context
     case Node(l: Context1ApplicationLabel, children) =>
       val cs = children.iterator

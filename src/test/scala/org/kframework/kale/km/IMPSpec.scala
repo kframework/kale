@@ -19,6 +19,8 @@ class IMPSpec extends FreeSpec {
 
   val ints = FreeLabel2("_,_")
 
+  // TODO(Daejun): clean up
+
   object Sorts {
     val Pgm = Sort("Pgm")
     val Id = Sort("Id")
@@ -117,6 +119,8 @@ class IMPSpec extends FreeSpec {
 
     assert(unify(plus(E1,E2), plus(E2,E1)) == Equality(E1, E2))
 //  assert(unify(plus(E1,E2), plus(E2,E1)) == Equality(E2, E1)) // TODO: is that ok?
+
+    // TODO(Daejun): put assert
 
     println(
       unify(
