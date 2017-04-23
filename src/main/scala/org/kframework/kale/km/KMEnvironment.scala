@@ -21,6 +21,10 @@ class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasID
     throw new AssertionError("Could not find Signature for label: " + l)
   })
 
+  def targetSort(l: Label): kale.Sort = sorts.get(l).map({signature => signature.target}).getOrElse({
+    throw new AssertionError("Could not find Signature for label: " + l)
+  })
+
   def sorted(l: Label, signature: Signature): Unit = {
     sorts.put(l, signature)
   }
