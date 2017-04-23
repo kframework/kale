@@ -136,5 +136,8 @@ class IMPSpec extends FreeSpec {
     // X = a ∧ Y = a
     // original: X = Y, Y = a
 
+
+    // TODO: negative tests (i.e., occur check)
+
   }
 }
