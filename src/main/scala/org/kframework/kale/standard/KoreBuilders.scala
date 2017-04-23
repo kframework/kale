@@ -19,7 +19,7 @@ class KoreBuilders(implicit val env: Environment) extends kore.Builders with Def
 
   override def SortedVariable(_1: kore.Name, _2: kore.Sort): kore.Variable = StandardVariable(_1.asInstanceOf[Name], _2.asInstanceOf[Sort])
 
-  override def DomainValue(_1: kore.Symbol, _2: kore.Value): kore.DomainValue = {
+  override def DomainValue(_1: kore.Symbol, _2: kore.Value): kore.Pattern = {
     def instantiate[T]() = _1.asInstanceOf[DomainValueLabel[T]].interpret(_2.str)
 
     instantiate()

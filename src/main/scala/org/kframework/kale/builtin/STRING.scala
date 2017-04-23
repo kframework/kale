@@ -7,6 +7,6 @@ trait HasSTRING {
   self: Environment =>
 
   val STRING = new ReferenceLabel[String]("String")(this) {
-    override protected[this] def internalInterpret(s: String): String = "\"" + s + "\""
+    override protected[this] def internalInterpret(s: String): String = s
   }
 }

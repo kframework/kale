@@ -8,13 +8,6 @@ trait PredicateLabel
 trait DomainValueLabel[T] extends LeafLabel[T] {
 
   def apply(v: T): DomainValue[T]
-
-  // FOR KORE
-
-  def interpret(str: String): DomainValue[T] = this (internalInterpret(str))
-
-  // remove this and all descendants if getting rid of Constant.build
-  protected[this] def internalInterpret(s: String): T
 }
 
 trait DomainValue[T] extends Leaf[T] with kore.DomainValue {
@@ -68,7 +61,9 @@ trait Variable extends Leaf[(Name, Sort)] {
   }
 }
 
-trait TruthLabel extends LeafLabel[Boolean] with PredicateLabel
+trait TruthLabel extends LeafLabel[Boolean] with PredicateLabel {
+  override protected[this] def internalInterpret(s: String): Boolean = s.toBoolean
+}
 
 trait Truth extends Leaf[Boolean] {
   val isGround = true

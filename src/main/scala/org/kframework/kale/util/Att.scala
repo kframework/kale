@@ -2,8 +2,6 @@ package org.kframework.kale.util
 
 import org.kframework.kale.Term
 
-import scala.collection._
-
 trait Att[T] {
   def default(): T
 
@@ -35,7 +33,7 @@ trait HasAtt {
   self: Term =>
 
   //  protected[this]
-  var attributes = Map[Att[_], Any]()
+  var attributes: Map[Att[_], _] = Map()
 
   def updateAttributes(oldChildren: Option[Iterable[Term]]): Unit = {
     attributes = (this.attributes map {

@@ -62,6 +62,11 @@ trait LeafLabel[T] extends Label {
     case t: Leaf[T] if t.label == this => Some(t.data)
     case _ => None
   }
+
+  // for KORE
+  def interpret(str: String): Term = this (internalInterpret(str))
+
+  protected[this] def internalInterpret(s: String): T
 }
 
 trait Leaf[T] extends Term {

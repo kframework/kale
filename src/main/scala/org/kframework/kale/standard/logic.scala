@@ -25,6 +25,10 @@ private[standard] case class StandardVariableLabel(implicit val env: Environment
   def apply(name: kale.Name): Variable = apply((name, Sort.K))
 
   def apply(nameAndSort: (kale.Name, kale.Sort)): Variable = StandardVariable(nameAndSort._1, nameAndSort._2)
+
+  override protected[this] def internalInterpret(s: String): (kale.Name, kale.Sort) = s.split(":") match {
+    case Array(name, sort) => (Name(name), Sort(sort))
+  }
 }
 
 private[standard] case class StandardVariable(name: kale.Name, givenSort: kale.Sort)(implicit env: Environment) extends Variable with kore.Variable {
