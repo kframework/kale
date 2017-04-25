@@ -94,9 +94,8 @@ private[kale] class Equals(val _1: Term, val _2: Term)(implicit env: Environment
 
 
 private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: DNFEnvironment) extends Equals(variable, term) with kale.Binding {
-// TODO(Daejun):
-//  import org.kframework.kale.util.StaticImplicits._
-//  assert(!term.contains(variable))
+  // TODO(Daejun): Cosmin: occur check failed due to the context variables
+  // assert(!util.Util.contains(term, variable))
   assert(_1.isInstanceOf[Variable])
 
   def get(v: Variable): Option[Term] = if (_1 == v) Some(_2) else None
@@ -226,6 +225,7 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
       * normalizing
       */
     def apply(_1: Substitution, _2: Substitution): Term = {
+      // TODO(Daejun): exhaustively apply to get a fixpoint, but be careful to guarantee termination
       // TODO: optimize to use the larger substitution as the first one
       val substitutionAndTerms(newSubs2, termsOutOfSubs2: Iterable[Term]) = _1(_2)
 
