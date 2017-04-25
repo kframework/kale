@@ -120,26 +120,40 @@ class IMPSpec extends FreeSpec {
     assert(unify(plus(E1,E2), plus(E2,E1)) == Equality(E1, E2))
 //  assert(unify(plus(E1,E2), plus(E2,E1)) == Equality(E2, E1)) // TODO: is that ok?
 
-    // TODO(Daejun): put assert
+    val a = ID("a")
 
-    println(
+    assert(
       unify(
         div(plus(E1,E2), plus(E2,E1)),
         div(E3, E3)
       )
-    )
-    // E3 = _+_(E1, E1) ∧ E2 = E1
-    // original: E1 = E2, E3 = plus(E1,E2)
-
-    println(
-      unify(
-        ppp(X, Y, ID("a")),
-        ppp(Y, X, X)
+      ==
+      // E3 = _+_(E1, E1) ∧ E2 = E1
+      And(
+        Equality(E3, plus(E1,E2)),
+        Equality(E2, E1)
       )
     )
-    // X = a ∧ Y = a
-    // original: X = Y, Y = a
 
+    assert(
+      unify(
+        ppp(X, Y, a),
+        ppp(Y, X, X)
+      )
+      ==
+      // X = a ∧ Y = a
+      And(
+        Equality(X, a),
+        Equality(Y, a)
+      )
+      /*
+      // original: X = Y, Y = a
+      And(
+        Equality(X, Y),
+        Equality(Y, a)
+      )
+       */
+    )
 
     // TODO: negative tests (i.e., occur check)
 
