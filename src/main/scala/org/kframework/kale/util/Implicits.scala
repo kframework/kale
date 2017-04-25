@@ -36,7 +36,7 @@ class Implicits(implicit val env: StandardEnvironment) extends StaticImplicits {
 trait StaticImplicits {
 
   implicit class StaticRichTerm(t: Term) {
-    def contains(subterm: Term): Boolean = if (t == subterm) true else t.children.exists(_.contains(subterm))
+    def contains(subterm: Term): Boolean = Util.contains(t, subterm) // if (t == subterm) true else t.children.exists(_.contains(subterm))
   }
 
   implicit class StaticRichAssocLabel(label: AssocLabel) {
