@@ -83,6 +83,7 @@ class IMPSpec extends FreeSpec {
 
   env.seal()
 
+  // TODO(Daejun): move to unify test
   val unify = new MultiSortedUnifier(env)
 
   "first test" in {
