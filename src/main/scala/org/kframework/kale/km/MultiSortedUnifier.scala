@@ -11,7 +11,8 @@ class MultiSortedUnifier(val env: KMEnvironment) extends kale.MatcherOrUnifier {
     /*
       This sorted unifier does the occur-check, even if org.kframework.kale.standard.StandardEqualityLabel.apply also does it.
       Note that StandardEqualityLabel.apply simply returns Equals instead of Bottom when the occur-check is failed,
-      which is more flexible in the sense that the returned Equals could be either reduced to Bottom later by external solvers (e.g., z3), or used in other ways.
+      which is more flexible in the sense that the returned Equals could be either reduced to Bottom later by external solvers (e.g., z3),
+      or used in other ways (e.g., infinite trace solvers).
      */
     def f(solver: Apply)(a: Variable, b: Term) =
       if(a == b)
