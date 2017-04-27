@@ -33,4 +33,6 @@ object Util {
   }
 
   def moveRewriteSymbolToTop(t: Term)(implicit env: Environment): Rewrite = env.Rewrite(toRewriteLHS(t), toRewriteRHS((t))).asInstanceOf[Rewrite]
+
+  def contains(t: Term, subterm: Term): Boolean = if (t == subterm) true else t.children.exists(contains(_,subterm))
 }

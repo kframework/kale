@@ -1,106 +1,81 @@
 package org.kframework.kale.km
 
-import org.kframework.kale.IMP.env
 import org.kframework.kale._
 import org.kframework.kale.standard.{FreeLabel2, FreeLabel3, Sort}
-import org.kframework.kale.util.Implicits
 import org.scalatest.FreeSpec
-
-import scala.collection.Seq
 
 class IMPSpec extends FreeSpec {
   implicit val env = new KMEnvironment()
-
   import env._
 
-  val signature = new IMPCommonSignature()
-
-  import signature._
-
-  val ints = FreeLabel2("_,_")
-
-  // TODO(Daejun): clean up
-
-  object Sorts {
-    val Pgm = Sort("Pgm")
+  // sort delcarations
+  import Sort._
+  object ImpSorts {
     val Id = Sort("Id")
     val Ids = Sort("Ids")
     val Int = Sort("Int")
+    val IntList = Sort("IntList")
+    //
     val AExp = Sort("AExp")
     val BExp = Sort("BExp")
     val Block = Sort("Block")
     val Stmt = Sort("Stmt")
+    val Pgm = Sort("Pgm")
+    //
+    val Cell = Sort("Cell")
     val StateMap = Sort("StateMap")
     val KSeq = Sort("KSeq")
-    val Cell = Sort("Cell")
-    val K = Sort("K")
-    val IntList = Sort("IntList")
   }
+  import ImpSorts._
 
-  {
-    import Sorts._
+  // sortify builtin symbols
+  sorted(ID, Id)
+  sorted(INT, Int)
 
-    sorted(ID, Id)
+  // import/sortify common symbols
+  val signature = new IMPCommonSignature()
+  import signature._
+  sorted(div, AExp, AExp, AExp)
+  sorted(plus, AExp, AExp, AExp)
+  sorted(leq, AExp, AExp, BExp)
+  sorted(not, BExp, BExp)
+  sorted(and, BExp, BExp, BExp)
+  sorted(emptyBlock, Block)
+  sorted(block, Stmt, Block)
+  sorted(assign, Id, AExp, Stmt)
+  sorted(ifthenelse, BExp, Block, Block, Stmt)
+  sorted(whiledo, BExp, Block, Stmt)
+  sorted(seq, Stmt, Stmt, Stmt)
+  sorted(program, Ids, Stmt, Pgm)
+  sorted(T, Cell, Cell, Cell)
+  sorted(k, K, Cell)
+  sorted(state, StateMap, Cell)
+  sorted(varBinding, Id, Int, StateMap)
+  sorted(emptyIntList, IntList)
+  sorted(emptyStates, StateMap)
+  sorted(statesMap, StateMap, StateMap, StateMap)
+  sorted(emptyk, K)
 
-    sorted(INT, Int)
-
-    sorted(div, AExp, AExp, AExp)
-
-    sorted(plus, AExp, AExp, AExp)
-
-    sorted(leq, AExp, AExp, BExp)
-
-    sorted(not, BExp, BExp)
-
-    sorted(and, BExp, BExp, BExp)
-
-    sorted(emptyBlock, Block)
-
-    sorted(block, Stmt, Block)
-
-    sorted(assign, Id, AExp, Stmt)
-
-    sorted(ifthenelse, BExp, Block, Block, Stmt)
-
-    sorted(whiledo, BExp, Block, Stmt)
-
-    sorted(seq, Stmt, Stmt, Stmt)
-
-    sorted(program, Ids, Stmt, Pgm)
-
-    sorted(T, Cell, Cell, Cell)
-    sorted(k, K, Cell)
-    sorted(state, StateMap, Cell)
-    sorted(varBinding, Id, Int, StateMap)
-    sorted(emptyIntList, IntList)
-    sorted(emptyStates, StateMap)
-    sorted(statesMap, StateMap, StateMap, StateMap)
-    sorted(emptyk, K)
-
-    sorted(ints, IntList, IntList, IntList)
-  }
-
-
-  val kseq = FreeLabel2("_~>_")
-  sorted(kseq, Sorts.K, Sorts.KSeq, Sorts.KSeq)
-
+  // symbol declarations
+  val ints = FreeLabel2("_,_"); sorted(ints, IntList, IntList, IntList)
+  val kseq = FreeLabel2("_~>_"); sorted(kseq, K, KSeq, KSeq)
   // TODO: testing purpose only
-  val ppp = FreeLabel3("ppp")
-  sorted(ppp, Sorts.Id, Sorts.Id, Sorts.Id, Sorts.K)
+  val ppp = FreeLabel3("ppp"); sorted(ppp, Id, Id, Id, K)
 
-  val X = Variable("X", Sorts.Id)
-  val Y = Variable("Y", Sorts.Id)
-  val I = Variable("I", Sorts.Int)
-  val I1 = Variable("I1", Sorts.Int)
-  val I2 = Variable("I2", Sorts.Int)
-  val S = Variable("S", Sorts.StateMap)
-  val SO = Variable("SO", Sorts.StateMap)
-  val R = Variable("R", Sorts.KSeq)
+  // variable declarations
+  val X = Variable("X", Id)
+  val Y = Variable("Y", Id)
+  val I = Variable("I", Int)
+  val I1 = Variable("I1", Int)
+  val I2 = Variable("I2", Int)
+  val E1 = Variable("E1", AExp)
+  val E2 = Variable("E2", AExp)
+  val E3 = Variable("E3", AExp)
+  val S = Variable("S", StateMap)
+  val SO = Variable("SO", StateMap)
+  val R = Variable("R", KSeq)
 
-  val E1 = Variable("E1", Sorts.AExp)
-  val E2 = Variable("E2", Sorts.AExp)
-  val E3 = Variable("E3", Sorts.AExp)
-
+  // semantics
   val rules = Set(
     T(k(kseq(Rewrite(X, I), R)), state(statesMap(varBinding(X, I), SO))),
     T(k(kseq(Rewrite(div(I1, I2), intDiv(I1, I2)), R)), S)
@@ -108,6 +83,7 @@ class IMPSpec extends FreeSpec {
 
   env.seal()
 
+  // TODO(Daejun): move to unify test
   val unify = new MultiSortedUnifier(env)
 
   "first test" in {
@@ -120,28 +96,53 @@ class IMPSpec extends FreeSpec {
     assert(unify(plus(E1,E2), plus(E2,E1)) == Equality(E1, E2))
 //  assert(unify(plus(E1,E2), plus(E2,E1)) == Equality(E2, E1)) // TODO: is that ok?
 
-    // TODO(Daejun): put assert
+    val a = ID("a")
 
-    println(
+    assert(
+      // q(p(x,y), p(y,x)) =?= q(z,z)
       unify(
         div(plus(E1,E2), plus(E2,E1)),
         div(E3, E3)
       )
-    )
-    // E3 = _+_(E1, E1) ∧ E2 = E1
-    // original: E1 = E2, E3 = plus(E1,E2)
-
-    println(
-      unify(
-        ppp(X, Y, ID("a")),
-        ppp(Y, X, X)
+      ==
+      // E3 = _+_(E1, E1) ∧ E2 = E1
+      And(
+        Equality(E3, plus(E1,E2)),
+        Equality(E2, E1)
       )
     )
-    // X = a ∧ Y = a
-    // original: X = Y, Y = a
 
+    assert(
+      // p(x,y,a) =?= p(y,x,x)
+      unify(
+        ppp(X, Y, a),
+        ppp(Y, X, X)
+      )
+      ==
+      // X = a ∧ Y = a
+      And(
+        Equality(X, a),
+        Equality(Y, a)
+      )
+      /*
+      // original: X = Y, Y = a
+      And(
+        Equality(X, Y),
+        Equality(Y, a)
+      )
+       */
+    )
 
-    // TODO: negative tests (i.e., occur check)
-
+    // negative test
+    assert(
+      // p(x,y) =?= x
+      unify(
+        plus(E1, E2),
+        E1
+      )
+      ==
+      // unification failure
+      Bottom
+    )
   }
 }

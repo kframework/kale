@@ -54,7 +54,7 @@ trait MatcherOrUnifier extends transformer.Binary.Apply {
   }
 
   object VarRight extends ProcessingFunction[Apply] with TypedWith[Term, Variable] {
-    def f(solver: Apply)(a: Term, b: Variable) = Equality(b.asInstanceOf[Variable], a)
+    def f(solver: Apply)(a: Term, b: Variable) = VarLeft.f(solver)(b,a) // Equality(b.asInstanceOf[Variable], a)
   }
 
   object Constants extends ProcessingFunction[Apply] with TypedWith[DomainValue[_], DomainValue[_]] {
