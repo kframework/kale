@@ -8,16 +8,10 @@ class MultiSortedUnifier(val env: KMEnvironment) extends kale.MatcherOrUnifier {
   import env._
 
   object SortedVarLeft extends ProcessingFunction[Apply] with TypedWith[Variable, Term] {
-    /*
-      This sorted unifier does the occur-check, even if org.kframework.kale.standard.StandardEqualityLabel.apply also does it.
-      Note that StandardEqualityLabel.apply simply returns Equals instead of Bottom when the occur-check is failed,
-      which is more flexible in the sense that the returned Equals could be either reduced to Bottom later by external solvers (e.g., z3),
-      or used in other ways (e.g., infinite trace solvers).
-     */
     def f(solver: Apply)(a: Variable, b: Term) =
       if(a == b)
         Top
-      else if(a.sort == b.sort && !util.Util.contains(b,a))
+      else if(a.sort == b.sort)
         VarLeft.f(solver)(a,b)
       else
         Bottom
@@ -25,12 +19,6 @@ class MultiSortedUnifier(val env: KMEnvironment) extends kale.MatcherOrUnifier {
 
   object SortedVarRight extends ProcessingFunction[Apply] with TypedWith[Term, Variable] {
     def f(solver: Apply)(a: Term, b: Variable) = SortedVarLeft.f(solver)(b,a)
-//      if(a == b)
-//        Top
-//      else if(a.sort == b.sort && !util.Util.contains(b,a))
-//        VarRight.f(solver)(a,b)
-//      else
-//        Bottom
   }
 
   import kale.standard._

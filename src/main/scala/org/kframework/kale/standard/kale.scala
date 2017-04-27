@@ -6,7 +6,9 @@ import org.kframework.kore.Pattern
 
 import scala.language.implicitConversions
 
-trait FreeLabel
+trait Constructor
+
+trait FreeLabel extends Constructor
 
 case class Sort(name: String) extends kale.Sort
 

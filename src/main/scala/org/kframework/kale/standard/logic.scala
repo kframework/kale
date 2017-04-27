@@ -71,6 +71,7 @@ private[standard] case class StandardEqualityLabel(implicit val env: DNFEnvironm
       val Variable = env.Variable
       _1.label match {
         case `Variable` if !_2.contains(_1) => binding(_1.asInstanceOf[Variable], _2)
+        case `Variable` if _2.containsInConstructor(_1) => env.Bottom
         case _ => new Equals(_1, _2)
       }
     }
