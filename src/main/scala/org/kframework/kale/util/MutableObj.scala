@@ -17,6 +17,8 @@ final class MutableObj[T](private var v: T) extends Mutable {
   }
 
   override def hashCode(): Int = value.hashCode()
+
+  override def clone(): MutableObj[T] = new MutableObj[T](v)
 }
 
 object MutableObj {

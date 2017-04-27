@@ -20,11 +20,9 @@ class CodecTest extends FreeSpec {
   val pattern = foo(INT(3), STRING("bar"))
 
   object TestAtt extends Att[Int] {
-    override def default(): Int = 0
-
     override def toString = "test"
 
-    override def update(oldValue: Int, term: Term, oldChildren: Option[Iterable[Term]]): Int = oldValue
+    override def update(term: Term, oldTerm: Option[Term]): Int = 0
   }
 
   val codec = new Codec(Set(
