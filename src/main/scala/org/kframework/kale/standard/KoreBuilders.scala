@@ -57,8 +57,8 @@ class KoreBuilders(implicit val env: Environment) extends kore.Builders with Def
 }
 
 trait DefaultOuterBuilders {
-  def Definition(modules: Seq[kore.Module], att: kore.Attributes): kore.Definition = {
-    DefaultBuilders.Definition(modules, att)
+  def Definition(att: kore.Attributes, modules: Seq[kore.Module]): kore.Definition = {
+    DefaultBuilders.Definition(att, modules)
   }
 
   def Module(name: kore.ModuleName, sentences: Seq[kore.Sentence], att: kore.Attributes): kore.Module =
