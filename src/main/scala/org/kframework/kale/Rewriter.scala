@@ -74,9 +74,19 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
           val (sub, terms) = And.asSubstitutionAndTerms(u)
           val constraints = And(terms + Top)
           val newRhs = substitutioner(sub)(rhs)
-          And(newRhs, constraints)
+          val next = And(newRhs, constraints)
+          newRhs match {
+            case newRhs:And =>
+              if (sat(And(constraints, newRhs.predicates)))
+                next
+              else
+                Bottom
+            case _ => next
+          }
         })
         res
     }))
   }
+
+  def sat(t: Term): Boolean = true // TODO(Daejun): implement
 }
