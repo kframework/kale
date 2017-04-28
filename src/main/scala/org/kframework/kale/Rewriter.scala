@@ -70,8 +70,12 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
     Or(rules.map(r => (doMatch(r._1, obj), r._2)).flatMap({
       case (Bottom, _) => Set[Term]()
       case (or, rhs) =>
-        val substitutions: Set[Substitution] = Or.asSet(or).asInstanceOf[Set[Substitution]]
-        val res = substitutions.map(substitutioner).map(_ (rhs))
+        val res = Or.asSet(or).map(u => {
+          val (sub, terms) = And.asSubstitutionAndTerms(u)
+          val constraints = And(terms + Top)
+          val newRhs = substitutioner(sub)(rhs)
+          And(newRhs, constraints)
+        })
         res
     }))
   }
