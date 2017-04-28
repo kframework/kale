@@ -3,6 +3,8 @@ package org.kframework.kale
 import org.kframework.kore.implementation.DefaultBuilders
 import org.kframework.{kale, kore}
 
+import scala.collection.Set
+
 trait DomainValueLabel[T] extends LeafLabel[T] {
 
   def apply(v: T): DomainValue[T]
@@ -79,6 +81,7 @@ trait Bottom extends Truth with kore.Bottom
 trait AndLabel extends AssocCommWithIdLabel {
   override val identity = env.Top
   assert(identity != null)
+  def asSubstitutionAndTerms(t: Term): (Substitution, Set[Term])
 }
 
 trait OrLabel extends AssocCommWithIdLabel {
