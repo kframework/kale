@@ -70,12 +70,12 @@ class RewriteTest extends FreeSpec {
     val t1 = p(X)
 
     val And.substitutionAndTerms(sub1, terms1) = l
-    val xx = l.asInstanceOf[And].nonFormula
-    val yy = l.asInstanceOf[And].formulas
+    val xx = l.asInstanceOf[And].nonPredicates
+    val yy = l.asInstanceOf[And].predicates
 
     val ll = And(terms1)
-    val xxx = ll.asInstanceOf[And].nonFormula
-    val yyy = ll.asInstanceOf[And].formulas
+    val xxx = ll.asInstanceOf[And].nonPredicates
+    val yyy = ll.asInstanceOf[And].predicates
 
 
     println(rewriter(Set(r1)).searchStep(t1))
