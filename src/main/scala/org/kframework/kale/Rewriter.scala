@@ -1,17 +1,16 @@
 package org.kframework.kale
 
 import org.kframework.kale.transformer.Binary
-import org.kframework.kale.transformer.Binary.Apply
 
 import scala.collection.immutable.TreeSet
 import scala.collection.{Set, mutable}
 
 object Rewriter {
-  def apply(substitutioner: Substitution => SubstitutionApply, matcher: Binary.Apply, env: Environment)(rules: Set[Rewrite]) =
+  def apply(substitutioner: Substitution => (Term => Term), matcher: MatcherOrUnifier, env: Environment)(rules: Set[_ <: Rewrite]) =
     new Rewriter(substitutioner, matcher, rules, env)
 }
 
-class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binary.Apply, val rules: Set[Rewrite], val env: Environment) {
+class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment) {
   assert(env.isSealed)
   assert(rules != null)
 
@@ -72,7 +71,8 @@ class Rewriter(substitutioner: Substitution => SubstitutionApply, doMatch: Binar
       case (Bottom, _) => Set[Term]()
       case (or, rhs) =>
         val substitutions: Set[Substitution] = Or.asSet(or).asInstanceOf[Set[Substitution]]
-        substitutions.map(substitutioner).map(_ (rhs))
+        val res = substitutions.map(substitutioner).map(_ (rhs))
+        res
     }))
   }
 }

@@ -1,13 +1,15 @@
 package org.kframework.kale
 
-import org.kframework.kale.context.{AnywhereContextApplicationLabel, PatternContextApplicationLabel}
+import org.kframework.kale.standard.Bottomize
+import org.kframework.kore
 
 import scala.collection.mutable
 
-/**
-  * Created by cos on 3/15/17.
-  */
-case class Environment() {
+trait Environment extends KORELabels with Bottomize {
+  trait HasEnvironment {
+    val env = Environment.this
+  }
+
   val uniqueLabels = mutable.Map[String, Label]()
 
   def labels = uniqueLabels.values.toSet
@@ -31,54 +33,25 @@ case class Environment() {
 
   def label(labelName: String): Label = uniqueLabels(labelName)
 
+  def sort(l: Label, children: Seq[Term]): Sort
+
   override def toString = {
     "nextId: " + uniqueLabels.size + "\n" + uniqueLabels.mkString("\n")
   }
-
-  implicit private val tthis = this
-
-  val Variable = VariableLabel()
-
-  val Truth = TruthLabel()
-
-  val Hole = Variable("☐")
-
-  val Top: Truth with Substitution = TopInstance()
-  val Bottom: Truth = BottomInstance()
-
-  val Equality = EqualityLabel()
-  val And = AndLabel()
-  val Or = OrLabel()
-  val Rewrite = RewriteLabel()
-
-  val AnywhereContext = AnywhereContextApplicationLabel()
-  val CAPP = PatternContextApplicationLabel("CAPP")
-
-  val builtin = new Builtins()(this)
-
-  def bottomize(_1: Term)(f: => Term): Term = {
-    if (Bottom == _1)
-      Bottom
-    else
-      f
-  }
-
-  def bottomize(_1: Term, _2: Term)(f: => Term): Term = {
-    if (Bottom == _1 || Bottom == _2)
-      Bottom
-    else
-      f
-  }
-
-  def bottomize(terms: Term*)(f: => Term): Term = {
-    if (terms.contains(Bottom))
-      Bottom
-    else
-      f
-  }
-
-  def renameVariables[T <: Term](t: T): T = {
-    val rename = And.substitution((Util.variables(t) map (v => (v, v.label(v.name + Math.random().toInt)))).toMap)
-    rename(t).asInstanceOf[T]
-  }
 }
+
+trait KORELabels {
+  // Constants
+  val Bottom: Truth with kore.Bottom
+  val Top: Truth with Substitution with kore.Top
+
+  // Labels
+  val Variable: VariableLabel
+  val And: AndLabel
+  val Or: OrLabel
+  val Rewrite: RewriteLabel
+  val Equality: EqualityLabel
+  val Truth: TruthLabel
+  val Not: NotLabel
+}
+

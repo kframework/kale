@@ -1,5 +1,7 @@
-package kale
+package org.kframework.kale
 
+import org.kframework.kale.standard._
+import org.kframework.kale.util.Implicits
 import org.scalatest.FreeSpec
 
 /*
@@ -74,47 +76,123 @@ endmodule
 
  */
 
-//class ImpSpec extends FreeSpec {
-//  "IMP" - {
-//    object IMP extends Module {
-//      override val name = "IMP"
+
+
+object IMP {
+  implicit val env = new StandardEnvironment
+
+  val signature = new IMPCommonSignature()
+  import signature._
+
+  import env._
+  import builtin._
+
+  val ints = new standard.AssocWithIdListLabel("_,_", emptyIntList())
+  val kseq = new standard.AssocWithIdListLabel("_~>_", emptyk())
+
+  case class isSort(label: LeafLabel[_])(implicit val env: Environment) extends {
+    val name: String = "is" + label.name
+  } with FunctionLabel1 {
+    def f(_1: Term): Option[Term] = Some(Truth(_1.label == label))
+  }
+
+  val isInt = isSort(INT)
+
+  //  // AExp
+  //  rule <k> X:Id => I ...</k> <state>... X |-> I ...</state>
+  //  rule I1:Int / I2:Int => I1 /Int I2  when I2 =/=Int 0
+  //  rule I1:Int + I2:Int => I1 +Int I2
+  //    // BExp
+  //    rule I1:Int <= I2:Int => I1 <=Int I2
+  //    rule ! T:Bool => notBool T
+  //    rule true && B => B
+  //  rule false && _ => false
+  //  // Block
+  //  rule {} => .K   [structural]
+  //  rule {S} => S  [structural]
+  //  // Stmt
+  //  rule <k> X = I:Int; => .K ...</k> <state>... X |-> `_ => I` ...</state>
+  //  rule S1::Stmt S2::Stmt => S1 ~> S2  [structural]
+  //  rule if (true)  S else _ => S
+  //  rule if (false) _ else S => S
+  //  rule while (B) S => if (B) {S while (B) S} else {}  [structural]
+  //  // Pgm
+  //  rule <k> int `X,Xs => Xs`;_ </k> <state> Rho:Map `.Map => X|->0` </state>
+  //  when notBool `X in keys(Rho)`
+  //  rule int .Ids; S => S  [structural]
+
+
+  val X = Variable("X")
+  val I = Variable("I")
+  val I1 = Variable("I1")
+  val I2 = Variable("I2")
+  val S = Variable("S")
+  val SO = Variable("SO")
+  val R = Variable("R")
+
+  val implicits = new Implicits()
+  import implicits._
+
+  val rules = Set(
+    T(k(kseq(Rewrite(X, I), R)), state(statesMap(varBinding(X, I), SO))),
+    T(k(kseq(Rewrite(div(And(I1, isInt(I1)), And(I2, isInt(I2))), intDiv(I1, I2)), R)), S)
+  ) map (t => Rewrite(lhs(t), rhs(t)))
+
+  ID("junk")
+
+  env.seal()
+
+  val matcher = SingleSortedMatcher()
+  val rewrite = Rewriter(SubstitutionWithContext(_), matcher, env)(rules)
+}
+
+//object IMP {
+//  class Production0(val name: String) extends Label0 with InModule
+//  class Production1(val name: String) extends Label1 with InModule
+//  class Production2(val name: String) extends Label2 with InModule with SimpleNode2Label
+//  class Production3(val name: String) extends Label3 with InModule
 //
-//      class Production0(val name: String) extends Label0 with InModule
-//      class Production1(val name: String) extends Label1 with InModule
-//      class Production2(val name: String) extends Label2 with InModule with SimpleNode2Label
-//      class Production3(val name: String) extends Label3 with InModule
+//  object + extends Production2("+")
+//  object - extends Production2("-")
+//  object <= extends Production1("<=")
+//  object ! extends Production1("!")
+//  object && extends Production2("&&")
 //
-//      object + extends Production2("+")
-//      object - extends Production2("-")
-//      object <= extends Production1("<=")
-//      object ! extends Production1("!")
-//      object && extends Production2("&&")
-//
-//      object Block extends Production1("{_}")
-//      object Assign extends Production1("_=_;")
-//      object IfThenElse extends Production3("if_then_else_")
-//      object Pgm extends Production2("int _ ; _")
+//  object Block extends Production1("{_}")
+//  object Assign extends Production1("_=_;")
+//  object IfThenElse extends Production3("if_then_else_")
+//  object Pgm extends Production2("int _ ; _")
 //
 //
-//      val IdsModule = new ASSOC_LIST("_,_", new Production0(".Ids").apply())
-//      val ids = IdsModule.opLabel
-//      val emptyIds = IdsModule.unit
+//  val IdsModule = new ASSOC_LIST("_,_", new Production0(".Ids").apply())
+//  val ids = IdsModule.opLabel
+//  val emptyIds = IdsModule.unit
 //
-//      val StmtsModule = new ASSOC_LIST("_;_", new Production0(".Stmts").apply())
-//      val stmts = StmtsModule.op
-//      val emptyStmts = StmtsModule.unit
+//  val StmtsModule = new ASSOC_LIST("_;_", new Production0(".Stmts").apply())
+//  val stmts = StmtsModule.op
+//  val emptyStmts = StmtsModule.unit
 //
-//      object TCell extends Production2("<T>")
-//      object kCell extends Production1("<k>")
-//      object stateCell extends Production1("<state>")
-//      val StateModule = new MAP(" ", "|->", new Production0(".State").apply())
-//      val state = StateModule.op
-//      val emptyState = StateModule.unit
-//      override def unify(a: Term, b: Term): Term = ???
-//    }
-//
-//    import IMP._
-//
-//    println(TCell(kCell(KSEQ.unit), stateCell(emptyState)))
-//  }
+//  object TCell extends Production2("<T>")
+//  object kCell extends Production1("<k>")
+//  object stateCell extends Production1("<state>")
+//  val StateModule = new MAP(" ", "|->", new Production0(".State").apply())
+//  val state = StateModule.op
+//  val emptyState = StateModule.unit
+//  override def unify(a: Term, b: Term): Term = ???
 //}
+
+class ImpSpec extends FreeSpec {
+  "IMP" - {
+
+    import IMP._
+    import IMP.env._
+    import IMP.signature._
+    import implicits._
+
+    val term = T(k(ID("foo")), state(varBinding(ID("foo"), 5)))
+
+    println(rewrite.searchStep(term))
+
+    //    println(TCell(kCell(KSEQ.unit), stateCell(emptyState)))
+  }
+}

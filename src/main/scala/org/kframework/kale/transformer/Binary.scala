@@ -1,40 +1,56 @@
 package org.kframework.kale.transformer
 
-import org.kframework.kale.{Environment, Label, Term, Util}
-
-import scala.collection.Set
+import org.kframework.kale._
 
 object Binary {
 
-  trait ProcessingFunction[Left <: Term, Right <: Term, Result <: Term] extends (State => ((Term, Term) => Term)) {
-    def apply(solver: State) = { (a: Term, b: Term) => f(solver)(a.asInstanceOf[Left], b.asInstanceOf[Right]) }
-
-    def f(solver: State)(a: Left, b: Right): Result
+  trait TypedWith[L <: Term, R <: Term] {
+    type Left = L
+    type Right = R
   }
 
-  trait State {
-    def apply(left: Term, right: Term): Term
-  }
 
   /**
     * f specifies how to process a pair of terms with labels (leftLabel, rightLabel).
     * f is automatically hooked and applied via Apply.
     */
-  case class Piece(leftLabel: Label, rightLabel: Label, f: State => (Term, Term) => Term)
+  trait ProcessingFunction[-SpecificSolver <: Apply] extends (SpecificSolver => ((Term, Term) => Term)) {
+    type Left <: Term
+    type Right <: Term
 
-  class Apply(pieces: Set[Piece], env: Environment) extends State {
+    def apply(solver: SpecificSolver): (Term, Term) => Term = {
+      (a: Term, b: Term) => f(solver)(a.asInstanceOf[Left], b.asInstanceOf[Right])
+    }
+
+    def f(solver: SpecificSolver)(a: Left, b: Right): Term
+  }
+
+  trait Apply extends ((Term, Term) => Term) {
+    val env: Environment
     assert(env.isSealed)
 
-    import env._
+    type ProcessingFunctions = PartialFunction[(Label, Label), ProcessingFunction[this.type]]
 
-    val arr: Array[Array[(Term, Term) => Term]] =
-      (0 until env.labels.size + 1).map({ i =>
-        new Array[(Term, Term) => (Term)](env.labels.size + 1)
-      }).toArray
+    protected def definePartialFunction(f: ProcessingFunctions): ProcessingFunctions = f
 
-    for (p <- pieces) {
-      assert(arr(p.leftLabel.id)(p.rightLabel.id) == null)
-      arr(p.leftLabel.id)(p.rightLabel.id) = p.f(this)
+    protected def processingFunctions: ProcessingFunctions = PartialFunction.empty
+
+    protected lazy val arr: Array[Array[(Term, Term) => Term]] = {
+      val pf = processingFunctions.lift
+
+      val arr: Array[Array[(Term, Term) => Term]] =
+        (0 until env.labels.size + 1).map({ i =>
+          new Array[(Term, Term) => (Term)](env.labels.size + 1)
+        }).toArray
+
+      for (left <- env.labels) {
+        for (right <- env.labels) {
+          assert(arr(left.id)(right.id) == null)
+          val f = pf((left, right)).map(_(this)).orNull
+          arr(left.id)(right.id) = f
+        }
+      }
+      arr
     }
 
     def apply(left: Term, right: Term): Term = {
@@ -47,14 +63,13 @@ object Binary {
         val res = if (u != null)
           u(left, right)
         else
-          Bottom
+          env.Bottom
 
-        assert(!(left == right && res == Bottom), left.toString)
+        assert(!(left == right && res == env.Bottom), left.toString)
         res
       } catch {
         case _: IndexOutOfBoundsException => throw new AssertionError("No processing function registered for: " + left + " and " + right)
       }
     }
   }
-
 }
