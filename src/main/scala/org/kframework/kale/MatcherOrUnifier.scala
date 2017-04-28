@@ -64,15 +64,15 @@ trait MatcherOrUnifier extends transformer.Binary.Apply {
 
   object AndTerm extends ProcessingFunction[Apply] with TypedWith[And, Term] {
     override def f(solver: Apply)(a: And, b: Term): Term = {
-      val solution = solver(a.nonFormula.get, b)
-      And(a.formulas, solution)
+      val solution = solver(a.nonPredicates.get, b)
+      And(a.predicates, solution)
     }
   }
 
   object TermAnd extends ProcessingFunction[Apply] with TypedWith[Term, And] {
     override def f(solver: Apply)(a: Term, b: And): Term = {
-      val solution = solver(a, b.nonFormula.get)
-      And(solution, b.formulas)
+      val solution = solver(a, b.nonPredicates.get)
+      And(solution, b.predicates)
     }
   }
 

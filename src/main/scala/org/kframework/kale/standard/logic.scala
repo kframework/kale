@@ -150,7 +150,7 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
     if (_1 == Bottom || _2 == Bottom)
       Bottom
     else {
-      apply(Set(_1,_2))
+      apply(Set(_1, _2))
     }
     /*
       val substitutionAndTerms(sub1, terms1) = _1
@@ -214,9 +214,9 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
 
   object formulasAndNonFormula {
     def unapply(t: Term): Some[(Term, Option[Term])] = t match {
-      case tt: And => Some(tt.formulas, tt.nonFormula)
-      case tt if tt.label.isInstanceOf[PredicateLabel] => Some(tt, None)
-      case tt if !tt.label.isInstanceOf[PredicateLabel] => Some(Top, Some(tt))
+      case tt: And => Some(tt.predicates, tt.nonPredicates)
+      case tt if tt.isPredicate => Some(tt, None)
+      case tt if !tt.isPredicate => Some(Top, Some(tt))
     }
   }
 
@@ -306,10 +306,10 @@ private[standard] final class AndOfTerms(val terms: Set[Term])(implicit val env:
 
   import env._
 
-  lazy val formulas: Term = And(terms filter (_.label.isInstanceOf[PredicateLabel]))
+  lazy val predicates: Term = And(terms filter (_.isPredicate))
 
-  lazy val nonFormula: Option[Term] = {
-    val nonFormulas = terms filter (!_.label.isInstanceOf[PredicateLabel])
+  lazy val nonPredicates: Option[Term] = {
+    val nonFormulas = terms filter (!_.isPredicate)
     if (nonFormulas.size > 1) {
       throw new NotImplementedError("only handle at most one term for now")
     }
@@ -343,15 +343,15 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
 
   val label = And
 
-  lazy val formulas: Term = terms match {
-    case a: AndOfTerms => And(s, a.formulas)
-    case t if t.label.isInstanceOf[PredicateLabel] => And(s, t)
+  lazy val predicates: Term = terms match {
+    case a: AndOfTerms => And(s, a.predicates)
+    case t if t.isPredicate => And(s, t)
     case _ => s
   }
 
-  lazy val nonFormula: Option[Term] = terms match {
-    case a: AndOfTerms => a.nonFormula
-    case t if !t.label.isInstanceOf[PredicateLabel] => Some(t)
+  lazy val nonPredicates: Option[Term] = terms match {
+    case a: AndOfTerms => a.nonPredicates
+    case t if !t.isPredicate => Some(t)
     case _ => None
   }
 
@@ -410,8 +410,8 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
 
   override def toString: String = super[BinaryInfix].toString
 
-  override val formulas: Term = this
-  override val nonFormula: Option[Term] = None
+  override val predicates: Term = this
+  override val nonPredicates: Option[Term] = None
 
   override def asSet: Set[Term] = m.map({ case (k, v) => Equality.binding(k, v) }).toSet
 }
@@ -440,6 +440,8 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
   lazy val _1: Term = terms.head
   lazy val _2 = Or(terms.tail.toSeq)
   override val assocIterable: Iterable[Term] = terms
+
+  override lazy val isPredicate: Boolean = terms.forall(_.isPredicate)
 
   override def equals(other: Any): Boolean = other match {
     case that: OrWithAtLeastTwoElements => this.terms == that.terms
