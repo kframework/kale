@@ -80,6 +80,8 @@ case class MapImplementation(label: MapLabel, map: collection.Map[Term, Term], u
 
   override def _1: Term = unindexable.headOption.getOrElse(map.head._2)
 
+  override lazy val isPredicate: Boolean = false
+
   override def _2: Term =
     if (unindexable.nonEmpty)
       label(map, unindexable.tail)

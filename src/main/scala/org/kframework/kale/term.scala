@@ -33,6 +33,8 @@ trait Term extends kore.Pattern with HasAtt {
 
   val isGround: Boolean
 
+  val isPredicate: Boolean
+
   lazy val sort: Sort = label.env.sort(label, this.children.toSeq)
 
   def children: Iterable[Term]

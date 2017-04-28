@@ -33,6 +33,8 @@ case class SetLabel(name: String, identity: Term)(implicit val env: Environment 
 case class SET(label: SetLabel, elements: Set[Term]) extends Assoc {
   val assocIterable: Iterable[Term] = elements
 
+  override lazy val isPredicate: Boolean = false
+
   override def _1: Term = elements.head
 
   override def _2: Term = SET(label, elements.tail)

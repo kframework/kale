@@ -3,8 +3,6 @@ package org.kframework.kale
 import org.kframework.kore.implementation.DefaultBuilders
 import org.kframework.{kale, kore}
 
-trait PredicateLabel
-
 trait DomainValueLabel[T] extends LeafLabel[T] {
 
   def apply(v: T): DomainValue[T]
@@ -14,6 +12,8 @@ trait DomainValue[T] extends Leaf[T] with kore.DomainValue {
   val label: DomainValueLabel[T]
 
   val isGround = true
+
+  override lazy val isPredicate: Boolean = false
 
   override def toString: String = data.toString
 
@@ -50,6 +50,7 @@ trait Variable extends Leaf[(Name, Sort)] {
   val sort: Sort
   lazy val data = (name, sort)
   val isGround = false
+  override lazy val isPredicate: Boolean = false
 
   override def toString: String = name.str
 
@@ -61,12 +62,13 @@ trait Variable extends Leaf[(Name, Sort)] {
   }
 }
 
-trait TruthLabel extends LeafLabel[Boolean] with PredicateLabel {
+trait TruthLabel extends LeafLabel[Boolean] {
   override protected[this] def internalInterpret(s: String): Boolean = s.toBoolean
 }
 
 trait Truth extends Leaf[Boolean] {
   val isGround = true
+  override lazy val isPredicate: Boolean = true
 }
 
 trait Top extends Truth with Substitution with kore.Top
@@ -86,28 +88,35 @@ trait OrLabel extends AssocCommWithIdLabel {
 
 trait RewriteLabel extends Label2
 
-trait EqualityLabel extends Label2 with PredicateLabel {
+trait EqualityLabel extends Label2 {
   def binding(_1: Variable, _2: Term): Binding
 }
 
 trait NotLabel extends Label1
 
-trait Equals extends kore.Equals with Node2 with BinaryInfix
+trait Equals extends kore.Equals with Node2 with BinaryInfix {
+  override lazy val isPredicate: Boolean = true
+}
 
 trait Binding extends Equals with Substitution
 
 trait And extends kore.And with AssocComm {
   self: And =>
-  val formulas: Term
-  val nonFormula: Option[Term]
+  val predicates: Term
+  val nonPredicates: Option[Term]
+
+  override lazy val isPredicate: Boolean = nonPredicates.isEmpty
 }
 
 trait Or extends kore.Or with AssocComm
 
-trait Rewrite extends kore.Rewrite with Node2 with BinaryInfix
+trait Rewrite extends kore.Rewrite with Node2 with BinaryInfix {
+  override lazy val isPredicate: Boolean = ???
+}
 
 trait Application extends Node with kore.Application {
 
+  override lazy val isPredicate: Boolean = false
   // for KORE
   override def symbol: kore.Symbol = label
 
