@@ -72,7 +72,7 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
       case (or, rhs) =>
         val res = Or.asSet(or).flatMap(u => {
           val (sub, terms) = And.asSubstitutionAndTerms(u)
-          val constraints = And(terms + Top)
+          val constraints = And(terms)
           if (sat(constraints)) {
             Set(And(substitutioner(sub)(rhs), constraints)) // TODO: consider when rhs.predicates is not satisfiable with constraints
           } else {

@@ -143,8 +143,11 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
     * normalizing
     */
   override def apply(terms: Iterable[Term]): Term = {
-    val disjunction = terms map Or.asSet reduce cartezianProduct
-    Or(disjunction)
+    if (terms.isEmpty) Top
+    else {
+      val disjunction = terms map Or.asSet reduce cartezianProduct
+      Or(disjunction)
+    }
 
     //    val bindings: Map[Variable, Term] = terms.collect({ case Equality(v: Variable, t) => v -> t }).toMap
     //    val pureSubstitution = Substitution(bindings)
