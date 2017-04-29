@@ -52,7 +52,7 @@ private[standard] case class TopInstance(implicit eenv: Environment) extends Tru
 
   override def toString: String = "⊤"
 
-  def apply(t: Term): Term = t
+  override def apply(t: Term): Term = t
 }
 
 private[standard] case class BottomInstance(implicit eenv: Environment) extends Truth(false) with kale.Bottom {
@@ -94,7 +94,7 @@ private[kale] class Equals(val _1: Term, val _2: Term)(implicit env: Environment
 }
 
 
-private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: DNFEnvironment) extends Equals(variable, term) with kale.Binding {
+class Binding(val variable: Variable, val term: Term)(implicit val env: DNFEnvironment) extends Equals(variable, term) with kale.Binding {
   // TODO(Daejun): Cosmin: occur check failed due to the context variables
   // assert(!util.Util.contains(term, variable))
   assert(_1.isInstanceOf[Variable])
@@ -102,27 +102,6 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
   def get(v: Variable): Option[Term] = if (_1 == v) Some(_2) else None
 
   def asMap = Map(variable -> term)
-
-  /**
-    * Inefficient -- replace with some default version of ApplySubstitution
-    */
-  def apply(t: Term): Term = t match {
-    case `variable` => term // TODO(Daejun): occur check?
-
-    // TODO: Cosmin: move this to .context
-    case Node(l: Context1ApplicationLabel, children) =>
-      val cs = children.iterator
-      val contextVar = cs.next.asInstanceOf[Variable]
-      if (variable == contextVar) {
-        apply(env.And.substitution(Map(env.Variable("☐", Sort.K) -> cs.next))(term))
-      } else {
-        l(contextVar, apply(cs.next))
-      }
-    case n@Node(l, cs) =>
-      val newTerms = cs map apply
-      n.copy(newTerms.toSeq)
-    case _ => t
-  }
 
   override def toString: String = super[Equals].toString
 }
@@ -367,7 +346,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
   override def asSet: Set[Term] = And.asSet(terms) | And.asSet(s)
 }
 
-private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit env: DNFEnvironment) extends And with Substitution with BinaryInfix {
+private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit val env: DNFEnvironment) extends And with Substitution with BinaryInfix {
   assert(m.size >= 2)
 
   import env._
@@ -388,25 +367,6 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
   override def asMap: Map[Variable, Term] = m
 
   override val assocIterable: Iterable[Term] = And.asList(this)
-
-  /**
-    * Inefficient -- replace with some default version of ApplySubstitution
-    */
-  def apply(t: Term): Term = t match {
-    case v: Variable => m.getOrElse(v, v) // TODO(Daejun): occur check?
-    // TODO: Cosmin: move this to .context
-    case Node(l: Context1ApplicationLabel, children) =>
-      val cs = children.iterator
-      val contextVar = cs.next.asInstanceOf[Variable]
-      m.get(contextVar).map({ context =>
-        apply(And.substitution(Map(Variable("☐", Sort.K) -> cs.next))(context))
-      }).getOrElse(l(contextVar, apply(cs.next)))
-
-    case n: Node if !n.isGround =>
-      val newTerms = n.children map apply
-      n.copy(newTerms.toSeq)
-    case _ => t
-  }
 
   override def toString: String = super[BinaryInfix].toString
 

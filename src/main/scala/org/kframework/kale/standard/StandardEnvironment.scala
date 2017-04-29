@@ -16,4 +16,6 @@ class StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT wit
   val AnywhereContext = AnywhereContextApplicationLabel()
 
   override def sort(l: Label, children: Seq[Term]): kale.Sort = Sort.K
+
+  override val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)
 }

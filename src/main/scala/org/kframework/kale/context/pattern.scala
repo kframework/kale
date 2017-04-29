@@ -105,14 +105,10 @@ object pattern {
     import env._
 
     override def f(solver: SubstitutionApply)(t: PatternContextApplication): Term = {
-      val recursiveResult = Equality.binding(Hole, solver(t.redex))
-      And.substitution(solver.substitution, recursiveResult) match {
-        case subs: Substitution =>
-          val innerSolver = new SubstitutionWithContext(subs)(env)
-
-          solver.substitution.get(t.contextVar) map innerSolver getOrElse Bottom
-        case `Bottom` => Bottom
-      }
+      val contextVar = t.contextVar
+      solver.substitution.get(contextVar).map({ context =>
+        solver(new standard.Binding(Hole, t.redex)(env)(context))
+      }).getOrElse(t.label(contextVar, solver(t.redex)))
     }
   }
 

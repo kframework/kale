@@ -20,6 +20,8 @@ trait Environment extends KORELabels with Bottomize {
 
   def isSealed = pisSealed
 
+  val substitutionMaker: Substitution => SubstitutionApply
+
   def register(label: Label): Int = {
     assert(!isSealed, "The environment is sealed")
     assert(label != null)
