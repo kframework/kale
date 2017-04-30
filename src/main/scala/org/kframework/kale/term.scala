@@ -1,10 +1,10 @@
 package org.kframework.kale
 
+import io.circe.{Decoder, Encoder, HCursor}
 import org.kframework.kale.util.HasAtt
 import org.kframework.kore
 import org.kframework.kore.implementation.DefaultBuilders
-
-import scala.collection._
+import io.circe.syntax._
 
 trait Label extends MemoizedHashCode with kore.Symbol {
   val env: Environment
@@ -55,6 +55,41 @@ trait Term extends kore.Pattern with HasAtt {
   override def hashCode: Int = this.label.hashCode
 
   def copy(children: Seq[Term]): Term
+}
+
+object Term {
+  implicit def termDecoder(implicit env: Environment): Decoder[Term] = {
+    Decoder.instance { (h: HCursor) =>
+      val label = env.label(h.get[String]("label").right.get)
+
+      label match {
+        case leafLabel: LeafLabel[_] =>
+          val data = h.get[String]("data").right.get
+          val res = leafLabel.interpret(data)
+          Right(res)
+        case nodeLabel: NodeLabel =>
+          val decoder = Decoder.decodeList[Term]
+          decoder(h.downField("children").success.get).map({ children =>
+            val res = nodeLabel(children)
+            res
+          })
+      }
+    }
+  }
+
+  implicit val termEncoder: Encoder[Term] = {
+    Encoder.instance[Term] { t =>
+      val labelAndAtts = Map("label" -> t.label.toString.asJson)
+      t.label match {
+        case label: LeafLabel[_] =>
+          val label(data) = t
+          (labelAndAtts + ("data" -> data.toString.asJson)).asJson
+        case label: NodeLabel =>
+          val node = t.asInstanceOf[Node]
+          (labelAndAtts + ("children" -> node.children.asJson)).asJson
+      }
+    }
+  }
 }
 
 trait LeafLabel[T] extends Label {
