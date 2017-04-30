@@ -79,7 +79,7 @@ endmodule
 
 
 object IMP {
-  implicit val env = new StandardEnvironment
+  implicit val env = StandardEnvironment()
 
   val signature = new IMPCommonSignature()
   import signature._

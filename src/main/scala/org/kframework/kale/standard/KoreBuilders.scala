@@ -8,9 +8,7 @@ import org.kframework.kore.implementation.DefaultBuilders
 import scala.collection.Seq
 
 class KoreBackend(d: kore.Definition, mainModule: kore.ModuleName) {
-  val env = new StandardEnvironment
-
-
+  val env = StandardEnvironment
 }
 
 class KoreBuilders(implicit val env: Environment) extends kore.Builders with DefaultOuterBuilders {

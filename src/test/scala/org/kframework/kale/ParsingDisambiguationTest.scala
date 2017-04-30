@@ -10,7 +10,7 @@ import scala.language.implicitConversions
 
 class ParsingDisambiguationTest extends FreeSpec {
 
-  implicit val env = new StandardEnvironment
+  implicit val env = StandardEnvironment()
 
   import env._
 

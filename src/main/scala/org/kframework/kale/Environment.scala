@@ -6,6 +6,7 @@ import org.kframework.kore
 import scala.collection.mutable
 
 trait Environment extends KORELabels with Bottomize {
+
   trait HasEnvironment {
     val env = Environment.this
   }

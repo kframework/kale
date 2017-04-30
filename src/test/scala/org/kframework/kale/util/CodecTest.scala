@@ -11,7 +11,7 @@ import scala.language.implicitConversions
 
 class CodecTest extends FreeSpec {
 
-  implicit val env = new StandardEnvironment
+  implicit val env = StandardEnvironment()
 
   val foo = FreeLabel2("foo")
 

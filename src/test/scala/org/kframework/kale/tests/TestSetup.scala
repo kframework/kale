@@ -8,7 +8,7 @@ import org.scalactic.Prettifier
 
 trait TestSetup {
 
-  implicit val env = new StandardEnvironment
+  implicit val env = StandardEnvironment()
 
   import env._
 

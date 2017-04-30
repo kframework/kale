@@ -8,7 +8,7 @@ import org.kframework.kale.{Sort => _, _}
 import scala.collection._
 
 class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasID {
-  implicit protected val env = this
+  private implicit val env = this
 
   private val sorts = mutable.Map[Label, Signature]()
 
