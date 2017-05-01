@@ -17,7 +17,7 @@ trait PrimordialDomainValueLabel[T] extends DomainValueLabel[T] {
 
 private[standard] case class StandardDomainValue[T](label: DomainValueLabel[T], data: T) extends DomainValue[T]
 
-private[standard] case class StandardVariableLabel(implicit val env: Environment) extends Named("#Variable") with VariableLabel {
+private[standard] case class StandardVariableLabel(implicit override val env: Environment) extends Named("#Variable") with VariableLabel {
   def apply(name: String): Variable = apply((Name(name), Sort.K))
 
   def apply(name: String, sort: kale.Sort): Variable = apply((Name(name), sort))
@@ -67,7 +67,7 @@ private[standard] case class BottomInstance(implicit eenv: Environment) extends 
 }
 
 
-private[standard] case class StandardEqualityLabel(implicit val env: DNFEnvironment) extends Named("=") with EqualityLabel {
+private[standard] case class StandardEqualityLabel(implicit override val env: DNFEnvironment) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = {
     if (_1 == _2)
       env.Top
@@ -386,7 +386,7 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
   override def asSet: Set[Term] = m.map({ case (k, v) => Equality.binding(k, v) }).toSet
 }
 
-private[standard] case class DNFOrLabel(implicit val env: Environment) extends Named("∨") with OrLabel {
+private[standard] case class DNFOrLabel(implicit override val env: Environment) extends Named("∨") with OrLabel {
 
   import env._
 
@@ -422,7 +422,7 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
 }
 
 // implements: X and (M = (c = X) and (M = Bot implies t) and (not(m = Bot) implies e)
-private[standard] class IfThenElseLabel(implicit val env: Environment) extends Named("if_then_else") with Label3 {
+private[standard] class IfThenElseLabel(implicit override val env: Environment) extends Named("if_then_else") with Label3 {
   def apply(c: Term, t: Term, e: Term) = {
     if (c == env.Top)
       t
@@ -435,6 +435,6 @@ private[standard] class IfThenElseLabel(implicit val env: Environment) extends N
 
 case class Name(str: String) extends kale.Name
 
-private[standard] class BindMatchLabel(implicit val env: Environment) extends Named("BindMatch") with Label2 {
+private[standard] class BindMatchLabel(implicit override val env: Environment) extends Named("BindMatch") with Label2 {
   def apply(v: Term, p: Term) = FreeNode2(this, v.asInstanceOf[Variable], p)
 }

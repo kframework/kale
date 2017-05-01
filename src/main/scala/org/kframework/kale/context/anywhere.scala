@@ -15,7 +15,7 @@ object anywhere {
   }
 
 
-  case class AnywhereContextApplicationLabel(implicit val env: Environment) extends Named("AnywhereContext") with Context1ApplicationLabel {
+  case class AnywhereContextApplicationLabel(implicit override val env: Environment) extends Named("AnywhereContext") with Context1ApplicationLabel {
     override def apply(_1: Term, _2: Term): AnywhereContextApplication = _1 match {
       case v: Variable => AnywhereContextApplication(this, v, _2)
       case _ => throw new AssertionError(id + " " + "First parameter needs to be a variable but was: " + _1)
