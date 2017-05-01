@@ -1,8 +1,7 @@
 package org.kframework.kale.util
 
-import org.kframework.kale.standard
+import org.kframework.kale._
 import org.kframework.kale.standard.Rewrite
-import org.kframework.kale.{Environment, Node, Term, Variable}
 
 object fixpoint {
   def apply[T](f: T => T): (T => T) = {
@@ -43,6 +42,6 @@ object Util {
 
   def containsInConstructor(t: Term, subterm: Term): Boolean =
     if (t == subterm) true
-    else if (!t.label.isInstanceOf[standard.Constructor]) false
+    else if (!t.label.isInstanceOf[Constructor]) false
     else t.children.exists(containsInConstructor(_, subterm))
 }

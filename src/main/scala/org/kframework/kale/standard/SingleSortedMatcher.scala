@@ -146,32 +146,27 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
 
   import standard._
 
-  override def processingFunctions: ProcessingFunctions = definePartialFunction({
-    case (`BindMatch`, _) => BindMatchMatcher _
-    case (`IfThenElse`, _) => IfThenElseTerm _
-    case (_, `Not`) => OneIsFormula _
-    case (`Not`, _) => OneIsFormula _
-    case (`And`, _) => AndTerm _
-    case (_, `And`) => TermAnd _
-    case (`Or`, _) => OrTerm _
-    case (_, `Or`) => TermOr _
-    case (`Variable`, _) => VarLeft _
-    // case (_, `Variable`) => VarRight
-    case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
-    case (capp: PatternContextApplicationLabel, _) => new PatternContextMatcher()(env)
-    case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 => NoMatch _
-    case (_: SimpleFreeLabel0, _: SimpleFreeLabel0) => FreeNode0FreeNode0 _
-    case (_: SimpleFreeLabel1, _: SimpleFreeLabel1) => FreeNode1FreeNode1 _
-    case (_: SimpleFreeLabel2, _: SimpleFreeLabel2) => FreeNode2FreeNode2 _
-    case (_: SimpleFreeLabel3, _: SimpleFreeLabel3) => FreeNode3FreeNode3 _
-    case (_: SimpleFreeLabel4, _: SimpleFreeLabel4) => FreeNode4FreeNode4 _
-    case (_: FunctionDefinedByRewritingLabel0, _: FunctionDefinedByRewritingLabel0) => FreeNode0FreeNode0 _
-    case (_: FunctionDefinedByRewritingLabel1, _: FunctionDefinedByRewritingLabel1) => FreeNode1FreeNode1 _
-    case (_: FunctionDefinedByRewritingLabel2, _: FunctionDefinedByRewritingLabel2) => FreeNode2FreeNode2 _
-    case (_: FunctionDefinedByRewritingLabel3, _: FunctionDefinedByRewritingLabel3) => FreeNode3FreeNode3 _
-    case (_: FunctionDefinedByRewritingLabel4, _: FunctionDefinedByRewritingLabel4) => FreeNode4FreeNode4 _
-    case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants _
-    case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm _
-    case (_: AssocLabel, right) if !right.isInstanceOf[Variable] => AssocTerm _
-  }) orElse super.processingFunctions
+  override def processingFunctions: ProcessingFunctions =
+    definePartialFunction({
+      case (`BindMatch`, _) => BindMatchMatcher _
+      case (`IfThenElse`, _) => IfThenElseTerm _
+      case (_, `Not`) => OneIsFormula _
+      case (`Not`, _) => OneIsFormula _
+      case (`And`, _) => AndTerm _
+      case (_, `And`) => TermAnd _
+      case (`Or`, _) => OrTerm _
+      case (_, `Or`) => TermOr _
+      case (`Variable`, _) => VarLeft _
+      // case (_, `Variable`) => VarRight
+      case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
+      case (capp: PatternContextApplicationLabel, _) => new PatternContextMatcher()(env)
+    })
+      .orElse(freeLabelProcessing)
+      .orElse(functionDefinedByRewritingProcessing)
+      .orElse(definePartialFunction({
+        case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants _
+        case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm _
+        case (_: AssocLabel, right) if !right.isInstanceOf[Variable] => AssocTerm _
+      }))
+      .orElse(super.processingFunctions)
 }
