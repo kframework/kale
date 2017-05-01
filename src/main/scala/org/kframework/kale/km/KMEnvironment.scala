@@ -8,7 +8,7 @@ import org.kframework.kale.{Sort => _, _}
 import scala.collection._
 
 class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasID {
-  implicit protected val env = this
+  private implicit val env = this
 
   private val sorts = mutable.Map[Label, Signature]()
 
@@ -39,4 +39,6 @@ class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasID
   def sorted(l: Label2, arg1: Sort, arg2: Sort, target: Sort): Unit = sorted(l, Signature(Seq(arg1, arg2), target))
 
   def sorted(l: Label3, arg1: Sort, arg2: Sort, arg3: Sort, target: Sort): Unit = sorted(l, Signature(Seq(arg1, arg2, arg3), target))
+
+  override val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionApply(_)
 }

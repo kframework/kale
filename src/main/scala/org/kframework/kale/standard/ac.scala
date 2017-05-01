@@ -13,6 +13,8 @@ case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term
   assert(assocIterable.forall(_ != label.identity))
   assert(assocIterable.forall(_.label != label))
 
+  override lazy val isPredicate: Boolean = false
+
   override def _1: Term = assocIterable.head
 
   override def _2: Term = label(assocIterable.tail)

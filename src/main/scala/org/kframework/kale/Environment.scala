@@ -1,11 +1,12 @@
 package org.kframework.kale
 
-import org.kframework.kale.standard.Bottomize
+import org.kframework.kale.standard.{Bottomize, Name, Sort}
 import org.kframework.kore
 
 import scala.collection.mutable
 
 trait Environment extends KORELabels with Bottomize {
+
   trait HasEnvironment {
     val env = Environment.this
   }
@@ -19,6 +20,8 @@ trait Environment extends KORELabels with Bottomize {
   def seal(): Unit = pisSealed = true
 
   def isSealed = pisSealed
+
+  val substitutionMaker: Substitution => SubstitutionApply
 
   def register(label: Label): Int = {
     assert(!isSealed, "The environment is sealed")

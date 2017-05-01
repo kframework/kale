@@ -2,7 +2,7 @@ package org.kframework.kale.util
 
 import org.kframework.kale._
 import org.kframework.kale.builtin.HasINT
-import org.kframework.kale.standard.{FreeLabel2, StandardEnvironment}
+import org.kframework.kale.standard.{SimpleFreeLabel2, StandardEnvironment}
 
 import scala.language.implicitConversions
 
@@ -18,7 +18,7 @@ class Implicits(implicit val env: StandardEnvironment) extends StaticImplicits {
 
   implicit def stringConstant(x: String): DomainValue[String] = STRING(x)
 
-  val plus = FreeLabel2("+")
+  val plus = SimpleFreeLabel2("+")
 
   //PrimitiveFunction2("+", INT, (a: Int, b: Int) => a + b)(env)
 
@@ -34,10 +34,6 @@ class Implicits(implicit val env: StandardEnvironment) extends StaticImplicits {
 }
 
 trait StaticImplicits {
-
-  implicit class StaticRichTerm(t: Term) {
-    def contains(subterm: Term): Boolean = Util.contains(t, subterm) // if (t == subterm) true else t.children.exists(_.contains(subterm))
-  }
 
   implicit class StaticRichAssocLabel(label: AssocLabel) {
     def apply(args: Term*): Term = label.apply(args.toSeq)

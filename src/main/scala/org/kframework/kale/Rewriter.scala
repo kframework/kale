@@ -6,11 +6,16 @@ import scala.collection.immutable.TreeSet
 import scala.collection.{Set, mutable}
 
 object Rewriter {
-  def apply(substitutioner: Substitution => (Term => Term), matcher: MatcherOrUnifier, env: Environment)(rules: Set[_ <: Rewrite]) =
-    new Rewriter(substitutioner, matcher, rules, env)
+  def apply(substitutioner: Substitution => (Term => Term), matcher: MatcherOrUnifier) = new {
+    def apply(rules: Set[_ <: Rewrite]): Rewriter = new Rewriter(substitutioner, matcher, rules, matcher.env)
+    def apply(rule: Term): Rewriter = {
+      implicit val e = matcher.env
+      apply(Set(rule.moveRewriteToTop))
+    }
+  }
 }
 
-class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment) {
+class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment) extends (Term => Stream[Term]) {
   assert(env.isSealed)
   assert(rules != null)
 
@@ -39,6 +44,8 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
   sortedRules ++= rules
 
   import env._
+
+  def apply(t: Term): Stream[Term] = step(t)
 
   def step(obj: Term): Stream[Term] = {
     var tries = 0
@@ -70,9 +77,18 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
     Or(rules.map(r => (doMatch(r._1, obj), r._2)).flatMap({
       case (Bottom, _) => Set[Term]()
       case (or, rhs) =>
-        val substitutions: Set[Substitution] = Or.asSet(or).asInstanceOf[Set[Substitution]]
-        val res = substitutions.map(substitutioner).map(_ (rhs))
+        val res = Or.asSet(or).flatMap(u => {
+          val (sub, terms) = And.asSubstitutionAndTerms(u)
+          val constraints = And(terms)
+          if (sat(constraints)) {
+            Set(And(substitutioner(sub)(rhs), constraints)) // TODO: consider when rhs.predicates is not satisfiable with constraints
+          } else {
+            Set[Term]()
+          }
+        })
         res
     }))
   }
+
+  def sat(t: Term): Boolean = true // TODO(Daejun): implement
 }

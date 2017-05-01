@@ -4,27 +4,25 @@ import io.circe._
 import io.circe.syntax._
 import io.circe.parser._
 import org.kframework.kale._
-import org.kframework.kale.standard.{FreeLabel2, StandardEnvironment}
+import org.kframework.kale.standard.{SimpleFreeLabel2, StandardEnvironment}
 import org.scalatest.FreeSpec
 
 import scala.language.implicitConversions
 
 class CodecTest extends FreeSpec {
 
-  implicit val env = new StandardEnvironment
+  implicit val env = StandardEnvironment()
 
-  val foo = FreeLabel2("foo")
+  val foo = SimpleFreeLabel2("foo")
 
   import env._
 
   val pattern = foo(INT(3), STRING("bar"))
 
   object TestAtt extends Att[Int] {
-    override def default(): Int = 0
-
     override def toString = "test"
 
-    override def update(oldValue: Int, term: Term, oldChildren: Option[Iterable[Term]]): Int = oldValue
+    override def update(term: Term, oldTerm: Option[Term]): Int = 0
   }
 
   val codec = new Codec(Set(

@@ -79,7 +79,7 @@ endmodule
 
 
 object IMP {
-  implicit val env = new StandardEnvironment
+  implicit val env = StandardEnvironment()
 
   val signature = new IMPCommonSignature()
   import signature._
@@ -143,7 +143,7 @@ object IMP {
   env.seal()
 
   val matcher = SingleSortedMatcher()
-  val rewrite = Rewriter(SubstitutionWithContext(_), matcher, env)(rules)
+  val rewrite = Rewriter(SubstitutionWithContext(_), matcher)(rules)
 }
 
 //object IMP {

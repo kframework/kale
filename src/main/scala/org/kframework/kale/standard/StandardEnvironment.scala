@@ -5,8 +5,12 @@ import org.kframework.kale.builtin._
 import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
 import org.kframework.kale.{standard, _}
 
-class StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID {
-  implicit val env = this
+object StandardEnvironment {
+  def apply(): StandardEnvironment = new StandardEnvironment {}
+}
+
+trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID {
+  private implicit val env = this
 
   val Hole = Variable("☐", Sort.K)
 
@@ -16,4 +20,6 @@ class StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT wit
   val AnywhereContext = AnywhereContextApplicationLabel()
 
   override def sort(l: Label, children: Seq[Term]): kale.Sort = Sort.K
+
+  override val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)
 }

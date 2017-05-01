@@ -1,10 +1,10 @@
 package org.kframework.kale
 
-import org.kframework.kale.util.HasAtt
+import io.circe.{Decoder, Encoder, HCursor}
+import org.kframework.kale.util.{HasAtt, Util}
 import org.kframework.kore
 import org.kframework.kore.implementation.DefaultBuilders
-
-import scala.collection._
+import io.circe.syntax._
 
 trait Label extends MemoizedHashCode with kore.Symbol {
   val env: Environment
@@ -33,6 +33,8 @@ trait Term extends kore.Pattern with HasAtt {
 
   val isGround: Boolean
 
+  val isPredicate: Boolean
+
   lazy val sort: Sort = label.env.sort(label, this.children.toSeq)
 
   def children: Iterable[Term]
@@ -53,6 +55,50 @@ trait Term extends kore.Pattern with HasAtt {
   override def hashCode: Int = this.label.hashCode
 
   def copy(children: Seq[Term]): Term
+}
+
+object Term {
+  implicit def termDecoder(implicit env: Environment): Decoder[Term] = {
+    Decoder.instance { (h: HCursor) =>
+      val label = env.label(h.get[String]("label").right.get)
+
+      label match {
+        case leafLabel: LeafLabel[_] =>
+          val data = h.get[String]("data").right.get
+          val res = leafLabel.interpret(data)
+          Right(res)
+        case nodeLabel: NodeLabel =>
+          val decoder = Decoder.decodeList[Term]
+          decoder(h.downField("children").success.get).map({ children =>
+            val res = nodeLabel(children)
+            res
+          })
+      }
+    }
+  }
+
+  implicit val termEncoder: Encoder[Term] = {
+    Encoder.instance[Term] { t =>
+      val labelAndAtts = Map("label" -> t.label.toString.asJson)
+      t.label match {
+        case label: LeafLabel[_] =>
+          val label(data) = t
+          (labelAndAtts + ("data" -> data.toString.asJson)).asJson
+        case label: NodeLabel =>
+          val node = t.asInstanceOf[Node]
+          (labelAndAtts + ("children" -> node.children.asJson)).asJson
+      }
+    }
+  }
+
+  implicit class StaticRichTerm(t: Term) {
+    def contains(subterm: Term): Boolean = Util.contains(t, subterm) // if (t == subterm) true else t.children.exists(_.contains(subterm))
+    def containsInConstructor(subterm: Term): Boolean = Util.containsInConstructor(t, subterm)
+  }
+
+  implicit class RichTerm(t: Term)(implicit env: Environment) {
+    def moveRewriteToTop: Rewrite = Util.moveRewriteSymbolToTop(t)
+  }
 }
 
 trait LeafLabel[T] extends Label {

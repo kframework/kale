@@ -9,7 +9,14 @@ object Binary {
     type Right = R
   }
 
+  object ProcessingFunction {
+    implicit def functionToProcessingFunction[LeftIn <: Term, RightIn <: Term, SpecificSolver <: Apply](func: SpecificSolver => (LeftIn, RightIn) => Term): ProcessingFunction[SpecificSolver] = new ProcessingFunction[SpecificSolver] {
+      override type Left = LeftIn
+      override type Right = RightIn
 
+      override def f(state: SpecificSolver)(l: Left, r: Right): Term = func(state)(l, r)
+    }
+  }
   /**
     * f specifies how to process a pair of terms with labels (leftLabel, rightLabel).
     * f is automatically hooked and applied via Apply.

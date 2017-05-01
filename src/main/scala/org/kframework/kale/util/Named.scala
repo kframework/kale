@@ -1,3 +1,5 @@
 package org.kframework.kale.util
 
-abstract class Named(val name: String)
+import org.kframework.kale.Environment
+
+abstract class Named(val name: String)(implicit val env: Environment)

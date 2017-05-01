@@ -10,40 +10,40 @@ import scala.language.implicitConversions
 
 class ParsingDisambiguationTest extends FreeSpec {
 
-  implicit val env = new StandardEnvironment
+  implicit val env = StandardEnvironment()
 
   import env._
 
   val implicits = new Implicits()
 
-  val ExpId = FreeLabel1("ExpId")
-  val readPointer = FreeLabel1("readPointer")
-  val mult = FreeLabel2("mult")
-  val plus = FreeLabel2("plus")
+  val ExpId = SimpleFreeLabel1("ExpId")
+  val readPointer = SimpleFreeLabel1("readPointer")
+  val mult = SimpleFreeLabel2("mult")
+  val plus = SimpleFreeLabel2("plus")
 
-  val emptyExpList = FreeLabel0("emptyExpList")
-  val ExpList = FreeLabel2("ExpList")
+  val emptyExpList = SimpleFreeLabel0("emptyExpList")
+  val ExpList = SimpleFreeLabel2("ExpList")
 
-  val ExpStmt = FreeLabel1("_;")
-  val block = FreeLabel1("block")
-  val typedef = FreeLabel1("typedef")
+  val ExpStmt = SimpleFreeLabel1("_;")
+  val block = SimpleFreeLabel1("block")
+  val typedef = SimpleFreeLabel1("typedef")
 
-  val VarDecl = FreeLabel2("VarDecl")
+  val VarDecl = SimpleFreeLabel2("VarDecl")
 
-  val TypeId = FreeLabel1("TypeId")
+  val TypeId = SimpleFreeLabel1("TypeId")
 
-  val Pointer = FreeLabel1("Pointer")
+  val Pointer = SimpleFreeLabel1("Pointer")
 
-  val emptyTypeList = FreeLabel0("emptyTypeList")
-  val TypeList = FreeLabel2("TypeList")
+  val emptyTypeList = SimpleFreeLabel0("emptyTypeList")
+  val TypeList = SimpleFreeLabel2("TypeList")
 
-  val emptyDeclList = FreeLabel0("emptyDeclList")
-  val DeclList = FreeLabel2("DeclList")
+  val emptyDeclList = SimpleFreeLabel0("emptyDeclList")
+  val DeclList = SimpleFreeLabel2("DeclList")
 
-  val emptyStmtList = FreeLabel0("emptyStmtList")
-  val StmtList = FreeLabel2("StmtList")
+  val emptyStmtList = SimpleFreeLabel0("emptyStmtList")
+  val StmtList = SimpleFreeLabel2("StmtList")
 
-  val amb = FreeLabel2("amb")
+  val amb = SimpleFreeLabel2("amb")
 
   //  val ANYWHERE_NOT_BLOCK = PatternContextApplicationLabel("ANYWHERE_NOT_BLOCK")
 
@@ -189,7 +189,7 @@ class ParsingDisambiguationTest extends FreeSpec {
 
     val rewriteOnTop = Util.moveRewriteSymbolToTop(disambRule)(env)
 
-    val rewriter = Rewriter(substitutionApplier, unifier, env)(Set(rewriteOnTop))
+    val rewriter = Rewriter(substitutionApplier, unifier)(Set(rewriteOnTop))
 
     println(rewriter.searchStep(asMult(theAmbiguity)))
     println(rewriter.searchStep(asDecl(theAmbiguity)))
@@ -209,12 +209,12 @@ class ParsingDisambiguationTest extends FreeSpec {
         Rewrite(amb(ANYWHERE(TypeId(A)), B), B)
       )
 
-    val rewriterVarDecl = Rewriter(substitutionApplier, unifier, env)(Set(Util.moveRewriteSymbolToTop(keepVarDecl)(env)))
+    val rewriterVarDecl = Rewriter(substitutionApplier, unifier)(Set(Util.moveRewriteSymbolToTop(keepVarDecl)(env)))
 
     println(rewriterVarDecl.searchStep(asMult(theAmbiguity)))
     println(rewriterVarDecl.searchStep(asDecl(theAmbiguity)))
 
-    val rewriter = Rewriter(substitutionApplier, unifier, env)(Set(Util.moveRewriteSymbolToTop(keepMult)(env)))
+    val rewriter = Rewriter(substitutionApplier, unifier)(Set(Util.moveRewriteSymbolToTop(keepMult)(env)))
 
     println(rewriter.searchStep(asMult(theAmbiguity)))
     println(rewriter.searchStep(asDecl(theAmbiguity)))

@@ -9,7 +9,7 @@ import org.kframework.kore
 
 import scala.collection.{Iterable, Map, Seq, Set}
 
-abstract class ReferenceLabel[T](val name: String)(val env: Environment) extends PrimordialDomainValueLabel[T]
+abstract class ReferenceLabel[T](val name: String)(implicit val env: Environment) extends PrimordialDomainValueLabel[T]
 
 trait PrimordialDomainValueLabel[T] extends DomainValueLabel[T] {
   def apply(v: T): DomainValue[T] = StandardDomainValue(this, v)
@@ -17,7 +17,7 @@ trait PrimordialDomainValueLabel[T] extends DomainValueLabel[T] {
 
 private[standard] case class StandardDomainValue[T](label: DomainValueLabel[T], data: T) extends DomainValue[T]
 
-private[standard] case class StandardVariableLabel(implicit val env: Environment) extends Named("#Variable") with VariableLabel {
+private[standard] case class StandardVariableLabel(implicit override val env: Environment) extends Named("#Variable") with VariableLabel {
   def apply(name: String): Variable = apply((Name(name), Sort.K))
 
   def apply(name: String, sort: kale.Sort): Variable = apply((Name(name), sort))
@@ -28,6 +28,13 @@ private[standard] case class StandardVariableLabel(implicit val env: Environment
 
   override protected[this] def internalInterpret(s: String): (kale.Name, kale.Sort) = s.split(":") match {
     case Array(name, sort) => (Name(name), Sort(sort))
+  }
+
+  var counter = 0
+
+  def __ = {
+    counter += 1
+    this ((Name("_" + counter), Sort("K")))
   }
 }
 
@@ -52,7 +59,7 @@ private[standard] case class TopInstance(implicit eenv: Environment) extends Tru
 
   override def toString: String = "⊤"
 
-  def apply(t: Term): Term = t
+  override def apply(t: Term): Term = t
 }
 
 private[standard] case class BottomInstance(implicit eenv: Environment) extends Truth(false) with kale.Bottom {
@@ -60,7 +67,7 @@ private[standard] case class BottomInstance(implicit eenv: Environment) extends 
 }
 
 
-private[standard] case class StandardEqualityLabel(implicit val env: DNFEnvironment) extends Named("=") with EqualityLabel {
+private[standard] case class StandardEqualityLabel(implicit override val env: DNFEnvironment) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = {
     if (_1 == _2)
       env.Top
@@ -71,6 +78,7 @@ private[standard] case class StandardEqualityLabel(implicit val env: DNFEnvironm
       val Variable = env.Variable
       _1.label match {
         case `Variable` if !_2.contains(_1) => binding(_1.asInstanceOf[Variable], _2)
+        case `Variable` if _2.containsInConstructor(_1) => env.Bottom
         case _ => new Equals(_1, _2)
       }
     }
@@ -93,7 +101,7 @@ private[kale] class Equals(val _1: Term, val _2: Term)(implicit env: Environment
 }
 
 
-private[kale] class Binding(val variable: Variable, val term: Term)(implicit env: DNFEnvironment) extends Equals(variable, term) with kale.Binding {
+class Binding(val variable: Variable, val term: Term)(implicit val env: DNFEnvironment) extends Equals(variable, term) with kale.Binding {
   // TODO(Daejun): Cosmin: occur check failed due to the context variables
   // assert(!util.Util.contains(term, variable))
   assert(_1.isInstanceOf[Variable])
@@ -101,27 +109,6 @@ private[kale] class Binding(val variable: Variable, val term: Term)(implicit env
   def get(v: Variable): Option[Term] = if (_1 == v) Some(_2) else None
 
   def asMap = Map(variable -> term)
-
-  /**
-    * Inefficient -- replace with some default version of ApplySubstitution
-    */
-  def apply(t: Term): Term = t match {
-    case `variable` => term // TODO(Daejun): occur check?
-
-    // TODO: Cosmin: move this to .context
-    case Node(l: Context1ApplicationLabel, children) =>
-      val cs = children.iterator
-      val contextVar = cs.next.asInstanceOf[Variable]
-      if (variable == contextVar) {
-        apply(env.And.substitution(Map(env.Variable("☐", Sort.K) -> cs.next))(term))
-      } else {
-        l(contextVar, apply(cs.next))
-      }
-    case n@Node(l, cs) =>
-      val newTerms = cs map apply
-      n.copy(newTerms.toSeq)
-    case _ => t
-  }
 
   override def toString: String = super[Equals].toString
 }
@@ -149,7 +136,7 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
     if (_1 == Bottom || _2 == Bottom)
       Bottom
     else {
-      apply(Set(_1,_2))
+      apply(Set(_1, _2))
     }
     /*
       val substitutionAndTerms(sub1, terms1) = _1
@@ -163,8 +150,11 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
     * normalizing
     */
   override def apply(terms: Iterable[Term]): Term = {
-    val disjunction = terms map Or.asSet reduce cartezianProduct
-    Or(disjunction)
+    if (terms.isEmpty) Top
+    else {
+      val disjunction = terms map Or.asSet reduce cartezianProduct
+      Or(disjunction)
+    }
 
     //    val bindings: Map[Variable, Term] = terms.collect({ case Equality(v: Variable, t) => v -> t }).toMap
     //    val pureSubstitution = Substitution(bindings)
@@ -213,9 +203,9 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
 
   object formulasAndNonFormula {
     def unapply(t: Term): Some[(Term, Option[Term])] = t match {
-      case tt: And => Some(tt.formulas, tt.nonFormula)
-      case tt if tt.label.isInstanceOf[PredicateLabel] => Some(tt, None)
-      case tt if !tt.label.isInstanceOf[PredicateLabel] => Some(Top, Some(tt))
+      case tt: And => Some(tt.predicates, tt.nonPredicates)
+      case tt if tt.isPredicate => Some(tt, None)
+      case tt if !tt.isPredicate => Some(Top, Some(tt))
     }
   }
 
@@ -305,10 +295,10 @@ private[standard] final class AndOfTerms(val terms: Set[Term])(implicit val env:
 
   import env._
 
-  lazy val formulas: Term = And(terms filter (_.label.isInstanceOf[PredicateLabel]))
+  lazy val predicates: Term = And(terms filter (_.isPredicate))
 
-  lazy val nonFormula: Option[Term] = {
-    val nonFormulas = terms filter (!_.label.isInstanceOf[PredicateLabel])
+  lazy val nonPredicates: Option[Term] = {
+    val nonFormulas = terms filter (!_.isPredicate)
     if (nonFormulas.size > 1) {
       throw new NotImplementedError("only handle at most one term for now")
     }
@@ -342,21 +332,21 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
 
   val label = And
 
-  lazy val formulas: Term = terms match {
-    case a: AndOfTerms => And(s, a.formulas)
-    case t if t.label.isInstanceOf[PredicateLabel] => And(s, t)
+  lazy val predicates: Term = terms match {
+    case a: AndOfTerms => And(s, a.predicates)
+    case t if t.isPredicate => And(s, t)
     case _ => s
   }
 
-  lazy val nonFormula: Option[Term] = terms match {
-    case a: AndOfTerms => a.nonFormula
-    case t if !t.label.isInstanceOf[PredicateLabel] => Some(t)
+  lazy val nonPredicates: Option[Term] = terms match {
+    case a: AndOfTerms => a.nonPredicates
+    case t if !t.isPredicate => Some(t)
     case _ => None
   }
 
   lazy val _1: Term = s
   lazy val _2: Term = terms
-  override lazy val assocIterable: Iterable[Term] = And.asList(s) ++ And.asList(terms)
+  override lazy val assocIterable: Iterable[Term] = And.asIterable(s) ++ And.asIterable(terms)
 
   override def equals(other: Any): Boolean = other match {
     case that: AndOfSubstitutionAndTerms => this.s == that.s && this.terms == that.terms
@@ -366,7 +356,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
   override def asSet: Set[Term] = And.asSet(terms) | And.asSet(s)
 }
 
-private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit env: DNFEnvironment) extends And with Substitution with BinaryInfix {
+private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit val env: DNFEnvironment) extends And with Substitution with BinaryInfix {
   assert(m.size >= 2)
 
   import env._
@@ -386,36 +376,17 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
 
   override def asMap: Map[Variable, Term] = m
 
-  override val assocIterable: Iterable[Term] = And.asList(this)
-
-  /**
-    * Inefficient -- replace with some default version of ApplySubstitution
-    */
-  def apply(t: Term): Term = t match {
-    case v: Variable => m.getOrElse(v, v) // TODO(Daejun): occur check?
-    // TODO: Cosmin: move this to .context
-    case Node(l: Context1ApplicationLabel, children) =>
-      val cs = children.iterator
-      val contextVar = cs.next.asInstanceOf[Variable]
-      m.get(contextVar).map({ context =>
-        apply(And.substitution(Map(Variable("☐", Sort.K) -> cs.next))(context))
-      }).getOrElse(l(contextVar, apply(cs.next)))
-
-    case n: Node if !n.isGround =>
-      val newTerms = n.children map apply
-      n.copy(newTerms.toSeq)
-    case _ => t
-  }
+  override val assocIterable: Iterable[Term] = And.asIterable(this)
 
   override def toString: String = super[BinaryInfix].toString
 
-  override val formulas: Term = this
-  override val nonFormula: Option[Term] = None
+  override val predicates: Term = this
+  override val nonPredicates: Option[Term] = None
 
   override def asSet: Set[Term] = m.map({ case (k, v) => Equality.binding(k, v) }).toSet
 }
 
-private[standard] case class DNFOrLabel(implicit val env: Environment) extends Named("∨") with OrLabel {
+private[standard] case class DNFOrLabel(implicit override val env: Environment) extends Named("∨") with OrLabel {
 
   import env._
 
@@ -440,6 +411,8 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
   lazy val _2 = Or(terms.tail.toSeq)
   override val assocIterable: Iterable[Term] = terms
 
+  override lazy val isPredicate: Boolean = terms.forall(_.isPredicate)
+
   override def equals(other: Any): Boolean = other match {
     case that: OrWithAtLeastTwoElements => this.terms == that.terms
     case _ => false
@@ -449,7 +422,7 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
 }
 
 // implements: X and (M = (c = X) and (M = Bot implies t) and (not(m = Bot) implies e)
-private[standard] class IfThenElseLabel(implicit val env: Environment) extends Named("if_then_else") with Label3 {
+private[standard] class IfThenElseLabel(implicit override val env: Environment) extends Named("if_then_else") with Label3 {
   def apply(c: Term, t: Term, e: Term) = {
     if (c == env.Top)
       t
@@ -462,6 +435,6 @@ private[standard] class IfThenElseLabel(implicit val env: Environment) extends N
 
 case class Name(str: String) extends kale.Name
 
-private[standard] class BindMatchLabel(implicit val env: Environment) extends Named("BindMatch") with Label2 {
+private[standard] class BindMatchLabel(implicit override val env: Environment) extends Named("BindMatch") with Label2 {
   def apply(v: Term, p: Term) = FreeNode2(this, v.asInstanceOf[Variable], p)
 }

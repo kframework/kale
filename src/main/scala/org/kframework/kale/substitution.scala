@@ -3,9 +3,13 @@ package org.kframework.kale
 import scala.collection.Map
 
 trait Substitution extends (Term => Term) with Term {
+  def env: Environment
+
   def get(v: Variable): Option[Term]
 
-  def apply(t: Term): Term
-
   def asMap: Map[Variable, Term]
+
+  lazy val sub = env.substitutionMaker(this)
+
+  def apply(t: Term): Term = sub(t)
 }
