@@ -68,7 +68,7 @@ object anywhere {
         }
         case l: AssocLabel =>
           val zeroLevel: Term = And(solver(contextApplication.redex, term), Equality(contextApplication.contextVar, contextApplication.hole))
-          val subresults = l.asList(term).toList
+          val subresults = l.asIterable(term).toList
           val recursive = solutionFor(subresults, (pos: Int, tt: Term) => l(subresults.updated(pos, tt)))
           Or(recursive, zeroLevel)
         case l =>

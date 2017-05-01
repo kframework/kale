@@ -36,7 +36,7 @@ class RewriteTest extends FreeSpec {
 
   val unifier = new MultiSortedUnifier(env)
 
-  val rewriter = Rewriter(new SubstitutionApply(_), unifier, env)(_)
+  val rewriter = Rewriter(new SubstitutionApply(_), unifier)
 
   "simple" in {
 

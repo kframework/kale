@@ -6,11 +6,16 @@ import scala.collection.immutable.TreeSet
 import scala.collection.{Set, mutable}
 
 object Rewriter {
-  def apply(substitutioner: Substitution => (Term => Term), matcher: MatcherOrUnifier, env: Environment)(rules: Set[_ <: Rewrite]) =
-    new Rewriter(substitutioner, matcher, rules, env)
+  def apply(substitutioner: Substitution => (Term => Term), matcher: MatcherOrUnifier) = new {
+    def apply(rules: Set[_ <: Rewrite]): Rewriter = new Rewriter(substitutioner, matcher, rules, matcher.env)
+    def apply(rule: Term): Rewriter = {
+      implicit val e = matcher.env
+      apply(Set(rule.moveRewriteToTop))
+    }
+  }
 }
 
-class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment) {
+class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment) extends (Term => Stream[Term]) {
   assert(env.isSealed)
   assert(rules != null)
 
@@ -39,6 +44,8 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
   sortedRules ++= rules
 
   import env._
+
+  def apply(t: Term): Stream[Term] = step(t)
 
   def step(obj: Term): Stream[Term] = {
     var tries = 0

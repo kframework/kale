@@ -11,13 +11,13 @@ trait AssocLabel extends Label2 {
 
   private val thisthis = this
 
-  def asList(t: Term): Iterable[Term] = t.label match {
+  def asIterable(t: Term): Iterable[Term] = t.label match {
     case `thisthis` => t.asInstanceOf[Assoc].assocIterable
     case _ => List(t)
   }
 
   object iterable {
-    def unapply(t: Term): Option[Iterable[Term]] = Some(asList(t))
+    def unapply(t: Term): Option[Iterable[Term]] = Some(asIterable(t))
   }
 
 }
@@ -31,7 +31,9 @@ trait AssocWithIdLabel extends AssocLabel with HasId {
     construct(l1 ++ l2)
   }
 
-  def asIterable(t: Term): Iterable[Term] = t match {
+  val self = this
+
+  override def asIterable(t: Term): Iterable[Term] = t match {
     case `identity` => List[Term]()
     case x if x.label == this => x.asInstanceOf[Assoc].assocIterable
     case y => List(y)

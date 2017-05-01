@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.standard.Bottomize
+import org.kframework.kale.standard.{Bottomize, Name, Sort}
 import org.kframework.kore
 
 import scala.collection.mutable

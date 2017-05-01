@@ -12,7 +12,7 @@ case class Path(positions: Seq[Int]) {
   def apply(t: Term): Term = positions match {
     case head :: tail =>
       val elements = t.label match {
-        case label: AssocLabel => label.asList(t).toSeq
+        case label: AssocLabel => label.asIterable(t).toSeq
         case _ => t.children.toSeq
       }
       Path(tail)(elements(positions.head))

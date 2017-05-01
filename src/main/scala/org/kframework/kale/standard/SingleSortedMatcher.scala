@@ -48,14 +48,14 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
   }
 
   def AssocTerm(solver: Apply)(a: Assoc, b: Term) = {
-    val asList = a.label.asList _
+    val asList = a.label.asIterable _
     val l1 = asList(a)
     val l2 = asList(b)
     matchContents(a.label, Top, l1, l2)(solver)
   }
 
   def TermAssoc(solver: Apply)(a: Term, b: Assoc) = {
-    val asList = b.label.asList _
+    val asList = b.label.asIterable _
     val l1 = asList(a)
     val l2 = asList(b)
     matchContents(b.label, Top, l1, l2)(solver)

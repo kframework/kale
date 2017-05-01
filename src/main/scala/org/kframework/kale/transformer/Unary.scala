@@ -2,7 +2,7 @@ package org.kframework.kale.transformer
 
 import org.kframework.kale._
 import org.kframework.kale.transformer.GenUnary.Apply
-import org.kframework.kale.util.Util
+import org.kframework.kale.util.fixpoint
 
 /**
   * Abstract stateful transformer from Term to Term
@@ -88,7 +88,7 @@ object Unary {
       case l: LeafLabel[_] => DoNothing _
     }
 
-    def fixpoint(t: Term): Term = Util.fixpoint(apply)(t)
+    def fixpoint(t: Term): Term = util.fixpoint(apply)(t)
   }
 
 }

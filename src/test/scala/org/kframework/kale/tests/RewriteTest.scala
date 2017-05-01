@@ -31,7 +31,7 @@ class RewriteTest extends FreeSpec with TestSetup {
     assertRewrite(Rewrite((2: Term) + X + 3, (5: Term) + X))((2: Term) + 4 + 3, (5: Term) + 4)
   }
 
-  val rewriter = Rewriter(substitutionApplier, unifier, env)(Set(
+  val rewriter = Rewriter(substitutionApplier, unifier)(Set(
     Rewrite(X + 0, X),
     Rewrite((0: Term) + X, X),
     Rewrite(el ~~ 3 ~~ X ~~ Y ~~ 6, el ~~ X ~~ 0 ~~ Y)

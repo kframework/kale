@@ -1,7 +1,7 @@
 package org.kframework.kale
 
 import io.circe.{Decoder, Encoder, HCursor}
-import org.kframework.kale.util.HasAtt
+import org.kframework.kale.util.{HasAtt, Util}
 import org.kframework.kore
 import org.kframework.kore.implementation.DefaultBuilders
 import io.circe.syntax._
@@ -89,6 +89,15 @@ object Term {
           (labelAndAtts + ("children" -> node.children.asJson)).asJson
       }
     }
+  }
+
+  implicit class StaticRichTerm(t: Term) {
+    def contains(subterm: Term): Boolean = Util.contains(t, subterm) // if (t == subterm) true else t.children.exists(_.contains(subterm))
+    def containsInConstructor(subterm: Term): Boolean = Util.containsInConstructor(t, subterm)
+  }
+
+  implicit class RichTerm(t: Term)(implicit env: Environment) {
+    def moveRewriteToTop: Rewrite = Util.moveRewriteSymbolToTop(t)
   }
 }
 

@@ -9,7 +9,7 @@ import org.kframework.kore
 
 import scala.collection.{Iterable, Map, Seq, Set}
 
-abstract class ReferenceLabel[T](val name: String)(val env: Environment) extends PrimordialDomainValueLabel[T]
+abstract class ReferenceLabel[T](val name: String)(implicit val env: Environment) extends PrimordialDomainValueLabel[T]
 
 trait PrimordialDomainValueLabel[T] extends DomainValueLabel[T] {
   def apply(v: T): DomainValue[T] = StandardDomainValue(this, v)
@@ -28,6 +28,13 @@ private[standard] case class StandardVariableLabel(implicit val env: Environment
 
   override protected[this] def internalInterpret(s: String): (kale.Name, kale.Sort) = s.split(":") match {
     case Array(name, sort) => (Name(name), Sort(sort))
+  }
+
+  var counter = 0
+
+  def __ = {
+    counter += 1
+    this ((Name("_" + counter), Sort("K")))
   }
 }
 
@@ -339,7 +346,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
 
   lazy val _1: Term = s
   lazy val _2: Term = terms
-  override lazy val assocIterable: Iterable[Term] = And.asList(s) ++ And.asList(terms)
+  override lazy val assocIterable: Iterable[Term] = And.asIterable(s) ++ And.asIterable(terms)
 
   override def equals(other: Any): Boolean = other match {
     case that: AndOfSubstitutionAndTerms => this.s == that.s && this.terms == that.terms
@@ -369,7 +376,7 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
 
   override def asMap: Map[Variable, Term] = m
 
-  override val assocIterable: Iterable[Term] = And.asList(this)
+  override val assocIterable: Iterable[Term] = And.asIterable(this)
 
   override def toString: String = super[BinaryInfix].toString
 

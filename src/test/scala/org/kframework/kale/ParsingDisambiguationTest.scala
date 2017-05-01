@@ -189,7 +189,7 @@ class ParsingDisambiguationTest extends FreeSpec {
 
     val rewriteOnTop = Util.moveRewriteSymbolToTop(disambRule)(env)
 
-    val rewriter = Rewriter(substitutionApplier, unifier, env)(Set(rewriteOnTop))
+    val rewriter = Rewriter(substitutionApplier, unifier)(Set(rewriteOnTop))
 
     println(rewriter.searchStep(asMult(theAmbiguity)))
     println(rewriter.searchStep(asDecl(theAmbiguity)))
@@ -209,12 +209,12 @@ class ParsingDisambiguationTest extends FreeSpec {
         Rewrite(amb(ANYWHERE(TypeId(A)), B), B)
       )
 
-    val rewriterVarDecl = Rewriter(substitutionApplier, unifier, env)(Set(Util.moveRewriteSymbolToTop(keepVarDecl)(env)))
+    val rewriterVarDecl = Rewriter(substitutionApplier, unifier)(Set(Util.moveRewriteSymbolToTop(keepVarDecl)(env)))
 
     println(rewriterVarDecl.searchStep(asMult(theAmbiguity)))
     println(rewriterVarDecl.searchStep(asDecl(theAmbiguity)))
 
-    val rewriter = Rewriter(substitutionApplier, unifier, env)(Set(Util.moveRewriteSymbolToTop(keepMult)(env)))
+    val rewriter = Rewriter(substitutionApplier, unifier)(Set(Util.moveRewriteSymbolToTop(keepMult)(env)))
 
     println(rewriter.searchStep(asMult(theAmbiguity)))
     println(rewriter.searchStep(asDecl(theAmbiguity)))
