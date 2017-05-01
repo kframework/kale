@@ -16,34 +16,34 @@ class ParsingDisambiguationTest extends FreeSpec {
 
   val implicits = new Implicits()
 
-  val ExpId = FreeLabel1("ExpId")
-  val readPointer = FreeLabel1("readPointer")
-  val mult = FreeLabel2("mult")
-  val plus = FreeLabel2("plus")
+  val ExpId = SimpleFreeLabel1("ExpId")
+  val readPointer = SimpleFreeLabel1("readPointer")
+  val mult = SimpleFreeLabel2("mult")
+  val plus = SimpleFreeLabel2("plus")
 
-  val emptyExpList = FreeLabel0("emptyExpList")
-  val ExpList = FreeLabel2("ExpList")
+  val emptyExpList = SimpleFreeLabel0("emptyExpList")
+  val ExpList = SimpleFreeLabel2("ExpList")
 
-  val ExpStmt = FreeLabel1("_;")
-  val block = FreeLabel1("block")
-  val typedef = FreeLabel1("typedef")
+  val ExpStmt = SimpleFreeLabel1("_;")
+  val block = SimpleFreeLabel1("block")
+  val typedef = SimpleFreeLabel1("typedef")
 
-  val VarDecl = FreeLabel2("VarDecl")
+  val VarDecl = SimpleFreeLabel2("VarDecl")
 
-  val TypeId = FreeLabel1("TypeId")
+  val TypeId = SimpleFreeLabel1("TypeId")
 
-  val Pointer = FreeLabel1("Pointer")
+  val Pointer = SimpleFreeLabel1("Pointer")
 
-  val emptyTypeList = FreeLabel0("emptyTypeList")
-  val TypeList = FreeLabel2("TypeList")
+  val emptyTypeList = SimpleFreeLabel0("emptyTypeList")
+  val TypeList = SimpleFreeLabel2("TypeList")
 
-  val emptyDeclList = FreeLabel0("emptyDeclList")
-  val DeclList = FreeLabel2("DeclList")
+  val emptyDeclList = SimpleFreeLabel0("emptyDeclList")
+  val DeclList = SimpleFreeLabel2("DeclList")
 
-  val emptyStmtList = FreeLabel0("emptyStmtList")
-  val StmtList = FreeLabel2("StmtList")
+  val emptyStmtList = SimpleFreeLabel0("emptyStmtList")
+  val StmtList = SimpleFreeLabel2("StmtList")
 
-  val amb = FreeLabel2("amb")
+  val amb = SimpleFreeLabel2("amb")
 
   //  val ANYWHERE_NOT_BLOCK = PatternContextApplicationLabel("ANYWHERE_NOT_BLOCK")
 

@@ -4,7 +4,7 @@ import io.circe._
 import io.circe.syntax._
 import io.circe.parser._
 import org.kframework.kale._
-import org.kframework.kale.standard.{FreeLabel2, StandardEnvironment}
+import org.kframework.kale.standard.{SimpleFreeLabel2, StandardEnvironment}
 import org.scalatest.FreeSpec
 
 import scala.language.implicitConversions
@@ -13,7 +13,7 @@ class CodecTest extends FreeSpec {
 
   implicit val env = StandardEnvironment()
 
-  val foo = FreeLabel2("foo")
+  val foo = SimpleFreeLabel2("foo")
 
   import env._
 

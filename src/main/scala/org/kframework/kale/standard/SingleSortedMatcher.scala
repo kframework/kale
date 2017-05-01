@@ -160,11 +160,11 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
     case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
     case (capp: PatternContextApplicationLabel, _) => new PatternContextMatcher()(env)
     case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 => NoMatch _
-    case (_: FreeLabel0, _: FreeLabel0) => FreeNode0FreeNode0 _
-    case (_: FreeLabel1, _: FreeLabel1) => FreeNode1FreeNode1 _
-    case (_: FreeLabel2, _: FreeLabel2) => FreeNode2FreeNode2 _
-    case (_: FreeLabel3, _: FreeLabel3) => FreeNode3FreeNode3 _
-    case (_: FreeLabel4, _: FreeLabel4) => FreeNode4FreeNode4 _
+    case (_: SimpleFreeLabel0, _: SimpleFreeLabel0) => FreeNode0FreeNode0 _
+    case (_: SimpleFreeLabel1, _: SimpleFreeLabel1) => FreeNode1FreeNode1 _
+    case (_: SimpleFreeLabel2, _: SimpleFreeLabel2) => FreeNode2FreeNode2 _
+    case (_: SimpleFreeLabel3, _: SimpleFreeLabel3) => FreeNode3FreeNode3 _
+    case (_: SimpleFreeLabel4, _: SimpleFreeLabel4) => FreeNode4FreeNode4 _
     case (_: FunctionDefinedByRewritingLabel0, _: FunctionDefinedByRewritingLabel0) => FreeNode0FreeNode0 _
     case (_: FunctionDefinedByRewritingLabel1, _: FunctionDefinedByRewritingLabel1) => FreeNode1FreeNode1 _
     case (_: FunctionDefinedByRewritingLabel2, _: FunctionDefinedByRewritingLabel2) => FreeNode2FreeNode2 _

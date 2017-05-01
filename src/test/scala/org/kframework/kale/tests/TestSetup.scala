@@ -17,7 +17,7 @@ trait TestSetup {
   val X = Variable("X")
   val Y = Variable("Y")
 
-  val emptyList = FreeLabel0("emptyList")
+  val emptyList = SimpleFreeLabel0("emptyList")
 
   val el = emptyList()
 
@@ -27,13 +27,13 @@ trait TestSetup {
     def ~~(o: Term): Term = listLabel(t, o)
   }
 
-  val foo = FreeLabel2("foo")
-  val bar = FreeLabel1("bar")
-  val buz = FreeLabel2("buz")
+  val foo = SimpleFreeLabel2("foo")
+  val bar = SimpleFreeLabel1("bar")
+  val buz = SimpleFreeLabel2("buz")
   val (a, b, c, d, e) = (STRING("a"), STRING("b"), STRING("c"), STRING("d"), STRING("e"))
-  val matched = FreeLabel1("matched")
-  val traversed = FreeLabel1("traversed")
-  val andMatchingY = FreeLabel0("andMatchingY")
+  val matched = SimpleFreeLabel1("matched")
+  val traversed = SimpleFreeLabel1("traversed")
+  val andMatchingY = SimpleFreeLabel0("andMatchingY")
 
   val a2b = standard.FunctionDefinedByRewritingLabel1("a2b")
 

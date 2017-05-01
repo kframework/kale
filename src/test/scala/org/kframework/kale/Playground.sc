@@ -10,9 +10,9 @@ val impl = new Implicits()
 
 import impl._
 
-val block = FreeLabel1("block")
+val block = SimpleFreeLabel1("block")
 
-val mult = FreeLabel2("mult")
+val mult = SimpleFreeLabel2("mult")
 
 env.seal()
 
