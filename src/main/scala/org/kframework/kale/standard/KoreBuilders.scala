@@ -1,6 +1,5 @@
 package org.kframework.kale.standard
 
-import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kore
 import org.kframework.kore.implementation.DefaultBuilders
@@ -11,7 +10,9 @@ class KoreBackend(d: kore.Definition, mainModule: kore.ModuleName) {
   val env = StandardEnvironment
 }
 
-class KoreBuilders(implicit val env: Environment) extends kore.Builders with DefaultOuterBuilders {
+trait KoreBuilders  extends kore.Builders with DefaultOuterBuilders {
+
+  implicit val env: Environment
 
   override def Symbol(str: String): kore.Symbol = env.label(str)
 
