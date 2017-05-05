@@ -1,6 +1,7 @@
 package org.kframework.kale.builtin
 
 import org.kframework.kale.standard.ReferenceLabel
+import org.kframework.kale.util.Named
 import org.kframework.kale.{Environment, FunctionLabel2, Term}
 
 trait HasINT {
@@ -14,14 +15,48 @@ trait HasINT {
 trait HasINTdiv extends HasINT {
   self: Environment =>
 
-  val intDiv = new HasEnvironment with FunctionLabel2 {
+  val intDiv = new Named("_/Int_")(self) with FunctionLabel2 {
     def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
       case (_, INT(0)) => None
       case (INT(0), b) if b.isGround => Some(INT(0))
       case (INT(a), INT(b)) => Some(INT(a / b))
       case _ => None
     }
+  }
+}
 
-    override val name: String = "_/Int_"
+trait HasINTlt extends HasINT with HasBOOLEAN { self: Environment =>
+  val intLt = new Named("_<Int_")(self) with FunctionLabel2 {
+    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
+      case (INT(a), INT(b)) => Some(BOOLEAN(a < b))
+      case _ => None
+    }
+  }
+}
+
+trait HasINTle extends HasINT with HasBOOLEAN { self: Environment =>
+  val intLe = new Named("_<=Int_")(self) with FunctionLabel2 {
+    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
+      case (INT(a), INT(b)) => Some(BOOLEAN(a <= b))
+      case _ => None
+    }
+  }
+}
+
+trait HasINTgt extends HasINT with HasBOOLEAN { self: Environment =>
+  val intGt = new Named("_>Int_")(self) with FunctionLabel2 {
+    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
+      case (INT(a), INT(b)) => Some(BOOLEAN(a > b))
+      case _ => None
+    }
+  }
+}
+
+trait HasINTge extends HasINT with HasBOOLEAN { self: Environment =>
+  val intGe = new Named("_>=Int_")(self) with FunctionLabel2 {
+    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
+      case (INT(a), INT(b)) => Some(BOOLEAN(a >= b))
+      case _ => None
+    }
   }
 }

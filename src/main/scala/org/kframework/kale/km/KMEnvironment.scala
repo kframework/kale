@@ -1,13 +1,13 @@
 package org.kframework.kale.km
 
 import org.kframework.kale
-import org.kframework.kale.builtin.{HasID, HasINT, HasINTdiv}
+import org.kframework.kale.builtin._
 import org.kframework.kale.standard._
 import org.kframework.kale.{Sort => _, _}
 
 import scala.collection._
 
-class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasID {
+class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasINTlt with HasINTle with HasINTgt with HasINTge with HasID {
   private implicit val env = this
 
   private val sorts = mutable.Map[Label, Signature]()

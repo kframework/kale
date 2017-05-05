@@ -64,30 +64,44 @@ class RewriteTest extends FreeSpec {
   }
 
   "symbolic" in {
+
     // variable declarations
     val X = Variable("X", Int)
     val Y = Variable("Y", Int)
     val Z = Variable("Z", Int)
 
-    val l = And(Seq(p(X), Equality(f(X), INT(0)), Equality(f(X), INT(1))))
-    val r = q(X)
-    val r1 = Rewrite(l, r)
+    val r1 = Rewrite(
+      And(Seq(p(X), Equality(intGt(X,INT(0)), BOOLEAN(true)))), // p(x) /\ x > 0
+      q(X)
+    )
+    val r2 = Rewrite(
+      And(Seq(q(X), Equality(intGe(X,INT(0)), BOOLEAN(true)))), // q(x) /\ x >= 0
+      c()
+    )
+    val r3 = Rewrite(
+      And(Seq(q(X), Equality(intLt(X,INT(0)), BOOLEAN(true)))), // q(x) /\ x < 0
+      d()
+    )
 
     val t1 = p(X)
 
-    val And.substitutionAndTerms(sub1, terms1) = l
-    val xx = l.asInstanceOf[And].nonPredicates
-    val yy = l.asInstanceOf[And].predicates
+    // rule p(x:Int) => q(x) if x > 0
+    // p(x) =*=> [ q(x) /\ x > 0 ]
+    assert(
+      rewriter(Set(r1)).searchStep(t1)
+        ==
+      And(Seq(q(X), Equality(intGt(X,INT(0)), BOOLEAN(true))))
+    )
 
-    val ll = And(terms1)
-    val xxx = ll.asInstanceOf[And].nonPredicates
-    val yyy = ll.asInstanceOf[And].predicates
-
-
-    println(rewriter(Set(r1)).searchStep(t1))
-
+    // rule p(x:Int) => q(x) if x > 0
+    // rule q(x:Int) => c if x >= 0
+    // rule q(x:Int) => d if x < 0
+    // p(x) =*=> [ c /\ x>= 0 /\ x > 0 ]
+    val rr = rewriter(Set(r1,r2,r3))
+    println(
+      rr.searchStep(rr.searchStep(t1))
+    )
 
   }
-
 
 }
