@@ -49,11 +49,17 @@ class RewriteTest extends FreeSpec {
 
     // rule a => b
     // a => [ b ]
-    println(rewriter(Set(r1)).searchStep(t1))
+    assert(rewriter(Set(r1)).searchStep(t1) == b())
 
     // rule b => c
     // a =*=> [ ]
-    println(rewriter(Set(r2)).searchStep(t1))
+    assert(rewriter(Set(r2)).searchStep(t1) == Bottom)
+
+    // rule a => b
+    // rule b => c
+    // a => [ c ]
+    val rr = rewriter(Set(r1,r2))
+    assert(rr.searchStep(rr.searchStep(t1)) == c())
 
   }
 
