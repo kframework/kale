@@ -5,6 +5,10 @@ import scala.sys.process._
 
 trait Z3Builtin
 
+/*
+  symbolsSeq: constructor symbols that need to be encoded using z3 datatypes instead of functions.
+  It should be given as SCCs of symbols in topological order of dependency.
+ */
 class z3(val env: Environment, val symbolsSeq: Seq[Seq[Label]]) {
 
   import env._
@@ -72,7 +76,8 @@ class z3(val env: Environment, val symbolsSeq: Seq[Seq[Label]]) {
       .map(sort => if (sort.isInstanceOf[Z3Builtin]) "" else "(declare-sort " + sort.smtName + ")\n").mkString
     declareSorts + declDatatypes + declareFuns
   }
-  lazy val datatypes: Set[Sort] = symbolsSeq.flatMap(_.flatMap(s => sortArgs(s).toSet + sortTarget(s)).toSet).toSet
+//lazy val datatypes: Set[Sort] = symbolsSeq.flatMap(_.flatMap(s => sortArgs(s).toSet + sortTarget(s)).toSet).toSet
+  lazy val datatypes: Set[Sort] = symbolsSeq.flatMap(_.map(sortTarget).toSet).toSet
   lazy val declDatatypes: String = declareDatatypesSeq(symbolsSeq)
 
   // symbolsSeq: SCCs of symbols in topological order
