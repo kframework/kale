@@ -7,7 +7,7 @@ import org.kframework.kale._
 
 import scala.collection._
 
-class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasINTlt with HasINTle with HasINTgt with HasINTge with HasID {
+class KMEnvironment extends DNFEnvironment with HasINT with HasINTdiv with HasINTcmp with HasID {
   private implicit val env = this
 
   private val sorts = mutable.Map[Label, Signature]()

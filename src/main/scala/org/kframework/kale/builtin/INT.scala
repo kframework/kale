@@ -25,6 +25,8 @@ trait HasINTdiv extends HasINT {
   }
 }
 
+trait HasINTcmp extends HasINTlt with HasINTle with HasINTgt with HasINTge { self: Environment => }
+
 trait HasINTlt extends HasINT with HasBOOLEAN { self: Environment =>
   val intLt = new Named("_<Int_")(self) with FunctionLabel2 with Z3Builtin {
     def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
