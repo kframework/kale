@@ -27,6 +27,8 @@ trait DomainValue[T] extends Leaf[T] with kore.DomainValue {
 trait Sort extends kore.Sort {
   val name: String
 
+  def smtName: String = name
+
   override def equals(other: Any): Boolean = other match {
     case that: Sort => that.name == name
     case _ => false

@@ -57,9 +57,9 @@ class z3(val env: Environment, val symbolsSeq: Seq[Seq[Label]]) {
     // - variables and zero-argument symbols as `const`
     // - non-zero-argument symbols as `fun`
     val declareFuns: String = symbols.map({
-      case v:Variable => "(declare-const " + v.name + " " + v.sort.name + ")\n"
-      case l:FreeLabel0 => "(declare-const " + l.smtName + " " + sortTarget(l).name + ")\n"
-      case l:FreeLabel => "(declare-fun " + l.smtName + " (" + sortArgs(l).map(_.name).mkString(" ") + ") " + sortTarget(l).name + ")\n"
+      case v:Variable => "(declare-const " + v.name + " " + v.sort.smtName + ")\n"
+      case l:FreeLabel0 => "(declare-const " + l.smtName + " " + sortTarget(l).smtName + ")\n"
+      case l:FreeLabel => "(declare-fun " + l.smtName + " (" + sortArgs(l).map(_.smtName).mkString(" ") + ") " + sortTarget(l).smtName + ")\n"
       case _ => ???
     }).mkString
     // remaining sorts not defined by constructor datatypes
@@ -69,7 +69,7 @@ class z3(val env: Environment, val symbolsSeq: Seq[Seq[Label]]) {
       case _ => ???
     })
     val declareSorts = (sorts -- datatypes)
-      .map(sort => if (sort.isInstanceOf[Z3Builtin]) "" else "(declare-sort " + sort.name + ")\n").mkString
+      .map(sort => if (sort.isInstanceOf[Z3Builtin]) "" else "(declare-sort " + sort.smtName + ")\n").mkString
     declareSorts + declDatatypes + declareFuns
   }
   lazy val datatypes: Set[Sort] = symbolsSeq.flatMap(_.flatMap(s => sortArgs(s).toSet + sortTarget(s)).toSet).toSet
@@ -82,9 +82,9 @@ class z3(val env: Environment, val symbolsSeq: Seq[Seq[Label]]) {
       symbols.filter(sym => !sym.isInstanceOf[Z3Builtin])
         .groupBy(sortTarget)
         .map({case (sort, syms) =>
-          "  (" + sort.name + "\n" +
+          "  (" + sort.smtName + "\n" +
             syms.map(sym =>
-              "    (" + sym.smtName + " " + sortArgs(sym).zipWithIndex.map({case (s,i) => "(" + sym.smtName + i + " " + s.name + ")"}).mkString(" ") + ")\n"
+              "    (" + sym.smtName + " " + sortArgs(sym).zipWithIndex.map({case (s,i) => "(" + sym.smtName + i + " " + s.smtName + ")"}).mkString(" ") + ")\n"
             ).mkString +
             "  )\n"
         }).mkString +
