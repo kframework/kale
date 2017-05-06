@@ -12,14 +12,50 @@ trait HasINT {
   }
 }
 
-trait HasINTdiv extends HasINT {
-  self: Environment =>
+trait HasINTbop extends HasINTplus with HasINTminus with HasINTmult with HasINTdiv with HasINTmod { self: Environment => }
 
+trait HasINTplus extends HasINT { self: Environment =>
+  val intPlus = new Named("_+Int_")(self) with FunctionLabel2 {
+    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
+      case (INT(a), INT(b)) => Some(INT(a + b))
+      case _ => None
+    }
+  }
+}
+
+trait HasINTminus extends HasINT { self: Environment =>
+  val intMinus = new Named("_-Int_")(self) with FunctionLabel2 {
+    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
+      case (INT(a), INT(b)) => Some(INT(a + b))
+      case _ => None
+    }
+  }
+}
+
+trait HasINTmult extends HasINT { self: Environment =>
+  val intMult = new Named("_*Int_")(self) with FunctionLabel2 {
+    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
+      case (INT(a), INT(b)) => Some(INT(a * b))
+      case _ => None
+    }
+  }
+}
+
+trait HasINTdiv extends HasINT { self: Environment =>
   val intDiv = new Named("_/Int_")(self) with FunctionLabel2 {
     def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
-      case (_, INT(0)) => None
-      case (INT(0), b) if b.isGround => Some(INT(0))
+    //case (_, INT(0)) => None
+    //case (INT(0), b) if b.isGround => Some(INT(0))
       case (INT(a), INT(b)) => Some(INT(a / b))
+      case _ => None
+    }
+  }
+}
+
+trait HasINTmod extends HasINT { self: Environment =>
+  val intMod = new Named("_%Int_")(self) with FunctionLabel2 {
+    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
+      case (INT(a), INT(b)) => Some(INT(a % b))
       case _ => None
     }
   }
