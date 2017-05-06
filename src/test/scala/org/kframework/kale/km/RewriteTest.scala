@@ -1,6 +1,6 @@
 package org.kframework.kale.km
 
-import org.kframework.kale.{And, Rewriter, SubstitutionApply}
+import org.kframework.kale.{And, Rewriter, SubstitutionApply, Z3Builtin}
 import org.kframework.kale.standard._
 import org.scalatest.FreeSpec
 
@@ -12,7 +12,7 @@ class RewriteTest extends FreeSpec {
   // sort delcarations
   object Sorts {
     val Id = Sort("Id")
-    val Int = Sort("Int")
+    val Int = new Sort("Int") with Z3Builtin
     val K = Sort("K")
   }
   import Sorts._
@@ -49,39 +49,61 @@ class RewriteTest extends FreeSpec {
 
     // rule a => b
     // a => [ b ]
-    println(rewriter(Set(r1)).searchStep(t1))
+    assert(rewriter(Set(r1)).searchStep(t1) == b())
 
     // rule b => c
     // a =*=> [ ]
-    println(rewriter(Set(r2)).searchStep(t1))
+    assert(rewriter(Set(r2)).searchStep(t1) == Bottom)
+
+    // rule a => b
+    // rule b => c
+    // a => [ c ]
+    val rr = rewriter(Set(r1,r2))
+    assert(rr.searchStep(rr.searchStep(t1)) == c())
 
   }
 
   "symbolic" in {
+
     // variable declarations
     val X = Variable("X", Int)
     val Y = Variable("Y", Int)
     val Z = Variable("Z", Int)
 
-    val l = And(Seq(p(X), Equality(f(X), INT(0)), Equality(f(X), INT(1))))
-    val r = q(X)
-    val r1 = Rewrite(l, r)
+    val r1 = Rewrite(
+      And(Seq(p(X), Equality(intGt(X,INT(0)), BOOLEAN(true)))), // p(x) /\ x > 0
+      q(X)
+    )
+    val r2 = Rewrite(
+      And(Seq(q(X), Equality(intGe(X,INT(0)), BOOLEAN(true)))), // q(x) /\ x >= 0
+      c()
+    )
+    val r3 = Rewrite(
+      And(Seq(q(X), Equality(intLt(X,INT(0)), BOOLEAN(true)))), // q(x) /\ x < 0
+      d()
+    )
 
     val t1 = p(X)
 
-    val And.substitutionAndTerms(sub1, terms1) = l
-    val xx = l.asInstanceOf[And].nonPredicates
-    val yy = l.asInstanceOf[And].predicates
+    // rule p(x:Int) => q(x) if x > 0
+    // p(x) =*=> [ q(x) /\ x > 0 ]
+    assert(
+      rewriter(Set(r1)).searchStep(t1)
+        ==
+      And(Seq(q(X), Equality(intGt(X,INT(0)), BOOLEAN(true))))
+    )
 
-    val ll = And(terms1)
-    val xxx = ll.asInstanceOf[And].nonPredicates
-    val yyy = ll.asInstanceOf[And].predicates
-
-
-    println(rewriter(Set(r1)).searchStep(t1))
-
+    // rule p(x:Int) => q(x) if x > 0
+    // rule q(x:Int) => c if x >= 0
+    // rule q(x:Int) => d if x < 0
+    // p(x) =*=> [ c /\ x>= 0 /\ x > 0 ]
+    val rr = rewriter(Set(r1,r2,r3))
+    assert(
+      rr.searchStep(rr.searchStep(t1))
+        ==
+      And(Seq(c(), Equality(intGe(X,INT(0)), BOOLEAN(true)), Equality(intGt(X,INT(0)), BOOLEAN(true))))
+    )
 
   }
-
 
 }

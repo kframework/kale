@@ -1,7 +1,7 @@
 package org.kframework.kale
 
 
-trait Constructor
+trait Constructor extends NodeLabel
 
 trait FreeLabel extends Constructor
 
@@ -46,16 +46,18 @@ trait FreeLabel6 extends Label6 with FreeLabel {
   }
 }
 
-case class FreeNode0(label: Label0) extends Node0 with Application
+trait FreeNode // extends Node
 
-case class FreeNode1(label: Label1, _1: Term) extends Node1 with Application
+case class FreeNode0(label: Label0) extends Node0 with FreeNode with Application
 
-case class FreeNode2(label: Label2, _1: Term, _2: Term) extends Node2 with Application
+case class FreeNode1(label: Label1, _1: Term) extends Node1 with FreeNode with Application
 
-case class FreeNode3(label: Label3, _1: Term, _2: Term, _3: Term) extends Node3 with Application
+case class FreeNode2(label: Label2, _1: Term, _2: Term) extends Node2 with FreeNode with Application
 
-case class FreeNode4(label: Label4, _1: Term, _2: Term, _3: Term, _4: Term) extends Node4 with Application
+case class FreeNode3(label: Label3, _1: Term, _2: Term, _3: Term) extends Node3 with FreeNode with Application
 
-case class FreeNode5(label: Label5, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term) extends Node5 with Application
+case class FreeNode4(label: Label4, _1: Term, _2: Term, _3: Term, _4: Term) extends Node4 with FreeNode with Application
 
-case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term) extends Node6 with Application
+case class FreeNode5(label: Label5, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term) extends Node5 with FreeNode with Application
+
+case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term) extends Node6 with FreeNode with Application
