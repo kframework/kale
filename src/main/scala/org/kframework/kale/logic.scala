@@ -27,6 +27,8 @@ trait DomainValue[T] extends Leaf[T] with kore.DomainValue {
 trait Sort extends kore.Sort {
   val name: String
 
+  def smtName: String = name
+
   override def equals(other: Any): Boolean = other match {
     case that: Sort => that.name == name
     case _ => false
@@ -78,24 +80,24 @@ trait Top extends Truth with Substitution with kore.Top
 trait Bottom extends Truth with kore.Bottom
 
 
-trait AndLabel extends AssocCommWithIdLabel {
+trait AndLabel extends AssocCommWithIdLabel with Z3Builtin {
   override val identity = env.Top
   assert(identity != null)
   def asSubstitutionAndTerms(t: Term): (Substitution, Set[Term])
 }
 
-trait OrLabel extends AssocCommWithIdLabel {
+trait OrLabel extends AssocCommWithIdLabel with Z3Builtin {
   override val identity = env.Bottom
   assert(identity != null)
 }
 
 trait RewriteLabel extends Label2
 
-trait EqualityLabel extends Label2 {
+trait EqualityLabel extends Label2 with Z3Builtin {
   def binding(_1: Variable, _2: Term): Binding
 }
 
-trait NotLabel extends Label1
+trait NotLabel extends Label1 with Z3Builtin
 
 trait Equals extends kore.Equals with Node2 with BinaryInfix {
   override lazy val isPredicate: Boolean = true

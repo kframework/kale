@@ -43,6 +43,8 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
 
   sortedRules ++= rules
 
+  val z3 = new z3(env, Seq(Seq()))
+
   import env._
 
   def apply(t: Term): Stream[Term] = step(t)
@@ -80,7 +82,7 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
         val res = Or.asSet(or).flatMap(u => {
           val (sub, terms) = And.asSubstitutionAndTerms(u)
           val constraints = And(terms)
-          if (sat(constraints)) {
+          if (z3.sat(constraints)) {
             Set(And(substitutioner(sub)(rhs), constraints)) // TODO: consider when rhs.predicates is not satisfiable with constraints
           } else {
             Set[Term]()
@@ -89,6 +91,4 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
         res
     }))
   }
-
-  def sat(t: Term): Boolean = true // TODO(Daejun): implement
 }

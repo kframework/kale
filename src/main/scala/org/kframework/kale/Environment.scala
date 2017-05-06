@@ -3,7 +3,7 @@ package org.kframework.kale
 import org.kframework.kale.standard.{Bottomize, Name, Sort}
 import org.kframework.kore
 
-import scala.collection.mutable
+import scala.collection._
 
 trait Environment extends KORELabels with Bottomize {
 
@@ -37,6 +37,10 @@ trait Environment extends KORELabels with Bottomize {
   def label(labelName: String): Label = uniqueLabels(labelName)
 
   def sort(l: Label, children: Seq[Term]): Sort
+
+  def sortArgs(l: Label): Seq[Sort]
+
+  def sortTarget(l: Label): Sort
 
   override def toString = {
     "nextId: " + uniqueLabels.size + "\n" + uniqueLabels.mkString("\n")

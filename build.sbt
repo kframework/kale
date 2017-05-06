@@ -16,5 +16,5 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic" % "0.7.0",
   "io.circe" %% "circe-parser" % "0.7.0",
 
-  "org.kframework" %% "kore" % "0.5-SNAPSHOT"
+  "org.kframework.k" %% "kore" % "1.0-SNAPSHOT"
 )

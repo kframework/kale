@@ -31,7 +31,7 @@ class MultiSortedUnifier(val env: KMEnvironment) extends kale.MatcherOrUnifier {
     case (_, And) => TermAnd _
     case (Or, _) => OrTerm _
     case (_, Or) => TermOr _
-    case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 || env.targetSort(l1) != env.targetSort(l2) => NoMatch _
+    case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 || env.sortTarget(l1) != env.sortTarget(l2) => NoMatch _
   })
     .orElse(freeLabelProcessing)
     .orElse(functionDefinedByRewritingProcessing)
