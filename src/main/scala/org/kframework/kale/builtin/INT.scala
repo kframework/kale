@@ -20,6 +20,7 @@ trait HasINTplus extends HasINT { self: Environment =>
       case (INT(a), INT(b)) => Some(INT(a + b))
       case _ => None
     }
+    override def smtName: String = "+"
   }
 }
 
@@ -29,6 +30,7 @@ trait HasINTminus extends HasINT { self: Environment =>
       case (INT(a), INT(b)) => Some(INT(a + b))
       case _ => None
     }
+    override def smtName: String = "-"
   }
 }
 
@@ -38,6 +40,7 @@ trait HasINTmult extends HasINT { self: Environment =>
       case (INT(a), INT(b)) => Some(INT(a * b))
       case _ => None
     }
+    override def smtName: String = "*"
   }
 }
 
@@ -49,6 +52,7 @@ trait HasINTdiv extends HasINT { self: Environment =>
       case (INT(a), INT(b)) => Some(INT(a / b))
       case _ => None
     }
+    override def smtName: String = "div" // integer division, while "/" is real division.
   }
 }
 
@@ -58,6 +62,7 @@ trait HasINTmod extends HasINT { self: Environment =>
       case (INT(a), INT(b)) => Some(INT(a % b))
       case _ => None
     }
+    override def smtName: String = "mod" // z3 also has "rem", remainder.
   }
 }
 
