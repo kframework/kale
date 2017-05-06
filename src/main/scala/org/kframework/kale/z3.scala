@@ -34,8 +34,8 @@ class z3(val env: Environment, val symbolsSeq: Seq[Seq[Label]]) {
     case t:Equals => "(= " + encode(t._1) + " " + encode(t._2) + ")"
     case t:And => "(and " + encode(t._1) + " " + encode(t._2) + ")"
     case t:Or => "(or " + encode(t._1) + " " + encode(t._2) + ")"
-    case FreeNode0(symbol) => symbol.smt
-    case t:FreeNode => "(" + t.label.smt + " " + t.children.map(encode).mkString(" ") + ")"
+    case FreeNode0(symbol) => symbol.smtName
+    case t:FreeNode => "(" + t.label.smtName + " " + t.children.map(encode).mkString(" ") + ")"
     case v:Variable => v.name.toString
     case c:DomainValue[_] => c.toString
     case _ => ???
@@ -58,8 +58,8 @@ class z3(val env: Environment, val symbolsSeq: Seq[Seq[Label]]) {
     // - non-zero-argument symbols as `fun`
     val declareFuns: String = symbols.map({
       case v:Variable => "(declare-const " + v.name + " " + v.sort.name + ")\n"
-      case l:FreeLabel0 => "(declare-const " + l.smt + " " + sortTarget(l).name + ")\n"
-      case l:FreeLabel => "(declare-fun " + l.smt + " (" + sortArgs(l).map(_.name).mkString(" ") + ") " + sortTarget(l).name + ")\n"
+      case l:FreeLabel0 => "(declare-const " + l.smtName + " " + sortTarget(l).name + ")\n"
+      case l:FreeLabel => "(declare-fun " + l.smtName + " (" + sortArgs(l).map(_.name).mkString(" ") + ") " + sortTarget(l).name + ")\n"
       case _ => ???
     }).mkString
     // remaining sorts not defined by constructor datatypes
@@ -84,7 +84,7 @@ class z3(val env: Environment, val symbolsSeq: Seq[Seq[Label]]) {
         .map({case (sort, syms) =>
           "  (" + sort.name + "\n" +
             syms.map(sym =>
-              "    (" + sym.smt + " " + sortArgs(sym).zipWithIndex.map({case (s,i) => "(" + sym.smt + i + " " + s.name + ")"}).mkString(" ") + ")\n"
+              "    (" + sym.smtName + " " + sortArgs(sym).zipWithIndex.map({case (s,i) => "(" + sym.smtName + i + " " + s.name + ")"}).mkString(" ") + ")\n"
             ).mkString +
             "  )\n"
         }).mkString +

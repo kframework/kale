@@ -31,7 +31,7 @@ trait HasINTlt extends HasINT with HasBOOLEAN { self: Environment =>
       case (INT(a), INT(b)) => Some(BOOLEAN(a < b))
       case _ => None
     }
-    override def smt: String = "<"
+    override def smtName: String = "<"
   }
 }
 
@@ -41,7 +41,7 @@ trait HasINTle extends HasINT with HasBOOLEAN { self: Environment =>
       case (INT(a), INT(b)) => Some(BOOLEAN(a <= b))
       case _ => None
     }
-    override def smt: String = "<="
+    override def smtName: String = "<="
   }
 }
 
@@ -51,7 +51,7 @@ trait HasINTgt extends HasINT with HasBOOLEAN { self: Environment =>
       case (INT(a), INT(b)) => Some(BOOLEAN(a > b))
       case _ => None
     }
-    override def smt: String = ">"
+    override def smtName: String = ">"
   }
 }
 
@@ -61,6 +61,6 @@ trait HasINTge extends HasINT with HasBOOLEAN { self: Environment =>
       case (INT(a), INT(b)) => Some(BOOLEAN(a >= b))
       case _ => None
     }
-    override def smt: String = ">="
+    override def smtName: String = ">="
   }
 }

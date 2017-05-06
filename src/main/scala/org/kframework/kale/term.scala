@@ -11,7 +11,7 @@ trait Label extends MemoizedHashCode with kore.Symbol {
 
   val name: String
 
-  def smt: String = name
+  def smtName: String = name
 
   val id: Int = env.register(this)
 
