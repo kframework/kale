@@ -95,7 +95,7 @@ trait EqualityLabel extends Label2 with Z3Builtin {
   def binding(_1: Variable, _2: Term): Binding
 }
 
-trait NotLabel extends Label1
+trait NotLabel extends Label1 with Z3Builtin
 
 trait Equals extends kore.Equals with Node2 with BinaryInfix {
   override lazy val isPredicate: Boolean = true
