@@ -5,7 +5,7 @@ import scala.sys.process._
 
 trait Z3Builtin
 
-class z3(val env: Environment) {
+class z3(val env: Environment, val symbolsSeq: Seq[Seq[Label]]) {
 
   import env._
 
@@ -72,28 +72,24 @@ class z3(val env: Environment) {
       .map(sort => if (sort.isInstanceOf[Z3Builtin]) "" else "(declare-sort " + sort.name + ")\n").mkString
     declareSorts + declDatatypes + declareFuns
   }
-  lazy val datatypes: Set[Sort] = Set()
-  lazy val declDatatypes: String = ""
+  lazy val datatypes: Set[Sort] = symbolsSeq.flatMap(_.flatMap(s => sortArgs(s).toSet + sortTarget(s)).toSet).toSet
+  lazy val declDatatypes: String = declareDatatypesSeq(symbolsSeq)
 
-  // TODO:
-//  lazy val datatypes: Set[Sort] = symbolsSeq.flatMap(_.flatMap(s => s.signature._1.toSet + s.signature._2).toSet).toSet
-//  lazy val declDatatypes: String = declareDatatypesSeq(symbolsSeq)
-//
-//  // symbolsSeq: SCCs of symbols in topological order
-//  def declareDatatypesSeq(symbolsSeq: Seq[Seq[Symbol]]): String = symbolsSeq.map(declareDatatypes).mkString
-//  def declareDatatypes(symbols: Seq[Symbol]): String = {
-//    "(declare-datatypes () (\n" +
-//      symbols.filter(sym => !sym.isFunctional && !sym.smtBuiltin)
-//        .groupBy(_.signature._2)
-//        .map({case (sort, syms) =>
-//          "  (" + sort.smt + "\n" +
-//            syms.map(sym =>
-//              "    (" + sym.smt + " " + sym.signature._1.zipWithIndex.map({case (s,i) => "(" + sym.smt + i + " " + s.smt + ")"}).mkString(" ") + ")\n"
-//            ).mkString +
-//            "  )\n"
-//        }).mkString +
-//      "))\n"
-//  }
+  // symbolsSeq: SCCs of symbols in topological order
+  def declareDatatypesSeq(symbolsSeq: Seq[Seq[Label]]): String = symbolsSeq.map(declareDatatypes).mkString
+  def declareDatatypes(symbols: Seq[Label]): String = {
+    "(declare-datatypes () (\n" +
+      symbols.filter(sym => !sym.isInstanceOf[Z3Builtin])
+        .groupBy(sortTarget)
+        .map({case (sort, syms) =>
+          "  (" + sort.name + "\n" +
+            syms.map(sym =>
+              "    (" + sym.smt + " " + sortArgs(sym).zipWithIndex.map({case (s,i) => "(" + sym.smt + i + " " + s.name + ")"}).mkString(" ") + ")\n"
+            ).mkString +
+            "  )\n"
+        }).mkString +
+      "))\n"
+  }
 
 }
 

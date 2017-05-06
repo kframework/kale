@@ -43,7 +43,7 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
 
   sortedRules ++= rules
 
-  val z3 = new z3(env)
+  val z3 = new z3(env, Seq(Seq()))
 
   import env._
 
