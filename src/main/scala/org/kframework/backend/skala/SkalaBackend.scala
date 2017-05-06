@@ -1,6 +1,6 @@
 package org.kframework.backend.skala
 
-import org.kframework.kale.Environment
+import org.kframework.kale.{Environment, Label}
 import org.kframework.kale.standard._
 import org.kframework.kore.extended.Backend
 import org.kframework.kore.extended
@@ -80,18 +80,18 @@ object DefintionToEnvironment extends (kore.Definition => Environment) {
     nonAssocSymbols.foreach(x => {
       x.att.getSymbolValue(Encodings.relativeHook) match {
         // Has Relative Hook
-        case Some(_) => print("")
+        case Some(_) => None
         // No Relative Hook
         case None => x.att.getSymbolValue(Encodings.hook) match {
           case Some(v) => {
-            println(v)
+            None
             //Todo: Initialize Some Hook
           }
           case None => {
             x.att.findSymbol(Encodings.function) match {
               case Some(_) => {
                 if (x.symbol.str.startsWith("is")) {
-                  //Todo: Treat as Sort Label
+                  None
 
                 }
 
@@ -112,7 +112,7 @@ object DefintionToEnvironment extends (kore.Definition => Environment) {
                   case Seq(_) => SimpleFreeLabel1(x.symbol.str)
                   case Seq(_, _) => SimpleFreeLabel2(x.symbol.str)
                   case Seq(_, _, _) => SimpleFreeLabel3(x.symbol.str)
-                  case Seq(_, _, _, _) => SimpleFreeLabel4(x.symbol.str)(env)
+                  case Seq(_, _, _, _) => SimpleFreeLabel4(x.symbol.str)
                 }
               }
             }
@@ -121,9 +121,6 @@ object DefintionToEnvironment extends (kore.Definition => Environment) {
       }
     })
 
-    //Kale Initialization
-    //    private val nonAssocLabels: Set[Label] =  nonAssocSymbols.map(x => {
-    //    })
     env
 
   }
