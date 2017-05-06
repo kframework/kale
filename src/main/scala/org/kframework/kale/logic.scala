@@ -78,20 +78,20 @@ trait Top extends Truth with Substitution with kore.Top
 trait Bottom extends Truth with kore.Bottom
 
 
-trait AndLabel extends AssocCommWithIdLabel {
+trait AndLabel extends AssocCommWithIdLabel with Z3Builtin {
   override val identity = env.Top
   assert(identity != null)
   def asSubstitutionAndTerms(t: Term): (Substitution, Set[Term])
 }
 
-trait OrLabel extends AssocCommWithIdLabel {
+trait OrLabel extends AssocCommWithIdLabel with Z3Builtin {
   override val identity = env.Bottom
   assert(identity != null)
 }
 
 trait RewriteLabel extends Label2
 
-trait EqualityLabel extends Label2 {
+trait EqualityLabel extends Label2 with Z3Builtin {
   def binding(_1: Variable, _2: Term): Binding
 }
 

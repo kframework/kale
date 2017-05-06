@@ -2,7 +2,7 @@ package org.kframework.kale.builtin
 
 import org.kframework.kale.standard.ReferenceLabel
 import org.kframework.kale.util.Named
-import org.kframework.kale.{Environment, FunctionLabel2, Term}
+import org.kframework.kale.{Environment, FunctionLabel2, Term, Z3Builtin}
 
 trait HasINT {
   self: Environment =>
@@ -26,37 +26,41 @@ trait HasINTdiv extends HasINT {
 }
 
 trait HasINTlt extends HasINT with HasBOOLEAN { self: Environment =>
-  val intLt = new Named("_<Int_")(self) with FunctionLabel2 {
+  val intLt = new Named("_<Int_")(self) with FunctionLabel2 with Z3Builtin {
     def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
       case (INT(a), INT(b)) => Some(BOOLEAN(a < b))
       case _ => None
     }
+    override def smt: String = "<"
   }
 }
 
 trait HasINTle extends HasINT with HasBOOLEAN { self: Environment =>
-  val intLe = new Named("_<=Int_")(self) with FunctionLabel2 {
+  val intLe = new Named("_<=Int_")(self) with FunctionLabel2 with Z3Builtin {
     def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
       case (INT(a), INT(b)) => Some(BOOLEAN(a <= b))
       case _ => None
     }
+    override def smt: String = "<="
   }
 }
 
 trait HasINTgt extends HasINT with HasBOOLEAN { self: Environment =>
-  val intGt = new Named("_>Int_")(self) with FunctionLabel2 {
+  val intGt = new Named("_>Int_")(self) with FunctionLabel2 with Z3Builtin {
     def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
       case (INT(a), INT(b)) => Some(BOOLEAN(a > b))
       case _ => None
     }
+    override def smt: String = ">"
   }
 }
 
 trait HasINTge extends HasINT with HasBOOLEAN { self: Environment =>
-  val intGe = new Named("_>=Int_")(self) with FunctionLabel2 {
+  val intGe = new Named("_>=Int_")(self) with FunctionLabel2 with Z3Builtin {
     def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
       case (INT(a), INT(b)) => Some(BOOLEAN(a >= b))
       case _ => None
     }
+    override def smt: String = ">="
   }
 }

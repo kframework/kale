@@ -1,6 +1,6 @@
 package org.kframework.kale.km
 
-import org.kframework.kale.{And, Rewriter, SubstitutionApply}
+import org.kframework.kale.{And, Rewriter, SubstitutionApply, Z3Builtin}
 import org.kframework.kale.standard._
 import org.scalatest.FreeSpec
 
@@ -12,7 +12,7 @@ class RewriteTest extends FreeSpec {
   // sort delcarations
   object Sorts {
     val Id = Sort("Id")
-    val Int = Sort("Int")
+    val Int = new Sort("Int") with Z3Builtin
     val K = Sort("K")
   }
   import Sorts._
@@ -98,8 +98,10 @@ class RewriteTest extends FreeSpec {
     // rule q(x:Int) => d if x < 0
     // p(x) =*=> [ c /\ x>= 0 /\ x > 0 ]
     val rr = rewriter(Set(r1,r2,r3))
-    println(
+    assert(
       rr.searchStep(rr.searchStep(t1))
+        ==
+      And(Seq(c(), Equality(intGe(X,INT(0)), BOOLEAN(true)), Equality(intGt(X,INT(0)), BOOLEAN(true))))
     )
 
   }
