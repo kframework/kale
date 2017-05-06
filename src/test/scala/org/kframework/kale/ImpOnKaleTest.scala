@@ -14,18 +14,18 @@ import org.kframework.kore.extended.implicits._
 
 class ImpOnKaleTest extends FreeSpec {
 
-  "IMP" in {
-    val defaultBuilders: Builders = DefaultBuilders
-    val koreParser = parser.TextToKore(defaultBuilders)
-    val imp = Source.fromResource("imp.kore")
-    implicit val koreDefinition: k.Definition = koreParser.parse(imp)
-
-//    val module = koreDefinition.modulesMap(defaultBuilders.ModuleName("SEMANTICS"))
-
-    val module = koreDefinition.modulesMap(defaultBuilders.ModuleName("INT-SYNTAX"))
-
-    val skalaBackend: Backend = SkalaBackend(koreDefinition, module)
-  }
+//  "IMP" in {
+//    val defaultBuilders: Builders = DefaultBuilders
+//    val koreParser = parser.TextToKore(defaultBuilders)
+//    val imp = Source.fromResource("imp.kore")
+//    implicit val koreDefinition: k.Definition = koreParser.parse(imp)
+//
+////    val module = koreDefinition.modulesMap(defaultBuilders.ModuleName("SEMANTICS"))
+//
+//    val module = koreDefinition.modulesMap(defaultBuilders.ModuleName("INT-SYNTAX"))
+//
+//    val skalaBackend: Backend = SkalaBackend(koreDefinition, module)
+//  }
 
 
 
