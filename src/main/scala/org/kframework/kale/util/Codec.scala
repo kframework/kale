@@ -23,7 +23,7 @@ class Codec(attCodecs: Set[AttCodec[E] forSome {type E}])(implicit val env: Envi
       val atts: Map[Att[_], _] = attsCursor.fieldSet.get map {
         (attName: String) =>
           val AttCodec(att, _, decoder) = nameToAttDecoder(attName)
-          (att -> decoder(attsCursor.downField(attName).success.get).right.get)
+          att -> decoder(attsCursor.downField(attName).success.get).right.get
       } toMap
 
       label match {
@@ -51,7 +51,7 @@ class Codec(attCodecs: Set[AttCodec[E] forSome {type E}])(implicit val env: Envi
 
     Encoder.instance[Term] { t =>
       val encodedAtts: Map[String, Json] = t.attributes map {
-        case (att: Att[_], v: Any) => (att.toString -> nameToAttDecoder(att.toString).encoder.asInstanceOf[Encoder[Any]](v))
+        case (att, v) => (att.toString -> nameToAttDecoder(att.toString).encoder.asInstanceOf[Encoder[Any]](v))
       }
       val labelAndAtts = Map("label" -> t.label.toString.asJson, "att" -> encodedAtts.asJson)
       t.label match {
