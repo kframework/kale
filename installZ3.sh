@@ -15,7 +15,7 @@ if [ ! -d ./z3 ]; then
     fi
 
     mkdir z3
-    curl -L $URL | tar -xzf- -C z3 --strip-components=1
+    curl -JL $URL | tar -xf- -C z3 --strip-components=1
 
 
 fi
