@@ -51,7 +51,7 @@ trait Term extends kore.Pattern with HasAtt {
     * Subclasses can override the method to attach functionality related to updating, e.g., updating attributes.
     * Should return `this`.
     */
-//  override def updatePostProcess(oldTerm: Term): Term = this
+  //  override def updatePostProcess(oldTerm: Term): Term = this
 
   // TODO: should experiment with other implementations
   override def hashCode: Int = this.label.hashCode
@@ -101,11 +101,10 @@ object Term {
   implicit class RichTerm(t: Term)(implicit env: Environment) {
     def moveRewriteToTop: Rewrite = Util.moveRewriteSymbolToTop(t)
   }
+
 }
 
-trait LeafLabel[T] extends Label {
-  def apply(t: T): Term
-
+trait LeafLabel[T] extends (T => Leaf[T]) with Label {
   def unapply(t: Term): Option[T] = t match {
     case t: Leaf[T] if t.label == this => Some(t.data)
     case _ => None

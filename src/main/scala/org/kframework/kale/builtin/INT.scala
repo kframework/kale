@@ -2,7 +2,7 @@ package org.kframework.kale.builtin
 
 import org.kframework.kale.standard.ReferenceLabel
 import org.kframework.kale.util.Named
-import org.kframework.kale.{Environment, FunctionLabel2, Term, Z3Builtin}
+import org.kframework.kale._
 
 trait HasINT {
   self: Environment =>
@@ -10,6 +10,8 @@ trait HasINT {
   val INT = new ReferenceLabel[Int]("Int")(this) {
     override protected[this] def internalInterpret(s: String): Int = s.toInt
   }
+
+  implicit def toINT(i: Int): DomainValue[Int] = INT(i)
 }
 
 trait HasINTbop extends HasINTplus with HasINTminus with HasINTmult with HasINTdiv with HasINTmod { self: Environment => }

@@ -138,8 +138,6 @@ object IMP {
     T(k(kseq(Rewrite(div(And(I1, isInt(I1)), And(I2, isInt(I2))), intDiv(I1, I2)), R)), S)
   ) map (t => Rewrite(lhs(t), rhs(t)))
 
-  ID("junk")
-
   env.seal()
 
   val matcher = SingleSortedMatcher()
@@ -189,7 +187,7 @@ class ImpSpec extends FreeSpec {
     import IMP.signature._
     import implicits._
 
-    val term = T(k(ID("foo")), state(varBinding(ID("foo"), 5)))
+    val term = T(k('foo), state(varBinding('foo, 5)))
 
     println(rewrite.searchStep(term))
 

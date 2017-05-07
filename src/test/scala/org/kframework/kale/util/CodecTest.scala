@@ -17,7 +17,7 @@ class CodecTest extends FreeSpec {
 
   import env._
 
-  val pattern = foo(INT(3), STRING("bar"))
+  val pattern = foo(3, STRING("bar"))
 
   object TestAtt extends Att[Int] {
     override def toString = "test"

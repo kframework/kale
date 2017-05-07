@@ -5,7 +5,7 @@ import org.kframework.kale.util.Path
 import org.scalatest.FreeSpec
 
 class PathTest extends FreeSpec with TestSetup {
-  import implicits._
+  import env._
 
   "apply empty path" in {
     assert(Path(Seq())(foo(bar(1), 2)) === foo(bar(1), 2))

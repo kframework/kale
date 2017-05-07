@@ -81,29 +81,29 @@ class ParsingDisambiguationTest extends FreeSpec {
 
   val theAmbiguity: Term = amb(
     VarDecl(
-      TypeList(TypeId(ID("a")), emptyTypeList()),
+      TypeList(TypeId('a), emptyTypeList()),
       DeclList(
-        Pointer(ID("b")),
-        DeclList(Pointer(ID("c")), emptyDeclList()))),
+        Pointer('b),
+        DeclList(Pointer('c), emptyDeclList()))),
     ExpStmt(
       ExpList(
-        mult(ExpId(ID("a")), ExpId(ID("b"))),
+        mult(ExpId('a), ExpId('b)),
         ExpList(
-          readPointer(ExpId(ID("c"))),
+          readPointer(ExpId('c)),
           emptyExpList())))
   )
 
   def asMult(amb: Term) = StmtList(
-    block(StmtList(typedef(ID("a")), emptyStmtList())),
+    block(StmtList(typedef('a), emptyStmtList())),
     ExpList(
-      ID("traversed"),
+      'traversed,
       amb)
   )
 
   def asDecl(amb: Term) = StmtList(
-    typedef(ID("a")),
+    typedef('a),
     ExpList(
-      ID("traversed"),
+      'traversed,
       amb
     )
   )
@@ -148,12 +148,12 @@ class ParsingDisambiguationTest extends FreeSpec {
 
     // as decl
     assert(unifier(pattern, asDecl(theAmbiguity))
-      === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
+      === And(List(Equality(A, 'a), Equality(B, 'b), Equality(C, 'c),
       Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Top), Equality(CX, Hole))))
 
     // as mult
     assert(unifier(pattern, asMult(theAmbiguity))
-      === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
+      === And(List(Equality(A, 'a), Equality(B, 'b), Equality(C, 'c),
       Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Bottom))))
 
   }

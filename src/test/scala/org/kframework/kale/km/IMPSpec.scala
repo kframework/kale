@@ -87,7 +87,7 @@ class IMPSpec extends FreeSpec {
   val unify = new MultiSortedUnifier(env)
 
   "first test" in {
-    assert(unify(X, ID("foo")) === Equality(X, ID("foo")))
+    assert(unify(X, 'foo) === Equality(X, 'foo))
     assert(unify(X, Y) === Equality(X, Y))
     assert(unify(X, INT(2)) === Bottom)
 
@@ -96,7 +96,7 @@ class IMPSpec extends FreeSpec {
     assert(unify(plus(E1,E2), plus(E2,E1)) == Equality(E1, E2))
 //  assert(unify(plus(E1,E2), plus(E2,E1)) == Equality(E2, E1)) // TODO: is that ok?
 
-    val a = ID("a")
+    val a = 'a
 
     assert(
       // q(p(x,y), p(y,x)) =?= q(z,z)
