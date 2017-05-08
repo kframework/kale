@@ -19,7 +19,6 @@ trait AssocLabel extends Label2 {
   object iterable {
     def unapply(t: Term): Option[Iterable[Term]] = Some(asIterable(t))
   }
-
 }
 
 trait AssocWithIdLabel extends AssocLabel with HasId {
