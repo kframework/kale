@@ -17,6 +17,7 @@ object Binary {
       override def f(state: SpecificSolver)(l: Left, r: Right): Term = func(state)(l, r)
     }
   }
+
   /**
     * f specifies how to process a pair of terms with labels (leftLabel, rightLabel).
     * f is automatically hooked and applied via Apply.
@@ -53,7 +54,7 @@ object Binary {
       for (left <- env.labels) {
         for (right <- env.labels) {
           assert(arr(left.id)(right.id) == null)
-          val f = pf((left, right)).map(_(this)).orNull
+          val f = pf((left, right)).map(_ (this)).orNull
           arr(left.id)(right.id) = f
         }
       }
@@ -65,18 +66,19 @@ object Binary {
       assert(left.label.id <= env.labels.size, "Left label " + left.label + " with id " + left.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
       assert(right.label.id <= env.labels.size, "Right label " + right.label + " with id " + right.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
 
-      try {
-        val u = arr(left.label.id)(right.label.id)
-        val res = if (u != null)
-          u(left, right)
-        else
-          env.Bottom
-
-        assert(!(left == right && res == env.Bottom), left.toString)
-        res
+      val u = try {
+        arr(left.label.id)(right.label.id)
       } catch {
-        case _: IndexOutOfBoundsException => throw new AssertionError("No processing function registered for: " + left + " and " + right)
+        case _: IndexOutOfBoundsException => throw new AssertionError("No processing function registered for: " + left.label + " and " + right.label)
       }
+      val res = if (u != null)
+        u(left, right)
+      else
+        env.Bottom
+
+      assert(!(left == right && res == env.Bottom), left.toString)
+      res
     }
   }
+
 }

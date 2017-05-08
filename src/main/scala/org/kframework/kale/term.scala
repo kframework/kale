@@ -93,11 +93,6 @@ object Term {
     }
   }
 
-  implicit class StaticRichTerm(t: Term) {
-    def contains(subterm: Term): Boolean = Util.contains(t, subterm) // if (t == subterm) true else t.children.exists(_.contains(subterm))
-    def containsInConstructor(subterm: Term): Boolean = Util.containsInConstructor(t, subterm)
-  }
-
   implicit class RichTerm(t: Term)(implicit env: Environment) {
     def moveRewriteToTop: Rewrite = Util.moveRewriteSymbolToTop(t)
   }

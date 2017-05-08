@@ -13,10 +13,14 @@ trait HasAtt {
   var attributes: Map[Att[_], _] = Map()
 
   def updateAttributes(oldTerm: Term): Unit = {
-    attributes = (this.attributes map {
-      case (k, v) => (k, k.asInstanceOf[Att[Any]].update(this, Some(oldTerm)))
+    attributes = (oldTerm.attributes map {
+      case (k, _) => (k, k.asInstanceOf[Att[Any]].update(this, Some(oldTerm)))
     }).toMap
   }
+
+  def set[T](att: Att[T], value: T): Unit = attributes += (att -> value)
+
+  def hasAtt(att: Att[_]): Boolean = attributes.contains(att)
 
   def att[T](att: Att[T]): T = {
     if (!attributes.contains(att)) {

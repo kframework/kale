@@ -19,13 +19,15 @@ trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT wit
 
   val AnywhereContext = AnywhereContextApplicationLabel()
 
+  def ANYWHERE(t: Term) = AnywhereContext(Variable.__, t)
+
   override def sort(l: Label, children: Seq[Term]): kale.Sort = Sort.K
 
   override def sortTarget(l: Label): kale.Sort = Sort.K
 
   override def sortArgs(l: Label): Seq[kale.Sort] = l match {
-    case l:LeafLabel[_] => Seq()
-    case l:NodeLabel => Seq.fill(l.arity)(Sort.K)
+    case l: LeafLabel[_] => Seq()
+    case l: NodeLabel => Seq.fill(l.arity)(Sort.K)
   }
 
   override val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)

@@ -102,7 +102,7 @@ trait Node1 extends Node with Product1[Term] {
   val isGround: Boolean = _1.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
-    case 0 => label(t)
+    case 0 => this.copy(t)
   }
 
   override def children: Iterable[Term] = Iterable(_1)
@@ -121,8 +121,8 @@ trait Node2 extends Node with Product2[Term, Term] {
   lazy val isGround: Boolean = _1.isGround && _2.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
-    case 0 => label(t, _2)
-    case 1 => label(_1, t)
+    case 0 => this.copy(t, _2)
+    case 1 => this.copy(_1, t)
   }
 
   override def children: Iterable[Term] = Iterable(_1, _2)
@@ -141,9 +141,9 @@ trait Node3 extends Node with Product3[Term, Term, Term] {
   val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
-    case 0 => label(t, _2, _3)
-    case 1 => label(_1, t, _3)
-    case 2 => label(_1, _2, t)
+    case 0 => this.copy(t, _2, _3)
+    case 1 => this.copy(_1, t, _3)
+    case 2 => this.copy(_1, _2, t)
   }
 
   def copy(_1: Term, _2: Term, _3: Term): Term = label(_1, _2, _3).updatePostProcess(this)
@@ -162,10 +162,10 @@ trait Node4 extends Node with Product4[Term, Term, Term, Term] {
   val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
-    case 0 => label(t, _2, _3, _4)
-    case 1 => label(_1, t, _3, _4)
-    case 2 => label(_1, _2, t, _4)
-    case 3 => label(_1, _2, _3, t)
+    case 0 => this.copy(t, _2, _3, _4)
+    case 1 => this.copy(_1, t, _3, _4)
+    case 2 => this.copy(_1, _2, t, _4)
+    case 3 => this.copy(_1, _2, _3, t)
   }
 
   def copy(_1: Term, _2: Term, _3: Term, _4: Term): Term = label(_1, _2, _3, _4).updatePostProcess(this)
@@ -184,11 +184,11 @@ trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
   val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
-    case 0 => label(t, _2, _3, _4, _5)
-    case 1 => label(_1, t, _3, _4, _5)
-    case 2 => label(_1, _2, t, _4, _5)
-    case 3 => label(_1, _2, _3, t, _5)
-    case 4 => label(_1, _2, _3, _4, t)
+    case 0 => this.copy(t, _2, _3, _4, _5)
+    case 1 => this.copy(_1, t, _3, _4, _5)
+    case 2 => this.copy(_1, _2, t, _4, _5)
+    case 3 => this.copy(_1, _2, _3, t, _5)
+    case 4 => this.copy(_1, _2, _3, _4, t)
   }
 
   def copy(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term): Term = label(_1, _2, _3, _4, _5).updatePostProcess(this)
@@ -207,12 +207,12 @@ trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
   val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround && _6.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
-    case 0 => label(t, _2, _3, _4, _5, _6)
-    case 1 => label(_1, t, _3, _4, _5, _6)
-    case 2 => label(_1, _2, t, _4, _5, _6)
-    case 3 => label(_1, _2, _3, t, _5, _6)
-    case 4 => label(_1, _2, _3, _4, t, _6)
-    case 5 => label(_1, _2, _3, _4, _5, t)
+    case 0 => this.copy(t, _2, _3, _4, _5, _6)
+    case 1 => this.copy(_1, t, _3, _4, _5, _6)
+    case 2 => this.copy(_1, _2, t, _4, _5, _6)
+    case 3 => this.copy(_1, _2, _3, t, _5, _6)
+    case 4 => this.copy(_1, _2, _3, _4, t, _6)
+    case 5 => this.copy(_1, _2, _3, _4, _5, t)
   }
 
   def copy(_1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term): Term = label(_1, _2, _3, _4, _5, _6).updatePostProcess(this)
