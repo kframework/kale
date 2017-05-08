@@ -3,13 +3,14 @@ package org.kframework.kale.standard
 import org.kframework.kale
 import org.kframework.kale.builtin._
 import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
+import org.kframework.kale.pretty.HasPretty
 import org.kframework.kale.{standard, _}
 
 object StandardEnvironment {
   def apply(): StandardEnvironment = new StandardEnvironment {}
 }
 
-trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID {
+trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID with HasPretty {
   private implicit val env = this
 
   val Hole = Variable("☐", Sort.K)

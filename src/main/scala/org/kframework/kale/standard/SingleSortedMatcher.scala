@@ -4,6 +4,7 @@ import org.kframework.kale._
 import org.kframework.kale.builtin.MapLabel
 import org.kframework.kale.context.anywhere.AnywhereContextMatcher
 import org.kframework.kale.context.pattern.{PatternContextApplicationLabel, PatternContextMatcher}
+import org.kframework.kale.pretty.PrettyWrapperHolder
 import org.kframework.kale.transformer.Binary
 
 import scala.collection.{+:, Iterable, Seq}
@@ -146,6 +147,18 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
 
   import standard._
 
+  def TermPrettyWrapper(solver: Apply)(t: Term, a: PrettyWrapperHolder) = {
+    solver(t, a.content)
+  }
+
+  def PrettyWrapperTerm(solver: Apply)(a: PrettyWrapperHolder, t: Term) = {
+    solver(a.content, t)
+  }
+
+  def PrettyWrapperPrettyWrapper(solver: Apply)(a: PrettyWrapperHolder, b: PrettyWrapperHolder) = {
+    FreeNode3FreeNode3(solver)(a, b)
+  }
+
   override def processingFunctions: ProcessingFunctions =
     definePartialFunction({
       case (`BindMatch`, _) => BindMatchMatcher _
@@ -168,6 +181,9 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
         case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm _
         case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm _
         case (left, _: AssocWithIdLabel) if !left.isInstanceOf[Variable] => TermAssocWithId _
+        case (PrettyWrapper, PrettyWrapper) => PrettyWrapperPrettyWrapper _
+        case (term, PrettyWrapper) => TermPrettyWrapper _
+        case (PrettyWrapper, term) => PrettyWrapperTerm _
       }))
       .orElse(super.processingFunctions)
 }

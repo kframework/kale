@@ -173,10 +173,10 @@ class MatchSpec extends FreeSpec with TestSetup {
     assert(xy == And(Equality(X, a), Equality(Y, c), b, d))
     assert(xy == And(Equality(X, a), Equality(Y, c), d, b))
 
-    assert(And.apply(Or(a,b), Or(c,d)) == Or(And(a,c), And(a,d), And(b,c), And(b,d)))
+    assert(And.apply(Or(a, b), Or(c, d)) == Or(And(a, c), And(a, d), And(b, c), And(b, d)))
 
     // testing equivalence of DNFAndLabel.apply(Term,Term) vs DNFAndLabel.apply(Iterable[Term])
-    assert(And.apply(And(a,b), c) == And.apply(Seq(And(a,b), c)))
+    assert(And.apply(And(a, b), c) == And.apply(Seq(And(a, b), c)))
   }
 
   "context and and" in {
@@ -228,5 +228,33 @@ class MatchSpec extends FreeSpec with TestSetup {
     assert((BindMatch(X, bar(Y)) := 3) === Bottom)
 
     assert((BindMatch(X, bar(Y)) := Or(bar(1), 2)) === And(Equality(X, bar(1)), Equality(Y, 1)))
+  }
+
+  "pretty" - {
+    val three = PrettyWrapper("a", 3, "b")
+    "ground" in {
+
+      assert(three.toString === "a3b")
+
+      assert(((3: Term) := three) === Top)
+
+      assert((X := three) === Equality(X, three))
+    }
+
+    val fooThree = PrettyWrapper("c", foo(three, 6), "d")
+
+    "wrapper left" in {
+      assert(And(foo(X, 6) := fooThree, Equality(X, 3)) === Equality(X, three))
+    }
+
+    "wrapper right" in {
+      assert(And(fooThree := foo(X, 6), Equality(X, 3)) === Equality(X, three))
+    }
+
+    "wrapper wrapper" in {
+      val fooThreeDifferent = PrettyWrapper("e", foo(three, 6), "f")
+      assert((fooThree := fooThree) == Top)
+      assert((fooThree := fooThreeDifferent) == Bottom)
+    }
   }
 }

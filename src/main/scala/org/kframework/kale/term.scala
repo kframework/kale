@@ -59,6 +59,14 @@ trait Term extends kore.Pattern with HasAtt {
   def copy(children: Seq[Term]): Term
 }
 
+trait IsPredicate {
+  val isPredicate = true
+}
+
+trait IsNotPredicate {
+  val isPredicate = false
+}
+
 object Term {
   implicit def termDecoder(implicit env: Environment): Decoder[Term] = {
     Decoder.instance { (h: HCursor) =>
