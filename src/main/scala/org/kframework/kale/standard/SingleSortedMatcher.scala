@@ -167,6 +167,7 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
         case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants _
         case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm _
         case (_: AssocLabel, right) if !right.isInstanceOf[Variable] => AssocTerm _
+        case (left, _: AssocLabel) if !left.isInstanceOf[Variable] => TermAssoc _
       }))
       .orElse(super.processingFunctions)
 }
