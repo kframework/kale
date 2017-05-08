@@ -157,7 +157,7 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
       case (`Or`, _) => OrTerm _
       case (_, `Or`) => TermOr _
       case (`Variable`, _) => VarLeft _
-      // case (_, `Variable`) => VarRight
+      case (_, `Variable`) => VarRight _
       case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
       case (capp: PatternContextApplicationLabel, _) => new PatternContextMatcher()(env)
     })
