@@ -77,8 +77,11 @@ private[standard] case class StandardEqualityLabel(implicit override val env: DN
       import org.kframework.kale.util.StaticImplicits._
       val Variable = env.Variable
       _1.label match {
-        case `Variable` if !_2.contains(_1) => binding(_1.asInstanceOf[Variable], _2)
-        case `Variable` if _2.containsInConstructor(_1) => env.Bottom
+        case `Variable` =>
+          if (_2.containsInConstructor(_1))
+            env.Bottom
+          else
+            binding(_1.asInstanceOf[Variable], _2)
         case _ => new Equals(_1, _2)
       }
     }
