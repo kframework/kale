@@ -72,7 +72,10 @@ private[standard] case class StandardEqualityLabel(implicit override val env: DN
     if (_1 == _2)
       env.Top
     else if (_1.isGround && _2.isGround) {
-      env.Bottom
+      if (env.isSealed)
+        env.unify(_1, _2)
+      else
+        new Equals(_1, _2)
     } else {
       import org.kframework.kale.util.StaticImplicits._
       val Variable = env.Variable

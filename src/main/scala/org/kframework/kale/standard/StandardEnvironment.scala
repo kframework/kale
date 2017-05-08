@@ -31,4 +31,6 @@ trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT wit
   }
 
   override val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)
+
+  protected override lazy val unifier = SingleSortedMatcher()(this)
 }

@@ -51,5 +51,7 @@ class KMEnvironment extends DNFEnvironment with HasBuiltin {
 
   def sorted(l: Label3, arg1: kale.Sort, arg2: kale.Sort, arg3: kale.Sort, target: kale.Sort): Unit = sorted(l, Signature(Seq(arg1, arg2, arg3), target))
 
-  override val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionApply(_)
+  override lazy val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionApply(_)
+
+  override protected lazy val unifier = new MultiSortedUnifier(this)
 }

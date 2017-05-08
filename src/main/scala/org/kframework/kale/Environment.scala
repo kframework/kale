@@ -23,6 +23,13 @@ trait Environment extends KORELabels with Bottomize {
 
   val substitutionMaker: Substitution => SubstitutionApply
 
+  final def unify(a: Term, b: Term): Term = {
+    assert(this.isSealed)
+    unifier(a, b)
+  }
+
+  protected val unifier: MatcherOrUnifier
+
   def register(label: Label): Int = {
     assert(!isSealed, "The environment is sealed")
     assert(label != null)
