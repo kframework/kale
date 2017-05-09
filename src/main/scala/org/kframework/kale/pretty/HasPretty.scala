@@ -24,7 +24,11 @@ class PrettyWrapperLabel(implicit envv: Environment with HasPretty) extends Name
 }
 
 case class PrettyWrapperHolder(label: PrettyWrapperLabel, prefix: Term, content: Term, suffix: Term) extends Node3 with IsNotPredicate {
-  override def toString = "⦅" + _1.toString + "|" + _2 + "|" + _3 + "⦆"
+  override def toString =
+    if(_1.toString.nonEmpty || _3.toString.nonEmpty)
+      "⦅" + _1.toString + "|" + _2 + "|" + _3 + "⦆"
+    else
+      _2.toString
 
   override def _1: Term = prefix
 
