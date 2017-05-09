@@ -44,6 +44,11 @@ trait Label3 extends NodeLabel {
 
   def apply(_1: Term, _2: Term, _3: Term): Term
 
+  def unapply(t: Term): Option[(Term, Term, Term)] = t match {
+    case n: Node3 if n.label == this => Some(n._1, n._2, n._3)
+    case _ => None
+  }
+
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head)
 
   override def toString: String =  super[NodeLabel].toString

@@ -234,7 +234,7 @@ class MatchSpec extends FreeSpec with TestSetup {
     val three = PrettyWrapper("a", 3, "b")
     "ground" in {
 
-      assert(three.toString === "a3b")
+      assert(three.pretty === "a3b")
 
       assert(((3: Term) := three) === Top)
 
