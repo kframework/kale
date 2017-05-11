@@ -9,7 +9,7 @@ object StandardEnvironment {
   def apply(): StandardEnvironment = new StandardEnvironment {}
 }
 
-trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID {
+trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID with HasINTplus{
   private implicit val env = this
 
   val Hole = Variable("☐", Sort.K)

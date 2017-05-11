@@ -1,10 +1,11 @@
 package org.kframework.backend.skala
 
-import org.kframework.kale.{Environment, Label}
 import org.kframework.kale.standard._
-import org.kframework.kore.extended.Backend
-import org.kframework.kore.extended
+import org.kframework.kale.{Environment, Term}
+import org.kframework.km.term.Application
 import org.kframework.kore
+import org.kframework.kore.extended
+import org.kframework.kore.extended.Backend
 import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.DefaultBuilders
 
@@ -14,9 +15,17 @@ class SkalaBackend(implicit val env: Environment, val originalDefintion: kore.De
   override def att: kore.Attributes = ???
 
   override def modules: Seq[kore.Module] = ???
-
-
 }
+
+//case class Converter(implicit val env: Environment) {
+//  def convert(p: kore.Pattern): Term = p match {
+//    case kore.SortedVariable(Name(name), Sort(s)) => StandardVariable(Name(name), Sort(s))
+//    case kore.Application(kore.Symbol(s), args) => {
+//      ???
+//    }
+//  }
+//}
+
 
 //Todo: Move somewhere else
 object Encodings {
@@ -27,9 +36,15 @@ object Encodings {
   val relativeHook = DefaultBuilders.Symbol("relativeHook")
   val hook = DefaultBuilders.Symbol("hook")
   val function = DefaultBuilders.Symbol("function")
+  val unit = DefaultBuilders.Symbol("unit")
+  val index = DefaultBuilders.Symbol("index")
+  val comm = DefaultBuilders.Symbol("comm")
+  val macroEnc = DefaultBuilders.Symbol("macro")
+  val rewrite = DefaultBuilders.Symbol("#KRewrite")
 }
 
-object DefintionToEnvironment extends (kore.Definition => Environment) {
+
+object DefinitionToEnvironment extends (kore.Definition => Environment) {
 
   import Encodings._
 
@@ -56,6 +71,7 @@ object DefintionToEnvironment extends (kore.Definition => Environment) {
     }
   }
 
+
   def apply(d: kore.Definition, m: kore.Module): Environment = {
 
     implicit val iDef = d
@@ -70,29 +86,31 @@ object DefintionToEnvironment extends (kore.Definition => Environment) {
     })
 
 
-    val assocSymbols = uniqueSymbolDecs.filter(isAssoc)
+    val assocSymbols: Seq[kore.SymbolDeclaration] = uniqueSymbolDecs.filter(isAssoc)
 
-    val nonAssocSymbols: Seq[kore.SymbolDeclaration] = (uniqueSymbolDecs).diff(assocSymbols)
+    val nonAssocSymbols: Seq[kore.SymbolDeclaration] = uniqueSymbolDecs.diff(assocSymbols)
 
     implicit val env = StandardEnvironment()
 
+    //dealing with non-assoc labels
 
     nonAssocSymbols.foreach(x => {
       x.att.getSymbolValue(Encodings.relativeHook) match {
-        // Has Relative Hook
+        // Todo: Has Relative Hook
         case Some(_) => None
         // No Relative Hook
         case None => x.att.getSymbolValue(Encodings.hook) match {
+          // Has Some Non Relative Hook
           case Some(v) => {
             None
-            //Todo: Initialize Some Hook
+            //Todo: No Hooking Mechanism present?
           }
           case None => {
             x.att.findSymbol(Encodings.function) match {
               case Some(_) => {
                 if (x.symbol.str.startsWith("is")) {
+                  //Todo: Issue with Sorting?
                   None
-
                 }
 
                 //Functional Symbol Declaration
@@ -121,16 +139,49 @@ object DefintionToEnvironment extends (kore.Definition => Environment) {
       }
     })
 
-    env
+    //Todo: Dealing with Assoc Labels
+    //dealing with assoc labels
+    assocSymbols.foreach(x => {
+      val unitLabel: Option[kore.Pattern] = x.att.findSymbol(Encodings.unit)
+      unitLabel match {
+        case Some(kore.Application(kore.Symbol(label), _)) => {
+          env.uniqueLabels.getOrElse(x.symbol.str, {
+            val index = x.att.findSymbol(Encodings.index)
+            if (index.isDefined && x.att.findSymbol(Encodings.comm).isEmpty) {
+              //              MapLabel(label, indexFunction, unitLabel())(env)
+              ???
+            } else {
+              //              new AssocWithIdListLabel(label, unitLabel())(env)
+              ???
+            }
 
+          })
+        }
+        //No unit Label for Assoc Symbol
+        case None => ???
+      }
+
+    })
+    //TODO: rules with function attributes
+
+    //Todo: rules without function att
+//    val rules: Set[Any] = m.rules.map(_ match {
+//      case kore.Rule(kore.Implies(requires, kore.And(kore.Rewrite(a, b), kore.Next(ensures))), att)
+//        if (att.findSymbol(Encodings.macroEnc).isEmpty) => Rewrite(a.asInstanceOf[Term], b.asInstanceOf[Term])
+//      case _ => ??? // Todo: Throw Exception
+//    }).toSet
+
+    env.seal()
+
+    env
   }
 }
 
 object SkalaBackend extends extended.BackendCreator {
-  override def apply(d: kore.Definition): Backend = new SkalaBackend()(DefintionToEnvironment(d), d)
+  override def apply(d: kore.Definition): Backend = new SkalaBackend()(DefinitionToEnvironment(d), d)
 
   // Todo: Use for Development, Replace with apply above
-  def apply(d: kore.Definition, m: kore.Module): Backend = new SkalaBackend()(DefintionToEnvironment(d, m), d)
+  def apply(d: kore.Definition, m: kore.Module): Backend = new SkalaBackend()(DefinitionToEnvironment(d, m), d)
 
 }
 
