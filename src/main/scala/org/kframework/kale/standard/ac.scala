@@ -5,7 +5,7 @@ import org.kframework.kale.util.Named
 
 import scala.collection.Iterable
 
-class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
+class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val env: Environment) extends AssocWithIdLabel with Constructor {
   override def construct(l: Iterable[Term]): Term = AssocWithIdList(this, l)
 }
 

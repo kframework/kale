@@ -3,13 +3,14 @@ package org.kframework.kale.standard
 import org.kframework.kale
 import org.kframework.kale.builtin._
 import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
+import org.kframework.kale.pretty.{HasPretty, PrettyWrapperHolder}
 import org.kframework.kale.{standard, _}
 
 object StandardEnvironment {
   def apply(): StandardEnvironment = new StandardEnvironment {}
 }
 
-trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID with HasINTplus{
+trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID with HasPretty {
   private implicit val env = this
 
   val Hole = Variable("☐", Sort.K)
@@ -31,4 +32,11 @@ trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT wit
   }
 
   override val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)
+
+  protected override lazy val unifier = SingleSortedMatcher()(this)
+
+  def pretty(t: Term): String = t match {
+    case PrettyWrapper(p, c, s) => p + pretty(c) + s
+    case _ => t.toString
+  }
 }
