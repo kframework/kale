@@ -10,7 +10,7 @@ class KoreBackend(d: kore.Definition, mainModule: kore.ModuleName) {
   val env = StandardEnvironment
 }
 
-trait KoreBuilders  extends kore.Builders with DefaultOuterBuilders {
+trait KoreBuilders extends kore.Builders with DefaultOuterBuilders {
 
   implicit val env: Environment
 
@@ -79,4 +79,34 @@ trait DefaultOuterBuilders {
   def Attributes(att: Seq[kore.Pattern]): kore.Attributes = DefaultBuilders.Attributes(att)
 
   def ModuleName(str: String): kore.ModuleName = DefaultBuilders.ModuleName(str)
+}
+
+case class ConversionException(m: String) extends RuntimeException {
+  override def getMessage: String = m
+}
+
+
+object StandardConverter {
+
+  def apply(p: kore.Pattern)(implicit env: Environment): Term = p match {
+    case kore.Application(kore.Symbol(s), args) => args match {
+      case Seq() => SimpleFreeLabel0(s).apply()
+      case Seq(p1) => SimpleFreeLabel1(s).apply(StandardConverter(p1))
+      case Seq(p1, p2) => SimpleFreeLabel2(s).apply(StandardConverter(p1), StandardConverter(p2))
+      case Seq(p1, p2, p3) => SimpleFreeLabel3(s).apply(StandardConverter(p1), StandardConverter(p2), StandardConverter(p3))
+      case Seq(p1, p2, p3, p4) => SimpleFreeLabel4(s).apply(StandardConverter(p1), StandardConverter(p2), StandardConverter(p3), StandardConverter(p4))
+    }
+    case kore.SortedVariable(kore.Name(n), kore.Sort(s)) => StandardVariable(Name(n), Sort(s))
+    case kore.Top() => standard.StandardTruthLabel().apply(true)
+    case kore.Bottom() => standard.StandardTruthLabel().apply(false)
+    case kore.Equals(p1, p2) => standard.StandardEqualityLabel().apply(StandardConverter(p1), StandardConverter(p2))
+    case kore.And(p1, p2) => standard.DNFAndLabel().apply(StandardConverter(p1), StandardConverter(p2))
+    case kore.Or(p1, p2) => standard.DNFOrLabel().apply(StandardConverter(p1), StandardConverter(p2))
+    case kore.Not(p1) => standard.NotLabel().apply(StandardConverter(p1))
+    case kore.Rewrite(p1, p2) => standard.Rewrite.apply(StandardConverter(p1), StandardConverter(p2))
+    case kore.Implies(p1, p2) => DNFOrLabel().apply(NotLabel().apply(StandardConverter(p1)), StandardConverter(p2))
+    case p@_ => throw ConversionException(p.toString + "Cannot Convert To Kale")
+  }
+
+
 }

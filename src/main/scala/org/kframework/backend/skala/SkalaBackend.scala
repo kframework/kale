@@ -2,7 +2,6 @@ package org.kframework.backend.skala
 
 import org.kframework.kale.standard._
 import org.kframework.kale.{Environment, Term}
-import org.kframework.km.term.Application
 import org.kframework.kore
 import org.kframework.kore.extended
 import org.kframework.kore.extended.Backend
@@ -16,15 +15,6 @@ class SkalaBackend(implicit val env: Environment, val originalDefintion: kore.De
 
   override def modules: Seq[kore.Module] = ???
 }
-
-//case class Converter(implicit val env: Environment) {
-//  def convert(p: kore.Pattern): Term = p match {
-//    case kore.SortedVariable(Name(name), Sort(s)) => StandardVariable(Name(name), Sort(s))
-//    case kore.Application(kore.Symbol(s), args) => {
-//      ???
-//    }
-//  }
-//}
 
 
 //Todo: Move somewhere else
@@ -47,6 +37,8 @@ object Encodings {
 object DefinitionToEnvironment extends (kore.Definition => Environment) {
 
   import Encodings._
+
+  import org.kframework.kore.implementation.{DefaultBuilders => db}
 
   def apply(d: kore.Definition): Environment = {
     val mainModuleName: kore.ModuleName = {
@@ -164,15 +156,16 @@ object DefinitionToEnvironment extends (kore.Definition => Environment) {
     })
     //TODO: rules with function attributes
 
-    //Todo: rules without function att
-//    val rules: Set[Any] = m.rules.map(_ match {
-//      case kore.Rule(kore.Implies(requires, kore.And(kore.Rewrite(a, b), kore.Next(ensures))), att)
-//        if (att.findSymbol(Encodings.macroEnc).isEmpty) => Rewrite(a.asInstanceOf[Term], b.asInstanceOf[Term])
-//      case _ => ??? // Todo: Throw Exception
-//    }).toSet
+    val rules: Set[Rewrite] = m.rules.map({
+      case kore.Rule(kore.Implies(requires, kore.And(kore.Rewrite(left, right), kore.Next(ensures))), att)
+        if att.findSymbol(Encodings.macroEnc).isEmpty => {
+        StandardConverter(db.Rewrite(db.And(left, requires), right)).asInstanceOf[Rewrite]
+      }
+      case _ => throw ConversionException("Encountered Non Uniform Rule")
+    }).toSet
 
     env.seal()
-
+    
     env
   }
 }
@@ -191,4 +184,3 @@ object SkalaBackend extends extended.BackendCreator {
 //
 //
 //
-//}
