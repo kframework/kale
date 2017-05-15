@@ -14,7 +14,7 @@ case class STRING()(implicit protected val penv: Environment) extends Module("ST
 trait importSTRING {
   protected val env: Environment
 
-  lazy val STRING = builtin.STRING()(env)
+  val STRING = builtin.STRING()(env)
 
   implicit def toSTRING(s: String): DomainValue[String] = STRING.String(s)
 
