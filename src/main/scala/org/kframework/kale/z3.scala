@@ -50,7 +50,7 @@ class z3(val env: Environment, val symbolsSeq: Seq[Seq[Label]]) {
     def getFunctionSymbols(term: Term): Set[Any] = term match {
       case t:Node =>
         val decls = t.children.flatMap(getFunctionSymbols).toSet
-        if (!t.label.isInstanceOf[Z3Builtin]) decls + t.label
+        if (!env.isZ3Builtin(t.label)) decls + t.label
         else decls
       case _:Variable => Set(term)
       case _:DomainValue[_] => Set()
@@ -64,7 +64,6 @@ class z3(val env: Environment, val symbolsSeq: Seq[Seq[Label]]) {
       case v:Variable => "(declare-const " + v.name + " " + v.sort.smtName + ")\n"
       case l:FreeLabel0 => "(declare-const " + l.smtName + " " + sortTarget(l).smtName + ")\n"
       case l:FreeLabel => "(declare-fun " + l.smtName + " (" + sortArgs(l).map(_.smtName).mkString(" ") + ") " + sortTarget(l).smtName + ")\n"
-      case _ => ???
     }).mkString
     // remaining sorts not defined by constructor datatypes
     val sorts: Set[Sort] = symbols.flatMap({

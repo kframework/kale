@@ -57,7 +57,7 @@ object Hook {
   def apply(hookName: String, labelName: String)(implicit env: StandardEnvironment) = {
     hookName match {
       case "INT.Int" => env.INT
-      case "INT.add" if !env.uniqueLabels.contains(hookName) => PrimitiveFunction2(labelName, env.INT, env.INT, (x: Int, y: Int) => x + y)
+      case "INT.add" => env.label(labelName)
     }
   }
 }

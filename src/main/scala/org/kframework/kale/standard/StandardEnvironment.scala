@@ -3,16 +3,14 @@ package org.kframework.kale.standard
 import org.kframework.kale
 import org.kframework.kale.builtin._
 import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
-import org.kframework.kale.pretty.{HasPretty, PrettyWrapperHolder}
+import org.kframework.kale.pretty.{importPretty, PrettyWrapperHolder}
 import org.kframework.kale.{standard, _}
 
 object StandardEnvironment {
   def apply(): StandardEnvironment = new StandardEnvironment {}
 }
 
-trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID with HasPretty {
-  private implicit val env = this
-
+trait StandardEnvironment extends DNFEnvironment with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with importPretty {
   val Hole = Variable("☐", Sort.K)
 
   val IfThenElse = new IfThenElseLabel()
@@ -31,7 +29,7 @@ trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT wit
     case l: NodeLabel => Seq.fill(l.arity)(Sort.K)
   }
 
-  override val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)
+  override val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)(this)
 
   protected override lazy val unifier = SingleSortedMatcher()(this)
 
@@ -39,4 +37,8 @@ trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT wit
     case PrettyWrapper(p, c, s) => p + pretty(c) + s
     case _ => t.toString
   }
+
+  override def SMTName(l: Label): String = ???
+
+  override def isZ3Builtin(l: Label): Boolean = ???
 }

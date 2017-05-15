@@ -85,7 +85,6 @@ object IMP {
   import signature._
 
   import env._
-  import builtin._
 
   val ints = new standard.AssocWithIdListLabel("_,_", emptyIntList())
   val kseq = new standard.AssocWithIdListLabel("_~>_", emptyk())
@@ -96,7 +95,7 @@ object IMP {
     def f(_1: Term): Option[Term] = Some(Truth(_1.label == label))
   }
 
-  val isInt = isSort(INT)
+  val isInt = isSort(INT.Int)
 
   //  // AExp
   //  rule <k> X:Id => I ...</k> <state>... X |-> I ...</state>
@@ -135,7 +134,7 @@ object IMP {
 
   val rules = Set(
     T(k(kseq(Rewrite(X, I), R)), state(statesMap(varBinding(X, I), SO))),
-    T(k(kseq(Rewrite(div(And(I1, isInt(I1)), And(I2, isInt(I2))), intDiv(I1, I2)), R)), S)
+    T(k(kseq(Rewrite(div(And(I1, isInt(I1)), And(I2, isInt(I2))), INT.div(I1, I2)), R)), S)
   ) map (t => Rewrite(lhs(t), rhs(t)))
 
   env.seal()
