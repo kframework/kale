@@ -18,10 +18,10 @@ object ProgrammaticBasicDefinition {
   /**
     * []
     * module SEMANTICS []
-    *   syntax Exp ::= `_+_`(Int, Int)    []
-    *   syntax Exp ::= `_+Int_`(Int, Int) [hook(INT.add)]
-    *   
-    *   rule X:Int + Y:Int => X +Int Y    []
+    * syntax Exp ::= `_+_`(Int, Int)    []
+    * syntax Exp ::= `_+Int_`(Int, Int) [hook(INT.add)]
+    *
+    * rule X:Int + Y:Int => X +Int Y    []
     * endmodule
     */
   val sentences: Seq[k.Sentence] = Seq(
@@ -41,21 +41,25 @@ object ProgrammaticBasicDefinition {
 
 class BasicOnSkalaTest extends FreeSpec {
 
-  "1 +Int 2 = 3" in {
-    val db: Builders = DefaultBuilders
-    implicit val koreDefinition: k.Definition = ProgrammaticBasicDefinition.definition
+  "In Basic,"  - {
+    "1 +Int 2 == 3" in {
+      val db: Builders = DefaultBuilders
+      implicit val koreDefinition: k.Definition = ProgrammaticBasicDefinition.definition
 
-    val module = koreDefinition.modulesMap(db.ModuleName("SEMANTICS"))
+      val module = koreDefinition.modulesMap(db.ModuleName("SEMANTICS"))
 
-    // Use Default Builders to Create the Definiton
-    val skalaBackend: Backend = SkalaBackend(koreDefinition, module)
+      // Use Default Builders to Create the Definiton
+      val skalaBackend: Backend = SkalaBackend(koreDefinition, module)
 
-    // Use Builders of the Backend to Create Terms/Patterns
-    val pattern: k.Pattern = skalaBackend.Application(skalaBackend.Symbol("_+_"),
-      Seq(skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("1")),
-        skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("2"))))
+      // Use Builders of the Backend to Create Terms/Patterns
+      val pattern: k.Pattern = skalaBackend.Application(skalaBackend.Symbol("_+_"),
+        Seq(skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("1")),
+          skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("2"))))
 
-    assert(skalaBackend.step(pattern) == skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("3")))
+      assert(skalaBackend.step(pattern) == skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("3")))
+    }
+
+
 
   }
 
