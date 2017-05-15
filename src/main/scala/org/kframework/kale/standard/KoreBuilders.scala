@@ -6,6 +6,8 @@ import org.kframework.kore.implementation.DefaultBuilders
 
 import scala.collection.Seq
 
+import EnvironmentImplicit._
+
 class KoreBackend(d: kore.Definition, mainModule: kore.ModuleName) {
   val env = StandardEnvironment
 }
@@ -22,6 +24,7 @@ trait KoreBuilders extends kore.Builders with DefaultOuterBuilders {
     def instantiate[T]() = _1.asInstanceOf[DomainValueLabel[T]].interpret(_2.str)
 
     instantiate()
+
   }
 
   override def Top(): kore.Top = env.Top
@@ -46,7 +49,12 @@ trait KoreBuilders extends kore.Builders with DefaultOuterBuilders {
 
   override def Rewrite(_1: kore.Pattern, _2: kore.Pattern): kore.Pattern = env.Rewrite(_1.asInstanceOf[Term], _2.asInstanceOf[Term])
 
-  override def Application(_1: kore.Symbol, args: Seq[kore.Pattern]): kore.Pattern = _1.asInstanceOf[NodeLabel](args.asInstanceOf[Seq[Term]])
+  override def Application(_1: kore.Symbol, args: Seq[kore.Pattern]): kore.Pattern = {
+    env.label(_1.str) match {
+      case l: NodeLabel => l(args.asInstanceOf[Seq[Term]])
+      case _ => ???
+    }
+  }
 
   def Sort(str: String): kore.Sort = standard.Sort(str)
 
@@ -86,25 +94,31 @@ case class ConversionException(m: String) extends RuntimeException {
 }
 
 
-object StandardConverter {
 
-  def apply(p: kore.Pattern)(implicit env: Environment): Term = p match {
-    case kore.Application(kore.Symbol(s), args) => args match {
-      case Seq() => SimpleFreeLabel0(s).apply()
-      case Seq(p1) => SimpleFreeLabel1(s).apply(StandardConverter(p1))
-      case Seq(p1, p2) => SimpleFreeLabel2(s).apply(StandardConverter(p1), StandardConverter(p2))
-      case Seq(p1, p2, p3) => SimpleFreeLabel3(s).apply(StandardConverter(p1), StandardConverter(p2), StandardConverter(p3))
-      case Seq(p1, p2, p3, p4) => SimpleFreeLabel4(s).apply(StandardConverter(p1), StandardConverter(p2), StandardConverter(p3), StandardConverter(p4))
-    }
-    case kore.SortedVariable(kore.Name(n), kore.Sort(s)) => StandardVariable(Name(n), Sort(s))
-    case kore.Top() => standard.StandardTruthLabel().apply(true)
-    case kore.Bottom() => standard.StandardTruthLabel().apply(false)
-    case kore.Equals(p1, p2) => standard.StandardEqualityLabel().apply(StandardConverter(p1), StandardConverter(p2))
-    case kore.And(p1, p2) => standard.DNFAndLabel().apply(StandardConverter(p1), StandardConverter(p2))
-    case kore.Or(p1, p2) => standard.DNFOrLabel().apply(StandardConverter(p1), StandardConverter(p2))
-    case kore.Not(p1) => standard.NotLabel().apply(StandardConverter(p1))
-    case kore.Rewrite(p1, p2) => standard.Rewrite.apply(StandardConverter(p1), StandardConverter(p2))
-    case kore.Implies(p1, p2) => DNFOrLabel().apply(NotLabel().apply(StandardConverter(p1)), StandardConverter(p2))
+object EnvironmentImplicit {
+  implicit def envToStdEnv(env: Environment): StandardEnvironment = env.asInstanceOf[StandardEnvironment]
+}
+
+object StandardConverter {
+  def apply(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
+    case kore.Application(kore.Symbol(s), args) =>
+      if (env.isSealed) {
+        env.label(s) match {
+          case l: FreeLabel => l(args.map(StandardConverter.apply))
+          case l: FunctionLabel2 => l.apply(args.map(StandardConverter.apply))
+        }
+      } else {
+        //Todo: Case when Environment isn't sealed
+        ???
+      }
+    case kore.And(p1, p2) => env.And(StandardConverter(p1), StandardConverter(p2))
+    case kore.Or(p1, p2) => env.Or(StandardConverter(p1), StandardConverter(p2))
+    case kore.Top() => env.Top
+    case kore.Bottom() => env.Bottom
+    case kore.Equals(p1, p2) => env.Equality(StandardConverter(p1), StandardConverter(p2))
+    case kore.SortedVariable(kore.Name(n), kore.Sort(s)) => env.Variable(n, Sort(s))
+    case kore.Not(p) => env.Not(StandardConverter(p))
+    case kore.Rewrite(p1, p2) => env.Rewrite(StandardConverter(p1), StandardConverter(p2))
     case p@_ => throw ConversionException(p.toString + "Cannot Convert To Kale")
   }
 

@@ -1,19 +1,39 @@
 package org.kframework.backend.skala
 
 import org.kframework.kale.standard._
-import org.kframework.kale.{Environment, Term}
+import org.kframework.kale.{Rewrite => _, _}
 import org.kframework.kore
-import org.kframework.kore.extended
-import org.kframework.kore.extended.Backend
+import org.kframework.kore.{Pattern, extended}
+import org.kframework.kore.extended.{Backend, Rewriter}
 import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.DefaultBuilders
 
 import scala.collection.Seq
 
-class SkalaBackend(implicit val env: Environment, val originalDefintion: kore.Definition) extends KoreBuilders with extended.Backend {
-  override def att: kore.Attributes = ???
 
-  override def modules: Seq[kore.Module] = ???
+class SkalaBackend(implicit val env: StandardEnvironment, val originalDefintion: kore.Definition) extends KoreBuilders with extended.Backend {
+
+  import org.kframework.kore.implementation.{DefaultBuilders => db}
+
+  override def att: kore.Attributes = originalDefintion.att
+
+  override def modules: Seq[kore.Module] = originalDefintion.modules
+
+  lazy val rules: Set[Rewrite] = modules.flatMap(_.rules).map({
+    case kore.Rule(kore.Implies(requires, kore.And(kore.Rewrite(left, right), kore.Next(ensures))), att)
+      if att.findSymbol(Encodings.macroEnc).isEmpty => {
+      StandardConverter(db.Rewrite(db.And(left, db.Equals(requires, db.Top())), right)).asInstanceOf[Rewrite]
+    }
+    case _ => throw ConversionException("Encountered Non Uniform Rule")
+  }).toSet
+
+  lazy val substitutionApplier = SubstitutionWithContext(_)
+
+  lazy val unifier: MatcherOrUnifier = SingleSortedMatcher()
+
+  lazy val rewriter = Rewriter(substitutionApplier, unifier)(rules)
+
+  override def step(p: Pattern, steps: Int): Pattern = rewriter(p.asInstanceOf[Term]).toList.head
 }
 
 
@@ -33,14 +53,23 @@ object Encodings {
   val rewrite = DefaultBuilders.Symbol("#KRewrite")
 }
 
+object Hook {
+  def apply(hookName: String, labelName: String)(implicit env: StandardEnvironment) = {
+    hookName match {
+      case "INT.Int" => env.INT
+      case "INT.add" if !env.uniqueLabels.contains(hookName) => PrimitiveFunction2(labelName, env.INT, env.INT, (x: Int, y: Int) => x + y)
+    }
+  }
+}
 
-object DefinitionToEnvironment extends (kore.Definition => Environment) {
+
+object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvironment) {
 
   import Encodings._
 
   import org.kframework.kore.implementation.{DefaultBuilders => db}
 
-  def apply(d: kore.Definition): Environment = {
+  def apply(d: kore.Definition): StandardEnvironment = {
     val mainModuleName: kore.ModuleName = {
       d.att.findSymbol(iMainModule) match {
         case Some(kore.Application(_, Seq(kore.DomainValue(kore.Symbol("S"), kore.Value(name)))))
@@ -64,7 +93,7 @@ object DefinitionToEnvironment extends (kore.Definition => Environment) {
   }
 
 
-  def apply(d: kore.Definition, m: kore.Module): Environment = {
+  def apply(d: kore.Definition, m: kore.Module): StandardEnvironment = {
 
     implicit val iDef = d
 
@@ -84,6 +113,7 @@ object DefinitionToEnvironment extends (kore.Definition => Environment) {
 
     implicit val env = StandardEnvironment()
 
+
     //dealing with non-assoc labels
 
     nonAssocSymbols.foreach(x => {
@@ -93,9 +123,8 @@ object DefinitionToEnvironment extends (kore.Definition => Environment) {
         // No Relative Hook
         case None => x.att.getSymbolValue(Encodings.hook) match {
           // Has Some Non Relative Hook
-          case Some(v) => {
-            None
-            //Todo: No Hooking Mechanism present?
+          case Some(kore.Value(v)) => {
+            Hook(v, x.symbol.str)
           }
           case None => {
             x.att.findSymbol(Encodings.function) match {
@@ -156,26 +185,19 @@ object DefinitionToEnvironment extends (kore.Definition => Environment) {
     })
     //TODO: rules with function attributes
 
-    val rules: Set[Rewrite] = m.rules.map({
-      case kore.Rule(kore.Implies(requires, kore.And(kore.Rewrite(left, right), kore.Next(ensures))), att)
-        if att.findSymbol(Encodings.macroEnc).isEmpty => {
-        StandardConverter(db.Rewrite(db.And(left, requires), right)).asInstanceOf[Rewrite]
-      }
-      case _ => throw ConversionException("Encountered Non Uniform Rule")
-    }).toSet
+    //Seal the Environment since rules should only use
 
     env.seal()
-    
+
     env
   }
 }
 
 object SkalaBackend extends extended.BackendCreator {
-  override def apply(d: kore.Definition): Backend = new SkalaBackend()(DefinitionToEnvironment(d), d)
+  override def apply(d: kore.Definition): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d), d)
 
   // Todo: Use for Development, Replace with apply above
-  def apply(d: kore.Definition, m: kore.Module): Backend = new SkalaBackend()(DefinitionToEnvironment(d, m), d)
-
+  def apply(d: kore.Definition, m: kore.Module): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d, m), d)
 }
 
 
