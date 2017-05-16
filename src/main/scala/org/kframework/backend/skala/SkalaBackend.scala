@@ -182,40 +182,46 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
     }
 
 
-    val hookedLabels : Set[Label] = nonAssocSymbols.flatMap(Hook.apply(_)).toSet
+    val hookedLabels: Set[Label] = nonAssocSymbols.flatMap(Hook(_)).toSet
 
     val unhookedLabels: Set[Label] = nonAssocSymbols.flatMap(declareNonHookedSymbol).toSet
 
     val nonAssocLabels = hookedLabels ++ unhookedLabels
 
-//    //Non Assoc Label Declaration
-//    nonAssocSymbols.foreach(x => {
-//      x.att.getSymbolValue(Encodings.relativeHook) match {
-//        // Todo: Has Relative Hook
-//        case Some(_) => Unit
-//        // No Relative Hook
-//        case None => x.att.getSymbolValue(Encodings.hook) match {
-//          // Has Some Non Relative Hook
-//          case Some(kore.Value(v)) => {
-//            Hook(v, x.symbol.str) match {
-//              case Some(_) => Unit
-//              case None => declareNonHookedSymbol(x)
-//            }
-//          }
-//          case None => declareNonHookedSymbol(x)
-//        }
-//      }
+    //    //Non Assoc Label Declaration
+    //    nonAssocSymbols.foreach(x => {
+    //      x.att.getSymbolValue(Encodings.relativeHook) match {
+    //        // Todo: Has Relative Hook
+    //        case Some(_) => Unit
+    //        // No Relative Hook
+    //        case None => x.att.getSymbolValue(Encodings.hook) match {
+    //          // Has Some Non Relative Hook
+    //          case Some(kore.Value(v)) => {
+    //            Hook(v, x.symbol.str) match {
+    //              case Some(_) => Unit
+    //              case None => declareNonHookedSymbol(x)
+    //            }
+    //          }
+    //          case None => declareNonHookedSymbol(x)
+    //        }
+    //      }
 
 
-      //Todo: Dealing with Assoc Labels
-      //dealing with assoc labels
-      assocSymbols.foreach(x => {
-        val unitLabel: Option[Pattern] = x.att.findSymbol(Encodings.unit)
-        val unitLabelValue: Option[String] = decodeAttributePattern(unitLabel, Encodings.unit.str)
-        unitLabel match {
-          //Assoc Symbol Has a Unit in Attributes
-          case Some(_) => {
-            env.uniqueLabels.getOrElse(x.symbol.str, {
+    def getLabelForAtt(att: String): Label = {
+      val label = nonAssocLabels.filter(p => p.name == att)
+      assert(label.size == 1)
+      label.head
+    }
+
+    val assocLabels: Set[Label] = assocSymbols.flatMap(x => {
+      val unitLabel: Option[Pattern] = x.att.findSymbol(Encodings.unit)
+      val unitLabelValue: Option[String] = decodeAttributePattern(unitLabel, Encodings.unit.str)
+
+      unitLabel match {
+        case Some(_) => {
+          env.uniqueLabels.get(x.symbol.str) match {
+            case a@Some(_) => a
+            case None => {
               val index: Option[Pattern] = x.att.findSymbol(Encodings.index)
               if (index.isDefined && x.att.findSymbol(Encodings.comm).isDefined) {
                 // Both Commutative and Assoc with Index
@@ -224,42 +230,71 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
                 def indexFunction(t: Term): Term = t.children.toList(indexStr.toInt)
 
                 // Create the AC Label
-                MapLabel(x.symbol.str, indexFunction, env.label(unitLabelValue.get).asInstanceOf[Label0].apply())
+                Some(MapLabel(x.symbol.str, indexFunction, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
               } else {
                 // Create the AssocLabel
-                new AssocWithIdListLabel(x.symbol.str, env.label(unitLabelValue.get).asInstanceOf[Label0].apply())
+                Some(new AssocWithIdListLabel(x.symbol.str, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
               }
-            })
+            }
           }
-          //No unit Label for Assoc Symbol
-          case None => None
         }
+        case None => None
       }
-      )
-      //TODO: rules with function attributes
+    }).toSet
 
-      //Seal the Environment since rules should only use Declared Symbols
+    //      //Todo: Dealing with Assoc Labels
+    //      //dealing with assoc labels
+    //      assocSymbols.foreach(x => {
+    //        val unitLabel: Option[Pattern] = x.att.findSymbol(Encodings.unit)
+    //        val unitLabelValue: Option[String] = decodeAttributePattern(unitLabel, Encodings.unit.str)
+    //        unitLabel match {
+    //          //Assoc Symbol Has a Unit in Attributes
+    //          case Some(_) => {
+    //            env.uniqueLabels.getOrElse(x.symbol.str, {
+    //              val index: Option[Pattern] = x.att.findSymbol(Encodings.index)
+    //              if (index.isDefined && x.att.findSymbol(Encodings.comm).isDefined) {
+    //                // Both Commutative and Assoc with Index
+    //                val indexStr: String = decodeAttributePattern(index, Encodings.index.str).get
+    //
+    //                def indexFunction(t: Term): Term = t.children.toList(indexStr.toInt)
+    //
+    //                // Create the AC Label
+    //                MapLabel(x.symbol.str, indexFunction, env.label(unitLabelValue.get).asInstanceOf[Label0].apply())
+    //              } else {
+    //                // Create the AssocLabel
+    //                new AssocWithIdListLabel(x.symbol.str, env.label(unitLabelValue.get).asInstanceOf[Label0].apply())
+    //              }
+    //            })
+    //          }
+    //          //No unit Label for Assoc Symbol
+    //          case None => None
+    //        }
+    //      }
+    //      )
+    //TODO: rules with function attributes
 
-      env.seal()
+    //Seal the Environment since rules should only use Declared Symbols
 
-      env
-    }
+    env.seal()
 
-    def decodeAttributePattern(p: Option[Pattern], symbol: String): Option[String] = p match {
-      case Some(kore.Application(kore.Symbol(`symbol`), Seq(kore.DomainValue(Encodings.`attributeValue`, kore.Value(v))))) => Some(v)
-      case _ => None
+    env
+  }
 
-    }
-
+  def decodeAttributePattern(p: Option[Pattern], symbol: String): Option[String] = p match {
+    case Some(kore.Application(kore.Symbol(`symbol`), Seq(kore.DomainValue(Encodings.`attributeValue`, kore.Value(v))))) => Some(v)
+    case _ => None
 
   }
 
-  object SkalaBackend extends extended.BackendCreator {
-    override def apply(d: kore.Definition): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d), d)
 
-    // Todo: Use for Development, Replace with apply above
-    def apply(d: kore.Definition, m: kore.Module): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d, m), d)
-  }
+}
+
+object SkalaBackend extends extended.BackendCreator {
+  override def apply(d: kore.Definition): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d), d)
+
+  // Todo: Use for Development, Replace with apply above
+  def apply(d: kore.Definition, m: kore.Module): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d, m), d)
+}
 
 
 //class ScalaConverters(m: kore.Module)(implicit env: Environment) {
