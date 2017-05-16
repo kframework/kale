@@ -94,7 +94,6 @@ case class ConversionException(m: String) extends RuntimeException {
 }
 
 
-
 object EnvironmentImplicit {
   implicit def envToStdEnv(env: Environment): StandardEnvironment = env.asInstanceOf[StandardEnvironment]
 }
@@ -102,14 +101,9 @@ object EnvironmentImplicit {
 object StandardConverter {
   def apply(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
     case kore.Application(kore.Symbol(s), args) =>
-      if (env.isSealed) {
-        env.label(s) match {
-          case l: FreeLabel => l(args.map(StandardConverter.apply))
-          case l: FunctionLabel2 => l.apply(args.map(StandardConverter.apply))
-        }
-      } else {
-        //Todo: Case when Environment isn't sealed
-        ???
+      env.uniqueLabels.get(s) match {
+        case Some(l: NodeLabel) => l(args.map(StandardConverter.apply))
+        case None => ???
       }
     case kore.And(p1, p2) => env.And(StandardConverter(p1), StandardConverter(p2))
     case kore.Or(p1, p2) => env.Or(StandardConverter(p1), StandardConverter(p2))
@@ -121,6 +115,4 @@ object StandardConverter {
     case kore.Rewrite(p1, p2) => env.Rewrite(StandardConverter(p1), StandardConverter(p2))
     case p@_ => throw ConversionException(p.toString + "Cannot Convert To Kale")
   }
-
-
 }

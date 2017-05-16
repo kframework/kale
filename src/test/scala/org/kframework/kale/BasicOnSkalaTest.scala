@@ -8,6 +8,9 @@ import org.kframework.kore.{Builders, parser}
 import org.kframework.{kore => k}
 import org.scalatest.FreeSpec
 import org.kframework.kore.extended.implicits._
+import org.kframework.kore.parser.TextToKore
+
+import scala.io.Source
 
 
 //A programmatic Definition of Basic.
@@ -41,9 +44,9 @@ object ProgrammaticBasicDefinition {
 
 class BasicOnSkalaTest extends FreeSpec {
 
-  "In Basic,"  - {
+  val db: Builders = DefaultBuilders
+  "In Basic," - {
     "1 +Int 2 == 3" in {
-      val db: Builders = DefaultBuilders
       implicit val koreDefinition: k.Definition = ProgrammaticBasicDefinition.definition
 
       val module = koreDefinition.modulesMap(db.ModuleName("SEMANTICS"))
@@ -55,10 +58,25 @@ class BasicOnSkalaTest extends FreeSpec {
       val pattern: k.Pattern = skalaBackend.Application(skalaBackend.Symbol("_+_"),
         Seq(skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("1")),
           skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("2"))))
-
       assert(skalaBackend.step(pattern) == skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("3")))
     }
 
+    "Text Kore Parse and Rewrite" in {
+      val parser: TextToKore = TextToKore(db)
+      val basic = Source.fromResource("imp.kore")
+      implicit val koreDefinition: k.Definition = parser.parse(basic)
+
+      val intModule = koreDefinition.modulesMap(db.ModuleName("SEMANTICS"))
+
+      val skalaBackend: Backend = SkalaBackend(koreDefinition, intModule)
+
+      val pattern: k.Pattern = skalaBackend.Application(skalaBackend.Symbol("_+_"),
+        Seq(skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("1")),
+          skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("2"))))
+
+
+      assert(skalaBackend.step(pattern) == skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("3")))
+    }
 
 
   }
