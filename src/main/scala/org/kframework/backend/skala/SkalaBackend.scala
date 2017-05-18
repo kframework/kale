@@ -62,35 +62,7 @@ object Encodings {
 object Hook {
   def apply(s: kore.SymbolDeclaration)(implicit env: StandardEnvironment): Option[Label] = {
     s.att.getSymbolValue(Encodings.hook) match {
-      case Some(v) => v.str match {
-        case "INT.Int" => Some(env.INT)
-        case "INT.add" => Some(PrimitiveFunction2(s.symbol.str, env.INT, env.INT, (x: Int, y: Int) => x + y))
-        case "INT.sub" => Some(PrimitiveFunction2(s.symbol.str, env.INT, env.INT, (x: Int, y: Int) => x - y))
-        case "INT.ediv" => Some(PrimitiveFunction2(s.symbol.str, env.INT, env.INT, (x: Int, y: Int) => x / y))
-        case "INT.tmod" => Some(PrimitiveFunction2(s.symbol.str, env.INT, env.INT, (x: Int, y: Int) => x % y))
-        case "INT.abs" => Some(PrimitiveFunction1(s.symbol.str, env.INT, env.INT, (x: Int) => math.abs(x)))
-        case "INT.shr" => Some(PrimitiveFunction2(s.symbol.str, env.INT, env.INT, (x: Int, y: Int) => x >> y))
-        case "INT.not" => Some(PrimitiveFunction1(s.symbol.str, env.INT, env.INT, (x: Int) => ~x))
-        case "INT.xor" => Some(PrimitiveFunction2(s.symbol.str, env.INT, env.INT, (x: Int, y: Int) => x ^ y))
-        case "INT.ne" => Some(PrimitiveFunction2(s.symbol.str, env.INT, env.BOOLEAN, (x: Int, y: Int) => x != y))
-        case "INT.gt" => Some(PrimitiveFunction2(s.symbol.str, env.INT, env.BOOLEAN, (x: Int, y: Int) => x > y))
-        case "INT.ge" => Some(PrimitiveFunction2(s.symbol.str, env.INT, env.BOOLEAN, (x: Int, y: Int) => x >= y))
-        case "INT.lt" => Some(PrimitiveFunction2(s.symbol.str, env.INT, env.BOOLEAN, (x: Int, y: Int) => x < y))
-        case "INT.le" => Some(PrimitiveFunction2(s.symbol.str, env.INT, env.BOOLEAN, (x: Int, y: Int) => x <= y))
-        case "BOOL.or" => Some(PrimitiveFunction2(s.symbol.str, env.BOOLEAN, env.BOOLEAN, (x: Boolean, y: Boolean) => x || y))
-        case "BOOL.and" => Some(PrimitiveFunction2(s.symbol.str, env.BOOLEAN, env.BOOLEAN, (x: Boolean, y: Boolean) => x && y))
-        case "BOOL.xor" => Some(PrimitiveFunction2(s.symbol.str, env.BOOLEAN, env.BOOLEAN, (x: Boolean, y: Boolean) => x ^ y))
-        case "BOOL.ne" => Some(PrimitiveFunction2(s.symbol.str, env.BOOLEAN, env.BOOLEAN, (x: Boolean, y: Boolean) => x != y))
-        case "BOOL.not" => Some(PrimitiveFunction1(s.symbol.str, env.BOOLEAN, (x: Boolean) => !x))
-        case "BOOL.eq" => Some(PrimitiveFunction2(s.symbol.str, env.BOOLEAN, env.BOOLEAN, (x: Boolean, y: Boolean) => x == y))
-        case "BOOL.implies" => Some(PrimitiveFunction2(s.symbol.str, env.BOOLEAN, env.BOOLEAN, (x: Boolean, y: Boolean) => !x || y))
-        //Todo: How to handle these?
-        case "BOOL.orElse" => Some(SimpleFreeLabel2(s.symbol.str))
-        case "BOOL.andThen" => Some(SimpleFreeLabel2(s.symbol.str))
-        case "KString" => Some(SimpleFreeLabel1(s.symbol.str))
-        case "#KRewrite" => Some(FunctionDefinedByRewritingLabel2(s.symbol.str))
-        case _ => None
-      }
+      case Some(kore.Value(v)) => env.uniqueLabels.get(v)
       case None => None
     }
   }

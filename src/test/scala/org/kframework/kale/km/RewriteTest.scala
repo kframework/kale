@@ -18,8 +18,8 @@ class RewriteTest extends FreeSpec {
   import Sorts._
 
   // sortify builtin symbols
-  sorted(ID, Id)
-  sorted(INT, Int)
+  sorted(ID.Id, Id)
+  sorted(INT.Int, Int)
 
   // symbol declarations
   val a = SimpleFreeLabel0("a"); sorted(a, K)
@@ -71,15 +71,15 @@ class RewriteTest extends FreeSpec {
     val Z = Variable("Z", Int)
 
     val r1 = Rewrite(
-      And(Seq(p(X), Equality(intGt(X,INT(0)), BOOLEAN(true)))), // p(x) /\ x > 0
+      And(Seq(p(X), Equality(INT.gt(X,INT.Int(0)), BOOLEAN.Boolean(true)))), // p(x) /\ x > 0
       q(X)
     )
     val r2 = Rewrite(
-      And(Seq(q(X), Equality(intGe(X,INT(0)), BOOLEAN(true)))), // q(x) /\ x >= 0
+      And(Seq(q(X), Equality(INT.ge(X,INT.Int(0)), BOOLEAN.Boolean(true)))), // q(x) /\ x >= 0
       c()
     )
     val r3 = Rewrite(
-      And(Seq(q(X), Equality(intLt(X,INT(0)), BOOLEAN(true)))), // q(x) /\ x < 0
+      And(Seq(q(X), Equality(INT.lt(X,INT.Int(0)), BOOLEAN.Boolean(true)))), // q(x) /\ x < 0
       d()
     )
 
@@ -90,7 +90,7 @@ class RewriteTest extends FreeSpec {
     assert(
       rewriter(Set(r1)).searchStep(t1)
         ==
-      And(Seq(q(X), Equality(intGt(X,INT(0)), BOOLEAN(true))))
+      And(Seq(q(X), Equality(INT.gt(X,INT.Int(0)), BOOLEAN.Boolean(true))))
     )
 
     // rule p(x:Int) => q(x) if x > 0
@@ -101,7 +101,7 @@ class RewriteTest extends FreeSpec {
     assert(
       rr.searchStep(rr.searchStep(t1))
         ==
-      And(Seq(c(), Equality(intGe(X,INT(0)), BOOLEAN(true)), Equality(intGt(X,INT(0)), BOOLEAN(true))))
+      And(Seq(c(), Equality(INT.ge(X,INT.Int(0)), BOOLEAN.Boolean(true)), Equality(INT.gt(X,INT.Int(0)), BOOLEAN.Boolean(true))))
     )
 
   }

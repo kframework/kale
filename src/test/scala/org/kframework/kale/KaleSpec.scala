@@ -31,11 +31,11 @@ class KaleSpec extends FreeSpec {
     val y: DomainValue[Int] = 3
 
     "Int" in {
-      assert(x == INT(2))
+      assert(x == INT.Int(2))
       assert(x != y)
 
       assert(x.data == 2)
-      assert(x.label == INT)
+      assert(x.label == INT.Int)
     }
     //    "+" in {
     //      assert(x + y == INT(5))

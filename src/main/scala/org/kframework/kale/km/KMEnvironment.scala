@@ -7,25 +7,38 @@ import org.kframework.kale._
 
 import scala.collection._
 
-trait HasBuiltin
-  extends HasINT with HasINTbop with HasINTcmp
-  with HasID
-  with HasBOOLEAN
-  with HasSTRING
-{ self: Environment => }
+trait importBuiltin
+  extends Environment with importBOOLEAN
+    with importINT // with HasINTbop with HasINTcmp
+    with importID
+    with importSTRING {
 
-class KMEnvironment extends DNFEnvironment with HasBuiltin {
-  private implicit val env = this
+  def SMTName(l: Label): String = l match {
+    case INT.mod => "mod"
+    case INT.lt => "<"
+    case INT.gt => ">"
+    case INT.le => "<="
+    case INT.ge => ">="
+  }
+
+  def isZ3Builtin(l: Label): Boolean = l match {
+    case _: Z3Builtin => true
+    case l => INT.all.contains(l)
+  }
+
+}
+
+class KMEnvironment extends DNFEnvironment with importBuiltin {
 
   private val sorts = mutable.Map[Label, Signature]()
 
   case class Signature(args: Seq[kale.Sort], target: kale.Sort)
 
-  def sortArgs(l: Label): Seq[kale.Sort] = sorts.get(l).map({ signature => signature.args}).getOrElse({
+  def sortArgs(l: Label): Seq[kale.Sort] = sorts.get(l).map({ signature => signature.args }).getOrElse({
     throw new AssertionError("Could not find Signature for label: " + l)
   })
 
-  def sortTarget(l: Label): kale.Sort = sorts.get(l).map({ signature => signature.target}).getOrElse({
+  def sortTarget(l: Label): kale.Sort = sorts.get(l).map({ signature => signature.target }).getOrElse({
     throw new AssertionError("Could not find Signature for label: " + l)
   })
 
@@ -54,4 +67,5 @@ class KMEnvironment extends DNFEnvironment with HasBuiltin {
   override lazy val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionApply(_)
 
   override protected lazy val unifier = new MultiSortedUnifier(this)
+
 }

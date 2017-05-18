@@ -7,6 +7,8 @@ import scala.collection._
 
 trait Environment extends KORELabels with Bottomize {
 
+  implicit protected val env: this.type = this
+
   trait HasEnvironment {
     val env = Environment.this
   }
@@ -31,7 +33,7 @@ trait Environment extends KORELabels with Bottomize {
   protected val unifier: MatcherOrUnifier
 
   def register(label: Label): Int = {
-    assert(!isSealed, "The environment is sealed")
+    assert(!isSealed, "Cannot register label " + label + " because the environment is sealed")
     assert(label != null)
 
     if (uniqueLabels.contains(label.name))
@@ -52,6 +54,15 @@ trait Environment extends KORELabels with Bottomize {
   override def toString = {
     "nextId: " + uniqueLabels.size + "\n" + uniqueLabels.mkString("\n")
   }
+
+  def SMTName(l: Label): String
+
+  def isZ3Builtin(l: Label): Boolean
+
+  implicit class WithSMTname(l: Label) {
+    def smtName: String = SMTName(l)
+  }
+
 }
 
 trait KORELabels {

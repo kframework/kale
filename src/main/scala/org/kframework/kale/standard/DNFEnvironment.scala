@@ -4,8 +4,6 @@ import org.kframework.kale._
 import org.kframework.kale.util.Util
 
 trait DNFEnvironment extends Environment {
-  private implicit val env = this
-
   override val Truth: TruthLabel = standard.StandardTruthLabel()
 
   override val Top: Top = standard.TopInstance()

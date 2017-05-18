@@ -14,7 +14,7 @@ import org.kframework.kore.extended.implicits._
 
 class ImpOnSkalaTest extends FreeSpec {
 
-  "IMP" in {
+  "IMP" ignore {
     val defaultBuilders: Builders = DefaultBuilders
     val koreParser = parser.TextToKore(defaultBuilders)
     val imp = Source.fromResource("imp.kore")

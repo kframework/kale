@@ -30,7 +30,7 @@ trait TestSetup {
   val foo = SimpleFreeLabel2("foo")
   val bar = SimpleFreeLabel1("bar")
   val buz = SimpleFreeLabel2("buz")
-  val (a, b, c, d, e) = (STRING("a"), STRING("b"), STRING("c"), STRING("d"), STRING("e"))
+  val (a, b, c, d, e) = (STRING.String("a"), STRING.String("b"), STRING.String("c"), STRING.String("d"), STRING.String("e"))
   val matched = SimpleFreeLabel1("matched")
   val traversed = SimpleFreeLabel1("traversed")
   val andMatchingY = SimpleFreeLabel0("andMatchingY")

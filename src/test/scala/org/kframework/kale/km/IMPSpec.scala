@@ -29,8 +29,8 @@ class IMPSpec extends FreeSpec {
   import ImpSorts._
 
   // sortify builtin symbols
-  sorted(ID, Id)
-  sorted(INT, Int)
+  sorted(ID.Id, Id)
+  sorted(INT.Int, Int)
 
   // import/sortify common symbols
   val signature = new IMPCommonSignature()
@@ -78,7 +78,7 @@ class IMPSpec extends FreeSpec {
   // semantics
   val rules = Set(
     T(k(kseq(Rewrite(X, I), R)), state(statesMap(varBinding(X, I), SO))),
-    T(k(kseq(Rewrite(div(I1, I2), intDiv(I1, I2)), R)), S)
+    T(k(kseq(Rewrite(div(I1, I2), INT.div(I1, I2)), R)), S)
   ) map (t => Rewrite(lhs(t), rhs(t)))
 
   env.seal()
@@ -89,7 +89,7 @@ class IMPSpec extends FreeSpec {
   "first test" in {
     assert(unify(X, 'foo) === Equality(X, 'foo))
     assert(unify(X, Y) === Equality(X, Y))
-    assert(unify(X, INT(2)) === Bottom)
+    assert(unify(X, INT.Int(2)) === Bottom)
 
     assert(unify(plus(E1,E2), leq(E1,E2)) == Bottom)
 
