@@ -1,17 +1,17 @@
 package org.kframework.backend.skala
 
+import org.kframework.backend.skala.backendImplicits._
 import org.kframework.kale.builtin.MapLabel
 import org.kframework.kale.standard._
-import org.kframework.kale.util.{Named, Util, fixpoint}
+import org.kframework.kale.util.Named
 import org.kframework.kale.{Rewrite => _, _}
 import org.kframework.kore
-import org.kframework.kore.{Pattern, extended}
-import org.kframework.kore.extended.{Backend, Rewriter}
+import org.kframework.kore.extended.Backend
 import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.DefaultBuilders
+import org.kframework.kore.{Pattern, extended}
 
 import scala.collection.Seq
-import org.kframework.backend.skala.backendImplicits._
 
 
 class SkalaBackend(implicit val env: StandardEnvironment, val originalDefintion: kore.Definition) extends KoreBuilders with extended.Backend {
@@ -20,16 +20,23 @@ class SkalaBackend(implicit val env: StandardEnvironment, val originalDefintion:
 
   override def modules: Seq[kore.Module] = originalDefintion.modules
 
-  lazy val rules: Set[Rewrite] = modules.flatMap(_.rules).filter(_.att.findSymbol(Encodings.function).isEmpty)
-    .map(StandardConverter.apply).toSet
+  val functionLabels = env.uniqueLabels.filter(_._2.isInstanceOf[FunctionDefinedByRewriting])
 
-  lazy val substitutionApplier = SubstitutionWithContext(_)
+  val functionalRules: Set[kore.Rule] = modules.flatMap(_.rules).filter(functionalFilter).toSet
 
-  lazy val unifier: MatcherOrUnifier = SingleSortedMatcher()
+  val regularRules: Set[Rewrite] = (modules.flatMap(_.rules).toSet[kore.Rule] -- functionalRules).map(StandardConverter.apply)
 
-  lazy val rewriterGenerator = Rewriter(substitutionApplier, unifier)
+  val substitutionApplier = SubstitutionWithContext(_)
 
-  lazy val rewriter = rewriterGenerator(rules)
+  val unifier: MatcherOrUnifier = SingleSortedMatcher()
+
+  val rewriterGenerator = Rewriter(substitutionApplier, unifier)
+
+  val rewriter = rewriterGenerator(regularRules)
+
+  private def functionalFilter(r: kore.Rule): Boolean = r match {
+    case kore.Rule(kore.Implies(_, kore.And(kore.Rewrite(kore.Application(kore.Symbol(label), _), _), _)), att) => functionLabels.contains(label)
+  }
 
   override def step(p: Pattern, steps: Int): Pattern = rewriter(p.asInstanceOf[Term]).toList.head
 }
@@ -93,7 +100,6 @@ object Hook {
 object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvironment) {
 
   import Encodings._
-
   import org.kframework.kore.implementation.{DefaultBuilders => db}
 
   def apply(d: kore.Definition): StandardEnvironment = {
@@ -243,7 +249,6 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
     }).toSet
 
 
-
     // Function Rules
 
     val functionRulesAsLeftRight: Set[(Label, Rewrite)] = m.rules.collect({
@@ -258,34 +263,6 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 
 
     env.seal()
-
-//
-//    lazy val substitutionApplier = SubstitutionWithContext(_)
-//
-//    lazy val unifier: MatcherOrUnifier = SingleSortedMatcher()
-//
-//    val rewriterGenerator = (s: Set[Rewrite]) => Rewriter(substitutionApplier, unifier)(s)
-//
-//    def setFunctionRules(functionRules: Map[Label, Set[Rewrite]]) {
-//      env.labels.collect({
-//        // TODO: Add an warning for when a function is not defined by either a hook or rules
-//        case l: FunctionDefinedByRewriting => l.setRules(functionRules.getOrElse(l, Set()))(rewriterGenerator)
-//      })
-//    }
-//
-//    setFunctionRules(functionRulesWithRenamedVariables)
-//
-//    def reconstruct(inhibitForLabel: Label)(t: Term): Term = t match {
-//      case Node(label, children) if label != inhibitForLabel => label(children map reconstruct(inhibitForLabel))
-//      case t => t
-//    }
-//
-//    def resolveFunctionRHS(functionRules: Map[Label, Set[Rewrite]]): Map[Label, Set[Rewrite]] = {
-//      functionRules map { case (label, rewrites) => (label, rewrites map (rw => reconstruct(label)(rw).asInstanceOf[Rewrite])) }
-//    }
-//
-//    val finalFunctionRules = fixpoint(resolveFunctionRHS)(functionRules)
-//    setFunctionRules(finalFunctionRules)
 
     env
   }
@@ -313,9 +290,3 @@ object SkalaBackend extends extended.BackendCreator {
   def apply(d: kore.Definition, m: kore.Module): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d, m), d)
 }
 
-
-//class ScalaConverters(m: kore.Module)(implicit env: Environment) {
-//  //Some Converters need to be ported here
-//
-//
-//
