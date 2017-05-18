@@ -5,8 +5,9 @@ import org.kframework.kore
 import org.kframework.kore.implementation.DefaultBuilders
 
 import scala.collection.Seq
-
 import EnvironmentImplicit._
+import org.kframework.backend.skala.Encodings
+import org.kframework.kore.extended.implicits._
 
 class KoreBackend(d: kore.Definition, mainModule: kore.ModuleName) {
   val env = StandardEnvironment
@@ -99,12 +100,15 @@ object EnvironmentImplicit {
 }
 
 object StandardConverter {
+  import org.kframework.kore.implementation.{DefaultBuilders => db}
   def apply(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
-    case kore.Application(kore.Symbol(s), args) =>
+    case p@kore.Application(kore.Symbol("#"), args) => apply(decodePatternAttribute(p)._1)
+    case kore.Application(kore.Symbol(s), args) => {
       env.uniqueLabels.get(s) match {
         case Some(l: NodeLabel) => l(args.map(StandardConverter.apply))
         case None => ???
       }
+    }
     case kore.And(p1, p2) => env.And(StandardConverter(p1), StandardConverter(p2))
     case kore.Or(p1, p2) => env.Or(StandardConverter(p1), StandardConverter(p2))
     case kore.Top() => env.Top
@@ -114,5 +118,25 @@ object StandardConverter {
     case kore.Not(p) => env.Not(StandardConverter(p))
     case kore.Rewrite(p1, p2) => env.Rewrite(StandardConverter(p1), StandardConverter(p2))
     case p@_ => throw ConversionException(p.toString + "Cannot Convert To Kale")
+  }
+
+  def apply(r: kore.Rule)(implicit env: StandardEnvironment): Rewrite = r match {
+    case kore.Rule(kore.Implies(requires, kore.And(kore.Rewrite(left, right), kore.Next(ensures))), att)
+      if att.findSymbol(Encodings.macroEnc).isEmpty => {
+      StandardConverter(db.Rewrite(db.And(left, db.Equals(requires, db.Top())), right)).asInstanceOf[Rewrite]
+    }
+    case _ => throw ConversionException("Encountered Non Uniform Rule")
+  }
+
+
+
+
+  private def decodePatternAttribute(p: kore.Pattern): (kore.Pattern, Seq[kore.Pattern]) = {
+    p match {
+      case kore.Application(kore.Symbol("#"), Seq(p, p2)) => decodePatternAttribute(p) match {
+        case (p1, a1) => (p1, p2 +: a1)
+      }
+      case p@_ => (p, Seq())
+    }
   }
 }
