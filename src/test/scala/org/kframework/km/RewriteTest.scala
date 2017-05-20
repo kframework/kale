@@ -57,7 +57,7 @@ class RewriteTest extends FreeSpec {
     assert(search(Seq(r1,r2,r4), t1) == Seq(SimplePattern(c, tt), SimplePattern(c, tt)))
   }
 
-  "symbolic" in {
+  "symbolic" ignore {
     val tt = BOOL(true)
 
     val x = Variable("x", SortInt)
@@ -100,7 +100,7 @@ class RewriteTest extends FreeSpec {
     assert(search(Seq(r1,r2,r3), t1) == Seq(SimplePattern(c, BOOL.and(xgt0, xge0))))
   }
 
-  "z3" in {
+  "z3" ignore {
     val a = new Constructor("a", (Seq(),SortK))
     val b = new Constructor("b", (Seq(),SortK))
     val z3 = new z3(Seq(Seq(a,b)))
@@ -114,7 +114,7 @@ class RewriteTest extends FreeSpec {
     assert(!z3.sat(BOOL.eq(SortK)(aa,bb)))
   }
 
-  "0.imp" in {
+  "0.imp" ignore {
     import Imp._
     val x = IdOf(STRING("x"))
     val x0 = KStmt(StmtAssign(x, AExpInt(INT(0)))) // x = 0;
@@ -127,7 +127,7 @@ class RewriteTest extends FreeSpec {
     assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),INT(0)))) /\\ BOOL(true))")
   }
 
-  "1.imp" in {
+  "1.imp" ignore {
     import Imp._
     val x = IdOf(STRING("x"))
     val y = IdOf(STRING("y"))
@@ -142,7 +142,7 @@ class RewriteTest extends FreeSpec {
     assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(x)),INT(0)),_(STRING(y)),INT(1)))) /\\ BOOL(true))")
   }
 
-  "2.imp" in {
+  "2.imp" ignore {
     import Imp._
     val x = IdOf(STRING("x"))
     val y = IdOf(STRING("y"))
@@ -168,7 +168,7 @@ class RewriteTest extends FreeSpec {
     // <T>(<k>(.K()),<state>(storeMapIdInt(M:Map{Id,Int},_(STRING(y)),INT(1)))) /\ _==Bool_(BOOL(false),_<=Int_(selectMapIdInt(M:Map{Id,Int},_(STRING(x))),INT(0)))
   }
 
-  "3.imp" in {
+  "3.imp" ignore {
     import Imp._
     val x = IdOf(STRING("x"))
     val y = IdOf(STRING("y"))
@@ -198,7 +198,7 @@ class RewriteTest extends FreeSpec {
     // <T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(y)),INT(20)),_(STRING(z)),INT(200)))) /\ _==Bool_(BOOL(false),_<=Int_(selectMapIdInt(M:Map{Id,Int},_(STRING(x))),INT(0)))
   }
 
-  "sum.imp" in {
+  "sum.imp" ignore {
     import Imp._
     val n = IdOf(STRING("n"))
     val sum = IdOf(STRING("sum"))
@@ -219,7 +219,7 @@ class RewriteTest extends FreeSpec {
     assert(res.toString == "List(<T>(<k>(.K()),<state>(storeMapIdInt(storeMapIdInt(M:Map{Id,Int},_(STRING(n)),INT(0)),_(STRING(sum)),INT(5050)))) /\\ BOOL(true))")
   }
 
-  "sum.imp.symbolic" in {
+  "sum.imp.symbolic" ignore {
     import Imp._
     val i = IdOf(STRING("i"))
     val n = IdOf(STRING("n"))
