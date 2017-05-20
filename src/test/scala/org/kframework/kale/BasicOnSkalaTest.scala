@@ -61,22 +61,16 @@ class BasicOnSkalaTest extends FreeSpec {
       assert(skalaBackend.step(pattern) == skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("3")))
     }
 
-    "Text Kore Parse and Rewrite" in {
-      val parser: TextToKore = TextToKore(db)
-      val basic = Source.fromResource("basic.kore")
-      implicit val koreDefinition: k.Definition = parser.parse(basic)
-
-      val basicModule = koreDefinition.modulesMap(db.ModuleName("INT"))
-
-      val skalaBackend: Backend = SkalaBackend(koreDefinition, basicModule)
-
-      val pattern: k.Pattern = skalaBackend.Application(skalaBackend.Symbol("_+_"),
-        Seq(skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("1")),
-          skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("2"))))
-
-
-      assert(skalaBackend.step(pattern) == skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("3")))
-    }
+//    "Text Kore Parse and Rewrite" in {
+//      val parser: TextToKore = TextToKore(db)
+//      val basic = Source.fromResource("basic.kore")
+//      implicit val koreDefinition: k.Definition = parser.parse(basic)
+//
+//      val module = koreDefinition.modulesMap(db.ModuleName("BOOL"))
+//
+//      val skalaBackend: Backend = SkalaBackend(koreDefinition, module)
+//
+//    }
 
 
   }

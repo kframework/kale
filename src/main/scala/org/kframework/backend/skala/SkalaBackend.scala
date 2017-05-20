@@ -3,42 +3,71 @@ package org.kframework.backend.skala
 import org.kframework.backend.skala.backendImplicits._
 import org.kframework.kale.builtin.MapLabel
 import org.kframework.kale.standard._
-import org.kframework.kale.util.Named
+import org.kframework.kale.util.{Named, fixpoint}
 import org.kframework.kale.{Rewrite => _, _}
 import org.kframework.kore
 import org.kframework.kore.extended.Backend
 import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.DefaultBuilders
-import org.kframework.kore.{Pattern, extended}
+import org.kframework.kore.{Pattern, Rule, extended}
 
 import scala.collection.Seq
 
 
-class SkalaBackend(implicit val env: StandardEnvironment, val originalDefintion: kore.Definition) extends KoreBuilders with extended.Backend {
+class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalDefintion: kore.Definition, val module: kore.Module) extends KoreBuilders with extended.Backend {
 
   override def att: kore.Attributes = originalDefintion.att
 
-  override def modules: Seq[kore.Module] = originalDefintion.modules
+  override def modules: Seq[kore.Module] = module +: originalDefintion.modulesMap.get(module.name).get.imports
 
   val functionLabels = env.uniqueLabels.filter(_._2.isInstanceOf[FunctionDefinedByRewriting])
 
-  val functionalRules: Set[kore.Rule] = modules.flatMap(_.rules).filter(functionalFilter).toSet
+  val functionalLabelRulesMap: Map[Label, Set[Rule]] = modules.flatMap(_.rules).collect({
+    case r@kore.Rule(kore.Implies(_, kore.And(kore.Rewrite(kore.Application(kore.Symbol(label), _), _), _)), att) if functionLabels.contains(label) => (env.label(label), r)
+  }).groupBy(_._1).mapValues(_.map(_._2).toSet)
+
+  val functionalRules: Set[kore.Rule] = functionalLabelRulesMap.values.flatten.toSet
 
   val regularRules: Set[Rewrite] = (modules.flatMap(_.rules).toSet[kore.Rule] -- functionalRules).map(StandardConverter.apply)
+
+  processFunctionRules(functionalLabelRulesMap)
 
   val substitutionApplier = SubstitutionWithContext(_)
 
   val unifier: MatcherOrUnifier = SingleSortedMatcher()
 
-  val rewriterGenerator = Rewriter(substitutionApplier, unifier)
+  implicit val rewriterGenerator = Rewriter(substitutionApplier, unifier)
 
   val rewriter = rewriterGenerator(regularRules)
 
-  private def functionalFilter(r: kore.Rule): Boolean = r match {
-    case kore.Rule(kore.Implies(_, kore.And(kore.Rewrite(kore.Application(kore.Symbol(label), _), _), _)), att) => functionLabels.contains(label)
+  override def step(p: Pattern, steps: Int): Pattern = rewriter(p.asInstanceOf[Term]).toList.head
+
+  private def processFunctionRules(functionalLabelRulesMap: Map[Label, Set[Rule]]): Unit = {
+    val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.mapValues(x => x.map(StandardConverter.apply))
+
+    val functionRulesWithRenamedVariables: Map[Label, Set[Rewrite]] = functionalLabelRewriteMap.map({ case (k, v) => (k, v map env.renameVariables) })
+
+    setFunctionRules(functionRulesWithRenamedVariables)
+
+    val finalFunctionRules = fixpoint(resolveFunctionRHS)(functionalLabelRewriteMap)
+    setFunctionRules(finalFunctionRules)
   }
 
-  override def step(p: Pattern, steps: Int): Pattern = rewriter(p.asInstanceOf[Term]).toList.head
+  def setFunctionRules(functionRules: Map[Label, Set[Rewrite]]) {
+    env.labels.collect({
+      case l: FunctionDefinedByRewriting => l.setRules(functionRules.getOrElse(l, Set()))(x => rewriterGenerator(x))
+    })
+  }
+
+  private def reconstruct(inhibitForLabel: Label)(t: Term): Term = t match {
+    case Node(label, children) if label != inhibitForLabel => label(children map reconstruct(inhibitForLabel))
+    case t => t
+  }
+
+  private def resolveFunctionRHS(functionRules: Map[Label, Set[Rewrite]]): Map[Label, Set[Rewrite]] =
+    functionRules map { case (label, rewrites) => (label, rewrites map (rw => reconstruct(label)(rw).asInstanceOf[Rewrite])) }
+
+
 }
 
 //Todo: Move somewhere else
@@ -68,6 +97,23 @@ object Hook {
   }
 }
 
+case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)(implicit env: Environment) extends Named(s.toString) with FunctionLabel1 {
+
+  import org.kframework.kore.implementation.{DefaultBuilders => db}
+
+  override def f(_1: Term): Option[Term] = {
+    if (!_1.isGround)
+      None
+    else {
+      val ss = m.sortsFor(db.Symbol(_1.label.name))
+      ss.map(x => m.subsorts.<=(x, s)).filter(_)
+      if (ss.nonEmpty) {
+        Some(env.Truth(true))
+      }
+      None
+    }
+  }
+}
 
 object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvironment) {
 
@@ -99,32 +145,19 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 
 
   def apply(d: kore.Definition, m: kore.Module): StandardEnvironment = {
+    import org.kframework.kore.implementation.{DefaultBuilders => db}
 
     implicit val iDef = d
 
-    case class IsSort(s: kore.Sort)(implicit env: Environment) extends Named(s.toString) with FunctionLabel1 {
-      override def f(_1: Term): Option[Term] = {
-        if (!_1.isGround)
-          None
-        else {
-          val ss = m.sortsFor(db.Symbol(_1.label.name))
-          ss.map(x => m.subsorts.<=(x, s)).filter(_)
-          if (ss.nonEmpty) {
-            Some(env.Truth(true))
-          }
-          None
-        }
-      }
-    }
-
+    val allImports = m.imports
 
 
     val uniqueSymbolDecs: Seq[kore.SymbolDeclaration] = m.allSentences.collect({
-      case sd@kore.SymbolDeclaration(_, s, _, _) if s != iNone => sd
+      case sd@kore.SymbolDeclaration(_, s, _, _) => sd
     }).groupBy(_.symbol).mapValues(_.head).values.toSeq
 
 
-    val sortDeclarations: Seq[kore.SortDeclaration] = m.sentences.collect({
+    val sortDeclarations: Seq[kore.SortDeclaration] = m.allSentences.collect({
       case s@kore.SortDeclaration(_, _) => s
     })
 
@@ -136,11 +169,6 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
     implicit val env = StandardEnvironment()
 
 
-    def declareSortPredicate(x: kore.SymbolDeclaration): Option[Label] = {
-      Some(IsSort(db.Sort(x.symbol.str)).asInstanceOf[Label])
-    }
-
-
     def declareNonHookedSymbol(x: kore.SymbolDeclaration): Option[Label] = {
       if (env.uniqueLabels.contains(x.symbol.str)) {
         None
@@ -149,16 +177,16 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
         x.att.findSymbol(Encodings.function) match {
           case Some(_) => {
             if (x.symbol.str.startsWith("is")) {
-              declareSortPredicate(x)
-            }
-
-            //Functional Symbol Declaration
-            x.args match {
-              case Seq() => Some(FunctionDefinedByRewritingLabel0(x.symbol.str)(env))
-              case Seq(_) => Some(FunctionDefinedByRewritingLabel1(x.symbol.str)(env))
-              case Seq(_, _) => Some(FunctionDefinedByRewritingLabel2(x.symbol.str)(env))
-              case Seq(_, _, _) => Some(FunctionDefinedByRewritingLabel3(x.symbol.str)(env))
-              case Seq(_, _, _, _) => Some(FunctionDefinedByRewritingLabel4(x.symbol.str)(env))
+              Some(IsSort(db.Sort(x.symbol.str), m, d))
+            } else {
+              //Functional Symbol Declaration
+              x.args match {
+                case Seq() => Some(FunctionDefinedByRewritingLabel0(x.symbol.str)(env))
+                case Seq(_) => Some(FunctionDefinedByRewritingLabel1(x.symbol.str)(env))
+                case Seq(_, _) => Some(FunctionDefinedByRewritingLabel2(x.symbol.str)(env))
+                case Seq(_, _, _) => Some(FunctionDefinedByRewritingLabel3(x.symbol.str)(env))
+                case Seq(_, _, _, _) => Some(FunctionDefinedByRewritingLabel4(x.symbol.str)(env))
+              }
             }
           }
           //
@@ -220,20 +248,6 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
       }
     }).toSet
 
-
-    // Function Rules
-
-    val functionRulesAsLeftRight: Set[(Label, Rewrite)] = m.rules.collect({
-      case r@kore.Rule(kore.Implies(_, kore.And(kore.Rewrite(kore.Application(kore.Symbol(label), _), _), _)), att) if att.findSymbol(Encodings.function).isDefined =>
-        (env.label(label), StandardConverter(r))
-    }).toSet
-
-
-    val functionRules: Map[Label, Set[Rewrite]] = functionRulesAsLeftRight groupBy (_._1) map { case (k, set) => (k, set.map(_._2)) }
-
-    val functionRulesWithRenamedVariables: Map[Label, Set[Rewrite]] = functionRules map { case (k, v) => (k, v map env.renameVariables) }
-
-
     env.seal()
 
     env
@@ -256,9 +270,8 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 }
 
 object SkalaBackend extends extended.BackendCreator {
-  override def apply(d: kore.Definition): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d), d)
 
   // Todo: Use for Development, Replace with apply above
-  def apply(d: kore.Definition, m: kore.Module): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d, m), d)
+  def apply(d: kore.Definition, m: kore.Module): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d, m), d, m)
 }
 

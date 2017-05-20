@@ -117,6 +117,14 @@ object StandardConverter {
     case kore.SortedVariable(kore.Name(n), kore.Sort(s)) => env.Variable(n, Sort(s))
     case kore.Not(p) => env.Not(StandardConverter(p))
     case kore.Rewrite(p1, p2) => env.Rewrite(StandardConverter(p1), StandardConverter(p2))
+    case kore.DomainValue(kore.Symbol(s), kore.Value(v)) => {
+      var ls = s.toUpperCase()
+      if (s.contains("@")) ls = ls.split("@")(0)
+      ls match {
+        case "INT" => env.toINT(v.toInt)
+        case "BOOL" => env.toBoolean(v.toBoolean)
+      }
+    }
     case p@_ => throw ConversionException(p.toString + "Cannot Convert To Kale")
   }
 
@@ -127,9 +135,6 @@ object StandardConverter {
     }
     case _ => throw ConversionException("Encountered Non Uniform Rule")
   }
-
-
-
 
   private def decodePatternAttribute(p: kore.Pattern): (kore.Pattern, Seq[kore.Pattern]) = {
     p match {
