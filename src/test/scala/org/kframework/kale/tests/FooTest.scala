@@ -1,7 +1,7 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
-import org.kframework.kale.builtin.{importINT}
+import org.kframework.kale.builtin.importINT
 import org.kframework.kale.standard.DNFEnvironment
 import org.scalatest.FreeSpec
 
