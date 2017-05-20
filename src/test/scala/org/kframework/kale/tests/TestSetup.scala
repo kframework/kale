@@ -1,7 +1,6 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
-import org.kframework.kale.builtin.Hooks
 import org.kframework.kale.context.pattern.PatternContextApplicationLabel
 import org.kframework.kale.standard.{Rewrite => _, _}
 import org.kframework.kale.util.Implicits
