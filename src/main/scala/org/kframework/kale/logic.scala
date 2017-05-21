@@ -84,6 +84,13 @@ trait AndLabel extends AssocCommWithIdLabel with Z3Builtin {
   override val identity = env.Top
   assert(identity != null)
   def asSubstitutionAndTerms(t: Term): (Substitution, Set[Term])
+  object predicatesAndNonPredicate {
+    def unapply(t: Term): Some[(Term, Option[Term])] = t match {
+      case tt: And => Some(tt.predicates, tt.nonPredicates)
+      case tt if tt.isPredicate => Some(tt, None)
+      case tt if !tt.isPredicate => Some(Top, Some(tt))
+    }
+  }
 }
 
 trait OrLabel extends AssocCommWithIdLabel with Z3Builtin {
@@ -127,3 +134,5 @@ trait Application extends Node with kore.Application {
 
   override def args: Seq[kore.Pattern] = children.toSeq
 }
+
+trait NextLabel extends Label1

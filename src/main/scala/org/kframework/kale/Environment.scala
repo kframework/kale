@@ -78,5 +78,6 @@ trait KORELabels {
   val Equality: EqualityLabel
   val Truth: TruthLabel
   val Not: NotLabel
+  val Next: NextLabel
 }
 

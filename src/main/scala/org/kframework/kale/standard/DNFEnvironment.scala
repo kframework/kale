@@ -15,6 +15,8 @@ trait DNFEnvironment extends Environment {
   override val Variable: StandardVariableLabel = standard.StandardVariableLabel()
   override val Equality: EqualityLabel = standard.StandardEqualityLabel()
 
+  override val Next: NextLabel = SimpleNextLabel()
+
   override val Rewrite = StandardRewriteLabel()
 
   def renameVariables[T <: Term](t: T): T = {

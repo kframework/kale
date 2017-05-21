@@ -66,6 +66,15 @@ private[standard] case class BottomInstance(implicit eenv: Environment) extends 
   override def toString: String = "⊥"
 }
 
+private[standard] case class SimpleNextLabel(implicit override val env: Environment) extends Named("=>_") with NextLabel {
+  def apply(t: Term) = SimpleNext(t)
+}
+
+private[standard] case class SimpleNext(_1: Term)(implicit env: Environment) extends Node1 {
+  override val label = SimpleNextLabel()
+
+  override val isPredicate = true
+}
 
 private[standard] case class StandardEqualityLabel(implicit override val env: DNFEnvironment) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = {
@@ -205,14 +214,6 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
     case `Top` => Map[Variable, Term]()
     case b: Binding => Map(b.variable -> b.term)
     case s: MultipleBindings => s.m
-  }
-
-  object formulasAndNonFormula {
-    def unapply(t: Term): Some[(Term, Option[Term])] = t match {
-      case tt: And => Some(tt.predicates, tt.nonPredicates)
-      case tt if tt.isPredicate => Some(tt, None)
-      case tt if !tt.isPredicate => Some(Top, Some(tt))
-    }
   }
 
   object substitution {
