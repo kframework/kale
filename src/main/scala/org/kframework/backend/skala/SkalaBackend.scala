@@ -27,51 +27,106 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
   }).groupBy(_._1).mapValues(_.map(_._2).toSet)
 
 
+  /**
+    * At this point, all symbols (including ones with functional attributes) in the environment have been defined.
+    * The environment is still unsealed. The following line separates out rules that have functional symbols in them
+    */
   val functionalRules: Set[kore.Rule] = functionalLabelRulesMap.values.flatten.toSet
 
+  /**
+    * Self-explanatory, rules that don't have functional Symbols. I just convert them to a set of Rewrite(s) in Kale.
+    * The conversion follows the method used in the earlier hook, but with Kore structures instead of frontend structures.
+    */
   val regularRules: Set[Rewrite] = (modules.flatMap(_.rules).toSet[kore.Rule] -- functionalRules).map(StandardConverter.apply)
 
-  val substitutionApplier = SubstitutionWithContext(_)
+  /**
+    * Now, before sealing the environment, I convert all Rules with Funcitonal Symbols from Kore Rules to Kale Rules.
+    * Since the environment is unsealed, this should go through without a problem
+    */
 
-  val rewriterGenerator = Rewriter(substitutionApplier, unifier)
+  val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.mapValues(_.map(StandardConverter.apply))
 
-  processFunctionRules(functionalLabelRulesMap)
+  /**
+    * Now Since we're done with all conversions, I seal the environment.
+    */
 
   env.seal()
 
+  /**
+    * Next two lines are matcher and unifier, needed for creating a Rewriter.
+    */
+  val substitutionApplier = SubstitutionWithContext(_)
+
   val unifier: MatcherOrUnifier = SingleSortedMatcher()
+
+  /**
+    * Create the rewriter, needed for setting rules in FunctionDefinedByRewritingLabel
+    */
+  val rewriterGenerator = Rewriter(substitutionApplier, unifier)
+
+
+  /**
+    * Getting all FunctionDefinedByRewritingLabel(s) from the environment
+    */
+
+  val functionDefinedByRewritingLabels: Set[Label with FunctionDefinedByRewriting] = env.labels.collect({
+    case l:FunctionDefinedByRewriting => l
+  })
+
+  /**
+    * Setting Rules in the Labels
+    */
+  functionDefinedByRewritingLabels.foreach(x => {
+    x.setRules(functionalLabelRewriteMap.getOrElse(x, Set()))(x => rewriterGenerator(x))
+  })
+
+
+  /**
+    * This is where I'm unclear about how to proceed. More comments in the function.
+    */
 
   val rewriter = rewriterGenerator(regularRules)
 
   override def step(p: Pattern, steps: Int): Pattern = rewriter(p.asInstanceOf[Term]).toList.head
 
-  private def processFunctionRules(functionalLabelRulesMap: Map[Label, Set[Rule]]): Unit = {
-    val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.mapValues(x => x.map(StandardConverter.apply))
+//  private def processFunctionRules(functionalLabelRulesMap: Map[Label, Set[Rule]]): Unit = {
+//    /**
+//      * Following the mechanism in K's old codebase, I'm trying to convert rules with functional symbols in them to
+//      * Kale Rewrite(s). It seems that it's important that the environment is not sealed at this moment in the execution. If
+//      * the environment is sealed, Kale will try to apply rewrite rules in the "FunctionDefinedByRewriteLabel" while doing
+//      * the conversion from Kore's Rewrite to Kale's Rewrite. But we don't want that to happen at this stage, since the
+//      * rewrite rules haven't been set yet (that's what we're trying to do here, so we want the FunctionDefinedByRewritingLabel to behave as a regular Label).
+//      * So the environment should be unsealed, right? Or do I have the wrong Idea here?
+//      */
+//    val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.mapValues(x => x.map(StandardConverter.apply))
+//
+//    /**
+//      * This is the point where I get confused. I have more comments in the function
+//      */
+//
+//    setFunctionRules(functionalLabelRewriteMap)
 
-//    val functionRulesWithRenamedVariables: Map[Label, Set[Rewrite]] = functionalLabelRewriteMap.map({ case (k, v) => (k, v map env.renameVariables) })
-
-    setFunctionRules(functionalLabelRewriteMap)
-
-    val finalFunctionRules = fixpoint(resolveFunctionRHS)(functionalLabelRewriteMap)
-    setFunctionRules(finalFunctionRules)
-  }
-
-//  private def convertFunctionalRule(r: kore.Rule): Rewrite = r match {
-//    case kore.Rule(kore.Implies(requires, kore.And(kore.Rewrite(kore.Application(kore.Symbol(koreLabel), koreLabelArgs), right), kore.Next(ensures))), att)
-//      if att.findSymbol(Encodings.macroEnc).isEmpty => {
-//      val convertedRight = StandardConverter(right)
-//      val convetedRequires = StandardConverter(requires)
-//      val convertedEnsures = StandardConverter(ensures)
-//      val convertedLeft = env.label(koreLabel).asInstanceOf[FreeLabel].apply(koreLabelArgs.map(StandardConverter.apply))
-//      env.Rewrite(env.And(convertedLeft, env.Equality(convetedRequires, env.Truth(true))), convertedRight)
-//    }
+//    val finalFunctionRules = fixpoint(resolveFunctionRHS)(functionalLabelRewriteMap)
+//    setFunctionRules(finalFunctionRules)
 //  }
 
-  def setFunctionRules(functionRules: Map[Label, Set[Rewrite]]) {
-    env.labels.collect({
-      case l: FunctionDefinedByRewriting => l.setRules(functionRules.getOrElse(l, Set()))(x => Rewriter(SubstitutionWithContext(_), SingleSortedMatcher())(x))
-    })
-  }
+
+//  def setFunctionRules(functionalLabelRewriteMap: Map[Label, Set[Rewrite]]) {
+//
+//    env.seal()
+//    /**
+//      * So this comment follows from the environment should be sealed discussion. Now, when I try to set
+//      * rules in "FunctionDefinedByRewriting" Label, I need to provide a function, lets say f, of type (Set[Rewrite]) => Rewriter.
+//      * This wasn't the case in the old K conversion. Now, when I try to create f, I need to to create a matcher + Substititioner.
+//      * But SingleSortedMatcher creation requires the environment to be sealed.
+//      */
+//
+//    val functionalLabels: Set[FunctionDefinedByRewriting] = env.labels.collect({
+//      case l:FunctionDefinedByRewriting => l
+//    })
+//
+//    functionalLabels.foreach(x => x.setRules(functionalLabelRewriteMap.getOrElse(x.asInstanceOf[Label], Set()))(x => Rewriter(SubstitutionWithContext(_), SingleSortedMatcher())(x)))
+//  }
 
   private def reconstruct(inhibitForLabel: Label)(t: Term): Term = t match {
     case Node(label, children) if label != inhibitForLabel => label(children map reconstruct(inhibitForLabel))
