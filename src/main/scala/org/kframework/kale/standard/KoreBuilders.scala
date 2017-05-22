@@ -100,7 +100,6 @@ object EnvironmentImplicit {
 }
 
 object StandardConverter {
-  import org.kframework.kore.implementation.{DefaultBuilders => db}
   def apply(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
     case p@kore.Application(kore.Symbol("#"), args) => apply(decodePatternAttribute(p)._1)
     case kore.Application(kore.Symbol(s), args) => {
@@ -131,7 +130,11 @@ object StandardConverter {
   def apply(r: kore.Rule)(implicit env: StandardEnvironment): Rewrite = r match {
     case kore.Rule(kore.Implies(requires, kore.And(kore.Rewrite(left, right), kore.Next(ensures))), att)
       if att.findSymbol(Encodings.macroEnc).isEmpty => {
-      StandardConverter(db.Rewrite(db.And(left, db.Equals(requires, db.Top())), right)).asInstanceOf[Rewrite]
+      val convertedLeft = StandardConverter(left)
+      val convertedRight = StandardConverter(right)
+      val convetedRequires = StandardConverter(requires)
+      val convertedEnsures = StandardConverter(ensures)
+      env.Rewrite(env.And(convertedLeft, env.Equality(convetedRequires, env.Truth(true))), convertedRight)
     }
     case _ => throw ConversionException("Encountered Non Uniform Rule")
   }

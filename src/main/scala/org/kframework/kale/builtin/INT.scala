@@ -15,7 +15,7 @@ case class INT(implicit protected val penv: Environment with importBOOLEAN) exte
   val minus = PrimitiveFunction2[Int]("_-Int_", Int, _ - _)
   val mult = PrimitiveFunction2[Int]("_*Int_", Int, _ * _)
   val div = PrimitiveFunction2[Int]("_/Int_", Int, _ / _)
-  val mod = PrimitiveFunction2[Int]("_%Int_", Int, _ / _)
+  val mod = PrimitiveFunction2[Int]("_%Int_", Int, _ % _)
   val lt = PrimitiveFunction2[Int, Boolean]("_<Int_", Int, BOOLEAN.Boolean, _ < _)
   val le = PrimitiveFunction2[Int, Boolean]("_<=Int_", Int, BOOLEAN.Boolean, _ <= _)
   val gt = PrimitiveFunction2[Int, Boolean]("_>Int_", Int, BOOLEAN.Boolean, _ > _)

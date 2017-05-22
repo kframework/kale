@@ -46,31 +46,31 @@ class BasicOnSkalaTest extends FreeSpec {
 
   val db: Builders = DefaultBuilders
   "In Basic," - {
-    "1 +Int 2 == 3" in {
-      implicit val koreDefinition: k.Definition = ProgrammaticBasicDefinition.definition
-
-      val module = koreDefinition.modulesMap(db.ModuleName("SEMANTICS"))
-
-      // Use Default Builders to Create the Definiton
-      val skalaBackend: Backend = SkalaBackend(koreDefinition, module)
-
-      // Use Builders of the Backend to Create Terms/Patterns
-      val pattern: k.Pattern = skalaBackend.Application(skalaBackend.Symbol("_+_"),
-        Seq(skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("1")),
-          skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("2"))))
-      assert(skalaBackend.step(pattern) == skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("3")))
-    }
-
-//    "Text Kore Parse and Rewrite" in {
-//      val parser: TextToKore = TextToKore(db)
-//      val basic = Source.fromResource("basic.kore")
-//      implicit val koreDefinition: k.Definition = parser.parse(basic)
+//    "1 +Int 2 == 3" in {
+//      implicit val koreDefinition: k.Definition = ProgrammaticBasicDefinition.definition
 //
-//      val module = koreDefinition.modulesMap(db.ModuleName("BOOL"))
+//      val module = koreDefinition.modulesMap(db.ModuleName("SEMANTICS"))
 //
+//      // Use Default Builders to Create the Definiton
 //      val skalaBackend: Backend = SkalaBackend(koreDefinition, module)
 //
+//      // Use Builders of the Backend to Create Terms/Patterns
+//      val pattern: k.Pattern = skalaBackend.Application(skalaBackend.Symbol("_+_"),
+//        Seq(skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("1")),
+//          skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("2"))))
+//      assert(skalaBackend.step(pattern) == skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("3")))
 //    }
+
+    "Text Kore Parse and Rewrite" in {
+      val parser: TextToKore = TextToKore(db)
+      val basic = Source.fromResource("basic.kore")
+      implicit val koreDefinition: k.Definition = parser.parse(basic)
+
+      val module = koreDefinition.modulesMap(db.ModuleName("BOOL"))
+
+      val skalaBackend: Backend = SkalaBackend(koreDefinition, module)
+
+    }
 
 
   }
