@@ -74,60 +74,16 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
   })
 
   /**
-    * Setting Rules in the Labels
+    * Setting Rules in the Labels. This Leads to an error, which I'm not
+    * not sure about.
     */
   functionDefinedByRewritingLabels.foreach(x => {
     x.setRules(functionalLabelRewriteMap.getOrElse(x, Set()))(x => rewriterGenerator(x))
   })
 
-
-  /**
-    * This is where I'm unclear about how to proceed. More comments in the function.
-    */
-
   val rewriter = rewriterGenerator(regularRules)
 
   override def step(p: Pattern, steps: Int): Pattern = rewriter(p.asInstanceOf[Term]).toList.head
-
-//  private def processFunctionRules(functionalLabelRulesMap: Map[Label, Set[Rule]]): Unit = {
-//    /**
-//      * Following the mechanism in K's old codebase, I'm trying to convert rules with functional symbols in them to
-//      * Kale Rewrite(s). It seems that it's important that the environment is not sealed at this moment in the execution. If
-//      * the environment is sealed, Kale will try to apply rewrite rules in the "FunctionDefinedByRewriteLabel" while doing
-//      * the conversion from Kore's Rewrite to Kale's Rewrite. But we don't want that to happen at this stage, since the
-//      * rewrite rules haven't been set yet (that's what we're trying to do here, so we want the FunctionDefinedByRewritingLabel to behave as a regular Label).
-//      * So the environment should be unsealed, right? Or do I have the wrong Idea here?
-//      */
-//    val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.mapValues(x => x.map(StandardConverter.apply))
-//
-//    /**
-//      * This is the point where I get confused. I have more comments in the function
-//      */
-//
-//    setFunctionRules(functionalLabelRewriteMap)
-
-//    val finalFunctionRules = fixpoint(resolveFunctionRHS)(functionalLabelRewriteMap)
-//    setFunctionRules(finalFunctionRules)
-//  }
-
-
-//  def setFunctionRules(functionalLabelRewriteMap: Map[Label, Set[Rewrite]]) {
-//
-//    env.seal()
-//    /**
-//      * So this comment follows from the environment should be sealed discussion. Now, when I try to set
-//      * rules in "FunctionDefinedByRewriting" Label, I need to provide a function, lets say f, of type (Set[Rewrite]) => Rewriter.
-//      * This wasn't the case in the old K conversion. Now, when I try to create f, I need to to create a matcher + Substititioner.
-//      * But SingleSortedMatcher creation requires the environment to be sealed.
-//      */
-//
-//    val functionalLabels: Set[FunctionDefinedByRewriting] = env.labels.collect({
-//      case l:FunctionDefinedByRewriting => l
-//    })
-//
-//    functionalLabels.foreach(x => x.setRules(functionalLabelRewriteMap.getOrElse(x.asInstanceOf[Label], Set()))(x => Rewriter(SubstitutionWithContext(_), SingleSortedMatcher())(x)))
-//  }
-
   private def reconstruct(inhibitForLabel: Label)(t: Term): Term = t match {
     case Node(label, children) if label != inhibitForLabel => label(children map reconstruct(inhibitForLabel))
     case t => t
@@ -135,8 +91,6 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
 
   private def resolveFunctionRHS(functionRules: Map[Label, Set[Rewrite]]): Map[Label, Set[Rewrite]] =
     functionRules map { case (label, rewrites) => (label, rewrites map (rw => reconstruct(label)(rw).asInstanceOf[Rewrite])) }
-
-
 }
 
 //Todo: Move somewhere else
@@ -186,6 +140,13 @@ case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)
     }
   }
 }
+
+
+/**
+  * This first step of the conversion. Go through the definition, and declare all the
+  * symbols. Basically, initialize the matching logic signature of the definition.
+  * The environment returned is unsealed at the end of this definition.
+  */
 
 object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvironment) {
 
@@ -341,7 +302,6 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 
 object SkalaBackend extends extended.BackendCreator {
 
-  // Todo: Use for Development, Replace with apply above
   def apply(d: kore.Definition, m: kore.Module): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d, m), d, m)
 }
 
