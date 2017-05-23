@@ -11,8 +11,7 @@ import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.DefaultBuilders
 import org.kframework.kore.{Pattern, Rule, extended}
 
-import scala.collection.Seq
-
+//import scala.collection.{Seq, mutable}
 
 class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalDefintion: kore.Definition, val module: kore.Module) extends KoreBuilders with extended.Backend {
 
@@ -20,7 +19,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
 
   override def modules: Seq[kore.Module] = module +: originalDefintion.modulesMap.get(module.name).get.imports
 
-  val functionLabels = env.uniqueLabels.filter(_._2.isInstanceOf[FunctionDefinedByRewriting])
+  val functionLabels: Map[String, Label] = Map.empty[String, Label] ++ env.uniqueLabels.filter(_._2.isInstanceOf[FunctionDefinedByRewriting])
 
   val functionalLabelRulesMap: Map[Label, Set[Rule]] = modules.flatMap(_.rules).collect({
     case r@kore.Rule(kore.Implies(_, kore.And(kore.Rewrite(kore.Application(kore.Symbol(label), _), _), _)), att) if functionLabels.contains(label) => (env.label(label), r)
@@ -40,17 +39,21 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
   val regularRules: Set[Rewrite] = (modules.flatMap(_.rules).toSet[kore.Rule] -- functionalRules).map(StandardConverter.apply)
 
   /**
-    * Now, before sealing the environment, I convert all Rules with Funcitonal Symbols from Kore Rules to Kale Rules.
+    * Now, before sealing the environment, I convert all Rules with functional Symbols from Kore Rules to Kale Rules.
     * Since the environment is unsealed, this should go through without a problem
     */
 
-  val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.mapValues(_.map(StandardConverter.apply))
+
+  val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.mapValues({ x: Set[Rule] => x.map((y: Rule) => StandardConverter(y)) })
+
 
   /**
     * Now Since we're done with all conversions, I seal the environment.
     */
+  //  val labels: Iterable[Rewrite] = functionalLabelRewriteMap.values.flatten
 
   env.seal()
+
 
   /**
     * Next two lines are matcher and unifier, needed for creating a Rewriter.
@@ -70,7 +73,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
     */
 
   val functionDefinedByRewritingLabels: Set[Label with FunctionDefinedByRewriting] = env.labels.collect({
-    case l:FunctionDefinedByRewriting => l
+    case l: FunctionDefinedByRewriting => l
   })
 
   /**
@@ -84,6 +87,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
   val rewriter = rewriterGenerator(regularRules)
 
   override def step(p: Pattern, steps: Int): Pattern = rewriter(p.asInstanceOf[Term]).toList.head
+
   private def reconstruct(inhibitForLabel: Label)(t: Term): Term = t match {
     case Node(label, children) if label != inhibitForLabel => label(children map reconstruct(inhibitForLabel))
     case t => t
@@ -301,7 +305,6 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 }
 
 object SkalaBackend extends extended.BackendCreator {
-
   def apply(d: kore.Definition, m: kore.Module): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d, m), d, m)
 }
 
