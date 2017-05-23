@@ -11,6 +11,9 @@ import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.DefaultBuilders
 import org.kframework.kore.{Pattern, Rule, extended}
 
+import scala.collection.mutable
+
+
 //import scala.collection.{Seq, mutable}
 
 class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalDefintion: kore.Definition, val module: kore.Module) extends KoreBuilders with extended.Backend {
@@ -19,32 +22,34 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
 
   override def modules: Seq[kore.Module] = module +: originalDefintion.modulesMap.get(module.name).get.imports
 
-  val functionLabels: Map[String, Label] = Map.empty[String, Label] ++ env.uniqueLabels.filter(_._2.isInstanceOf[FunctionDefinedByRewriting])
+  val functionLabels: mutable.Map[String, Label] = env.uniqueLabels.filter(_._2.isInstanceOf[FunctionDefinedByRewriting])
 
   val functionalLabelRulesMap: Map[Label, Set[Rule]] = modules.flatMap(_.rules).collect({
     case r@kore.Rule(kore.Implies(_, kore.And(kore.Rewrite(kore.Application(kore.Symbol(label), _), _), _)), att) if functionLabels.contains(label) => (env.label(label), r)
   }).groupBy(_._1).mapValues(_.map(_._2).toSet)
 
-
   /**
     * At this point, all symbols (including ones with functional attributes) in the environment have been defined.
     * The environment is still unsealed. The following line separates out rules that have functional symbols in them
     */
-  val functionalRules: Set[kore.Rule] = functionalLabelRulesMap.values.flatten.toSet
+  val functionalKoreRules: Set[kore.Rule] = functionalLabelRulesMap.values.flatten.toSet
 
   /**
     * Self-explanatory, rules that don't have functional Symbols. I just convert them to a set of Rewrite(s) in Kale.
     * The conversion follows the method used in the earlier hook, but with Kore structures instead of frontend structures.
     */
-  val regularRules: Set[Rewrite] = (modules.flatMap(_.rules).toSet[kore.Rule] -- functionalRules).map(StandardConverter.apply)
+  val regularRules: Set[Rewrite] = (modules.flatMap(_.rules).toSet[kore.Rule] -- functionalKoreRules).map(StandardConverter.apply)
 
   /**
     * Now, before sealing the environment, I convert all Rules with functional Symbols from Kore Rules to Kale Rules.
     * Since the environment is unsealed, this should go through without a problem
     */
 
+    val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.map({
+      case (k, v) => (k, v.map(StandardConverter.apply))
+    })
 
-  val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.mapValues({ x: Set[Rule] => x.map((y: Rule) => StandardConverter(y)) })
+//  val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.mapValues({ x: Set[Rule] => x.map((y: Rule) => StandardConverter(y)) })
 
 
   /**
