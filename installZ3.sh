@@ -1,21 +1,20 @@
 #!/bin/sh
 
 if [ ! -d ./z3 ]; then
-    OSNAME=`uname`
 
-    if [ "$OSNAME"="Linux" ]; then
+    URL="https://github.com/Z3Prover/z3/releases/download/z3-4.5.0/"
+    FORMAT=".zip"
+
+    if [ `uname` = "Linux" ]; then
         echo "Linux"
-        # fix this to select Linux version
-        URL="https://github.com/Z3Prover/z3/releases/download/z3-4.5.0/z3-4.5.0-x64-ubuntu-14.04.zip"
-    fi
+        EXECUTABLE="z3-4.5.0-x64-ubuntu-14.04"
 
-    if [ "$OSNAME"="Darwin" ]; then
+
+    elif [ `uname` = "Darwin" ]; then
         echo "Darwin"
-        URL="https://github.com/Z3Prover/z3/releases/download/z3-4.5.0/z3-4.5.0-x64-osx-10.11.6.zip"
+        EXECUTABLE="z3-4.5.0-x64-osx-10.11.6"
     fi
 
-    mkdir z3
-    curl -L $URL | tar -Jf- -C z3 --strip-components=1
-
+    curl -OL $URL$EXECUTABLE$FORMAT && tar -xvf $EXECUTABLE$FORMAT && mv $EXECUTABLE"/" z3 && rm $EXECUTABLE$FORMAT
 
 fi
