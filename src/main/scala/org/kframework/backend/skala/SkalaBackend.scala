@@ -1,9 +1,9 @@
 package org.kframework.backend.skala
 
 import org.kframework.backend.skala.backendImplicits._
-import org.kframework.kale.builtin.MapLabel
+import org.kframework.kale.builtin.{GenericTokenLabel, MapLabel}
 import org.kframework.kale.standard._
-import org.kframework.kale.util.{Named, fixpoint}
+import org.kframework.kale.util.Named
 import org.kframework.kale.{Rewrite => _, _}
 import org.kframework.kore
 import org.kframework.kore.extended.Backend
@@ -14,7 +14,6 @@ import org.kframework.kore.{Pattern, Rule, extended}
 import scala.collection.mutable
 
 
-//import scala.collection.{Seq, mutable}
 
 class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalDefintion: kore.Definition, val module: kore.Module) extends KoreBuilders with extended.Backend {
 
@@ -41,7 +40,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
   val regularRules: Set[Rewrite] = (modules.flatMap(_.rules).toSet[kore.Rule] -- functionalKoreRules).map(StandardConverter.apply)
 
   /**
-    * Now, before sealing the environment, I convert all Rules with functional Symbols from Kore Rules to Kale Rules.
+    * Now, before sealing the environment, convert all Rules with functional Symbols from Kore Rules to Kale Rules.
     * Since the environment is unsealed, this should go through without a problem
     */
 
@@ -49,14 +48,9 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
       case (k, v) => (k, v.map(StandardConverter.apply))
     })
 
-//  val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.mapValues({ x: Set[Rule] => x.map((y: Rule) => StandardConverter(y)) })
-
-
   /**
-    * Now Since we're done with all conversions, I seal the environment.
+    * Now Since we're done with all conversions, seal the environment.
     */
-  //  val labels: Iterable[Rewrite] = functionalLabelRewriteMap.values.flatten
-
   env.seal()
 
 
@@ -82,8 +76,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
   })
 
   /**
-    * Setting Rules in the Labels. This Leads to an error, which I'm not
-    * not sure about.
+    * Setting Rules in the Labels.
     */
   functionDefinedByRewritingLabels.foreach(x => {
     x.setRules(functionalLabelRewriteMap.getOrElse(x, Set()))(x => rewriterGenerator(x))
@@ -91,7 +84,11 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
 
   val rewriter = rewriterGenerator(regularRules)
 
-  override def step(p: Pattern, steps: Int): Pattern = rewriter(p.asInstanceOf[Term]).toList.head
+
+  override def step(p: Pattern, steps: Int): Pattern = {
+    val convertedK = StandardConverter(p)
+    rewriter(convertedK).toList.head
+  }
 
   private def reconstruct(inhibitForLabel: Label)(t: Term): Term = t match {
     case Node(label, children) if label != inhibitForLabel => label(children map reconstruct(inhibitForLabel))
@@ -118,6 +115,7 @@ object Encodings {
   val rewrite = DefaultBuilders.Symbol("#KRewrite")
   val attributeValue = DefaultBuilders.Symbol("AttributeValue")
   val att = DefaultBuilders.Symbol("#")
+  val token = DefaultBuilders.Symbol("token")
 }
 
 object Hook {
@@ -199,17 +197,11 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
     }).groupBy(_.symbol).mapValues(_.head).values.toSeq
 
 
-    val sortDeclarations: Seq[kore.SortDeclaration] = m.allSentences.collect({
-      case s@kore.SortDeclaration(_, _) => s
-    })
-
-
     val assocSymbols: Seq[kore.SymbolDeclaration] = uniqueSymbolDecs.filter(isAssoc)
 
     val nonAssocSymbols: Seq[kore.SymbolDeclaration] = uniqueSymbolDecs.diff(assocSymbols)
 
     implicit val env = StandardEnvironment()
-
 
     def declareNonHookedSymbol(x: kore.SymbolDeclaration): Option[Label] = {
       if (env.uniqueLabels.contains(x.symbol.str)) {
@@ -289,6 +281,14 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
         case None => None
       }
     }).toSet
+
+    //Todo: Better Mechanism To Handle These
+
+    val emptyKSeqLabel: SimpleFreeLabel0 = SimpleFreeLabel0(".K")
+
+    val kSeq = new AssocWithIdListLabel("~>", emptyKSeqLabel())
+
+    val kConfigVar = SimpleFreeLabel1("KConfigVar@BASIC-K")
 
     env
   }

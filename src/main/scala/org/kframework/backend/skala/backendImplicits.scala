@@ -1,6 +1,6 @@
 package org.kframework.backend.skala
-import org.kframework.kore.extended.implicits._
 import org.kframework.kore
+import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.{DefaultBuilders => db}
 
 /**

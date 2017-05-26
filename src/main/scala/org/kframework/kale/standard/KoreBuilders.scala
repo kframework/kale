@@ -100,11 +100,17 @@ object EnvironmentImplicit {
 }
 
 object StandardConverter {
+
+  val specialSymbolsSet: Set[String] = Set("#", "#KSequence")
+
   def apply(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
-    case p@kore.Application(kore.Symbol("#"), args) => apply(decodePatternAttribute(p)._1)
+    case p@kore.Application(kore.Symbol(str), args) if specialSymbolsSet.contains(str) => specialPatternHandler(p)
     case kore.Application(kore.Symbol(s), args) => {
       env.uniqueLabels.get(s) match {
-        case Some(l: NodeLabel) => l(args.map(StandardConverter.apply))
+        case Some(l: NodeLabel) => {
+          val cargs = args.map(StandardConverter.apply)
+          l(cargs)
+        }
         case None => ???
       }
     }
@@ -122,6 +128,8 @@ object StandardConverter {
       ls match {
         case "INT" => env.toINT(v.toInt)
         case "BOOL" => env.toBoolean(v.toBoolean)
+        case "STRING" => env.toSTRING(v)
+        case "KCONFIGVAR" => env.Variable(v)
       }
     }
     case p@_ => throw ConversionException(p.toString + "Cannot Convert To Kale")
@@ -137,6 +145,14 @@ object StandardConverter {
       env.Rewrite(env.And(convertedLeft, env.Equality(convetedRequires, env.Truth(true))), convertedRight)
     }
     case _ => throw ConversionException("Encountered Non Uniform Rule")
+  }
+
+  //Todo: Better Mechanism To Handle These Cases
+  private def specialPatternHandler(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
+    case p@kore.Application(kore.Symbol(s), args) => s match {
+      case "#" => apply(decodePatternAttribute(p)._1)
+      case "#KSequence" => env.label("~>").asInstanceOf[AssocWithIdListLabel](args.map(StandardConverter.apply))
+    }
   }
 
   private def decodePatternAttribute(p: kore.Pattern): (kore.Pattern, Seq[kore.Pattern]) = {
