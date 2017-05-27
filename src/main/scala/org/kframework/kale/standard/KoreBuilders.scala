@@ -7,6 +7,7 @@ import org.kframework.kore.implementation.DefaultBuilders
 import scala.collection.Seq
 import EnvironmentImplicit._
 import org.kframework.backend.skala.Encodings
+import org.kframework.kale.builtin.{GenericTokenLabel, MapLabel}
 import org.kframework.kore.extended.implicits._
 
 class KoreBackend(d: kore.Definition, mainModule: kore.ModuleName) {
@@ -101,12 +102,23 @@ object EnvironmentImplicit {
 
 object StandardConverter {
 
-  val specialSymbolsSet: Set[String] = Set("#", "#KSequence")
+  val renamingMap: Map[String, String] = Map(
+    "keys" -> "_Map_.keys",
+    "lookup" -> "_Map_.lookup",
+    "Set:in" -> "_Set_.in",
+    "Map:lookup" -> "_Map_.lookup"
+  )
+
+  val specialSymbolsSet: Set[String] = Set("#", "#KSequence", "Map:lookup")
 
   def apply(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
     case p@kore.Application(kore.Symbol(str), args) if specialSymbolsSet.contains(str) => specialPatternHandler(p)
     case kore.Application(kore.Symbol(s), args) => {
-      env.uniqueLabels.get(s) match {
+      var key = s
+//      if(renamingMap.contains(s))
+//        key = renamingMap(s)
+
+      env.uniqueLabels.get(key) match {
         case Some(l: NodeLabel) => {
           val cargs = args.map(StandardConverter.apply)
           l(cargs)
@@ -119,17 +131,26 @@ object StandardConverter {
     case kore.Top() => env.Top
     case kore.Bottom() => env.Bottom
     case kore.Equals(p1, p2) => env.Equality(StandardConverter(p1), StandardConverter(p2))
-    case kore.SortedVariable(kore.Name(n), kore.Sort(s)) => env.Variable(n, Sort(s))
+    case kore.SortedVariable(kore.Name(n), kore.Sort(s)) => n match {
+      case "$PGM" => env.Variable(n, Sort("KConfigVar@BASIC-K"))
+      case _ => env.Variable(n, Sort(s))
+    }
     case kore.Not(p) => env.Not(StandardConverter(p))
     case kore.Rewrite(p1, p2) => env.Rewrite(StandardConverter(p1), StandardConverter(p2))
-    case kore.DomainValue(kore.Symbol(s), kore.Value(v)) => {
-      var ls = s.toUpperCase()
-      if (s.contains("@")) ls = ls.split("@")(0)
-      ls match {
-        case "INT" => env.toINT(v.toInt)
-        case "BOOL" => env.toBoolean(v.toBoolean)
-        case "STRING" => env.toSTRING(v)
-        case "KCONFIGVAR" => env.Variable(v)
+    case kore.DomainValue(symbol@kore.Symbol(s), value@kore.Value(v)) => {
+      env.uniqueLabels.get("TOKEN_" + s) match {
+        case Some(l: GenericTokenLabel) => l(v)
+        case None => {
+          var ls = s.toUpperCase()
+          if (s.contains("@")) ls = ls.split("@")(0)
+          ls match {
+            case "INT" => env.toINT(v.toInt)
+            case "BOOL" => env.toBoolean(v.toBoolean)
+            case "STRING" => env.toSTRING(v)
+            //Todo: Throw Exception Here
+            case _ => ???
+          }
+        }
       }
     }
     case p@_ => throw ConversionException(p.toString + "Cannot Convert To Kale")
@@ -152,6 +173,7 @@ object StandardConverter {
     case p@kore.Application(kore.Symbol(s), args) => s match {
       case "#" => apply(decodePatternAttribute(p)._1)
       case "#KSequence" => env.label("~>").asInstanceOf[AssocWithIdListLabel](args.map(StandardConverter.apply))
+      case "Map:lookup" => env.label("_Map_").asInstanceOf[MapLabel].lookup(args.map(StandardConverter.apply))
     }
   }
 

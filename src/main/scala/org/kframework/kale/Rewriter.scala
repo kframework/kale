@@ -1,5 +1,6 @@
 package org.kframework.kale
 
+import org.kframework.kale.standard.AndOfSubstitutionAndTerms
 import org.kframework.kale.transformer.Binary
 
 import scala.collection.immutable.TreeSet
@@ -8,6 +9,7 @@ import scala.collection.{Set, mutable}
 object Rewriter {
   def apply(substitutioner: Substitution => (Term => Term), matcher: MatcherOrUnifier) = new {
     def apply(rules: Set[_ <: Rewrite]): Rewriter = new Rewriter(substitutioner, matcher, rules, matcher.env)
+
     def apply(rule: Term): Rewriter = {
       implicit val e = matcher.env
       apply(Set(rule.moveRewriteToTop))
@@ -56,7 +58,12 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
       tries += 1
       m match {
         case Or.set(ands) =>
-          val oneGoodSub = (ands collect { case s: Substitution => s }).headOption
+          val oneGoodSub = (ands collect {
+            case s: Substitution => s
+            case a: AndOfSubstitutionAndTerms => a.s
+          }).headOption
+
+
           val afterSubstitution = oneGoodSub.map(substitutioner(_).apply(r._2)).getOrElse(Bottom)
           //          if (afterSubstitution != Bottom) {
           //            println("   " + r)

@@ -14,7 +14,6 @@ import org.kframework.kore.{Pattern, Rule, extended}
 import scala.collection.mutable
 
 
-
 class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalDefintion: kore.Definition, val module: kore.Module) extends KoreBuilders with extended.Backend {
 
   override def att: kore.Attributes = originalDefintion.att
@@ -44,9 +43,9 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
     * Since the environment is unsealed, this should go through without a problem
     */
 
-    val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.map({
-      case (k, v) => (k, v.map(StandardConverter.apply))
-    })
+  val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.map({
+    case (k, v) => (k, v.map(StandardConverter.apply))
+  })
 
   /**
     * Now Since we're done with all conversions, seal the environment.
@@ -160,6 +159,7 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
   import Encodings._
   import org.kframework.kore.implementation.{DefaultBuilders => db}
 
+
   def apply(d: kore.Definition): StandardEnvironment = {
     val mainModuleName: kore.ModuleName = {
       d.att.findSymbol(iMainModule) match {
@@ -197,11 +197,24 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
     }).groupBy(_.symbol).mapValues(_.head).values.toSeq
 
 
+
+
+
     val assocSymbols: Seq[kore.SymbolDeclaration] = uniqueSymbolDecs.filter(isAssoc)
 
     val nonAssocSymbols: Seq[kore.SymbolDeclaration] = uniqueSymbolDecs.diff(assocSymbols)
 
     implicit val env = StandardEnvironment()
+
+    /**
+      * Declare All Sorts With Tokens as Token Labels
+      */
+
+    val tokenLabels: Seq[GenericTokenLabel] = m.allSentences.flatMap({
+      case kore.SortDeclaration(kore.Sort(s), attributes) if attributes.getSymbolValue(Encodings.token).isDefined =>
+          Some(GenericTokenLabel(Sort(s)))
+      case _ => None
+    })
 
     def declareNonHookedSymbol(x: kore.SymbolDeclaration): Option[Label] = {
       if (env.uniqueLabels.contains(x.symbol.str)) {
@@ -288,7 +301,7 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 
     val kSeq = new AssocWithIdListLabel("~>", emptyKSeqLabel())
 
-    val kConfigVar = SimpleFreeLabel1("KConfigVar@BASIC-K")
+    val kConfigVar = GenericTokenLabel(Sort("KConfigVar@BASIC-K"))
 
     env
   }
