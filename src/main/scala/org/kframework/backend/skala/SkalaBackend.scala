@@ -19,10 +19,10 @@ class SkalaBackend(implicit val env: StandardEnvironment, val originalDefintion:
 
   override def modules: Seq[kore.Module] = originalDefintion.modules
 
-  lazy val rules: Set[Rewrite] = modules.flatMap(_.rules).map({
+  lazy val rules: Set[SimpleRewrite] = modules.flatMap(_.rules).map({
     case kore.Rule(kore.Implies(requires, kore.And(kore.Rewrite(left, right), kore.Next(ensures))), att)
       if att.findSymbol(Encodings.macroEnc).isEmpty => {
-      StandardConverter(db.Rewrite(db.And(left, db.Equals(requires, db.Top())), right)).asInstanceOf[Rewrite]
+      StandardConverter(db.Rewrite(db.And(left, db.Equals(requires, db.Top())), right)).asInstanceOf[SimpleRewrite]
     }
     case _ => throw ConversionException("Encountered Non Uniform Rule")
   }).toSet
@@ -194,7 +194,7 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 }
 
 object SkalaBackend extends extended.BackendCreator {
-  override def apply(d: kore.Definition): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d), d)
+  def apply(d: kore.Definition): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d), d)
 
   // Todo: Use for Development, Replace with apply above
   def apply(d: kore.Definition, m: kore.Module): Backend = new SkalaBackend()(DefinitionToStandardEnvironment(d, m), d)

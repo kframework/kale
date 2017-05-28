@@ -19,8 +19,9 @@ class Implicits(implicit val env: StandardEnvironment) extends StaticImplicits {
   }
 
   implicit class RichTerm(t: Term) {
-    def :=(tt: Term)(implicit m: MatcherOrUnifier): Term = m(t, tt)
-    def =:=(tt: Term)(implicit m: MatcherOrUnifier): Term = m(t, tt)
+    def :=(tt: Term)(implicit m: MatcherOrUnifier): Term = env.And.withNext.filterOurNext(m(t, tt))
+    def :==(tt: Term)(implicit m: MatcherOrUnifier): Term = m(t, tt)
+    def =:=(tt: Term)(implicit m: MatcherOrUnifier): Term = env.And.withNext.filterOurNext(m(t, tt))
   }
 
 }

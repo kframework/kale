@@ -117,82 +117,12 @@ class ParsingDisambiguationTest extends FreeSpec {
   val Mult = Variable("Mult")
   val Decl = Variable("Decl")
 
-  "match part" ignore {
-    val pattern = AnywhereContext(
-      Variable("ANYWHERE0"),
-      StmtList(
-        BindMatch(DeclOrNot,
-          IfThenElse(TYPEDEF_CONTEXT(
-            CX,
-            typedef(A)
-          ), Equality(IsDecl, Top), Equality(IsDecl, Bottom))
-        ),
-        Or(
-          And(Not(IsDecl),
-            BindMatch(Mult, ExpList(
-              mult(A, B),
-              readPointer(C)
-            ))
-          ),
-          And(IsDecl,
-            BindMatch(Decl, VarDecl(
-              A,
-              DeclList(
-                Pointer(B),
-                Pointer(C))
-            ))
-          )
-        )
-      )
-    )
-
-    // as decl
-    assert(unifier(pattern, asDecl(theAmbiguity))
-      === And(List(Equality(A, 'a), Equality(B, 'b), Equality(C, 'c),
-      Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Top), Equality(CX, Hole))))
-
-    // as mult
-    assert(unifier(pattern, asMult(theAmbiguity))
-      === And(List(Equality(A, 'a), Equality(B, 'b), Equality(C, 'c),
-      Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Bottom))))
-
-  }
-
   var anywhereCounter = 0
 
   def ANYWHERE(p: Term) = {
     anywhereCounter += 1
     AnywhereContext(
       Variable("ANYWHERE" + anywhereCounter), p)
-  }
-
-  "rewrite" ignore {
-
-    val disambRule = ANYWHERE(
-      StmtList(
-        Rewrite(
-          BindMatch(DeclOrNot,
-            IfThenElse(TYPEDEF_CONTEXT(CX, typedef(A)), Equality(IsDecl, Top), Equality(IsDecl, Bottom))),
-          DeclOrNot),
-        Or(
-          And(Not(IsDecl),
-            ANYWHERE(
-              Rewrite(
-                BindMatch(Mult, MULT(Variable("CxMult"), mult(A, _V))),
-                Mult))),
-          And(IsDecl,
-            ANYWHERE(
-              Rewrite(
-                BindMatch(Decl, VarDecl(A, _V)),
-                Decl))
-          ))))
-
-    val rewriteOnTop = Util.moveRewriteSymbolToTop(disambRule)(env)
-
-    val rewriter = Rewriter(substitutionApplier, unifier)(Set(rewriteOnTop))
-
-    println(rewriter.searchStep(asMult(theAmbiguity)))
-    println(rewriter.searchStep(asDecl(theAmbiguity)))
   }
 
   "with two rules and amb" in {

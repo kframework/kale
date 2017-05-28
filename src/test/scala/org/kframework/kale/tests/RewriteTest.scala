@@ -31,11 +31,24 @@ class RewriteTest extends FreeSpec with TestSetup {
     assertRewrite(Rewrite((2: Term) + X + 3, (5: Term) + X))((2: Term) + 4 + 3, (5: Term) + 4)
   }
 
-  val rewriter = Rewriter(substitutionApplier, unifier)(Set(
+  val rewriter = Rewriter(substitutionApplier, nextUnifier)(Set(
     Rewrite(X + 0, X),
     Rewrite((0: Term) + X, X),
     Rewrite(el ~~ 3 ~~ X ~~ Y ~~ 6, el ~~ X ~~ 0 ~~ Y)
   ))
+
+  def justNext(t: Term) = t match {
+    case And.withNext(_, Some(Next(next))) => next
+  }
+
+  "inner rewrite" - {
+    "simple" in {
+      assert(justNext(bar(Rewrite(X, b)) :== bar(a)) === bar(b))
+    }
+    "swap" in {
+      assert(justNext(foo(Rewrite(X, Y), Rewrite(Y, X)) :== foo(a, b)) === foo(b, a))
+    }
+  }
 
   "step" in {
     assert(rewriter.step((1: Term) + 0).toList === List(1: Term))
@@ -109,6 +122,13 @@ class RewriteTest extends FreeSpec with TestSetup {
       assertRewrite(CAPP(C, Rewrite(bar(X), buz(X, X))))(
         foo(1, bar(buz(3, bar(2)))),
         foo(1, buz(buz(3, bar(2)), buz(3, bar(2)))))
+    }
+  }
+
+  "inline rewrite" - {
+    "very simple" in {
+      val rw = Rewrite(1, 2)
+      println(rw := 1)
     }
   }
 }

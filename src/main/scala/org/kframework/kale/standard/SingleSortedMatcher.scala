@@ -23,6 +23,14 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
   import org.kframework.kale.context._
   import org.kframework.kale.util.StaticImplicits._
 
+  override def apply(left: Term, right: Term): Term = {
+    val res = super.apply(left, right)
+    assert(env.Or.asSet(res).forall({
+      case env.And.withNext(_, Some(_)) => true
+    }))
+    res
+  }
+
   def matchContents(l: AssocLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = {
     val res = (ksLeft.toSeq, ksRight.toSeq) match {
       case (Seq(), Seq()) =>
@@ -34,32 +42,34 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
           }
           .map {
             case (prefix, suffix) =>
-              val bind = And(soFar, Equality(v, l(prefix)))
-              matchContents(l, bind, tailL, suffix)
+              val prefixTerm = l(prefix)
+              val newSoFar = And.combine(l)(Solved(soFar), Solved(And(Next(prefixTerm), Equality(v, prefixTerm))))
+              matchContents(l, newSoFar, tailL, suffix)
           }
           .fold(Bottom)({
             (a, b) => Or(a, b)
           })
       case (left, right) if left.nonEmpty && right.nonEmpty =>
-        val headSolution: Term = solver(And(soFar, left.head), right.head)
+        val (sub, _) = And.asSubstitutionAndTerms(soFar)
+        val headSolution: Term = And.combine(l)(Solved(soFar), Task(sub(left.head), sub(right.head)))
         matchContents(l, headSolution, left.tail, right.tail)
-      case other => Bottom
+      case _ => Bottom
     }
     res
   }
 
-  def AssocWithIdTerm(solver: Apply)(a: Assoc, b: Term) = {
+  def AssocWithIdTerm(solver: Apply)(a: AssocWithIdList, b: Term) = {
     val asList = a.label.asIterable _
     val l1 = asList(a)
     val l2 = asList(b)
-    matchContents(a.label, Top, l1, l2)(solver)
+    matchContents(a.label, Next(a.label.identity), l1, l2)(solver)
   }
 
-  def TermAssocWithId(solver: Apply)(a: Term, b: Assoc) = {
+  def TermAssocWithId(solver: Apply)(a: Term, b: AssocWithIdList) = {
     val asList = b.label.asIterable _
     val l1 = asList(a)
     val l2 = asList(b)
-    matchContents(b.label, Top, l1, l2)(solver)
+    matchContents(b.label, Next(b.label.identity), l1, l2)(solver)
   }
 
   def MapTerm(solver: Apply)(a: Term, b: Term): Term = a.label match {
@@ -145,6 +155,17 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
     })
   }
 
+  def RewriteMatcher(solver: SingleSortedMatcher)(a: SimpleRewrite, b: Term): Term = {
+    val env = solver.env
+    import env._
+    val m = solver(a._1, b)
+    m match {
+      case And.withNext(nonNext@And.substitutionAndTerms(subs, terms), _) =>
+        val s = substitutionMaker(subs)
+        And(Next(s(a._2)), nonNext)
+    }
+  }
+
   import standard._
 
   def TermPrettyWrapper(solver: Apply)(t: Term, a: PrettyWrapperHolder) = {
@@ -161,8 +182,8 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
 
   override def processingFunctions: ProcessingFunctions =
     definePartialFunction({
+      case (`Rewrite`, _) => RewriteMatcher _
       case (`BindMatch`, _) => BindMatchMatcher _
-      case (`IfThenElse`, _) => IfThenElseTerm _
       case (_, `Not`) => OneIsFormula _
       case (`Not`, _) => OneIsFormula _
       case (`And`, _) => AndTerm _

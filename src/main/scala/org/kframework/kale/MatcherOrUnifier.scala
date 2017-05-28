@@ -9,38 +9,27 @@ trait MatcherOrUnifier extends transformer.Binary.Apply {
   import Binary._
   import env._
 
-  def shortCircuitAnd(solver: Apply)(toEqual: (Term, Term)*): Term = {
-    toEqual.foldLeft(Top: Term)({
-      case (Bottom, _) => Bottom
-      case (soFar, (l, r)) =>
-        val results = Or.asSet(soFar) map {
-          case soFarVariant@And.substitutionAndTerms(sub, _) =>
-            And(soFarVariant: Term, solver(sub(l), sub(r)))
-        }
-        Or(results)
-    })
-  }
 
   def FreeNode0FreeNode0(solver: Apply)(a: Node0, b: Node0) = Top
 
-  def FreeNode1FreeNode1(solver: Apply)(a: Node1, b: Node1): Term = shortCircuitAnd(solver)((a._1, b._1))
+  def FreeNode1FreeNode1(solver: Apply)(a: Node1, b: Node1): Term = And.combine(b.label)(Task(a._1, b._1))
 
-  def FreeNode2FreeNode2(solver: Apply)(a: Node2, b: Node2): Term = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2))
+  def FreeNode2FreeNode2(solver: Apply)(a: Node2, b: Node2): Term = And.combine(b.label)(Task(a._1, b._1), Task(a._2, b._2))
 
-  def FreeNode3FreeNode3(solver: Apply)(a: Node3, b: Node3): Term = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2), (a._3, b._3))
+  def FreeNode3FreeNode3(solver: Apply)(a: Node3, b: Node3): Term = And.combine(b.label)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3))
 
-  def FreeNode4FreeNode4(solver: Apply)(a: Node4, b: Node4): Term = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2), (a._3, b._3), (a._4, b._4))
+  def FreeNode4FreeNode4(solver: Apply)(a: Node4, b: Node4): Term = And.combine(b.label)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4))
 
-  def FreeNode5FreeNode5(solver: Apply)(a: Node5, b: Node5): Term = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2), (a._3, b._3), (a._4, b._4), (a._5, b._5))
+  def FreeNode5FreeNode5(solver: Apply)(a: Node5, b: Node5): Term = And.combine(b.label)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4), Task(a._5, b._5))
 
-  def FreeNode6FreeNode6(solver: Apply)(a: Node6, b: Node6): Term = shortCircuitAnd(solver)((a._1, b._1), (a._2, b._2), (a._3, b._3), (a._4, b._4), (a._5, b._5), (a._6, b._6))
+  def FreeNode6FreeNode6(solver: Apply)(a: Node6, b: Node6): Term = And.combine(b.label)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4), Task(a._5, b._5), Task(a._6, b._6))
 
-  def VarLeft(solver: Apply)(a: Variable, b: Term) = Equality(a.asInstanceOf[Variable], b)
+  def VarLeft(solver: Apply)(a: Variable, b: Term) = And(Equality(a.asInstanceOf[Variable], b), Next(b))
 
   def VarRight(solver: Apply)(a: Term, b: Variable): Term = VarLeft(solver)(b, a) // Equality(b.asInstanceOf[Variable], a)
 
   def Constants(solver: Apply)(a: DomainValue[_], b: DomainValue[_]) =
-    Truth(a.data == b.data)
+    And(Truth(a.data == b.data), Next(b))
 
   def AndTerm(solver: Apply)(a: And, b: Term): Term = {
     val solution = solver(a.nonPredicates.get, b)

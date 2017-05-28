@@ -32,7 +32,7 @@ private[standard] case class StandardVariableLabel(implicit override val env: En
 
   var counter = 0
 
-  def __ = {
+  def freshVariable() = {
     counter += 1
     this ((Name("_" + counter), Sort("K")))
   }
@@ -71,7 +71,7 @@ private[standard] case class SimpleNextLabel(implicit override val env: Environm
 }
 
 private[standard] case class SimpleNext(_1: Term)(implicit env: Environment) extends Node1 {
-  override val label = SimpleNextLabel()
+  override val label = env.Next
 
   override val isPredicate = true
 }
@@ -131,16 +131,16 @@ class Binding(val variable: Variable, val term: Term)(implicit val env: DNFEnvir
 private[standard] case class StandardRewriteLabel(implicit val env: Environment) extends {
   val name = "=>"
 } with RewriteLabel {
-  def apply(_1: Term, _2: Term) = Rewrite(_1, _2)
+  def apply(_1: Term, _2: Term) = SimpleRewrite(_1, _2)
 }
 
-case class Rewrite(_1: Term, _2: Term)(implicit env: Environment) extends kale.Rewrite {
+case class SimpleRewrite(_1: Term, _2: Term)(implicit env: Environment) extends kale.Rewrite {
   override val label = env.Rewrite
 }
 
 private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
   val name = "∧"
-} with AssocWithIdLabel with AndLabel {
+} with AndLabel {
 
   import env._
 
@@ -180,16 +180,20 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
   /**
     * normalizing
     */
-  private def applyOnNonOrs(_1: Term, _2: Term): Term = {
+  def applyOnNonOrs(_1: Term, _2: Term): Term = {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
     else {
-      val substitutionAndTerms(sub1, terms1) = _1
-      val substitutionAndTerms(sub2, terms2) = _2
+      val withNext(substitutionAndTerms(sub1, terms1), next1) = _1
+      val withNext(substitutionAndTerms(sub2, terms2), next2) = _2
+
+      assert(!(next1.isDefined && next2.isDefined))
+
       apply(sub1, sub2) match {
         case `Bottom` => Bottom
         case substitutionAndTerms(sub, terms) =>
-          apply(sub, (terms1 ++ terms2 map sub) ++ terms)
+          val x = apply(sub, (terms1 ++ terms2 map sub) ++ terms)
+          next1.orElse(next2).map(t => new AndWithNext(x, sub(t))).getOrElse(x)
         case _ => unreachable()
       }
     }
@@ -208,7 +212,13 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
   /**
     * not-normalizing
     */
-  def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = substitutionAndTerms(pureSubstitution, others)
+  def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = {
+    others.find(_.label == Next).map({
+      next =>
+        And.withNext(substitutionAndTerms(pureSubstitution, others.filterNot(_.label == Next)), next)
+    }).getOrElse(substitutionAndTerms(pureSubstitution, others))
+  }
+
 
   def asMap(t: Substitution): Map[Variable, Term] = t match {
     case `Top` => Map[Variable, Term]()
@@ -255,6 +265,10 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
     case s: Substitution => (s, Set.empty)
     case and: AndOfSubstitutionAndTerms => (and.s, And.asSet(and.terms))
     case and: AndOfTerms => (Top, and.terms)
+    case And.withNext(rest, Some(next)) =>
+      val (s, terms) = asSubstitutionAndTerms(rest)
+      (s, terms.toSet + next)
+    case t if t.label == And => ???
     case o => (Top, Set(o))
   }
 
@@ -295,8 +309,84 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
     }
   }
 
-  override def construct(l: Iterable[Term]): Term = ???
+
+  object predicatesAndNonPredicate {
+    def unapply(t: Term): Some[(Term, Option[Term])] = t match {
+      case tt: And => Some(tt.predicates, tt.nonPredicates)
+      case tt if tt.isPredicate => Some(tt, None)
+      case tt if !tt.isPredicate => Some(Top, Some(tt))
+    }
+  }
+
+  object withNext {
+    def apply(t: Term, next: Term): Term = {
+      assert(next.label == Next)
+      bottomize(t) {
+        if (t == Top)
+          next
+        else
+          AndWithNext(t, next)
+      }
+    }
+
+    def unapply(t: Term): Some[(Term, Option[Term])] = t match {
+      case standard.AndWithNext(and, next) =>
+        Some(and, Some(next))
+      case next if t.label == Next =>
+        Some(Top, Some(next))
+      case _ => Some(t, None)
+    }
+
+    def filterOurNext(t: Term): Term = {
+      Or(Or.asSet(t) map {
+        case env.And.withNext(t, _) => t
+      })
+    }
+  }
+
+  private object an {
+    def unapply(t: Term): Option[(Term, Term)] = t match {
+      case withNext(and, Some(next)) => Some(and, next.asInstanceOf[SimpleNext]._1)
+      case _ => None
+    }
+  }
+
+  private type TheFold = Set[(Term, List[Term])]
+
+  private def cartezianProductWithNext(soFar: TheFold, t2: MightBeSolved): TheFold = {
+    if (soFar.isEmpty) {
+      soFar
+    } else {
+      val t2sol = t2 match {
+        case Solved(term) => term
+        case Task(a, b) => env.unify(a, b)
+      }
+      t2sol match {
+        case Bottom => Set()
+        case _ =>
+          for (e1 <- soFar; e2 <- Or.asSet(t2sol)) yield {
+            (e1, e2) match {
+              case ((solutionSoFar, nexts), an(p2, next2)) =>
+                (applyOnNonOrs(solutionSoFar, p2), nexts :+ next2)
+            }
+          }
+      }
+    }
+  }
+
+  override def combine(label: NodeLabel)(solutions: MightBeSolved*): Term = {
+    val res = solutions.foldLeft(Set((Top: Term, List[Term]())))(cartezianProductWithNext)
+    Or(res map {
+      case (other@And.substitutionAndTerms(s, _), l) => And.withNext(other, Next(label(l map s)))
+    })
+  }
 }
+
+trait MightBeSolved
+
+case class Task(a: Term, b: Term) extends MightBeSolved
+
+case class Solved(t: Term) extends MightBeSolved
 
 private[standard] final class AndOfTerms(val terms: Set[Term])(implicit val env: Environment) extends And with Assoc {
 
@@ -304,7 +394,7 @@ private[standard] final class AndOfTerms(val terms: Set[Term])(implicit val env:
 
   lazy val predicates: Term = And(terms filter (_.isPredicate))
 
-  lazy val nonPredicates: Option[Term] = {
+  val nonPredicates: Option[Term] = {
     val nonFormulas = terms filter (!_.isPredicate)
     if (nonFormulas.size > 1) {
       throw new NotImplementedError("only handle at most one term for now")
@@ -315,6 +405,7 @@ private[standard] final class AndOfTerms(val terms: Set[Term])(implicit val env:
   assert(terms.size > 1, terms.toString())
   assert(!terms.contains(Bottom))
   assert(!terms.contains(Top))
+  assert(terms.forall(_.label != Next))
 
   override val label = And
   override val assocIterable: Iterable[Term] = terms
@@ -331,11 +422,37 @@ private[standard] final class AndOfTerms(val terms: Set[Term])(implicit val env:
   override def asSet: Set[Term] = terms
 }
 
+final case class AndWithNext(conjunction: Term, nextTerm: Term)(implicit env: DNFEnvironment) extends And {
+
+  import env._
+
+  assert(nextTerm.label == Next)
+
+  val And.predicatesAndNonPredicate(ps, nonPredicates) = conjunction
+  override val predicates: Term =
+    if (nonPredicates.isDefined)
+      And(ps, nextTerm)
+    else
+      this
+
+  override val label = And
+
+  override def asSet: Set[Term] = And.asSet(conjunction) + nextTerm
+
+  override val assocIterable: Iterable[Term] = asSet
+
+  override def _1: Term = conjunction
+
+  override def _2: Term = nextTerm
+}
+
+
 private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val terms: Term)(implicit env: Environment) extends And with Assoc {
 
   import env._
 
   assert(terms != Bottom)
+  assert(!And.asSet(terms).exists(_.label == Next))
 
   val label = And
 
@@ -365,6 +482,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
 
 private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit val env: DNFEnvironment) extends And with Substitution with BinaryInfix {
   assert(m.size >= 2)
+  assert(m.forall({ case (a, b) => a != b }))
 
   import env._
 
@@ -428,20 +546,9 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
   override def asSet: Set[Term] = terms
 }
 
-// implements: X and (M = (c = X) and (M = Bot implies t) and (not(m = Bot) implies e)
-private[standard] class IfThenElseLabel(implicit override val env: Environment) extends Named("if_then_else") with Label3 {
-  def apply(c: Term, t: Term, e: Term) = {
-    if (c == env.Top)
-      t
-    else if (c == env.Bottom)
-      e
-    else
-      FreeNode3(this, c, t, e)
-  }
-}
-
 case class Name(str: String) extends kale.Name
 
 private[standard] class BindMatchLabel(implicit override val env: Environment) extends Named("BindMatch") with Label2 {
   def apply(v: Term, p: Term) = FreeNode2(this, v.asInstanceOf[Variable], p)
 }
+

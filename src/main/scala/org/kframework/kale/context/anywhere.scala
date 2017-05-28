@@ -7,6 +7,7 @@ import org.kframework.kale.transformer.Binary.TypedWith
 import org.kframework.kale.util.Named
 
 object anywhere {
+
   case class AnywhereContextApplication(label: Context1ApplicationLabel, contextVar: Variable, redex: Term) extends Node2 with Context {
     val _1: Variable = contextVar
     val _2: Term = redex
@@ -33,13 +34,15 @@ object anywhere {
       assert(contextApplication.label == AnywhereContext)
       val contextVar = contextApplication.contextVar
 
-      def solutionFor(subterms: Seq[Term], reconstruct: (Int, Term) => Term) = {
-        Or(subterms.indices map { i =>
+      def solutionFor(subterms: Seq[Term], reconstruct: (Int, Term) => Term, avoidIndices: Set[Int] = Set()) = {
+        Or((subterms.indices.toSet &~ avoidIndices) map { i =>
           // calling f directly instead of solver because we know contextApplication is hooked to the current f
           val solutionForSubtermI = f(solver)(contextApplication, subterms(i))
           val res = Or.asSet(solutionForSubtermI) map {
             // this rewires C -> HOLE into C -> foo(HOLE)
-            case And.substitution(m) if m.contains(contextVar) => And.substitution(m.updated(contextVar, reconstruct(i, m(contextVar))))
+            case And.withNext(And.substitution(m), Some(Next(next))) if m.contains(contextVar) =>
+              And.withNext(And.substitution(m.updated(contextVar, reconstruct(i, m(contextVar)))),
+                Next(reconstruct(i, next)))
           }
           Or(res)
         })
@@ -47,19 +50,8 @@ object anywhere {
 
       term.label match {
         case AnywhereContext =>
-          val (rightContextVar, rightContextTerm) = AnywhereContext.unapply(term).get
-
-          def findMatches(t: Term): Term = {
-            Or(t match {
-              case AnywhereContext(_, tt) => solver(contextApplication.redex, tt)
-              case tt => Or(t.children.map(findMatches))
-            }, solver(contextApplication.redex, t))
-          }
-
-          val recursive = findMatches(rightContextTerm)
-          Or(Or.asSet(recursive) map {
-            case And.substitution(m) => And.substitution(m.updated(contextVar, rightContextVar))
-          })
+          val (rightContextVar, rightContextRedex) = AnywhereContext.unapply(term).get
+          solutionFor(term.children.toSeq, (_: Int, tt: Term) => AnywhereContext(rightContextVar, tt), Set(0))
         case `Or` => {
           Or(Or.asSet(term) map (solver(contextApplication, _)))
         }
@@ -93,12 +85,13 @@ object anywhere {
 
     override def f(solver: SubstitutionApply)(t: AnywhereContextApplication): Term = {
       val recursiveResult = Equality.binding(t.hole, solver(t.redex))
-      And.substitution(solver.substitution, recursiveResult) match {
-        case subs: Substitution =>
+      And(solver.substitution, recursiveResult) match {
+        case And.withNext(subs: Substitution, _) =>
           val innerSolver = new SubstitutionWithContext(subs)(env)
 
-          solver.substitution.get(t.contextVar) map innerSolver getOrElse Bottom
+          solver.substitution.get(t.contextVar) map innerSolver getOrElse AnywhereContext(t.contextVar, solver(t.redex))
         case `Bottom` => Bottom
+        case _ => t // TODO: risky case; look into this at some point
       }
     }
   }
@@ -107,7 +100,7 @@ object anywhere {
     //  assert(!basedOn.isInstanceOf[ContextContentVariable])
     val label: VariableLabel = basedOn.label
 
-    override val name = Name(basedOn.name.str + "_" + index)
+    override val name = Name(basedOn.name.str + "☐" + index)
   }
 
 }

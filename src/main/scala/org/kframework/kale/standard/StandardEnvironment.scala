@@ -13,12 +13,11 @@ object StandardEnvironment {
 trait StandardEnvironment extends DNFEnvironment with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with importPretty {
   val Hole = Variable("☐", Sort.K)
 
-  val IfThenElse = new IfThenElseLabel()
   val BindMatch = new BindMatchLabel()
 
   val AnywhereContext = AnywhereContextApplicationLabel()
 
-  def ANYWHERE(t: Term) = AnywhereContext(Variable.__, t)
+  def ANYWHERE(t: Term) = AnywhereContext(Variable.freshVariable, t)
 
   override def sort(l: Label, children: Seq[Term]): kale.Sort = Sort.K
 

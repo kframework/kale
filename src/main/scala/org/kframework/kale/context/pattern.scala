@@ -72,11 +72,13 @@ object pattern {
           val contextMatch = solver(right, term)
           val contextMatchSolutions = Or.asSet(contextMatch)
           Or(contextMatchSolutions map {
-            case And.substitutionAndTerms(sub@And.substitution(substitutionAsAMap), rhsLeftoverConstraints) =>
+            case And.withNext(And.substitutionAndTerms(sub@And.substitution(substitutionAsAMap), rhsLeftoverConstraints), Some(next)) =>
               val partiallySolvedLeftFormulas = sub(leftFormulas)
-              val contextSub = Equality(contextVar, sub(withHoles))
+              val matchSubAppliedToWithHoles = sub(withHoles)
+              val contextSub = Equality(contextVar, matchSubAppliedToWithHoles)
               // TODO: filter out less
-              And(partiallySolvedLeftFormulas, contextSub, And.substitution(substitutionAsAMap.filter({ case (k, _) => !contextVars.contains(k) })))
+              And(And(partiallySolvedLeftFormulas, contextSub, And.substitution(substitutionAsAMap.filter({ case (k, _) => !contextVars.contains(k) }))),
+                next)
           })
       })
 

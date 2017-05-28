@@ -6,10 +6,12 @@ import org.kframework.kale.util.Named
 import scala.collection.Iterable
 
 class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val env: Environment) extends AssocWithIdLabel with Constructor {
-  override def construct(l: Iterable[Term]): Term = AssocWithIdList(this, l)
+  protected override def construct(l: Iterable[Term]): Term = AssocWithIdList(this, l)
 }
 
 case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term]) extends Assoc {
+  assert(assocIterable.size > 1)
+
   assert(assocIterable.forall(_ != label.identity))
   assert(assocIterable.forall(_.label != label))
 

@@ -1,9 +1,10 @@
 package org.kframework.kale
 
+import org.kframework.kale.standard.MightBeSolved
 import org.kframework.kore.implementation.DefaultBuilders
 import org.kframework.{kale, kore}
 
-import scala.collection.Set
+import scala.collection.{Iterable, Seq, Set}
 
 trait DomainValueLabel[T] extends LeafLabel[T] {
 
@@ -81,16 +82,15 @@ trait Bottom extends Truth with kore.Bottom
 
 
 trait AndLabel extends AssocCommWithIdLabel with Z3Builtin {
-  override val identity = env.Top
+
+  import env._
+
+  override val identity = Top
   assert(identity != null)
+
   def asSubstitutionAndTerms(t: Term): (Substitution, Set[Term])
-  object predicatesAndNonPredicate {
-    def unapply(t: Term): Some[(Term, Option[Term])] = t match {
-      case tt: And => Some(tt.predicates, tt.nonPredicates)
-      case tt if tt.isPredicate => Some(tt, None)
-      case tt if !tt.isPredicate => Some(Top, Some(tt))
-    }
-  }
+
+  def combine(label: NodeLabel)(tasks: MightBeSolved*): Term
 }
 
 trait OrLabel extends AssocCommWithIdLabel with Z3Builtin {
@@ -129,6 +129,7 @@ trait Rewrite extends kore.Rewrite with Node2 with BinaryInfix {
 trait Application extends Node with kore.Application {
 
   override lazy val isPredicate: Boolean = false
+
   // for KORE
   override def symbol: kore.Symbol = label
 

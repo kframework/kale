@@ -2,7 +2,7 @@ package org.kframework.kale.tests
 
 import org.kframework.kale._
 import org.kframework.kale.context.pattern.PatternContextApplicationLabel
-import org.kframework.kale.standard.{Rewrite => _, _}
+import org.kframework.kale.standard.{SimpleRewrite => _, _}
 import org.kframework.kale.util.Implicits
 import org.scalactic.Prettifier
 
@@ -56,7 +56,9 @@ trait TestSetup {
 
   a2b.setRules(a2bRules)
 
-  implicit val unifier = SingleSortedMatcher()
+  implicit val nextUnifier = SingleSortedMatcher()
+
+  def unifier(t1: Term, t2: Term): Term = env.And.withNext.filterOurNext(nextUnifier(t1, t2))
 
   val substitutionApplier = SubstitutionWithContext(_)
 

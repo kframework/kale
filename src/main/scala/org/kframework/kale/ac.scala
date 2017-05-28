@@ -19,6 +19,7 @@ trait AssocLabel extends Label2 {
   object iterable {
     def unapply(t: Term): Option[Iterable[Term]] = Some(asIterable(t))
   }
+
 }
 
 trait AssocWithIdLabel extends AssocLabel with HasId {
@@ -27,7 +28,11 @@ trait AssocWithIdLabel extends AssocLabel with HasId {
   def apply(_1: Term, _2: Term): Term = {
     val l1 = asIterable(_1)
     val l2 = asIterable(_2)
-    construct(l1 ++ l2)
+    l1 ++ l2 filterNot (_ == identity) match {
+      case l if l.isEmpty => identity
+      case l if l.size == 1 => l.head
+      case l => construct(l)
+    }
   }
 
   val self = this
@@ -39,13 +44,10 @@ trait AssocWithIdLabel extends AssocLabel with HasId {
   }
 
   // normalizing
-  override def apply(list: Iterable[Term]): Term = list filterNot (_ == identity) match {
-    case l if l.isEmpty => identity
-    case l if l.size == 1 => l.head
-    case l => (l fold identity) ((a, b) => apply(a, b))
-  }
+  override def apply(list: Iterable[Term]): Term = (list fold identity) ((a, b) => apply(a, b))
 
-  def construct(l: Iterable[Term]): Term
+  // not normalizing
+  protected def construct(l: Iterable[Term]): Term
 }
 
 trait AssocWithoutIdLabel extends AssocLabel {
