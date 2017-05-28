@@ -129,7 +129,7 @@ object Hook {
 
 }
 
-case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)(implicit env: Environment) extends Named(s.str) with FunctionLabel1 {
+case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)(implicit env: Environment) extends Named(s.str) with FunctionLabel1 with IsPredicate {
 
   import org.kframework.kore.implementation.{DefaultBuilders => db}
 
@@ -140,7 +140,7 @@ case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)
       val ss = m.sortsFor(db.Symbol(_1.label.name))
       ss.map(x => m.subsorts.<=(x, s)).filter(_)
       if (ss.nonEmpty) {
-        Some(env.Truth(true))
+        Some(env.Top)
       }
       None
     }
@@ -215,6 +215,10 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
           Some(GenericTokenLabel(Sort(s)))
       case _ => None
     })
+
+    /**
+      * General operations on Maps/Sets
+      */
 
     def declareNonHookedSymbol(x: kore.SymbolDeclaration): Option[Label] = {
       if (env.uniqueLabels.contains(x.symbol.str)) {
