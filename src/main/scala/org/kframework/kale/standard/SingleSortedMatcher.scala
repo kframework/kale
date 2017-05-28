@@ -159,21 +159,24 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
     val env = solver.env
     import env._
     val m = solver(a._1, b)
-    m match {
+    Or(Or.asSet(m) map {
       case And.withNext(nonNext@And.substitutionAndTerms(subs, terms), _) =>
         val s = substitutionMaker(subs)
         And(Next(s(a._2)), nonNext)
-    }
+    })
   }
 
   import standard._
 
   def TermPrettyWrapper(solver: Apply)(t: Term, a: PrettyWrapperHolder) = {
-    solver(t, a.content)
+    solver(t, a.content) match {
+      case And.withNext(p, Some(Next(n))) => And.withNext(p, Next(a.copy(a._1, n , a._3)))
+    }
+
   }
 
   def PrettyWrapperTerm(solver: Apply)(a: PrettyWrapperHolder, t: Term) = {
-    solver(a.content, t)
+    Bottom
   }
 
   def PrettyWrapperPrettyWrapper(solver: Apply)(a: PrettyWrapperHolder, b: PrettyWrapperHolder) = {
@@ -182,6 +185,9 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
 
   override def processingFunctions: ProcessingFunctions =
     definePartialFunction({
+      case (PrettyWrapper, PrettyWrapper) => PrettyWrapperPrettyWrapper _
+      case (term, PrettyWrapper) => TermPrettyWrapper _
+      case (PrettyWrapper, term) => PrettyWrapperTerm _
       case (`Rewrite`, _) => RewriteMatcher _
       case (`BindMatch`, _) => BindMatchMatcher _
       case (_, `Not`) => OneIsFormula _
@@ -202,9 +208,6 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
         case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm _
         case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm _
         case (left, _: AssocWithIdLabel) if !left.isInstanceOf[Variable] => TermAssocWithId _
-        case (PrettyWrapper, PrettyWrapper) => PrettyWrapperPrettyWrapper _
-        case (term, PrettyWrapper) => TermPrettyWrapper _
-        case (PrettyWrapper, term) => PrettyWrapperTerm _
       }))
       .orElse(super.processingFunctions)
 }

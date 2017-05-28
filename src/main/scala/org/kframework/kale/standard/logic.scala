@@ -81,9 +81,10 @@ private[standard] case class StandardEqualityLabel(implicit override val env: DN
     if (_1 == _2)
       env.Top
     else if (_1.isGround && _2.isGround) {
-      if (env.isSealed)
-        env.unify(_1, _2)
-      else
+      if (env.isSealed) {
+        val env.And.withNext(p, _) = env.unify(_1, _2)
+        p
+      } else
         new Equals(_1, _2)
     } else {
       import org.kframework.kale.util.StaticImplicits._
@@ -353,22 +354,24 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
 
   private type TheFold = Set[(Term, List[Term])]
 
-  private def cartezianProductWithNext(soFar: TheFold, t2: MightBeSolved): TheFold = {
+  private def cartezianProductWithNext(soFar: TheFold, task: MightBeSolved): TheFold = {
     if (soFar.isEmpty) {
       soFar
     } else {
-      val t2sol = t2 match {
-        case Solved(term) => term
-        case Task(a, b) => env.unify(a, b)
-      }
-      t2sol match {
-        case Bottom => Set()
-        case _ =>
-          for (e1 <- soFar; e2 <- Or.asSet(t2sol)) yield {
-            (e1, e2) match {
-              case ((solutionSoFar, nexts), an(p2, next2)) =>
-                (applyOnNonOrs(solutionSoFar, p2), nexts :+ next2)
-            }
+
+      soFar flatMap {
+        case (solutionSoFar, nexts) =>
+          val solvedTask = task match {
+            case Solved(term) => term
+            case Task(a, b) =>
+              val sub = solutionSoFar match {
+                case And.withNext(And.substitutionAndTerms(sub, _), _) => sub
+              }
+              env.unify(sub(a), sub(b))
+          }
+          Or.asSet(solvedTask) map {
+            case an(p2, next2) =>
+              (applyOnNonOrs(solutionSoFar, p2), nexts :+ next2)
           }
       }
     }

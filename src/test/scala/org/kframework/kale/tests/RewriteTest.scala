@@ -13,9 +13,10 @@ class RewriteTest extends FreeSpec with TestSetup {
   import implicits._
 
   def assertRewrite(rule: Rewrite)(obj: Term, expected: Term) {
-    val unificationRes = unifier(rule._1, obj)
-    val res = Or.asSet(unificationRes) map (s => substitutionApplier(s.asInstanceOf[Substitution])(rule._2))
-    assert(Or(res) === expected)
+    val actual = nextUnifier(rule, obj)
+    //    val unificationRes = unifier(rule._1, obj)
+    //    val res = Or.asSet(unificationRes) map (s => substitutionApplier(s.asInstanceOf[Substitution])(rule._2))
+    assert(justNext(actual) === expected)
   }
 
   def assertRewrite(rule0: Term)(obj: Term, expected: Term) {
@@ -37,9 +38,9 @@ class RewriteTest extends FreeSpec with TestSetup {
     Rewrite(el ~~ 3 ~~ X ~~ Y ~~ 6, el ~~ X ~~ 0 ~~ Y)
   ))
 
-  def justNext(t: Term) = t match {
+  def justNext(t: Term) = Or(Or.asSet(t) map {
     case And.withNext(_, Some(Next(next))) => next
-  }
+  })
 
   "inner rewrite" - {
     "simple" in {

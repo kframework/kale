@@ -110,7 +110,8 @@ class MatchSpec extends FreeSpec with TestSetup {
       )
     }
 
-    "4" in {
+    // TODO: ignored as it was slow
+    "4" ignore {
 
       assert((foo(AnywhereContext(XX, AnywhereContext(X, Y)), AnywhereContext(YY, AnywhereContext(Z, ZZ)))
         := foo(AnywhereContext(XX1, AnywhereContext(X1, bar(Y1))), AnywhereContext(YY1, AnywhereContext(Z1, ZZ1))))
@@ -273,17 +274,17 @@ class MatchSpec extends FreeSpec with TestSetup {
 
       assert(((3: Term) := three) === Top)
 
-      assert((X := three) === Equality(X, three))
+      assert((X := three) === Equality(X, 3))
     }
 
     val fooThree = PrettyWrapper("c", foo(three, 6), "d")
 
     "wrapper left" in {
-      assert(And(foo(X, 6) := fooThree, Equality(X, 3)) === Equality(X, three))
+      assert(And(foo(X, 6) :== fooThree, Equality(X, 3)) === And(Equality(X, 3), Next(fooThree)))
     }
 
     "wrapper right" in {
-      assert(And(fooThree := foo(X, 6), Equality(X, 3)) === Equality(X, three))
+      assert(And(fooThree := foo(X, 6), Equality(X, 3)) === Bottom)
     }
 
     "wrapper wrapper" in {

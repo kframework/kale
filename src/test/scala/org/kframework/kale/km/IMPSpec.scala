@@ -6,10 +6,12 @@ import org.scalatest.FreeSpec
 
 class IMPSpec extends FreeSpec {
   implicit val env = new KMEnvironment()
+
   import env._
 
   // sort delcarations
   import Sort._
+
   object ImpSorts {
     val Id = Sort("Id")
     val Ids = Sort("Ids")
@@ -26,6 +28,7 @@ class IMPSpec extends FreeSpec {
     val StateMap = Sort("StateMap")
     val KSeq = Sort("KSeq")
   }
+
   import ImpSorts._
 
   // sortify builtin symbols
@@ -34,7 +37,9 @@ class IMPSpec extends FreeSpec {
 
   // import/sortify common symbols
   val signature = new IMPCommonSignature()
+
   import signature._
+
   sorted(div, AExp, AExp, AExp)
   sorted(plus, AExp, AExp, AExp)
   sorted(leq, AExp, AExp, BExp)
@@ -57,10 +62,13 @@ class IMPSpec extends FreeSpec {
   sorted(emptyk, K)
 
   // symbol declarations
-  val ints = SimpleFreeLabel2("_,_"); sorted(ints, IntList, IntList, IntList)
-  val kseq = SimpleFreeLabel2("_~>_"); sorted(kseq, K, KSeq, KSeq)
+  val ints = SimpleFreeLabel2("_,_");
+  sorted(ints, IntList, IntList, IntList)
+  val kseq = SimpleFreeLabel2("_~>_");
+  sorted(kseq, K, KSeq, KSeq)
   // TODO: testing purpose only
-  val ppp = SimpleFreeLabel3("ppp"); sorted(ppp, Id, Id, Id, K)
+  val ppp = SimpleFreeLabel3("ppp");
+  sorted(ppp, Id, Id, Id, K)
 
   // variable declarations
   val X = Variable("X", Id)
@@ -84,65 +92,83 @@ class IMPSpec extends FreeSpec {
   env.seal()
 
   // TODO(Daejun): move to unify test
-  val unify = new MultiSortedUnifier(env)
+  val unifier = new MultiSortedUnifier(env)
 
-  "first test" in {
-    assert(unify(X, 'foo) === And(Equality(X, 'foo), Next('foo)))
-    assert(unify(X, Y) === Equality(X, Y))
-    assert(unify(X, INT.Int(2)) === Bottom)
+  def unify(a: Term, b: Term) = {
+    Or(Or.asSet(unifier(a, b)) map {
+      x => And(And.asSet(x).filter(_.label != Next))
+    })
+  }
 
-    assert(unify(plus(E1,E2), leq(E1,E2)) == Bottom)
 
-    assert(unify(plus(E1,E2), plus(E2,E1)) == Equality(E1, E2))
-//  assert(unify(plus(E1,E2), plus(E2,E1)) == Equality(E2, E1)) // TODO: is that ok?
+  "first test" - {
+
+    "simple" in {
+      assert(unify(X, 'foo) === Equality(X, 'foo))
+      assert(unify(X, Y) === Equality(X, Y))
+      assert(unify(X, INT.Int(2)) === Bottom)
+
+      assert(unify(plus(E1, E2), leq(E1, E2)) == Bottom)
+
+      assert(unify(plus(E1, E2), plus(E2, E1)) == Equality(E1, E2))
+      //  assert(unify(plus(E1,E2), plus(E2,E1)) == Equality(E2, E1)) // TODO: is that ok?
+    }
 
     val a = 'a
 
-    assert(
-      // q(p(x,y), p(y,x)) =?= q(z,z)
-      unify(
-        div(plus(E1,E2), plus(E2,E1)),
-        div(E3, E3)
-      )
-      ==
-      // E3 = _+_(E1, E1) ∧ E2 = E1
-      And(
-        Equality(E3, plus(E1,E2)),
-        Equality(E2, E1)
-      )
-    )
+    "div 1" in {
 
-    assert(
-      // p(x,y,a) =?= p(y,x,x)
-      unify(
-        ppp(X, Y, a),
-        ppp(Y, X, X)
+      assert(
+        // q(p(x,y), p(y,x)) =?= q(z,z)
+        unify(
+          div(plus(E1, E2), plus(E2, E1)),
+          div(E3, E3)
+        )
+          ==
+          // E3 = _+_(E1, E1) ∧ E2 = E1
+          And(
+            Equality(E3, plus(E1, E2)),
+            Equality(E2, E1)
+          )
       )
-      ==
-      // X = a ∧ Y = a
-      And(
-        Equality(X, a),
-        Equality(Y, a)
-      )
-      /*
+    }
+
+    "div 2" in {
+
+      assert(
+        // p(x,y,a) =?= p(y,x,x)
+        unify(
+          ppp(X, Y, a),
+          ppp(Y, X, X)
+        )
+          ==
+          // X = a ∧ Y = a
+          And(
+            Equality(X, a),
+            Equality(Y, a)
+          )
+        /*
       // original: X = Y, Y = a
       And(
         Equality(X, Y),
         Equality(Y, a)
       )
        */
-    )
-
-    // negative test
-    assert(
-      // p(x,y) =?= x
-      unify(
-        plus(E1, E2),
-        E1
       )
-      ==
-      // unification failure
-      Bottom
-    )
+    }
+
+    "div 3" in {
+      // negative test
+      assert(
+        // p(x,y) =?= x
+        unify(
+          plus(E1, E2),
+          E1
+        )
+          ==
+          // unification failure
+          Bottom
+      )
+    }
   }
 }

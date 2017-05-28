@@ -1,5 +1,6 @@
 package org.kframework.kale
 
+import org.kframework.kale.standard.StandardEnvironment
 import org.kframework.kale.transformer.Binary
 
 import scala.collection.immutable.TreeSet
@@ -8,6 +9,7 @@ import scala.collection.{Set, mutable}
 object Rewriter {
   def apply(substitutioner: Substitution => (Term => Term), matcher: MatcherOrUnifier) = new {
     def apply(rules: Set[_ <: Rewrite]): Rewriter = new Rewriter(substitutioner, matcher, rules, matcher.env)
+
     def apply(rule: Term): Rewriter = {
       implicit val e = matcher.env
       apply(Set(rule.moveRewriteToTop))
@@ -52,12 +54,20 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
   def step(obj: Term): Stream[Term] = {
     var tries = 0
     val res = (sortedRules.toStream map { r =>
-      val m = doMatch(r._1, obj)
+      val m = doMatch(r, obj)
       tries += 1
       m match {
         case Or.set(ands) =>
-          val oneGoodSub = (ands collect { case s: Substitution => s }).headOption
-          val afterSubstitution = oneGoodSub.map(substitutioner(_).apply(r._2)).getOrElse(Bottom)
+          val afterSubstitution = env match {
+            case env: StandardEnvironment =>
+              import env._
+              ands.toStream.collect({
+                case And.withNext(_: Substitution, Some(Next(next))) => next
+              }).headOption.getOrElse(Bottom)
+            case _ =>
+              val oneGoodSub = (ands collect { case s: Substitution => s }).headOption
+              oneGoodSub.map(substitutioner(_).apply(r._2)).getOrElse(Bottom)
+          }
           //          if (afterSubstitution != Bottom) {
           //            println("   " + r)
           //            println("       " + oneGoodSub)
@@ -76,19 +86,27 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
   }
 
   def searchStep(obj: Term): Term = {
-    Or(rules.map(r => (doMatch(r._1, obj), r._2)).flatMap({
+    Or(rules.map(r => (doMatch(r, obj), r._2)).flatMap({
       case (Bottom, _) => Set[Term]()
       case (or, rhs) =>
         val res = Or.asSet(or).flatMap(u => {
-          val (sub, terms) = And.asSubstitutionAndTerms(u)
-          val constraints = And(terms)
-          if (z3.sat(constraints)) {
-            Set(And(substitutioner(sub)(rhs), constraints)) // TODO: consider when rhs.predicates is not satisfiable with constraints
-          } else {
-            Set[Term]()
+          env match {
+            case environment: StandardEnvironment =>
+              val withNext = environment.And.withNext
+              val withNext(sub, Some(Next(next))) = u
+              Set(next)
+            case _ =>
+              val (sub, terms) = And.asSubstitutionAndTerms(u)
+              val constraints = And(terms)
+              if (z3.sat(constraints)) {
+                Set(And(substitutioner(sub)(rhs), constraints)) // TODO: consider when rhs.predicates is not satisfiable with constraints
+              } else {
+                Set[Term]()
+              }
           }
         })
         res
     }))
   }
 }
+

@@ -3,6 +3,7 @@ package org.kframework.kale.km
 import org.kframework.kale
 import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunction, TypedWith}
 import org.kframework.kale._
+import org.kframework.kale.standard.{SimpleRewrite, SingleSortedMatcher}
 
 class MultiSortedUnifier(val env: KMEnvironment) extends kale.MatcherOrUnifier {
 
@@ -10,9 +11,7 @@ class MultiSortedUnifier(val env: KMEnvironment) extends kale.MatcherOrUnifier {
 
   object SortedVarLeft extends ProcessingFunction[Apply] with TypedWith[Variable, Term] {
     def f(solver: Apply)(a: Variable, b: Term) =
-      if (a == b)
-        Top
-      else if (a.sort == b.sort)
+      if (a.sort == b.sort)
         VarLeft(solver)(a, b)
       else
         Bottom
@@ -22,9 +21,14 @@ class MultiSortedUnifier(val env: KMEnvironment) extends kale.MatcherOrUnifier {
     def f(solver: Apply)(a: Term, b: Variable) = SortedVarLeft.f(solver)(b, a)
   }
 
+  def RewriteMatcher(solver: kale.MatcherOrUnifier)(a: SimpleRewrite, b: Term): Term = {
+    solver(a._1, b)
+  }
+
   import kale.standard._
 
   override def processingFunctions: ProcessingFunctions = definePartialFunction({
+    case (Rewrite, _) => RewriteMatcher _
     case (Variable, _) => SortedVarLeft
     case (_, Variable) => SortedVarRight
     case (And, _) => AndTerm _
