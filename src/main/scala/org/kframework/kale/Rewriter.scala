@@ -1,5 +1,6 @@
 package org.kframework.kale
 
+import org.kframework.kale.standard.AndOfSubstitutionAndTerms
 import org.kframework.kale.standard.StandardEnvironment
 import org.kframework.kale.transformer.Binary
 
@@ -65,7 +66,12 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
                 case And.withNext(_: Substitution, Some(Next(next))) => next
               }).headOption.getOrElse(Bottom)
             case _ =>
-              val oneGoodSub = (ands collect { case s: Substitution => s }).headOption
+              val oneGoodSub = (ands collect {
+            case s: Substitution => s
+            case a: AndOfSubstitutionAndTerms => a.s
+          }).headOption
+
+
               oneGoodSub.map(substitutioner(_).apply(r._2)).getOrElse(Bottom)
           }
           //          if (afterSubstitution != Bottom) {

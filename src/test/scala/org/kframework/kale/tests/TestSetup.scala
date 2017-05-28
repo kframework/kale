@@ -37,7 +37,7 @@ trait TestSetup {
 
   val a2b = standard.FunctionDefinedByRewritingLabel1("a2b")
 
-  val a2bRules = Set(Rewrite(a2b(a), b))
+  val a2bRules = Set[Rewrite](Rewrite(a2b(a), b))
 
   val C = Variable("C")
   val C1 = Variable("C1")

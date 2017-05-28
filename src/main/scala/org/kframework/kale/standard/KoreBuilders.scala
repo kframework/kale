@@ -5,8 +5,10 @@ import org.kframework.kore
 import org.kframework.kore.implementation.DefaultBuilders
 
 import scala.collection.Seq
-
 import EnvironmentImplicit._
+import org.kframework.backend.skala.Encodings
+import org.kframework.kale.builtin.{GenericTokenLabel, MapLabel}
+import org.kframework.kore.extended.implicits._
 
 class KoreBackend(d: kore.Definition, mainModule: kore.ModuleName) {
   val env = StandardEnvironment
@@ -94,33 +96,101 @@ case class ConversionException(m: String) extends RuntimeException {
 }
 
 
-
 object EnvironmentImplicit {
   implicit def envToStdEnv(env: Environment): StandardEnvironment = env.asInstanceOf[StandardEnvironment]
 }
 
 object StandardConverter {
+
+  val renamingMap: Map[String, String] = Map(
+    "keys" -> "_Map_.keys",
+    "lookup" -> "_Map_.lookup",
+    "Set:in" -> "_Set_.in",
+    "Map:lookup" -> "_Map_.lookup"
+  )
+
+  val specialSymbolsSet: Set[String] = Set("#", "#KSequence", "Map:lookup")
+
   def apply(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
-    case kore.Application(kore.Symbol(s), args) =>
-      if (env.isSealed) {
-        env.label(s) match {
-          case l: FreeLabel => l(args.map(StandardConverter.apply))
-          case l: FunctionLabel2 => l.apply(args.map(StandardConverter.apply))
+    case p@kore.Application(kore.Symbol(str), args) if specialSymbolsSet.contains(str) => specialPatternHandler(p)
+    case kore.Application(kore.Symbol(s), args) => {
+      var key = s
+//      if(renamingMap.contains(s))
+//        key = renamingMap(s)
+
+      env.uniqueLabels.get(key) match {
+        case Some(l: NodeLabel) => {
+          val cargs = args.map(StandardConverter.apply)
+          l(cargs)
         }
-      } else {
-        //Todo: Case when Environment isn't sealed
-        ???
+        case None => ???
       }
+    }
     case kore.And(p1, p2) => env.And(StandardConverter(p1), StandardConverter(p2))
     case kore.Or(p1, p2) => env.Or(StandardConverter(p1), StandardConverter(p2))
     case kore.Top() => env.Top
     case kore.Bottom() => env.Bottom
     case kore.Equals(p1, p2) => env.Equality(StandardConverter(p1), StandardConverter(p2))
-    case kore.SortedVariable(kore.Name(n), kore.Sort(s)) => env.Variable(n, Sort(s))
+    case kore.SortedVariable(kore.Name(n), kore.Sort(s)) => n match {
+      case "$PGM" => env.Variable(n, Sort("KConfigVar@BASIC-K"))
+      case _ => env.Variable(n, Sort(s))
+    }
     case kore.Not(p) => env.Not(StandardConverter(p))
     case kore.Rewrite(p1, p2) => env.Rewrite(StandardConverter(p1), StandardConverter(p2))
+    case kore.DomainValue(symbol@kore.Symbol(s), value@kore.Value(v)) => {
+      env.uniqueLabels.get("TOKEN_" + s) match {
+        case Some(l: GenericTokenLabel) => l(v)
+        case None => {
+          var ls = s.toUpperCase()
+          if (s.contains("@")) ls = ls.split("@")(0)
+          ls match {
+            case "INT" => env.toINT(v.toInt)
+            case "BOOL" => env.toBoolean(v.toBoolean)
+            case "STRING" => env.toSTRING(v)
+            //Todo: Throw Exception Here
+            case _ => ???
+          }
+        }
+      }
+    }
     case p@_ => throw ConversionException(p.toString + "Cannot Convert To Kale")
   }
 
+  private def ruleDVtoTopOrBottom(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
+      //Todo: This is a hack to get around the incorrect Kore encoding. Fix it once we get rid of the Java Backend.
+    case kore.DomainValue(kore.Symbol("Bool@BOOL-SYNTAX"), kore.Value("true")) => env.Top
+    case kore.DomainValue(kore.Symbol("Bool@BOOL-SYNTAX"), kore.Value("false")) => env.Bottom
+    case _ => apply(p)
+  }
 
+  // Todo: Fix the encoding of rules in Frontend To Kore Translation
+  def apply(r: kore.Rule)(implicit env: StandardEnvironment): Rewrite = r match {
+    case kore.Rule(kore.Implies(requires, kore.And(kore.Rewrite(left, right), kore.Next(ensures))), att)
+      if att.findSymbol(Encodings.macroEnc).isEmpty => {
+      val convertedLeft = apply(left)
+      val convertedRight = apply(right)
+      val convetedRequires = ruleDVtoTopOrBottom(requires)
+      val convertedEnsures = ruleDVtoTopOrBottom(ensures)
+      env.Rewrite(env.And(convertedLeft, env.Equality(convetedRequires, env.Truth(true))), convertedRight)
+    }
+    case _ => throw ConversionException("Encountered Non Uniform Rule")
+  }
+
+  //Todo: Better Mechanism To Handle These Cases
+  private def specialPatternHandler(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
+    case p@kore.Application(kore.Symbol(s), args) => s match {
+      case "#" => apply(decodePatternAttribute(p)._1)
+      case "#KSequence" => env.label("~>").asInstanceOf[AssocWithIdListLabel](args.map(StandardConverter.apply))
+      case "Map:lookup" => env.label("_Map_").asInstanceOf[MapLabel].lookup(args.map(StandardConverter.apply))
+    }
+  }
+
+  private def decodePatternAttribute(p: kore.Pattern): (kore.Pattern, Seq[kore.Pattern]) = {
+    p match {
+      case kore.Application(kore.Symbol("#"), Seq(p, p2)) => decodePatternAttribute(p) match {
+        case (p1, a1) => (p1, p2 +: a1)
+      }
+      case p@_ => (p, Seq())
+    }
+  }
 }

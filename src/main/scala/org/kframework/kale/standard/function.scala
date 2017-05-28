@@ -48,7 +48,7 @@ trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel {
 
   //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
 
-  def setRules(rules: Set[SimpleRewrite])(implicit rewriterBuilder: (Set[_ <: kale.Rewrite]) => Rewriter): Unit = {
+  def setRules(rules: Set[Rewrite])(implicit rewriterBuilder: (Set[_ <: kale.Rewrite]) => Rewriter): Unit = {
     p_rewriter = Some(rewriterBuilder(rules))
   }
 
