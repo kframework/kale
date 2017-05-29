@@ -10,6 +10,7 @@ object backendImplicits {
   implicit class ModuleWithSubsorting(m: kore.Module)(implicit definiton: kore.Definition) {
     private lazy val subsortRelations: Set[(kore.Sort, kore.Sort)] = m.allSentences.collect({
       case kore.SymbolDeclaration(startSort, _, Seq(endSort), att) if att.findSymbol(db.Symbol("klabel")).isEmpty => (endSort, startSort)
+      case kore.SortDeclaration(sort, _) => (sort, sort)
     }).toSet
 
     lazy val subsorts: POSet[kore.Sort] = POSet(subsortRelations)
