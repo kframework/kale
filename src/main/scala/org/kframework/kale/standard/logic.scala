@@ -194,7 +194,7 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
         case `Bottom` => Bottom
         case substitutionAndTerms(sub, terms) =>
           val x = apply(sub, (terms1 ++ terms2 map sub) ++ terms)
-          next1.orElse(next2).map(t => new AndWithNext(x, sub(t))).getOrElse(x)
+          next1.orElse(next2).map(t => And.withNext(x, sub(t))).getOrElse(x)
         case _ => unreachable()
       }
     }
@@ -322,7 +322,7 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
   object withNext {
     def apply(t: Term, next: Term): Term = {
       assert(next.label == Next)
-      bottomize(t) {
+      strongBottomize(t) {
         if (t == Top)
           next
         else
@@ -428,6 +428,8 @@ private[standard] final class AndOfTerms(val terms: Set[Term])(implicit val env:
 final case class AndWithNext(conjunction: Term, nextTerm: Term)(implicit env: DNFEnvironment) extends And {
 
   import env._
+
+  assert(conjunction != Bottom)
 
   assert(nextTerm.label == Next)
 

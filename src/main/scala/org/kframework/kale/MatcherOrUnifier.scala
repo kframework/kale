@@ -62,11 +62,20 @@ trait MatcherOrUnifier extends transformer.Binary.Apply {
     case (_: FreeLabel4, _: FreeLabel4) => FreeNode4FreeNode4 _
   })
 
+  def FunctionDefinedByRewritingMatcher(solver: Apply)(a: Term, b: Term) = {
+    val l = a.label.asInstanceOf[FunctionDefinedByRewriting]
+    And(Next(b), And(a.children.zip(b.children).map({
+      case (ca, cb) => solver(ca, cb) match {
+        case And.withNext(p, _) => p
+      }
+    })))
+  }
+
   val functionDefinedByRewritingProcessing = definePartialFunction({
-    case (_: FunctionDefinedByRewritingLabel0, _: FunctionDefinedByRewritingLabel0) => FreeNode0FreeNode0 _
-    case (_: FunctionDefinedByRewritingLabel1, _: FunctionDefinedByRewritingLabel1) => FreeNode1FreeNode1 _
-    case (_: FunctionDefinedByRewritingLabel2, _: FunctionDefinedByRewritingLabel2) => FreeNode2FreeNode2 _
-    case (_: FunctionDefinedByRewritingLabel3, _: FunctionDefinedByRewritingLabel3) => FreeNode3FreeNode3 _
-    case (_: FunctionDefinedByRewritingLabel4, _: FunctionDefinedByRewritingLabel4) => FreeNode4FreeNode4 _
+    case (_: FunctionDefinedByRewritingLabel0, _: FunctionDefinedByRewritingLabel0) => FunctionDefinedByRewritingMatcher _
+    case (_: FunctionDefinedByRewritingLabel1, _: FunctionDefinedByRewritingLabel1) => FunctionDefinedByRewritingMatcher _
+    case (_: FunctionDefinedByRewritingLabel2, _: FunctionDefinedByRewritingLabel2) => FunctionDefinedByRewritingMatcher _
+    case (_: FunctionDefinedByRewritingLabel3, _: FunctionDefinedByRewritingLabel3) => FunctionDefinedByRewritingMatcher _
+    case (_: FunctionDefinedByRewritingLabel4, _: FunctionDefinedByRewritingLabel4) => FunctionDefinedByRewritingMatcher _
   })
 }
