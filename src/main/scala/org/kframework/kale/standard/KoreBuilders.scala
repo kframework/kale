@@ -102,23 +102,13 @@ object EnvironmentImplicit {
 
 object StandardConverter {
 
-  val renamingMap: Map[String, String] = Map(
-    "keys" -> "_Map_.keys",
-    "lookup" -> "_Map_.lookup",
-    "Set:in" -> "_Set_.in",
-    "Map:lookup" -> "_Map_.lookup"
-  )
 
   val specialSymbolsSet: Set[String] = Set("#", "#KSequence", "Map:lookup")
 
   def apply(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
     case p@kore.Application(kore.Symbol(str), args) if specialSymbolsSet.contains(str) => specialPatternHandler(p)
     case kore.Application(kore.Symbol(s), args) => {
-      var key = s
-//      if(renamingMap.contains(s))
-//        key = renamingMap(s)
-
-      env.uniqueLabels.get(key) match {
+      env.uniqueLabels.get(s) match {
         case Some(l: NodeLabel) => {
           val cargs = args.map(StandardConverter.apply)
           l(cargs)
@@ -156,14 +146,7 @@ object StandardConverter {
     case p@_ => throw ConversionException(p.toString + "Cannot Convert To Kale")
   }
 
-  private def ruleDVtoTopOrBottom(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
-      //Todo: This is a hack to get around the incorrect Kore encoding. Fix it once we get rid of the Java Backend.
-    case kore.DomainValue(kore.Symbol("Bool@BOOL-SYNTAX"), kore.Value("true")) => env.Top
-    case kore.DomainValue(kore.Symbol("Bool@BOOL-SYNTAX"), kore.Value("false")) => env.Bottom
-    case _ => apply(p)
-  }
 
-  // Todo: Fix the encoding of rules in Frontend To Kore Translation
   def apply(r: kore.Rule)(implicit env: StandardEnvironment): Rewrite = r match {
     case kore.Rule(kore.Implies(requires, kore.And(kore.Rewrite(left, right), kore.Next(ensures))), att)
       if att.findSymbol(Encodings.macroEnc).isEmpty => {
