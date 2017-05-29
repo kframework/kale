@@ -129,7 +129,7 @@ object Hook {
 
 }
 
-case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)(implicit env: Environment) extends Named(s.str) with FunctionLabel1 with IsPredicate {
+case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)(implicit env: StandardEnvironment) extends Named(s.str) with FunctionLabel1 {
 
   import org.kframework.kore.implementation.{DefaultBuilders => db}
 
@@ -140,9 +140,10 @@ case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)
       val ss = m.sortsFor(db.Symbol(_1.label.name))
       ss.map(x => m.subsorts.<=(x, s)).filter(_)
       if (ss.nonEmpty) {
-        Some(env.Top)
+        Some(env.toBoolean(true))
       }
-      None
+      else
+        None
     }
   }
 }
@@ -197,9 +198,6 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
     }).groupBy(_.symbol).mapValues(_.head).values.toSeq
 
 
-
-
-
     val assocSymbols: Seq[kore.SymbolDeclaration] = uniqueSymbolDecs.filter(isAssoc)
 
     val nonAssocSymbols: Seq[kore.SymbolDeclaration] = uniqueSymbolDecs.diff(assocSymbols)
@@ -212,7 +210,7 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 
     val tokenLabels: Seq[GenericTokenLabel] = m.allSentences.flatMap({
       case kore.SortDeclaration(kore.Sort(s), attributes) if attributes.getSymbolValue(Encodings.token).isDefined =>
-          Some(GenericTokenLabel(Sort(s)))
+        Some(GenericTokenLabel(Sort(s)))
       case _ => None
     })
 

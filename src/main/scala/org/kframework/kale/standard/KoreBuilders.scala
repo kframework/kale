@@ -169,9 +169,9 @@ object StandardConverter {
       if att.findSymbol(Encodings.macroEnc).isEmpty => {
       val convertedLeft = apply(left)
       val convertedRight = apply(right)
-      val convetedRequires = ruleDVtoTopOrBottom(requires)
-      val convertedEnsures = ruleDVtoTopOrBottom(ensures)
-      env.Rewrite(env.And(convertedLeft, env.Equality(convetedRequires, env.Truth(true))), convertedRight)
+      val convetedRequires = apply(requires)
+      val convertedEnsures = apply(ensures)
+      env.Rewrite(env.And(convertedLeft, env.Equality(convetedRequires, env.toBoolean(true))), convertedRight)
     }
     case _ => throw ConversionException("Encountered Non Uniform Rule")
   }
