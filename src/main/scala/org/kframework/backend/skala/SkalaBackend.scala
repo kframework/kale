@@ -86,7 +86,8 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
 
   override def step(p: Pattern, steps: Int): Pattern = {
     val convertedK = StandardConverter(p)
-    rewriter(convertedK).toList.head
+    val result = rewriter(convertedK)
+    result.toList.head
   }
 
   private def reconstruct(inhibitForLabel: Label)(t: Term): Term = t match {
@@ -129,7 +130,7 @@ object Hook {
 
 }
 
-case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)(implicit env: Environment) extends Named(s.str) with FunctionLabel1 with IsPredicate {
+case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)(implicit env: StandardEnvironment) extends Named(s.str) with FunctionLabel1 {
 
   import org.kframework.kore.implementation.{DefaultBuilders => db}
 
@@ -137,12 +138,18 @@ case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)
     if (!_1.isGround)
       None
     else {
-      val ss = m.sortsFor(db.Symbol(_1.label.name))
-      ss.map(x => m.subsorts.<=(x, s)).filter(_)
-      if (ss.nonEmpty) {
-        Some(env.Top)
+      _1 match {
+        //Todo: Handle DomainValues Better.
+        case dv: kore.DomainValue if s.str.split("@")(0).substring(2) == dv.symbol.str => Some(env.toBoolean(true))
+        case _ =>
+          val ss = m.sortsFor(db.Symbol(_1.label.name))
+          ss.map(x => m.subsorts.<=(x, s)).filter(_)
+          if (ss.nonEmpty) {
+            Some(env.toBoolean(true))
+          }
+          else
+            None
       }
-      None
     }
   }
 }
