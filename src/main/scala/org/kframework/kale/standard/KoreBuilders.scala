@@ -7,7 +7,7 @@ import org.kframework.kore.implementation.DefaultBuilders
 import scala.collection.Seq
 import EnvironmentImplicit._
 import org.kframework.backend.skala.Encodings
-import org.kframework.kale.builtin.{GenericTokenLabel, MapLabel}
+import org.kframework.kale.builtin.{GenericTokenLabel, MapLabel, SetLabel}
 import org.kframework.kore.extended.implicits._
 
 class KoreBackend(d: kore.Definition, mainModule: kore.ModuleName) {
@@ -103,7 +103,8 @@ object EnvironmentImplicit {
 object StandardConverter {
 
 
-  val specialSymbolsSet: Set[String] = Set("#", "#KSequence", "Map:lookup")
+  //Todo: Special Cases Handle Generically
+  val specialSymbolsSet: Set[String] = Set("#", "#KSequence", "Map:lookup", ".Map")
 
   def apply(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
     case p@kore.Application(kore.Symbol(str), args) if specialSymbolsSet.contains(str) => specialPatternHandler(p)
@@ -137,6 +138,7 @@ object StandardConverter {
             case "INT" => env.toINT(v.toInt)
             case "BOOL" => env.toBoolean(v.toBoolean)
             case "STRING" => env.toSTRING(v)
+            case "ID" => env.toID(Symbol(v))
             //Todo: Throw Exception Here
             case _ => ???
           }
@@ -165,6 +167,7 @@ object StandardConverter {
       case "#" => apply(decodePatternAttribute(p)._1)
       case "#KSequence" => env.label("~>").asInstanceOf[AssocWithIdListLabel](args.map(StandardConverter.apply))
       case "Map:lookup" => env.label("_Map_").asInstanceOf[MapLabel].lookup(args.map(StandardConverter.apply))
+      case ".Map" => env.label("_Map_").asInstanceOf[MapLabel].identity
     }
   }
 

@@ -3,7 +3,8 @@ package org.kframework.backend.skala
 import org.kframework.backend.skala.backendImplicits._
 import org.kframework.kale.builtin.{GenericTokenLabel, MapLabel}
 import org.kframework.kale.standard._
-import org.kframework.kale.util.Named
+import org.kframework.kale.util.{Named, fixpoint}
+import org.kframework.kale.util
 import org.kframework.kale._
 import org.kframework.kore
 import org.kframework.kore.extended.Backend
@@ -22,7 +23,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
 
   val functionLabels: mutable.Map[String, Label] = env.uniqueLabels.filter(_._2.isInstanceOf[FunctionDefinedByRewriting])
 
-  val functionalLabelRulesMap: Map[Label, Set[Rule]] = modules.flatMap(_.rules).collect({
+  val functionLabelRulesMap: Map[Label, Set[Rule]] = modules.flatMap(_.rules).collect({
     case r@kore.Rule(kore.Implies(_, kore.And(kore.Rewrite(kore.Application(kore.Symbol(label), _), _), _)), att) if functionLabels.contains(label) => (env.label(label), r)
   }).groupBy(_._1).mapValues(_.map(_._2).toSet)
 
@@ -30,58 +31,65 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
     * At this point, all symbols (including ones with functional attributes) in the environment have been defined.
     * The environment is still unsealed. The following line separates out rules that have functional symbols in them
     */
-  val functionalKoreRules: Set[kore.Rule] = functionalLabelRulesMap.values.flatten.toSet
+  val functionKoreRules: Set[kore.Rule] = functionLabelRulesMap.values.flatten.toSet
 
   /**
     * Self-explanatory, rules that don't have functional Symbols. I just convert them to a set of Rewrite(s) in Kale.
     * The conversion follows the method used in the earlier hook, but with Kore structures instead of frontend structures.
     */
-  val regularRules: Set[Rewrite] = (modules.flatMap(_.rules).toSet[kore.Rule] -- functionalKoreRules).filterNot(_.att.findSymbol(Encodings.macroEnc).isDefined).map(StandardConverter.apply)
+  val regularRules: Set[Rewrite] = (modules.flatMap(_.rules).toSet[kore.Rule] -- functionKoreRules).filterNot(_.att.findSymbol(Encodings.macroEnc).isDefined).map(StandardConverter.apply)
 
   /**
     * Now, before sealing the environment, convert all Rules with functional Symbols from Kore Rules to Kale Rules.
     * Since the environment is unsealed, this should go through without a problem
     */
 
-  val functionalLabelRewriteMap: Map[Label, Set[Rewrite]] = functionalLabelRulesMap.map({
+  val functionLabelRewriteMap: Map[Label, Set[Rewrite]] = functionLabelRulesMap.map({
     case (k, v) => (k, v.map(StandardConverter.apply))
   })
 
   /**
-    * Now Since we're done with all conversions, seal the environment.
+    * Functional Rules Rename Variable
     */
-  env.seal()
-
+  val functionRulesWithRenamedVariables: Map[Label, Set[Rewrite]] = functionLabelRewriteMap.map({case (k, v) => (k, v.map(env.renameVariables))})
 
   /**
-    * Next two lines are matcher and unifier, needed for creating a Rewriter.
+    * Now Since we're done with all conversions, seal the environment.
+    */
+
+  env.seal()
+
+  /**
+    * Since setting the functional rules requires a rewriter, create the matcher and the rewriter instance.
     */
   val substitutionApplier = SubstitutionWithContext(_)
 
   val unifier: MatcherOrUnifier = SingleSortedMatcher()
 
-  /**
-    * Create the rewriter, needed for setting rules in FunctionDefinedByRewritingLabel
-    */
   val rewriterGenerator = Rewriter(substitutionApplier, unifier)
 
+  /**
+    * Following old Translation
+    */
+  setFunctionRules(functionRulesWithRenamedVariables)
+
 
   /**
-    * Getting all FunctionDefinedByRewritingLabel(s) from the environment
-    */
+    * Perform fixpoint Resolution after sealing the environment
+   */
+  val finalFunctionRules = fixpoint(resolveFunctionRHS)(functionLabelRewriteMap)
 
-  val functionDefinedByRewritingLabels: Set[Label with FunctionDefinedByRewriting] = env.labels.collect({
-    case l: FunctionDefinedByRewriting => l
-  })
+  setFunctionRules(finalFunctionRules)
 
-  /**
-    * Setting Rules in the Labels.
-    */
-  functionDefinedByRewritingLabels.foreach(x => {
-    x.setRules(functionalLabelRewriteMap.getOrElse(x, Set[Rewrite]()))(x => rewriterGenerator(x))
-  })
 
   val rewriter = rewriterGenerator(regularRules)
+
+
+  def setFunctionRules(functionRules: Map[Label, Set[Rewrite]]): Unit = {
+    env.labels.collect({
+      case l:FunctionDefinedByRewriting => l.setRules(functionRules.getOrElse(l, Set[Rewrite]()))(x => rewriterGenerator(x))
+    })
+  }
 
 
   override def step(p: Pattern, steps: Int): Pattern = {
