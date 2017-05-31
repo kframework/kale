@@ -4,7 +4,6 @@ import org.kframework.backend.skala.backendImplicits._
 import org.kframework.kale.builtin.{GenericTokenLabel, MapLabel}
 import org.kframework.kale.standard._
 import org.kframework.kale.util.{Named, fixpoint}
-import org.kframework.kale.util
 import org.kframework.kale._
 import org.kframework.kore
 import org.kframework.kore.extended.Backend
@@ -92,19 +91,20 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
   }
 
 
-  override def step(p: Pattern, steps: Int): Pattern = {
-    val convertedK = StandardConverter(p)
-    val result = rewriter(convertedK)
-    result.toList.head
-  }
-
   private def reconstruct(inhibitForLabel: Label)(t: Term): Term = t match {
     case Node(label, children) if label != inhibitForLabel => label(children map reconstruct(inhibitForLabel))
     case t => t
   }
 
   private def resolveFunctionRHS(functionRules: Map[Label, Set[Rewrite]]): Map[Label, Set[Rewrite]] =
-    functionRules map { case (label, rewrites) => (label, rewrites map (rw => reconstruct(label)(rw).asInstanceOf[Rewrite])) }
+  functionRules map { case (label, rewrites) => (label, rewrites map (rw => reconstruct(label)(rw).asInstanceOf[Rewrite])) }
+
+
+  override def step(p: Pattern, steps: Int): Pattern = {
+    val convertedK = StandardConverter(p)
+    val result = rewriter(convertedK)
+    result.toList.head
+  }
 }
 
 //Todo: Move somewhere else
