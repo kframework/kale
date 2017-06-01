@@ -7,7 +7,7 @@ import org.kframework.kale.util.{NameFromObject, Named, unreachable}
 import org.kframework.kore.implementation.DefaultBuilders
 import org.kframework.kore
 
-import scala.collection.{Iterable, Map, Seq, Set}
+import scala.collection.{Iterable, Seq}
 
 abstract class ReferenceLabel[T](val name: String)(implicit val env: Environment) extends PrimordialDomainValueLabel[T]
 
@@ -514,6 +514,8 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
   override val nonPredicates: Option[Term] = None
 
   override def asSet: Set[Term] = m.map({ case (k, v) => Equality.binding(k, v) }).toSet
+
+  override val boundVariables: Set[Variable] = m.keySet
 }
 
 private[standard] case class DNFOrLabel(implicit override val env: Environment) extends Named("∨") with OrLabel {

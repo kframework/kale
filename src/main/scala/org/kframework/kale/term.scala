@@ -44,6 +44,8 @@ trait Term extends kore.Pattern with HasAtt {
     case _ => false
   }
 
+  val variables: Set[Variable]
+
   /**
     * This method is called after `oldTerm` is updated resulting in `this` term.
     * Subclasses can override the method to attach functionality related to updating, e.g., updating attributes.
@@ -138,6 +140,7 @@ trait Leaf[T] extends Term {
     case that: Leaf[_] => that.label == this.label && that.data == this.data
     case _ => false
   }
+  override val variables: Set[Variable] = Set()
 }
 
 trait NodeLabel extends Label {
@@ -173,6 +176,8 @@ trait Node extends Term with Product {
   override def toString: String = label + "(" + children.mkString(", ") + ")"
 
   def copy(children: Seq[Term]): Term
+
+  override lazy val variables: Set[Variable] = children.flatMap(_.variables).toSet
 }
 
 object Node {

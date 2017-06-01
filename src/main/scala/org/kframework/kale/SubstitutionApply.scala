@@ -17,9 +17,11 @@ class SubstitutionApply(val substitution: Substitution)(implicit env: Environmen
   override def apply(t: Term): Term = {
     if (t.isGround)
       t
-    else {
+    else if((t.variables & substitution.boundVariables).nonEmpty) {
       arr(t.label.id)(t)
     }
+    else
+      t
   }
 }
 

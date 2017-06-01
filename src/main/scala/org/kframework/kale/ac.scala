@@ -1,6 +1,5 @@
 package org.kframework.kale
 
-import scala.collection._
 
 trait HasId {
   val identity: Term

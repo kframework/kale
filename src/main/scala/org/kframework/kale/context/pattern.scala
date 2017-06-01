@@ -7,7 +7,7 @@ import org.kframework.kale.transformer.Binary.TypedWith
 import org.kframework.kale.transformer.{Binary, Unary}
 import org.kframework.kale.util.Util
 
-import scala.collection.{Map, Set}
+import scala.collection.Set
 
 object pattern {
 

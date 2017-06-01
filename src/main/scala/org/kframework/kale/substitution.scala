@@ -3,6 +3,8 @@ package org.kframework.kale
 import scala.collection.Map
 
 trait Substitution extends (Term => Term) with Term {
+  val boundVariables: Set[Variable]
+
   def env: Environment
 
   def get(v: Variable): Option[Term]

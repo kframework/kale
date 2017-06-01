@@ -92,7 +92,11 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
 
 
   private def reconstruct(inhibitForLabel: Label)(t: Term): Term = t match {
-    case Node(label, children) if label != inhibitForLabel => label(children map reconstruct(inhibitForLabel))
+    case Node(label, children) if label != inhibitForLabel => {
+      val changedChildren = children map reconstruct(inhibitForLabel)
+      val returnVal = label(changedChildren)
+      returnVal
+    }
     case t => t
   }
 

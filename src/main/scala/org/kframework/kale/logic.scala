@@ -4,7 +4,7 @@ import org.kframework.kale.standard.MightBeSolved
 import org.kframework.kore.implementation.DefaultBuilders
 import org.kframework.{kale, kore}
 
-import scala.collection.{Iterable, Seq, Set}
+import scala.collection.Seq
 
 trait DomainValueLabel[T] extends LeafLabel[T] {
 
@@ -65,6 +65,8 @@ trait Variable extends Leaf[(Name, Sort)] {
     case v: Variable => v.name == this.name
     case _ => false
   }
+
+  override val variables: Set[Variable] = Set(this)
 }
 
 trait TruthLabel extends LeafLabel[Boolean] {
@@ -76,7 +78,9 @@ trait Truth extends Leaf[Boolean] {
   override lazy val isPredicate: Boolean = true
 }
 
-trait Top extends Truth with Substitution with kore.Top
+trait Top extends Truth with Substitution with kore.Top {
+  override val boundVariables: Set[Variable] = Set()
+}
 
 trait Bottom extends Truth with kore.Bottom
 
@@ -110,7 +114,9 @@ trait Equals extends kore.Equals with Node2 with BinaryInfix {
   override lazy val isPredicate: Boolean = true
 }
 
-trait Binding extends Equals with Substitution
+trait Binding extends Equals with Substitution {
+  override val boundVariables: Set[Variable] = Set(_1.asInstanceOf[Variable])
+}
 
 trait And extends kore.And with AssocComm {
   self: And =>
