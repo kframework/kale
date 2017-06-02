@@ -1,12 +1,12 @@
 package org.kframework.kale.pretty
 
-import org.kframework.kale.builtin.importSTRING
+import org.kframework.kale.builtin._
 import org.kframework.kale.util.Named
 import org.kframework.kale._
 
-class PrettyWrapperLabel(implicit envv: Environment with importPretty) extends Named("œ") with Label3 {
+class PrettyWrapperLabel(implicit penv: Environment with hasPrettyWrapper with hasSTRING) extends Named("œ") with Label3 {
 
-  import env._
+  import penv._
 
   override def apply(_1: Term, _2: Term, _3: Term): Term = {
     assert(_1.label == STRING.String)
@@ -37,15 +37,15 @@ case class PrettyWrapperHolder(label: PrettyWrapperLabel, prefix: Term, content:
   override def _3: Term = suffix
 }
 
-trait importPretty extends importSTRING {
-  self: Environment =>
+trait importPrettyWrapper {
+  protected val env: Environment with hasPrettyWrapper with hasSTRING
 
-  val PrettyWrapper = new PrettyWrapperLabel()(this)
+  val PrettyWrapper = new PrettyWrapperLabel()(env)
 
   def pretty(t: Term): String
 
   implicit class PrettyTerm(t: Term) {
-    def pretty: String = importPretty.this.pretty(t)
+    def pretty: String = importPrettyWrapper.this.pretty(t)
   }
 
 }

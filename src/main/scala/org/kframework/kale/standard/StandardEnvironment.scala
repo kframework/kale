@@ -3,14 +3,14 @@ package org.kframework.kale.standard
 import org.kframework.kale
 import org.kframework.kale.builtin._
 import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
-import org.kframework.kale.pretty.{importPretty, PrettyWrapperHolder}
+import org.kframework.kale.pretty.{importPrettyWrapper, PrettyWrapperHolder}
 import org.kframework.kale.{standard, _}
 
 object StandardEnvironment {
   def apply(): StandardEnvironment = new StandardEnvironment {}
 }
 
-trait StandardEnvironment extends DNFEnvironment with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with importPretty {
+trait StandardEnvironment extends DNFEnvironment with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with importPrettyWrapper {
   val Hole = Variable("☐", Sort.K)
 
   val BindMatch = new BindMatchLabel()

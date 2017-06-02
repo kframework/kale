@@ -3,7 +3,7 @@ package org.kframework.kale.builtin
 import org.kframework.kale._
 import org.kframework.kale.standard.ReferenceLabel
 
-case class STRING()(implicit protected val penv: Environment with importINT) extends Module("STRING")   {
+case class STRING()(implicit protected val penv: Environment with hasINT) extends Module("STRING")   {
   import penv._
 
   val String = new ReferenceLabel[String]("String")(penv) {
@@ -16,8 +16,7 @@ case class STRING()(implicit protected val penv: Environment with importINT) ext
 }
 
 trait importSTRING {
-  protected val env: Environment with importINT
-  val INT: builtin.INT
+  protected val env: Environment with hasINT
 
   val STRING = builtin.STRING()(env)
 

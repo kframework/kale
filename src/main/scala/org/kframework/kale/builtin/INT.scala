@@ -1,9 +1,11 @@
 package org.kframework.kale.builtin
 
 import org.kframework.kale._
+import org.kframework.kale.pretty.PrettyWrapperLabel
 import org.kframework.kale.standard.ReferenceLabel
 
-case class INT(implicit protected val penv: Environment with importBOOLEAN) extends Module("INT") {
+
+case class INT(implicit protected val penv: Environment with hasBOOLEAN) extends Module("INT") {
 
   import penv._
 
@@ -25,8 +27,7 @@ case class INT(implicit protected val penv: Environment with importBOOLEAN) exte
 }
 
 trait importINT {
-  protected val env: Environment with importBOOLEAN
-  val BOOLEAN: builtin.BOOLEAN
+  protected val env: Environment with hasBOOLEAN
 
   val INT = builtin.INT()(env)
 
