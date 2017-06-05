@@ -10,7 +10,7 @@ trait MatcherOrUnifier extends transformer.Binary.Apply {
   import env._
 
 
-  def FreeNode0FreeNode0(solver: Apply)(a: Node0, b: Node0) = Top
+  def FreeNode0FreeNode0(solver: Apply)(a: Node0, b: Node0) = Next(b)
 
   def FreeNode1FreeNode1(solver: Apply)(a: Node1, b: Node1): Term = And.combine(b.label)(Task(a._1, b._1))
 

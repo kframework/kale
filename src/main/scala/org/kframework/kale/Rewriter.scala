@@ -103,7 +103,7 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
               Set(next)
             case _ =>
               val (sub, terms) = And.asSubstitutionAndTerms(u)
-              val constraints = And(terms)
+              val constraints = And(terms.filterNot(_.label == env.Next))
               if (z3.sat(constraints)) {
                 Set(And(substitutioner(sub)(rhs), constraints)) // TODO: consider when rhs.predicates is not satisfiable with constraints
               } else {
