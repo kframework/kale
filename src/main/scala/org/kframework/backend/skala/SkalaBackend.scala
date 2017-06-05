@@ -1,7 +1,7 @@
 package org.kframework.backend.skala
 
 import org.kframework.backend.skala.backendImplicits._
-import org.kframework.kale.builtin.{GenericTokenLabel, MapLabel}
+import org.kframework.kale.builtin.{GenericTokenLabel, MapLabel, SetLabel}
 import org.kframework.kale.standard._
 import org.kframework.kale.util.{Named, fixpoint}
 import org.kframework.kale._
@@ -108,6 +108,21 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
     val convertedK = StandardConverter(p)
     val result = rewriter(convertedK)
     result.toList.head
+  }
+  override def execute(p: Pattern): Pattern = {
+    var previousResult = StandardConverter(p)
+    var result = rewriter(previousResult)
+    while(result.nonEmpty && result.head != previousResult) {
+      previousResult = result.head
+      result = rewriter(previousResult)
+    }
+
+    if(result.isEmpty) {
+      previousResult
+    }
+    else {
+      result.head
+    }
   }
 }
 
@@ -296,14 +311,17 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
             case a@Some(_) => a
             case None => {
               val index: Option[Pattern] = x.att.findSymbol(Encodings.index)
-              if (index.isDefined && x.att.findSymbol(Encodings.comm).isDefined) {
-                // Both Commutative and Assoc with Index
-                val indexStr: String = decodeAttributePattern(index, Encodings.index.str).get
-
-                def indexFunction(t: Term): Term = t.children.toList(indexStr.toInt)
-
-                // Create the AC Label with Identity Term
-                Some(MapLabel(x.symbol.str, indexFunction, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
+              if (x.att.findSymbol(Encodings.comm).isDefined) {
+                if (index.isDefined) {
+                  // Both Commutative and Assoc with Index
+                  val indexStr: String = decodeAttributePattern(index, Encodings.index.str).get
+                  def indexFunction(t: Term): Term = t.children.toList(indexStr.toInt)
+                  // Create the AC Label with Identity Term
+                  Some(MapLabel(x.symbol.str, indexFunction, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
+                }
+                else
+                  // AC Without Index
+                  Some(SetLabel(x.symbol.str, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
               } else {
                 // Create the AssocLabel with Identity Term
                 Some(new AssocWithIdListLabel(x.symbol.str, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
