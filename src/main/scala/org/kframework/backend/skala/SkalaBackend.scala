@@ -114,7 +114,8 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
     var result = rewriter(previousResult)
     while (result.nonEmpty && result.head != previousResult) {
       previousResult = result.head
-      result = rewriter(previousResult)
+      var stepResult = rewriter(previousResult)
+      result = stepResult
     }
 
     if (result.isEmpty) {
@@ -161,15 +162,21 @@ case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)
 
   import org.kframework.kore.implementation.{DefaultBuilders => db}
 
+  private lazy val sortsForMap = m.sortsFor
+
+  private lazy val subSortsPOSet = m.subsorts
+
   /**
     * Needed to Handle Domain Values. Converts Domain Values to
     * their base Module Qualified Symbol.
     */
+  //Todo: Figure out a better way to handle these
   object LabelToSymbol {
     def apply(label: String): kore.Symbol = label match {
       case "Int" => db.Symbol("Int@INT-SYNTAX")
-      case "Bool" => db.Symbol("Bool@BOOL-SYNTAX")
+      case "Boolean" => db.Symbol("Bool@BOOL-SYNTAX")
       case "Id" => db.Symbol("Id@ID")
+      case "~>" => db.Symbol("KBott@BASIC-K")
       case _ => db.Symbol(label)
     }
   }
@@ -178,13 +185,14 @@ case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)
     if (!_1.isGround)
       None
     else {
-      val ss = m.sortsFor(LabelToSymbol(_1.label.name))
-      val isSubsorts = ss.map(x => m.subsorts.<=(x, s)).filter(x => x)
+      val ss = sortsForMap(LabelToSymbol(_1.label.name))
+      val isSubsorts = ss.map(x => subSortsPOSet.<=(x, s)).filter(x => x)
       if (isSubsorts.nonEmpty) {
         Some(env.toBoolean(true))
       }
       else
-        None
+        Some(env.toBoolean(false))
+
     }
   }
 }
