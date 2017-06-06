@@ -50,7 +50,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
   /**
     * Functional Rules Rename Variable
     */
-  val functionRulesWithRenamedVariables: Map[Label, Set[Rewrite]] = functionLabelRewriteMap.map({case (k, v) => (k, v.map(env.renameVariables))})
+  val functionRulesWithRenamedVariables: Map[Label, Set[Rewrite]] = functionLabelRewriteMap.map({ case (k, v) => (k, v.map(env.renameVariables)) })
 
   /**
     * Now Since we're done with all conversions, seal the environment.
@@ -75,7 +75,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
 
   /**
     * Perform fixpoint Resolution after sealing the environment
-   */
+    */
   val finalFunctionRules = fixpoint(resolveFunctionRHS)(functionLabelRewriteMap)
 
   setFunctionRules(finalFunctionRules)
@@ -86,7 +86,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
 
   def setFunctionRules(functionRules: Map[Label, Set[Rewrite]]): Unit = {
     env.labels.collect({
-      case l:FunctionDefinedByRewriting => l.setRules(functionRules.getOrElse(l, Set[Rewrite]()))(x => rewriterGenerator(x))
+      case l: FunctionDefinedByRewriting => l.setRules(functionRules.getOrElse(l, Set[Rewrite]()))(x => rewriterGenerator(x))
     })
   }
 
@@ -101,7 +101,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
   }
 
   private def resolveFunctionRHS(functionRules: Map[Label, Set[Rewrite]]): Map[Label, Set[Rewrite]] =
-  functionRules map { case (label, rewrites) => (label, rewrites map (rw => reconstruct(label)(rw).asInstanceOf[Rewrite])) }
+    functionRules map { case (label, rewrites) => (label, rewrites map (rw => reconstruct(label)(rw).asInstanceOf[Rewrite])) }
 
 
   override def step(p: Pattern, steps: Int): Pattern = {
@@ -112,12 +112,12 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
   override def execute(p: Pattern): Pattern = {
     var previousResult = StandardConverter(p)
     var result = rewriter(previousResult)
-    while(result.nonEmpty && result.head != previousResult) {
+    while (result.nonEmpty && result.head != previousResult) {
       previousResult = result.head
       result = rewriter(previousResult)
     }
 
-    if(result.isEmpty) {
+    if (result.isEmpty) {
       previousResult
     }
     else {
@@ -157,26 +157,34 @@ object Hook {
 
 }
 
-case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)(implicit env: StandardEnvironment) extends Named(s.str) with FunctionLabel1 {
+case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)(implicit env: StandardEnvironment) extends Named("is" + s.str) with FunctionLabel1 {
 
   import org.kframework.kore.implementation.{DefaultBuilders => db}
+
+  /**
+    * Needed to Handle Domain Values. Converts Domain Values to
+    * their base Module Qualified Symbol.
+    */
+  object LabelToSymbol {
+    def apply(label: String): kore.Symbol = label match {
+      case "Int" => db.Symbol("Int@INT-SYNTAX")
+      case "Bool" => db.Symbol("Bool@BOOL-SYNTAX")
+      case "Id" => db.Symbol("Id@ID")
+      case _ => db.Symbol(label)
+    }
+  }
 
   override def f(_1: Term): Option[Term] = {
     if (!_1.isGround)
       None
     else {
-      _1 match {
-        //Todo: Handle DomainValues Better.
-        case dv: kore.DomainValue if s.str.split("@")(0).substring(2) == dv.symbol.str => Some(env.toBoolean(true))
-        case _ =>
-          val ss = m.sortsFor(db.Symbol(_1.label.name))
-          ss.map(x => m.subsorts.<=(x, s)).filter(_)
-          if (ss.nonEmpty) {
-            Some(env.toBoolean(true))
-          }
-          else
-            None
+      val ss = m.sortsFor(LabelToSymbol(_1.label.name))
+      val isSubsorts = ss.map(x => m.subsorts.<=(x, s)).filter(x => x)
+      if (isSubsorts.nonEmpty) {
+        Some(env.toBoolean(true))
       }
+      else
+        None
     }
   }
 }
@@ -259,7 +267,7 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
         x.att.findSymbol(Encodings.function) match {
           case Some(_) => {
             if (x.symbol.str.startsWith("is")) {
-              Some(IsSort(db.Sort(x.symbol.str), m, d))
+              Some(IsSort(db.Sort(x.symbol.str.substring(2)), m, d))
             } else {
               //Functional Symbol Declaration
               x.args match {
@@ -320,7 +328,7 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
                   Some(MapLabel(x.symbol.str, indexFunction, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
                 }
                 else
-                  // AC Without Index
+                // AC Without Index
                   Some(SetLabel(x.symbol.str, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
               } else {
                 // Create the AssocLabel with Identity Term
