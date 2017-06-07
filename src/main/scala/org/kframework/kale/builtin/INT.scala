@@ -22,8 +22,10 @@ case class INT(implicit protected val penv: Environment with hasBOOLEAN) extends
   val le = PrimitiveFunction2[Int, Boolean]("_<=Int_", Int, BOOLEAN.Boolean, _ <= _)
   val gt = PrimitiveFunction2[Int, Boolean]("_>Int_", Int, BOOLEAN.Boolean, _ > _)
   val ge = PrimitiveFunction2[Int, Boolean]("_>=Int_", Int, BOOLEAN.Boolean, _ >= _)
+  val neq = PrimitiveFunction2[Int, Boolean]("_=/=Int_", Int, BOOLEAN.Boolean, _ != _)
+  val eq = PrimitiveFunction2[Int, Boolean]("_==Int_", Int, BOOLEAN.Boolean, _ == _)
 
-  lazy val all = Set(Int, plus, minus, mult, div, mod, lt, le, gt, ge)
+  lazy val all = Set(Int, plus, minus, mult, div, mod, lt, le, gt, ge, neq, eq)
 }
 
 trait importINT {
