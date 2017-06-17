@@ -171,8 +171,8 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
   def TermPrettyWrapper(solver: Apply)(t: Term, a: PrettyWrapperHolder) = {
     solver(t, a.content) match {
       case And.withNext(p, Some(Next(n))) => And.withNext(p, Next(a.copy(a._1, n , a._3)))
+      case Bottom => Bottom
     }
-
   }
 
   def PrettyWrapperTerm(solver: Apply)(a: PrettyWrapperHolder, t: Term) = {
