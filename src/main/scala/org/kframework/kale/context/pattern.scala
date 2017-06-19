@@ -5,7 +5,6 @@ import org.kframework.kale.context.anywhere.ContextContentVariable
 import org.kframework.kale.standard.{StandardEnvironment, SubstitutionWithContext}
 import org.kframework.kale.transformer.Binary.TypedWith
 import org.kframework.kale.transformer.{Binary, Unary}
-import org.kframework.kale.util.Util
 
 import scala.collection.Set
 
@@ -52,14 +51,13 @@ object pattern {
 
     lazy val patternsWithRedexHolesAndTheirContextVariables: Set[(Term, Term, Set[Variable])] = Or.asSet(label.patterns) map {
       case Equality(left, right) =>
-        (Equality(sub(left), sub(right)), right, Util.variables(right))
+        (Equality(sub(left), sub(right)), right, right.variables)
     }
   }
 
   class PatternContextMatcher(implicit env: StandardEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Apply] with TypedWith[PatternContextApplication, Term] {
 
     import env._
-    import org.kframework.kale.util.StaticImplicits._
 
     override def f(solver: Binary.Apply)(contextApplication: PatternContextApplication, term: Term): Term = {
       val leftContextLabel = contextApplication.label

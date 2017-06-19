@@ -5,9 +5,9 @@ import org.kframework.kale.context._
 import org.kframework.kale.context.anywhere.{AnywhereContextApplicationLabel, AnywhereContextProcessingFunction}
 import org.kframework.kale.context.pattern.{PatternContextApplicationLabel, PatternContextProcessingFunction}
 
-case class SubstitutionWithContext(override val substitution: Substitution)(implicit val env: StandardEnvironment) extends SubstitutionApply(substitution)(env) {
+case class SubstitutionWithContext(override val substitution: Substitution)(implicit env: StandardEnvironment) extends SubstitutionApply(substitution)(env) {
 
-  override def processingFunctions: ProcessingFunctions = definePartialFunction({
+  override def processingFunctions: ProcessingFunctions = definePartialFunction[Term, this.type]({
     case l: AnywhereContextApplicationLabel => new AnywhereContextProcessingFunction()(env)
     case l: PatternContextApplicationLabel => new PatternContextProcessingFunction()(env)
   }) orElse super.processingFunctions

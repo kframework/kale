@@ -1,7 +1,6 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
-import org.kframework.kale.util.Util
 import org.scalatest.FreeSpec
 
 import scala.collection._
@@ -20,7 +19,7 @@ class RewriteTest extends FreeSpec with TestSetup {
   }
 
   def assertRewrite(rule0: Term)(obj: Term, expected: Term) {
-    val rule = Util.moveRewriteSymbolToTop(rule0)(env)
+    val rule = moveRewriteSymbolToTop(rule0)(env)
     assertRewrite(rule)(obj, expected)
   }
 

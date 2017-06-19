@@ -1,12 +1,12 @@
 import org.kframework.kale._
-import org.kframework.kale.util.Implicits
+import org.kframework.kale.util.dsl
 import standard._
 
 implicit val env = new StandardEnvironment
 
 import env._
 
-val impl = new Implicits()
+val impl = new dsl()
 
 import impl._
 

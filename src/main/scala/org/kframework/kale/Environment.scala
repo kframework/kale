@@ -1,6 +1,8 @@
 package org.kframework.kale
 
-import org.kframework.kale.standard.{Bottomize}
+import org.kframework.kale.standard.Bottomize
+import org.kframework.kale.transformer.Unary
+import org.kframework.kale.transformer.Unary.ProcessingFunctions
 import org.kframework.kore
 
 import scala.collection._
@@ -22,6 +24,8 @@ trait Environment extends KORELabels with Bottomize {
   def seal(): Unit = pisSealed = true
 
   def isSealed = pisSealed
+
+  def unaryProcessingFunctions: ProcessingFunctions = Unary.processingFunctions
 
   val substitutionMaker: Substitution => SubstitutionApply
 

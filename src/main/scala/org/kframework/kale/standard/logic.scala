@@ -87,7 +87,6 @@ private[standard] case class StandardEqualityLabel(implicit override val env: DN
       } else
         new Equals(_1, _2)
     } else {
-      import org.kframework.kale.util.StaticImplicits._
       val Variable = env.Variable
       _1.label match {
         case `Variable` =>
@@ -101,7 +100,6 @@ private[standard] case class StandardEqualityLabel(implicit override val env: DN
   }
 
   override def binding(_1: Variable, _2: Term): Binding = {
-    import org.kframework.kale.util.StaticImplicits._
     assert(!_2.contains(_1))
     new Binding(_1.asInstanceOf[Variable], _2)
   }
@@ -375,6 +373,13 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
           }
       }
     }
+  }
+
+  override def combine(originalTerm: Node)(solutions: MightBeSolved*): Term = {
+    val res = solutions.foldLeft(Set((Top: Term, List[Term]())))(cartezianProductWithNext)
+    Or(res map {
+      case (other@And.substitutionAndTerms(s, _), l) => And.withNext(other, Next(originalTerm.copy(l map s)))
+    })
   }
 
   override def combine(label: NodeLabel)(solutions: MightBeSolved*): Term = {

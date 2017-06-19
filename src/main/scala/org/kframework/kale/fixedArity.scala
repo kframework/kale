@@ -11,7 +11,7 @@ trait Label0 extends (() => Term) with NodeLabel {
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply()
 
-  override def toString: String =  super[NodeLabel].toString
+  override def toString: String = super[NodeLabel].toString
 }
 
 trait Label1 extends (Term => Term) with NodeLabel {
@@ -19,9 +19,14 @@ trait Label1 extends (Term => Term) with NodeLabel {
 
   def apply(_1: Term): Term
 
+  def unapply(t: Term): Option[Term] = t match {
+    case n: Node1 if n.label == this => Some(n._1)
+    case _ => None
+  }
+
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head)
 
-  override def toString: String =  super[NodeLabel].toString
+  override def toString: String = super[NodeLabel].toString
 }
 
 trait Label2 extends ((Term, Term) => Term) with NodeLabel {
@@ -36,7 +41,7 @@ trait Label2 extends ((Term, Term) => Term) with NodeLabel {
     case _ => None
   }
 
-  override def toString: String =  super[NodeLabel].toString
+  override def toString: String = super[NodeLabel].toString
 }
 
 trait Label3 extends NodeLabel {
@@ -51,7 +56,7 @@ trait Label3 extends NodeLabel {
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head)
 
-  override def toString: String =  super[NodeLabel].toString
+  override def toString: String = super[NodeLabel].toString
 }
 
 trait Label4 extends NodeLabel {
@@ -61,7 +66,7 @@ trait Label4 extends NodeLabel {
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head)
 
-  override def toString: String =  super[NodeLabel].toString
+  override def toString: String = super[NodeLabel].toString
 }
 
 trait Label5 extends NodeLabel {
@@ -71,7 +76,7 @@ trait Label5 extends NodeLabel {
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head, l.tail.tail.tail.tail.head)
 
-  override def toString: String =  super[NodeLabel].toString
+  override def toString: String = super[NodeLabel].toString
 }
 
 trait Label6 extends NodeLabel {
@@ -81,7 +86,7 @@ trait Label6 extends NodeLabel {
 
   protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.head, l.tail.head, l.tail.tail.head, l.tail.tail.tail.head, l.tail.tail.tail.tail.head, l.tail.tail.tail.tail.tail.head)
 
-  override def toString: String =  super[NodeLabel].toString
+  override def toString: String = super[NodeLabel].toString
 }
 
 trait Node0 extends Node with Application {

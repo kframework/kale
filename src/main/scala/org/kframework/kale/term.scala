@@ -1,7 +1,7 @@
 package org.kframework.kale
 
 import io.circe.{Decoder, Encoder, HCursor}
-import org.kframework.kale.util.{HasAtt, Util}
+import org.kframework.kale.util.HasAtt
 import org.kframework.kore
 import org.kframework.kore.implementation.DefaultBuilders
 import io.circe.syntax._
@@ -102,7 +102,7 @@ object Term {
   }
 
   implicit class RichTerm(t: Term)(implicit env: Environment) {
-    def moveRewriteToTop: Rewrite = Util.moveRewriteSymbolToTop(t)
+    def moveRewriteToTop: Rewrite = moveRewriteSymbolToTop(t)
   }
 
 }
@@ -140,6 +140,7 @@ trait Leaf[T] extends Term {
     case that: Leaf[_] => that.label == this.label && that.data == this.data
     case _ => false
   }
+
   override val variables: Set[Variable] = Set()
 }
 

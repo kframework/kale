@@ -3,7 +3,7 @@ package org.kframework.kale.tests
 import org.kframework.kale._
 import org.kframework.kale.context.pattern.PatternContextApplicationLabel
 import org.kframework.kale.standard.{SimpleRewrite => _, _}
-import org.kframework.kale.util.Implicits
+import org.kframework.kale.util.dsl
 import org.scalactic.Prettifier
 
 trait TestSetup {
@@ -12,7 +12,7 @@ trait TestSetup {
 
   import env._
 
-  val implicits = new Implicits()
+  val implicits = new dsl()
 
   val X = Variable("X")
   val Y = Variable("Y")

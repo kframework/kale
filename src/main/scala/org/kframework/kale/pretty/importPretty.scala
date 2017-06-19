@@ -10,9 +10,16 @@ class PrettyWrapperLabel(implicit penv: Environment with hasPrettyWrapper with h
 
   override def apply(_1: Term, _2: Term, _3: Term): Term = {
     assert(_1.label == STRING.String)
-    assert(_2.label != this)
     assert(_3.label == STRING.String)
-    PrettyWrapperHolder(this, _1, _2, _3)
+
+    _2 match {
+      case PrettyWrapper(STRING.String(_1inner), _2, STRING.String(_3inner)) =>
+        val STRING.String(_1outer) = _1
+        val STRING.String(_3outer) = _3
+        PrettyWrapper(STRING.String(_1outer + _1inner), _2, STRING.String(_3inner + _3outer))
+      case o =>
+        PrettyWrapperHolder(this, _1, _2, _3)
+    }
   }
 
   val self = this
@@ -21,11 +28,13 @@ class PrettyWrapperLabel(implicit penv: Environment with hasPrettyWrapper with h
     case self(_, c, _) => c
     case _ => t
   }
+
+  def unwrapBU(t: Term): Term = t mapBU unwrap
 }
 
 case class PrettyWrapperHolder(label: PrettyWrapperLabel, prefix: Term, content: Term, suffix: Term) extends Node3 with IsNotPredicate {
   override def toString =
-    if(_1.toString.nonEmpty || _3.toString.nonEmpty)
+    if (_1.toString.nonEmpty || _3.toString.nonEmpty)
       "⦅" + _1.toString + "|" + _2 + "|" + _3 + "⦆"
     else
       _2.toString

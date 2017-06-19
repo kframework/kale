@@ -1,8 +1,8 @@
 package org.kframework.kale.transformer
 
+import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kale.transformer.GenUnary.Apply
-import org.kframework.kale.util.fixpoint
+import org.kframework.kale.transformer.GenUnary.{Apply, ProcessingFunctions}
 
 /**
   * Abstract stateful transformer from Term to Term
@@ -31,12 +31,10 @@ object GenUnary {
     def f(state: SpecificSolver)(t: Element): ReturnType
   }
 
+  type ProcessingFunctions[T, Solver <: Apply[T]] = PartialFunction[Label, ProcessingFunction[T, Solver]]
 
-  abstract class Apply[T](env: Environment) extends (Term => T) {
-
-    type ProcessingFunctions = PartialFunction[Label, ProcessingFunction[T, this.type]]
-
-    protected def definePartialFunction(f: ProcessingFunctions): ProcessingFunctions = f
+  abstract class Apply[T](val env: Environment) extends (Term => T) {
+    type ProcessingFunctions = GenUnary.ProcessingFunctions[T, this.type]
 
     protected def processingFunctions: ProcessingFunctions
 
@@ -74,21 +72,21 @@ object Unary {
 
   def DoNothing(solver: Apply)(a: Term): Term = a
 
+  type ProcessingFunctions = GenUnary.ProcessingFunctions[Term, Apply]
 
-  abstract class Apply(env: Environment) extends GenUnary.Apply[Term](env) {
+  def processingFunctions: ProcessingFunctions = {
+    case l: Label0 => Node0 _
+    case l: Label1 => Node1 _
+    case l: Label2 => Node2 _
+    case l: Label3 => Node3 _
+    case l: Label4 => Node4 _
+    case l: Label5 => Node5 _
+    case l: Label6 => Node6 _
+    case l: LeafLabel[_] => DoNothing _
+  }
 
-    protected def processingFunctions: ProcessingFunctions = {
-      case l: Label0 => Node0 _
-      case l: Label1 => Node1 _
-      case l: Label2 => Node2 _
-      case l: Label3 => Node3 _
-      case l: Label4 => Node4 _
-      case l: Label5 => Node5 _
-      case l: Label6 => Node6 _
-      case l: LeafLabel[_] => DoNothing _
-    }
-
-    def fixpoint(t: Term): Term = util.fixpoint(apply)(t)
+  abstract class Apply(implicit env: Environment) extends GenUnary.Apply[Term](env) {
+    def fixpoint(t: Term): Term = kale.fixpoint(apply)(t)
   }
 
 }

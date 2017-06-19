@@ -12,17 +12,17 @@ trait MatcherOrUnifier extends transformer.Binary.Apply {
 
   def FreeNode0FreeNode0(solver: Apply)(a: Node0, b: Node0) = Next(b)
 
-  def FreeNode1FreeNode1(solver: Apply)(a: Node1, b: Node1): Term = And.combine(b.label)(Task(a._1, b._1))
+  def FreeNode1FreeNode1(solver: Apply)(a: Node1, b: Node1): Term = And.combine(b)(Task(a._1, b._1))
 
-  def FreeNode2FreeNode2(solver: Apply)(a: Node2, b: Node2): Term = And.combine(b.label)(Task(a._1, b._1), Task(a._2, b._2))
+  def FreeNode2FreeNode2(solver: Apply)(a: Node2, b: Node2): Term = And.combine(b)(Task(a._1, b._1), Task(a._2, b._2))
 
-  def FreeNode3FreeNode3(solver: Apply)(a: Node3, b: Node3): Term = And.combine(b.label)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3))
+  def FreeNode3FreeNode3(solver: Apply)(a: Node3, b: Node3): Term = And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3))
 
-  def FreeNode4FreeNode4(solver: Apply)(a: Node4, b: Node4): Term = And.combine(b.label)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4))
+  def FreeNode4FreeNode4(solver: Apply)(a: Node4, b: Node4): Term = And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4))
 
-  def FreeNode5FreeNode5(solver: Apply)(a: Node5, b: Node5): Term = And.combine(b.label)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4), Task(a._5, b._5))
+  def FreeNode5FreeNode5(solver: Apply)(a: Node5, b: Node5): Term = And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4), Task(a._5, b._5))
 
-  def FreeNode6FreeNode6(solver: Apply)(a: Node6, b: Node6): Term = And.combine(b.label)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4), Task(a._5, b._5), Task(a._6, b._6))
+  def FreeNode6FreeNode6(solver: Apply)(a: Node6, b: Node6): Term = And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4), Task(a._5, b._5), Task(a._6, b._6))
 
   def VarLeft(solver: Apply)(a: Variable, b: Term) = And(Equality(a.asInstanceOf[Variable], b), Next(b))
 

@@ -1,7 +1,7 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard._
-import org.kframework.kale.util.Implicits
+import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
 
 /*
@@ -129,7 +129,7 @@ object IMP {
   val SO = Variable("SO")
   val R = Variable("R")
 
-  val implicits = new Implicits()
+  val implicits = new dsl()
   import implicits._
 
   val rules = Set(

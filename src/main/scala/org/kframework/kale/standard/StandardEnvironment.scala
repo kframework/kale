@@ -3,7 +3,8 @@ package org.kframework.kale.standard
 import org.kframework.kale
 import org.kframework.kale.builtin._
 import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
-import org.kframework.kale.pretty.{importPrettyWrapper, PrettyWrapperHolder}
+import org.kframework.kale.pretty.{PrettyWrapperHolder, importPrettyWrapper}
+import org.kframework.kale.transformer.Unary.{Apply, ProcessingFunctions}
 import org.kframework.kale.{standard, _}
 
 object StandardEnvironment {

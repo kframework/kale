@@ -1,7 +1,6 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale._
-import org.kframework.kale.util.Util
 
 trait DNFEnvironment extends Environment {
   override val Truth: TruthLabel = standard.StandardTruthLabel()
@@ -20,7 +19,7 @@ trait DNFEnvironment extends Environment {
   override val Rewrite = StandardRewriteLabel()
 
   def renameVariables[T <: Term](t: T): T = {
-    val rename = And.substitution((Util.variables(t) map (v => (v, v.label(Name(v.name + "!" + Math.random().toInt), v.sort)))).toMap)
+    val rename = And.substitution((t.variables map (v => (v, v.label(Name(v.name + "!" + Math.random().toInt), v.sort)))).toMap)
     rename(t).asInstanceOf[T]
   }
 }

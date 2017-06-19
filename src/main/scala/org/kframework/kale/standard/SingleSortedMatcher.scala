@@ -21,7 +21,6 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
   import Binary._
   import env._
   import org.kframework.kale.context._
-  import org.kframework.kale.util.StaticImplicits._
 
   override def apply(left: Term, right: Term): Term = {
     val res = super.apply(left, right)
@@ -31,11 +30,19 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
     res
   }
 
+  object MatchesVar {
+    def unapply(t: Term): Option[Term] = t match {
+      case v: Variable => Some(t)
+      case Rewrite(_: Variable, _) => Some(t)
+      case _ => None
+    }
+  }
+
   def matchContents(l: AssocLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = {
     val res = (ksLeft.toSeq, ksRight.toSeq) match {
       case (Seq(), Seq()) =>
         soFar
-      case ((v: Variable) +: tailL, ksR) =>
+      case (MatchesVar(t) +: tailL, ksR) =>
         (0 to ksR.size)
           .map {
             index => (ksR.take(index), ksR.drop(index))
@@ -43,7 +50,11 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
           .map {
             case (prefix, suffix) =>
               val prefixTerm = l(prefix)
-              val newSoFar = And.combine(l)(Solved(soFar), Solved(And(Next(prefixTerm), Equality(v, prefixTerm))))
+              val newSoFar = t match {
+                case v: Variable => And.combine(l)(Solved(soFar), Solved(And(Next(prefixTerm), Equality(v, prefixTerm))))
+                case Rewrite(v, right) => And.combine(l)(Solved(soFar), Solved(And(Next(right), Equality(v, prefixTerm))))
+              }
+
               matchContents(l, newSoFar, tailL, suffix)
           }
           .fold(Bottom)({
@@ -169,10 +180,10 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
   import standard._
 
   def TermPrettyWrapper(solver: Apply)(t: Term, a: PrettyWrapperHolder) = {
-    solver(t, a.content) match {
+    Or(Or.asSet(solver(t, a.content)) map {
       case And.withNext(p, Some(Next(n))) => And.withNext(p, Next(a.copy(a._1, n , a._3)))
       case Bottom => Bottom
-    }
+    })
   }
 
   def PrettyWrapperTerm(solver: Apply)(a: PrettyWrapperHolder, t: Term) = {

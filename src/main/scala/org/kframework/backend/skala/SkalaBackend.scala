@@ -3,8 +3,8 @@ package org.kframework.backend.skala
 import org.kframework.backend.skala.backendImplicits._
 import org.kframework.kale.builtin.{GenericTokenLabel, MapLabel, SetLabel}
 import org.kframework.kale.standard._
-import org.kframework.kale.util.{Named, fixpoint}
 import org.kframework.kale._
+import org.kframework.kale.util.Named
 import org.kframework.kore
 import org.kframework.kore.extended.Backend
 import org.kframework.kore.extended.implicits._
@@ -155,7 +155,6 @@ object Hook {
       case None => None
     }
   }
-
 }
 
 case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)(implicit env: StandardEnvironment) extends Named("is" + s.str) with FunctionLabel1 {

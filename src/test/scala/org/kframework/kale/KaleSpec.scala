@@ -1,7 +1,7 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard.StandardEnvironment
-import org.kframework.kale.util.Implicits
+import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
 
 class KaleSpec extends FreeSpec {
@@ -10,7 +10,7 @@ class KaleSpec extends FreeSpec {
 
   import env._
 
-  val impl = new Implicits()
+  val impl = new dsl()
 
   import impl._
 

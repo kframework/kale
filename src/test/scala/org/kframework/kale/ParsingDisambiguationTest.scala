@@ -2,7 +2,7 @@ package org.kframework.kale
 
 import org.kframework.kale.context.pattern.PatternContextApplicationLabel
 import org.kframework.kale.standard._
-import org.kframework.kale.util.{Implicits, Util}
+import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
 
 import scala.collection._
@@ -14,7 +14,7 @@ class ParsingDisambiguationTest extends FreeSpec {
 
   import env._
 
-  val implicits = new Implicits()
+  val implicits = new dsl()
 
   val ExpId = SimpleFreeLabel1("ExpId")
   val readPointer = SimpleFreeLabel1("readPointer")
@@ -139,12 +139,12 @@ class ParsingDisambiguationTest extends FreeSpec {
         Rewrite(amb(ANYWHERE(TypeId(A)), B), B)
       )
 
-    val rewriterVarDecl = Rewriter(substitutionApplier, unifier)(Set(Util.moveRewriteSymbolToTop(keepVarDecl)(env)))
+    val rewriterVarDecl = Rewriter(substitutionApplier, unifier)(Set(moveRewriteSymbolToTop(keepVarDecl)(env)))
 
     println(rewriterVarDecl.searchStep(asMult(theAmbiguity)))
     println(rewriterVarDecl.searchStep(asDecl(theAmbiguity)))
 
-    val rewriter = Rewriter(substitutionApplier, unifier)(Set(Util.moveRewriteSymbolToTop(keepMult)(env)))
+    val rewriter = Rewriter(substitutionApplier, unifier)(Set(moveRewriteSymbolToTop(keepMult)(env)))
 
     println(rewriter.searchStep(asMult(theAmbiguity)))
     println(rewriter.searchStep(asDecl(theAmbiguity)))
