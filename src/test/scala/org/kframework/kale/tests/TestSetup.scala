@@ -54,11 +54,11 @@ trait TestSetup {
 
   implicit val rewriterBuilder: (collection.Set[_ <: Rewrite]) => Rewriter = Rewriter(SubstitutionWithContext(_)(env), SingleSortedMatcher()(env))(_)
 
-  a2b.setRules(a2bRules)
+  a2b.setRules(Or(a2bRules))
 
   implicit val nextUnifier = SingleSortedMatcher()
 
-  def unifier(t1: Term, t2: Term): Term = env.And.withNext.filterOurNext(nextUnifier(t1, t2))
+  def unifier(t1: Term, t2: Term): Term = env.And.filterOutNext(nextUnifier(t1, t2))
 
   val substitutionApplier = SubstitutionWithContext(_)
 

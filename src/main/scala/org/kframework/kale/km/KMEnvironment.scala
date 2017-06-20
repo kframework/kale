@@ -68,4 +68,5 @@ class KMEnvironment extends DNFEnvironment with importBuiltin {
 
   override protected lazy val unifier = new MultiSortedUnifier(this)
 
+  override def rewrite(rule: Term, obj: Term): Term = ???
 }

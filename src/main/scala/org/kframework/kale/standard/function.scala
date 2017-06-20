@@ -31,6 +31,9 @@ case class NotLabel(implicit override val env: Environment) extends Named("¬") 
   def f(_1: Term): Option[Term] = _1 match {
     case `Top` => Some(Bottom)
     case `Bottom` => Some(Top)
+//    case Or.set(terms) if terms.size > 1 => Some(And(terms map (Not(_))))
+//    case And.set(terms) if terms.size > 1 => Some(Or(terms map (Not(_))))
+//    case Equality(v: Variable, t) if t.isGround => Some(Bottom) // TODO: not sure about this
     case _ => None
   }
 }
@@ -41,23 +44,26 @@ case class SimpleNot(_1: Term)(implicit val env: Environment) extends Node1 {
 }
 
 trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel with NodeLabel {
-  implicit val env: Environment
-  private var p_rewriter: Option[Rewriter] = None
+  implicit val env: StandardEnvironment
+  private var p_rewriter: Option[Term] = None
 
-  def rewriter: Rewriter = p_rewriter.get
+  def rewriter: Term = p_rewriter.get
 
   //throw new AssertionError("Set rules before sealing the environment. Or at least before trying to create new terms in the sealed environment.")
 
-  def setRules(rules: Set[Rewrite])(implicit rewriterBuilder: (Set[_ <: kale.Rewrite]) => Rewriter): Unit = {
-    p_rewriter = Some(rewriterBuilder(rules))
+  def setRules(rules: Term): Unit = {
+    p_rewriter = Some(rules)
   }
 
   def tryToApply(res: Term): Option[Term] =
-    if (env.isSealed && rewriter.rules.nonEmpty) {
+    if (env.isSealed && p_rewriter.isDefined) {
+      import env._
       // do not try to execute the function before the env is sealed as it would trigger the lazy initialization fo the Rewriter,
       // and a Rewriter can only be built once the Environment is sealed
-      val Bottom = rewriter.env.Bottom
-      rewriter.step(res).find(t => t.label != env.And && t.label != env.Or)
+      unify(rewriter, res) match {
+        case Bottom => None
+        case r => Some(OneResult(And.onlyNext(r)))
+      }
     } else {
       None
     }
@@ -81,4 +87,13 @@ case class FunctionDefinedByRewritingLabel3(name: String)(implicit val env: Stan
 
 case class FunctionDefinedByRewritingLabel4(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel4 {
   def f(_1: Term, _2: Term, _3: Term, _4: Term): Option[Term] = tryToApply(FreeNode4(this, _1, _2, _3, _4))
+}
+
+case class Macro1(name: String, rw: Term)(implicit val env: StandardEnvironment) extends FunctionLabel1 {
+
+  import env._
+
+  def f(_1: Term): Option[Term] = {
+    Some(Equality.binding(Variable("A"), _1)(rw))
+  }
 }

@@ -9,9 +9,6 @@ class PrettyWrapperLabel(implicit penv: Environment with hasPrettyWrapper with h
   import penv._
 
   override def apply(_1: Term, _2: Term, _3: Term): Term = {
-    assert(_1.label == STRING.String)
-    assert(_3.label == STRING.String)
-
     _2 match {
       case PrettyWrapper(STRING.String(_1inner), _2, STRING.String(_3inner)) =>
         val STRING.String(_1outer) = _1

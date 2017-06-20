@@ -29,10 +29,12 @@ trait Environment extends KORELabels with Bottomize {
 
   val substitutionMaker: Substitution => SubstitutionApply
 
-  final def unify(a: Term, b: Term): Term = {
-    assert(this.isSealed)
-    unifier(a, b)
-  }
+
+  final val unify = standard.lift("unify", {
+    (a: Term, b: Term) =>
+      assert(this.isSealed)
+      unifier(a, b)
+  })
 
   protected val unifier: MatcherOrUnifier
 
@@ -67,6 +69,7 @@ trait Environment extends KORELabels with Bottomize {
     def smtName: String = SMTName(l)
   }
 
+  def rewrite(rule: Term, obj: Term): Term
 }
 
 trait KORELabels {

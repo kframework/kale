@@ -2,6 +2,7 @@ package org.kframework.kale.standard
 
 import org.kframework.kale
 import org.kframework.kale._
+import org.kframework.kale.builtin.importBOOLEAN
 import org.kframework.kale.context.Context1ApplicationLabel
 import org.kframework.kale.util.{NameFromObject, Named, unreachable}
 import org.kframework.kore.implementation.DefaultBuilders
@@ -76,6 +77,34 @@ private[standard] case class SimpleNext(_1: Term)(implicit env: Environment) ext
   override val isPredicate = true
 }
 
+private[standard] case class MatchLabel(implicit override val env: StandardEnvironment) extends Named(":=") with EqualityLabel {
+
+  import env._
+
+  override def apply(_1: Term, _2: Term): Term = {
+    if (env.isSealed) {
+      Equality(_1, _2) match {
+        case Equality(a, b) =>
+          val unified = And.filterOutNext(And.env.unify(a, b))
+          unified match {
+            case Equality(a, b) => new Matches(a, b)
+            case _ => unified
+          }
+        case Top => Top
+        case Bottom => Bottom
+      }
+    } else {
+      new Matches(_1, _2)
+    }
+  }
+
+  override def binding(_1: Variable, _2: Term): kale.Binding = Equality.binding(_1, _2)
+}
+
+private[kale] class Matches(val _1: Term, val _2: Term)(implicit env: StandardEnvironment) extends kale.Equals {
+  val label = env.Match
+}
+
 private[standard] case class StandardEqualityLabel(implicit override val env: DNFEnvironment) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = {
     if (_1 == _2)
@@ -135,6 +164,35 @@ private[standard] case class StandardRewriteLabel(implicit val env: Environment)
 
 case class SimpleRewrite(_1: Term, _2: Term)(implicit env: Environment) extends kale.Rewrite {
   override val label = env.Rewrite
+}
+
+private[standard] class GroundApplyRewrite(implicit env: Environment) extends Named("ApplyRewrite") with FunctionLabel2 {
+  override def f(_1: Term, _2: Term): Option[Term] =
+    if (_2.isGround) {
+      Some(env.rewrite(_1, _2))
+    } else {
+      None
+    }
+}
+
+private[standard] class OneResult(implicit penv: StandardEnvironment) extends Named("OneResult") with FunctionLabel1 {
+
+  import env._
+
+  override def f(_1: Term): Option[Term] =
+    if (_1 == Bottom) {
+      Some(Bottom)
+    } else {
+      (Or.asSet(_1).view collect {
+        case t@And.withNext(_, _) => t
+      }).headOption
+    }
+}
+
+class Compose2(val name: String, functionLabel2: Label2, functionLabel1: FunctionLabel1)(implicit val env: StandardEnvironment) extends FunctionLabel2 {
+  override def f(_1: Term, _2: Term): Option[Term] = {
+    Some(functionLabel1(functionLabel2(_1, _2)))
+  }
 }
 
 private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) extends {
@@ -317,6 +375,24 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
     }
   }
 
+  def onlyNext(t: Term): Term = {
+    Or(Or.asSet(t) map {
+      case env.And.withNext(_, Some(n)) => n
+    })
+  }
+
+  def filterOutNext(t: Term): Term = {
+    Or(Or.asSet(t) map {
+      case env.And.withNext(t, _) => t
+    })
+  }
+
+  def nextIsNow(t: Term): Term = {
+    Or(Or.asSet(t) map {
+      case env.And.withNext(t, Some(Next(n))) => And(t, n)
+    })
+  }
+
   object withNext {
     def apply(t: Term, next: Term): Term = {
       assert(next.label == Next)
@@ -334,12 +410,6 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
       case next if t.label == Next =>
         Some(Top, Some(next))
       case _ => Some(t, None)
-    }
-
-    def filterOurNext(t: Term): Term = {
-      Or(Or.asSet(t) map {
-        case env.And.withNext(t, _) => t
-      })
     }
   }
 
@@ -563,4 +633,3 @@ case class Name(str: String) extends kale.Name
 private[standard] class BindMatchLabel(implicit override val env: Environment) extends Named("BindMatch") with Label2 {
   def apply(v: Term, p: Term) = FreeNode2(this, v.asInstanceOf[Variable], p)
 }
-

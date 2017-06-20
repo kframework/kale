@@ -20,6 +20,8 @@ class FooTest extends FreeSpec{
       override def SMTName(l: Label): String = ???
 
       override def isZ3Builtin(l: Label): Boolean = ???
+
+      override def rewrite(rule: Term, obj: Term): Term = ???
     }
 
     println(env.isInstanceOf[importINT])

@@ -188,7 +188,7 @@ class ImpSpec extends FreeSpec {
 
     val term = T(k('foo), state(varBinding('foo, 5)))
 
-    println(rewrite.searchStep(term))
+    println(IMP.rewrite.searchStep(term))
 
     //    println(TCell(kCell(KSEQ.unit), stateCell(emptyState)))
   }

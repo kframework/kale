@@ -24,9 +24,9 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
 
   override def apply(left: Term, right: Term): Term = {
     val res = super.apply(left, right)
-    assert(env.Or.asSet(res).forall({
-      case env.And.withNext(_, Some(_)) => true
-    }))
+//    assert(env.Or.asSet(res).forall({
+//      case env.And.withNext(_, Some(_)) => true
+//    }))
     res
   }
 
@@ -180,38 +180,58 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
   import standard._
 
   def TermPrettyWrapper(solver: Apply)(t: Term, a: PrettyWrapperHolder) = {
-    Or(Or.asSet(solver(t, a.content)) map {
-      case And.withNext(p, Some(Next(n))) => And.withNext(p, Next(a.copy(a._1, n , a._3)))
-      case Bottom => Bottom
-    })
+    t match {
+      case v: Variable if v.sort == Sort("WhiteSpace") => VarLeft(solver)(v, a)
+      case _ =>
+        Or(Or.asSet(solver(t, a.content)) map {
+          case And.withNext(p, Some(Next(n))) => And.withNext(p, Next(a.copy(a._1, n, a._3)))
+          case Bottom => Bottom
+        })
+    }
+
   }
 
   def PrettyWrapperTerm(solver: Apply)(a: PrettyWrapperHolder, t: Term) = {
-    Bottom
+    if (t.isGround)
+      Bottom
+    else
+      And.withNext(Equality(a, t), Next(a))
   }
 
   def PrettyWrapperPrettyWrapper(solver: Apply)(a: PrettyWrapperHolder, b: PrettyWrapperHolder) = {
     FreeNode3FreeNode3(solver)(a, b)
   }
 
-  override def processingFunctions: ProcessingFunctions =
+  val strategyProcessing = {
+    import STRATEGY._
     definePartialFunction({
-      case (PrettyWrapper, PrettyWrapper) => PrettyWrapperPrettyWrapper _
-      case (term, PrettyWrapper) => TermPrettyWrapper _
-      case (PrettyWrapper, term) => PrettyWrapperTerm _
-      case (`Rewrite`, _) => RewriteMatcher _
-      case (`BindMatch`, _) => BindMatchMatcher _
-      case (_, `Not`) => OneIsFormula _
-      case (`Not`, _) => OneIsFormula _
-      case (`And`, _) => AndTerm _
-      case (_, `And`) => TermAnd _
-      case (`Or`, _) => OrTerm _
-      case (_, `Or`) => TermOr _
-      case (`Variable`, _) => VarLeft _
-      case (_, `Variable`) => VarRight _
-      case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
-      case (capp: PatternContextApplicationLabel, _) => new PatternContextMatcher()(env)
+      case (`orElse`, _) => strategy.orElseTerm _
+      case (`unappliedFunctionReference`, _) => strategy.functionReferenceTerm _
+      case (`compose`, _) => strategy.composeTerm _
+      case (`repeat`, _) => strategy.repeatTerm _
+      case (`fixpoint`, _) => strategy.fixpointTerm _
     })
+  }
+
+  override def processingFunctions: ProcessingFunctions =
+    strategyProcessing.orElse(
+      definePartialFunction({
+        case (`Rewrite`, _) => RewriteMatcher _
+        case (PrettyWrapper, PrettyWrapper) => PrettyWrapperPrettyWrapper _
+        case (term, PrettyWrapper) => TermPrettyWrapper _
+        case (PrettyWrapper, term) => PrettyWrapperTerm _
+        case (`BindMatch`, _) => BindMatchMatcher _
+        case (_, `Not`) => OneIsFormula _
+        case (`Not`, _) => OneIsFormula _
+        case (`And`, _) => AndTerm _
+        case (_, `And`) => TermAnd _
+        case (`Or`, _) => OrTerm _
+        case (_, `Or`) => TermOr _
+        case (`Variable`, _) => VarLeft _
+        case (_, `Variable`) => VarRight _
+        case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
+        case (capp: PatternContextApplicationLabel, _) => new PatternContextMatcher()(env)
+      }))
       .orElse(freeLabelProcessing)
       .orElse(functionDefinedByRewritingProcessing)
       .orElse(definePartialFunction({

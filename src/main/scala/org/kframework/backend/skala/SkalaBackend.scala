@@ -86,7 +86,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
 
   def setFunctionRules(functionRules: Map[Label, Set[Rewrite]]): Unit = {
     env.labels.collect({
-      case l: FunctionDefinedByRewriting => l.setRules(functionRules.getOrElse(l, Set[Rewrite]()))(x => rewriterGenerator(x))
+      case l: FunctionDefinedByRewriting => l.setRules(env.Or(functionRules.getOrElse(l, Set[Rewrite]())))
     })
   }
 
@@ -191,7 +191,6 @@ case class IsSort(s: kore.Sort, m: kore.Module, implicit val d: kore.Definition)
       }
       else
         Some(env.toBoolean(false))
-
     }
   }
 }

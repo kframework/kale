@@ -11,10 +11,18 @@ object StandardEnvironment {
   def apply(): StandardEnvironment = new StandardEnvironment {}
 }
 
-trait StandardEnvironment extends DNFEnvironment with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with importPrettyWrapper {
+trait StandardEnvironment extends DNFEnvironment with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with importPrettyWrapper with strategy.importSTRATEGY {
   val Hole = Variable("☐", Sort.K)
 
   val BindMatch = new BindMatchLabel()
+
+  val Match = new MatchLabel()
+
+  val ApplyRewrite = new GroundApplyRewrite()
+
+  val OneResult = new OneResult()
+
+  val ApplySimpleRewrite = new Compose2("ApplySimpleRewrite", ApplyRewrite, OneResult)
 
   val AnywhereContext = AnywhereContextApplicationLabel()
 
@@ -41,4 +49,13 @@ trait StandardEnvironment extends DNFEnvironment with importBOOLEAN with importI
   override def SMTName(l: Label): String = ???
 
   override def isZ3Builtin(l: Label): Boolean = ???
+
+  // HELPERS:
+
+  def rewrite(rule: Term, obj: Term): Term = {
+    Or(Or.asSet(unify(rule, obj)) map {
+      case And.withNext(_, Some(Next(t))) => t
+      case Bottom => Bottom
+    })
+  }
 }

@@ -10,6 +10,8 @@ case class BOOLEAN()(implicit penv: Environment) extends Module("BOOLEAN") {
 
   val not = PrimitiveFunction1[Boolean]("notBool_", Boolean, x => !x)
   val and = PrimitiveFunction2[Boolean]("_andBool_", Boolean, (x, y) => x && y)
+  val True = Boolean(true)
+  val False = Boolean(false)
 
   override val all: Set[Label] = Set(Boolean, not)
 }

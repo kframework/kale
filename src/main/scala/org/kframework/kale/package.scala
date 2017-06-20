@@ -1,6 +1,6 @@
 package org.kframework
 
-import org.kframework.kale.standard.SimpleRewrite
+import org.kframework.kale.standard.{SimpleRewrite, StandardEnvironment}
 import org.kframework.kale.transformer.GenUnary.Apply
 import org.kframework.kale.transformer.{GenUnary, Unary}
 import org.kframework.kale.transformer.Unary.ProcessingFunction
@@ -30,6 +30,10 @@ package object kale {
 
     // if (t == subterm) true else t.children.exists(_.contains(subterm))
     def containsInConstructor(subterm: Term): Boolean = kale.containsInConstructor(t, subterm)
+
+    def rewrite(obj: Term): Term = t.label.env.rewrite(t, obj)
+
+    def unify(obj: Term): Term = t.label.env.unify(t, obj)
   }
 
   implicit class StaticRichAssocLabel(label: AssocLabel) {
