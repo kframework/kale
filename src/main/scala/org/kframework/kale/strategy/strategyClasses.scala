@@ -2,14 +2,12 @@ package org.kframework.kale.strategy
 
 import org.kframework.kale.builtin.Module
 import org.kframework.kale.pretty.PrettyWrapperHolder
-import org.kframework.kale.standard.{SingleSortedMatcher, StandardEnvironment}
+import org.kframework.kale.standard.{Macro1, SingleSortedMatcher, StandardEnvironment}
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.Named
-import org.kframework.kale.{Environment, FreeNode1, FreeNode2, FunctionLabel1, Label, Label1, Label2, Node1, Node2, Term, Variable, standard}
+import org.kframework.kale.{Environment, FreeNode1, FreeNode2, FunctionLabel1, Label, Label1, Label2, Node1, Node2, Term, Variable, mapBU, standard}
 
 case class STRATEGY()(implicit penv: StandardEnvironment) extends Module("STRATEGY") {
-
-  import penv._
 
   val orElse = new Named("orElse") with Label2 {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)

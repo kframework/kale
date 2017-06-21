@@ -18,7 +18,7 @@ package object strategy {
     }
   }
 
-  def composeTerm(solver: SingleSortedMatcher)(composed: Term, obj: Term) = {
+  def composeTerm(solver: SingleSortedMatcher)(composed: Term, obj: Term): Term = {
     import solver.env._
     import STRATEGY._
     val compose(f, g) = composed
@@ -29,7 +29,7 @@ package object strategy {
     matchF
   }
 
-  def repeatTerm(solver: SingleSortedMatcher)(fp: Term, obj: Term) = {
+  def repeatTerm(solver: SingleSortedMatcher)(fp: Term, obj: Term): Term = {
     import solver.env._
     import STRATEGY._
     val repeat(f) = fp
@@ -45,7 +45,7 @@ package object strategy {
     }
   }
 
-  def fixpointTerm(solver: SingleSortedMatcher)(fp: Term, obj: Term) = {
+  def fixpointTerm(solver: SingleSortedMatcher)(fp: Term, obj: Term): Term = {
     import solver.env._
     import STRATEGY._
     val fixpoint(f) = fp

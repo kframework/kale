@@ -93,7 +93,6 @@ case class FunctionDefinedByRewritingLabel4(name: String)(implicit val env: Stan
 }
 
 case class Macro1(name: String, rw: Term)(implicit val env: StandardEnvironment) extends Label1 {
-
   import env._
 
   def apply(_1: Term): Term = Equality.binding(Hole, _1)(rw)

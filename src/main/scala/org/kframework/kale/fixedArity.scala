@@ -164,11 +164,6 @@ trait Node2 extends Node with Product2[Term, Term] {
     assert(children.size == 2)
     copy(children.head, children(1))
   }
-
-  override def equals(obj: Any): Boolean = obj match {
-    case that: Node2 => that.label == label && that._1 == this._1 && that._2 == this._2
-    case _ => false
-  }
 }
 
 trait Node3 extends Node with Product3[Term, Term, Term] {
