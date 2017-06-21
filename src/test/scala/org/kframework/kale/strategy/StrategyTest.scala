@@ -15,25 +15,38 @@ class StrategyTest extends FreeSpec with TestSetup {
     "else" in {
       assert(orElse(a, Y).unify(b) === And(Next(b), Equality(Y, b)))
     }
+    "mixed" in {
+      assert(orElse(Rewrite(a, c), Rewrite(b, d)).unify(Or(a, b)) === Or(Next(c), Next(d)))
+    }
   }
 
   "nextIsNow" in {
     assert(nextIsNow(And(Next(a), Equality(X, a))) === And(a, Equality(X, a)))
   }
 
-  "functionReference" in {
-    assert(functionReference(Rewrite(a, Hole)).unify(b).unify(a) === Next(b))
-  }
-
   "compose" in {
     assert(compose(Rewrite(b, c), Rewrite(a, b)).unify(a) === Next(c))
   }
 
-  "repeat" in {
-    assert(repeat(Or(Rewrite(a, b), Rewrite(b, c))).unify(a) === Next(c))
+  "repeat" - {
+    val repeatRule = repeat(Or(Rewrite(a, b), Rewrite(b, c)))
+    "simple" in {
+      assert(repeatRule.unify(a) === Next(c))
+    }
+    "disjunction" in {
+      assert(repeatRule.unify(Or(a, d)) === Or(Next(c), Next(d)))
+    }
   }
 
-  "fixpoint" in {
-    assert(fixpoint(Or(Rewrite(a, b), Rewrite(b, b))).unify(a) === Next(b))
+  "fixpoint" - {
+    val fp = fixpoint(Or(Rewrite(a, b), Rewrite(b, b)))
+    "simple" in {
+      assert(fp.unify(a) === Next(b))
+      assert(fp.unify(b) === Next(b))
+      assert(fp.unify(c) === Bottom)
+    }
+    "disjunction" in {
+      assert(fp.unify(Or(a, d)) === Next(b))
+    }
   }
 }

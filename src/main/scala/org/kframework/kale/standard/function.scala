@@ -29,11 +29,14 @@ case class NotLabel(implicit override val env: Environment) extends Named("¬") 
   }
 
   def f(_1: Term): Option[Term] = _1 match {
-    case `Top` => Some(Bottom)
-    case `Bottom` => Some(Top)
-//    case Or.set(terms) if terms.size > 1 => Some(And(terms map (Not(_))))
-//    case And.set(terms) if terms.size > 1 => Some(Or(terms map (Not(_))))
-//    case Equality(v: Variable, t) if t.isGround => Some(Bottom) // TODO: not sure about this
+    case `Top` =>
+      Some(Bottom)
+    case `Bottom` =>
+      Some(Top)
+    case Or.set(terms) if terms.size > 1 =>
+      Some(And(terms map (Not(_))))
+    case And.set(terms) if terms.size > 1 =>
+      Some(Or(terms map (Not(_))))
     case _ => None
   }
 }
@@ -89,11 +92,16 @@ case class FunctionDefinedByRewritingLabel4(name: String)(implicit val env: Stan
   def f(_1: Term, _2: Term, _3: Term, _4: Term): Option[Term] = tryToApply(FreeNode4(this, _1, _2, _3, _4))
 }
 
-case class Macro1(name: String, rw: Term)(implicit val env: StandardEnvironment) extends FunctionLabel1 {
+case class Macro1(name: String, rw: Term)(implicit val env: StandardEnvironment) extends Label1 {
 
   import env._
 
-  def f(_1: Term): Option[Term] = {
-    Some(Equality.binding(Variable("A"), _1)(rw))
-  }
+  def apply(_1: Term): Term = Equality.binding(Hole, _1)(rw)
+}
+
+case class Macro2(name: String, rw: Term)(implicit val env: StandardEnvironment) extends Label2 {
+
+  import env._
+
+  def apply(_1: Term, _2: Term): Term = And.substitution(Map(Hole1 -> _1, Hole2 -> _2))(rw)
 }

@@ -14,6 +14,7 @@ trait DNFEnvironment extends Environment {
   override val Variable: StandardVariableLabel = standard.StandardVariableLabel()
   override val Equality: EqualityLabel = standard.StandardEqualityLabel()
 
+  override val Exists: ExistsLabel = standard.SimpleExistsLabel()
   override val Next: NextLabel = standard.SimpleNextLabel()
 
   override val Rewrite = StandardRewriteLabel()

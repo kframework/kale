@@ -95,9 +95,9 @@ class IMPSpec extends FreeSpec {
   val unifier = new MultiSortedUnifier(env)
 
   def unify(a: Term, b: Term) = {
-    Or(Or.asSet(unifier(a, b)) map {
+    unifier(a, b).asOr map {
       x => And(And.asSet(x).filter(_.label != Next))
-    })
+    }
   }
 
 

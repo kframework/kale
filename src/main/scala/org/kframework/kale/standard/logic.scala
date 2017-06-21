@@ -7,6 +7,7 @@ import org.kframework.kale.context.Context1ApplicationLabel
 import org.kframework.kale.util.{NameFromObject, Named, unreachable}
 import org.kframework.kore.implementation.DefaultBuilders
 import org.kframework.kore
+import org.kframework.kore.Pattern
 
 import scala.collection.{Iterable, Seq}
 
@@ -61,6 +62,8 @@ private[standard] case class TopInstance(implicit eenv: Environment) extends Tru
   override def toString: String = "⊤"
 
   override def apply(t: Term): Term = t
+
+  override def remove(v: Variable): Substitution = this
 }
 
 private[standard] case class BottomInstance(implicit eenv: Environment) extends Truth(false) with kale.Bottom {
@@ -270,10 +273,18 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
     * not-normalizing
     */
   def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = {
-    others.find(_.label == Next).map({
-      next =>
-        And.withNext(substitutionAndTerms(pureSubstitution, others.filterNot(_.label == Next)), next)
-    }).getOrElse(substitutionAndTerms(pureSubstitution, others))
+    val negatedANot = others exists {
+      case Not(n) => pureSubstitution.contains(n)
+      case _ => false
+    }
+
+    if (negatedANot)
+      Bottom
+    else
+      others.find(_.label == Next).map({
+        next =>
+          And.withNext(substitutionAndTerms(pureSubstitution, others.filterNot(_.label == Next)), next)
+      }).getOrElse(substitutionAndTerms(pureSubstitution, others))
   }
 
 
@@ -376,21 +387,21 @@ private[standard] case class DNFAndLabel(implicit val env: DNFEnvironment) exten
   }
 
   def onlyNext(t: Term): Term = {
-    Or(Or.asSet(t) map {
+    t.asOr map {
       case env.And.withNext(_, Some(n)) => n
-    })
+    }
   }
 
   def filterOutNext(t: Term): Term = {
-    Or(Or.asSet(t) map {
+    t.asOr map {
       case env.And.withNext(t, _) => t
-    })
+    }
   }
 
-  def nextIsNow(t: Term): Term = {
-    Or(Or.asSet(t) map {
+  def nextIsNow(t: Term): Term = strongBottomize(t) {
+    t.asOr map {
       case env.And.withNext(t, Some(Next(n))) => And(t, n)
-    })
+    }
   }
 
   object withNext {
@@ -524,6 +535,11 @@ final case class AndWithNext(conjunction: Term, nextTerm: Term)(implicit env: DN
   override def _1: Term = conjunction
 
   override def _2: Term = nextTerm
+
+  override def equals(obj: Any): Boolean = obj match {
+    case that: AndWithNext => that.conjunction == this.conjunction && that.nextTerm == this.nextTerm
+    case _ => false
+  }
 }
 
 
@@ -591,6 +607,18 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
   override def asSet: Set[Term] = m.map({ case (k, v) => Equality.binding(k, v) }).toSet
 
   override val boundVariables: Set[Variable] = m.keySet
+
+  override def remove(v: Variable): Substitution = {
+    val newBindings = m.filterKeys(_ != v)
+
+    val res = if (newBindings.size == 1)
+      Equality.binding(newBindings.head._1, newBindings.head._2)
+    else
+      new MultipleBindings(newBindings)
+
+    assert(!res.contains(v))
+    res
+  }
 }
 
 private[standard] case class DNFOrLabel(implicit override val env: Environment) extends Named("∨") with OrLabel {
@@ -626,6 +654,34 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
   }
 
   override def asSet: Set[Term] = terms
+}
+
+private[standard] case class SimpleExistsLabel(implicit val e: DNFEnvironment) extends Named("∃") with ExistsLabel {
+
+  import env._
+
+  // 1. Bottom ... Bottom
+  // 2. X -> concrete ... remove binding
+  // 3. X -> symbolic ... leave in place
+  // 4. no X -> leave in place
+  override def apply(_1: Term, _2: Term): Term = {
+    val v = _1.asInstanceOf[Variable]
+    _2 match {
+      case Bottom => Bottom
+      case And.substitutionAndTerms(s, terms) if s.get(v).exists(_.isGround) =>
+        And.substitutionAndTerms(s.remove(v), terms)
+      case _ => SimpleExists(v, _2)
+    }
+  }
+}
+
+case class SimpleExists(v: Variable, p: Term)(implicit val env: Environment) extends Node2 with Exists {
+  val label = env.Exists
+  override val isPredicate = true
+
+  override def _1: Term = v
+
+  override def _2: Term = p
 }
 
 case class Name(str: String) extends kale.Name

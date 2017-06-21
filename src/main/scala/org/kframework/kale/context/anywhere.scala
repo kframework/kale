@@ -53,7 +53,7 @@ object anywhere {
           val (rightContextVar, rightContextRedex) = AnywhereContext.unapply(term).get
           solutionFor(term.children.toSeq, (_: Int, tt: Term) => AnywhereContext(rightContextVar, tt), Set(0))
         case `Or` => {
-          Or(Or.asSet(term) map (solver(contextApplication, _)))
+          term.asOr map (solver(contextApplication, _))
         }
         case `And` => {
           ???

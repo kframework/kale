@@ -42,15 +42,9 @@ trait MatcherOrUnifier extends transformer.Binary.Apply {
     And(solution, b.predicates)
   }
 
-  def OrTerm(solver: Apply)(a: Or, b: Term) = {
-    val sol = a.asSet map (solver(_, b))
-    Or(sol)
-  }
+  def OrTerm(solver: Apply)(a: Or, b: Term) = a map (solver(_, b))
 
-  def TermOr(solver: Apply)(a: Term, b: Or) = {
-    val sol = b.asSet map (solver(a, _))
-    Or(sol)
-  }
+  def TermOr(solver: Apply)(a: Term, b: Or) = b map (solver(a, _))
 
   def NoMatch(solver: Apply)(a: Term, b: Term): Term = Bottom
 

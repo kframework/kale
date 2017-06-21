@@ -3,19 +3,19 @@ package org.kframework.kale
 import org.kframework.kale.standard.SingleSortedMatcher
 
 package object strategy {
+
+  // only works for ground obj
   def orElseTerm(solver: SingleSortedMatcher)(orElse: Term, obj: Term): Term = {
     import solver.env._
-    val STRATEGY.orElse(pattern, theElse) = orElse
-    solver(pattern, obj) match {
-      case Bottom => unify(theElse, obj)
-      case other => other
-    }
-  }
+    val STRATEGY.orElse(theThen, theElse) = orElse
 
-  def functionReferenceTerm(solver: SingleSortedMatcher)(functionReference: Term, obj: Term) = {
-    import solver.env._
-    val STRATEGY.unappliedFunctionReference(v: Variable, inside) = functionReference
-    Equality.binding(v, obj)(inside)
+    obj.asOr map { t =>
+      val thenSol = unify(theThen, t)
+       thenSol match {
+        case Bottom => unify(theElse, t)
+        case other => other
+      }
+    }
   }
 
   def composeTerm(solver: SingleSortedMatcher)(composed: Term, obj: Term) = {
@@ -33,9 +33,15 @@ package object strategy {
     import solver.env._
     import STRATEGY._
     val repeat(f) = fp
-    solver(f, obj) match {
-      case Bottom => Next(obj)
-      case res => solver(fp, And.nextIsNow(res))
+    val someVar = Variable.freshVariable()
+    val sol = solver(orElse(f, someVar), obj)
+    sol.asOr map {
+      case And.withNext(p, Some(Next(t))) =>
+        if (p.contains(someVar)) {
+          Next(t)
+        } else {
+          solver(fp, t) // TODO: pass in the remaining predicates
+        }
     }
   }
 
@@ -44,6 +50,7 @@ package object strategy {
     import STRATEGY._
     val fixpoint(f) = fp
     solver(f, obj) match {
+      case Bottom => Bottom
       case Next(`obj`) => Next(obj)
       case res => solver(fp, And.nextIsNow(res))
     }

@@ -49,7 +49,7 @@ trait Name extends kore.Name {
   override def toString = str
 }
 
-trait Variable extends Leaf[(Name, Sort)] {
+trait Variable extends Leaf[(Name, Sort)] with kore.Variable {
   val label: VariableLabel
   val name: Name
   val sort: Sort
@@ -95,6 +95,7 @@ trait AndLabel extends AssocCommWithIdLabel with Z3Builtin {
   def asSubstitutionAndTerms(t: Term): (Substitution, Set[Term])
 
   def combine(label: Node)(tasks: MightBeSolved*): Term
+
   def combine(label: NodeLabel)(tasks: MightBeSolved*): Term
 }
 
@@ -111,12 +112,18 @@ trait EqualityLabel extends Label2 with Z3Builtin {
 
 trait NotLabel extends Label1 with Z3Builtin
 
+trait ExistsLabel extends Label2
+
+trait Exists extends kore.Exists
+
 trait Equals extends kore.Equals with Node2 with BinaryInfix {
   override lazy val isPredicate: Boolean = true
 }
 
 trait Binding extends Equals with Substitution {
   override val boundVariables: Set[Variable] = Set(_1.asInstanceOf[Variable])
+
+  override def remove(v: Variable): Substitution = if (_1 == v) env.Top else this
 }
 
 trait And extends kore.And with AssocComm {
@@ -127,7 +134,11 @@ trait And extends kore.And with AssocComm {
   override lazy val isPredicate: Boolean = nonPredicates.isEmpty
 }
 
-trait Or extends kore.Or with AssocComm
+trait Or extends kore.Or with AssocComm {
+  val label: OrLabel
+
+  def map(f: Term => Term): Term = label.map(f)(this)
+}
 
 trait Rewrite extends kore.Rewrite with Node2 with BinaryInfix {
   override lazy val isPredicate: Boolean = ???

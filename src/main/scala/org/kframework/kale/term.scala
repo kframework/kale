@@ -2,7 +2,7 @@ package org.kframework.kale
 
 import io.circe.{Decoder, Encoder, HCursor}
 import org.kframework.kale.util.HasAtt
-import org.kframework.kore
+import org.kframework.{kale, kore}
 import org.kframework.kore.implementation.DefaultBuilders
 import io.circe.syntax._
 
@@ -38,6 +38,8 @@ trait Term extends kore.Pattern with HasAtt {
   lazy val sort: Sort = label.env.sort(label, this.children.toSeq)
 
   def children: Iterable[Term]
+
+  def map0(f: Term => Term): Term
 
   def canEqual(that: Any): Boolean = that match {
     case t: Term => t.label == this.label
@@ -112,7 +114,6 @@ trait LeafLabel[T] extends (T => Leaf[T]) with Label {
     case t: Leaf[T] if t.label == this => Some(t.data)
     case _ => None
   }
-
   // for KORE
   def interpret(str: String): Term = this (internalInterpret(str))
 
@@ -121,6 +122,8 @@ trait LeafLabel[T] extends (T => Leaf[T]) with Label {
 
 trait Leaf[T] extends Term {
   def children: Iterable[Term] = Iterable.empty
+
+  def map0(f: Term => Term): Term = this
 
   def updateAt(i: Int)(t: Term): Term = throw new IndexOutOfBoundsException("Leaves have no children. Trying to update index _" + i)
 

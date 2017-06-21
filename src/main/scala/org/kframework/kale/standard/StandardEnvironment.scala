@@ -1,5 +1,6 @@
 package org.kframework.kale.standard
 
+import com.typesafe.scalalogging.Logger
 import org.kframework.kale
 import org.kframework.kale.builtin._
 import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
@@ -13,6 +14,9 @@ object StandardEnvironment {
 
 trait StandardEnvironment extends DNFEnvironment with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with importPrettyWrapper with strategy.importSTRATEGY {
   val Hole = Variable("☐", Sort.K)
+  val Hole1 = Variable("☐1", Sort.K)
+  val Hole2 = Variable("☐2", Sort.K)
+  val Hole3 = Variable("☐3", Sort.K)
 
   val BindMatch = new BindMatchLabel()
 
@@ -53,10 +57,17 @@ trait StandardEnvironment extends DNFEnvironment with importBOOLEAN with importI
   // HELPERS:
 
   def rewrite(rule: Term, obj: Term): Term = {
-    Or(Or.asSet(unify(rule, obj)) map {
-      case And.withNext(_, Some(Next(t))) => t
+    unify(rule, obj).asOr map {
+      case And.withNext(p, Some(Next(t))) =>
+        if (!p.exists(_.label == Not)) {
+          t
+        } else {
+          log.warn("Rewriter rule didn't apply because it's not clear if we can prove a Not");
+          Bottom
+        }
+
       case Bottom => Bottom
-    })
+    }
   }
 
   def log = Logger("EnvironmentLogger" + this.hashCode())

@@ -160,21 +160,21 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
   def BindMatchMatcher(solver: Apply)(a: Node2, b: Term): Term = {
     val v = a._1.asInstanceOf[Variable]
     val p = a._2
-    Or(Or.asSet(b) map { bx =>
+    b.asOr map { bx =>
       val sol = solver(p, bx)
       And(Equality(v, bx), sol)
-    })
+    }
   }
 
   def RewriteMatcher(solver: SingleSortedMatcher)(a: SimpleRewrite, b: Term): Term = {
     val env = solver.env
     import env._
     val m = solver(a._1, b)
-    Or(Or.asSet(m) map {
+    m.asOr map {
       case And.withNext(nonNext@And.substitutionAndTerms(subs, terms), _) =>
         val s = substitutionMaker(subs)
         And(Next(s(a._2)), nonNext)
-    })
+    }
   }
 
   import standard._
@@ -183,10 +183,10 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
     t match {
       case v: Variable if v.sort == Sort("WhiteSpace") => VarLeft(solver)(v, a)
       case _ =>
-        Or(Or.asSet(solver(t, a.content)) map {
+        solver(t, a.content).asOr map {
           case And.withNext(p, Some(Next(n))) => And.withNext(p, Next(a.copy(a._1, n, a._3)))
           case Bottom => Bottom
-        })
+        }
     }
 
   }
@@ -206,7 +206,6 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
     import STRATEGY._
     definePartialFunction({
       case (`orElse`, _) => strategy.orElseTerm _
-      case (`unappliedFunctionReference`, _) => strategy.functionReferenceTerm _
       case (`compose`, _) => strategy.composeTerm _
       case (`repeat`, _) => strategy.repeatTerm _
       case (`fixpoint`, _) => strategy.fixpointTerm _
@@ -218,7 +217,6 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
       definePartialFunction({
         case (`Rewrite`, _) => RewriteMatcher _
         case (PrettyWrapper, PrettyWrapper) => PrettyWrapperPrettyWrapper _
-        case (term, PrettyWrapper) => TermPrettyWrapper _
         case (PrettyWrapper, term) => PrettyWrapperTerm _
         case (`BindMatch`, _) => BindMatchMatcher _
         case (_, `Not`) => OneIsFormula _
@@ -227,18 +225,19 @@ class SingleSortedMatcher()(implicit val env: StandardEnvironment) extends Match
         case (_, `And`) => TermAnd _
         case (`Or`, _) => OrTerm _
         case (_, `Or`) => TermOr _
-        case (`Variable`, _) => VarLeft _
-        case (_, `Variable`) => VarRight _
         case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
         case (capp: PatternContextApplicationLabel, _) => new PatternContextMatcher()(env)
       }))
       .orElse(freeLabelProcessing)
       .orElse(functionDefinedByRewritingProcessing)
       .orElse(definePartialFunction({
+        case (term, PrettyWrapper) => TermPrettyWrapper _
         case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants _
         case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm _
         case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm _
         case (left, _: AssocWithIdLabel) if !left.isInstanceOf[Variable] => TermAssocWithId _
+        case (`Variable`, _) => VarLeft _
+        case (_, `Variable`) => VarRight _
       }))
       .orElse(super.processingFunctions)
 }

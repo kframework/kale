@@ -11,9 +11,15 @@ package object kale {
 
   implicit def PFtoTotal(f: PartialFunction[Term, Boolean]): (Term => Boolean) = x => f.lift(x).getOrElse(false)
 
-  implicit class RichTerm(private val t: Term) extends AnyVal {
-    def map0(f: Term => Term): Term = kale.map0(f)(t)
+  class ExplicitOr(private val t: Term) extends AnyVal {
+    def map(f: Term => Term): Term = (t.label.env.Or map f) (t)
+  }
 
+  class ExplicitAnd(private val t: Term) extends AnyVal {
+    def map(f: Term => Term): Term = (t.label.env.And map f) (t)
+  }
+
+  implicit class RichTerm(private val t: Term) extends AnyVal {
     def mapBU(f: Term => Term): Term = kale.mapBU(f)(t)
 
     def mapTD(f: Term => Term): Term = kale.mapTD(f)(t)
@@ -34,6 +40,10 @@ package object kale {
     def rewrite(obj: Term): Term = t.label.env.rewrite(t, obj)
 
     def unify(obj: Term): Term = t.label.env.unify(t, obj)
+
+
+    def asOr = new ExplicitOr(t)
+    def asAnd = new ExplicitAnd(t)
   }
 
   implicit class StaticRichAssocLabel(label: AssocLabel) {
@@ -71,7 +81,7 @@ package object kale {
   }
 
   case class map0(f: Term => Term) extends (Term => Term) {
-    override def apply(t: Term): Term = t.copy(t.children map f toSeq)
+    override def apply(t: Term): Term = t map0 f
   }
 
 

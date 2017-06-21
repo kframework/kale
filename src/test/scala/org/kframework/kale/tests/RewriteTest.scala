@@ -37,9 +37,9 @@ class RewriteTest extends FreeSpec with TestSetup {
     Rewrite(el ~~ 3 ~~ X ~~ Y ~~ 6, el ~~ X ~~ 0 ~~ Y)
   ))
 
-  def justNext(t: Term) = Or(Or.asSet(t) map {
+  def justNext(t: Term) = t.asOr map {
     case And.withNext(_, Some(Next(next))) => next
-  })
+  }
 
   "inner rewrite" - {
     "simple" in {

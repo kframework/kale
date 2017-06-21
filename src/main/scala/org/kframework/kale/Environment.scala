@@ -86,5 +86,6 @@ trait KORELabels {
   val Truth: TruthLabel
   val Not: NotLabel
   val Next: NextLabel
+  val Exists: ExistsLabel
 }
 

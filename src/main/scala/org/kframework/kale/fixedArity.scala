@@ -96,6 +96,8 @@ trait Node0 extends Node with Application {
 
   def innerUpdateAt(i: Int, t: Term): Term = throw new AssertionError("unreachable code")
 
+  def map0(f: Term => Term): Term = this.copy()
+
   override def children: Iterable[Term] = Iterable.empty
 
   def copy(): Term = label().updatePostProcess(this)
@@ -117,11 +119,23 @@ trait Node1 extends Node with Product1[Term] {
 
   override def children: Iterable[Term] = Iterable(_1)
 
-  def copy(_1: Term): Term = label(_1).updatePostProcess(this)
+  def map0(f: Term => Term): Term = this.copy(f(_1))
+
+  def copy(_1: Term): Term = {
+    if (_1 == this._1)
+      this
+    else
+      label(_1).updatePostProcess(this)
+  }
 
   override def copy(children: Seq[Term]): Term = {
     assert(children.size == 1)
     copy(children.head)
+  }
+
+  override def equals(obj: Any): Boolean = obj match {
+    case that: Node1 => that.label == label && that._1 == this._1
+    case _ => false
   }
 }
 
@@ -137,11 +151,23 @@ trait Node2 extends Node with Product2[Term, Term] {
 
   override def children: Iterable[Term] = Iterable(_1, _2)
 
-  def copy(_1: Term, _2: Term): Term = label(_1, _2).updatePostProcess(this)
+  def map0(f: Term => Term): Term = this.copy(f(_1), f(_2))
+
+  def copy(_1: Term, _2: Term): Term = {
+    if (_1 == this._1 && _2 == this._2) {
+      this
+    } else
+      label(_1, _2).updatePostProcess(this)
+  }
 
   override def copy(children: Seq[Term]): Term = {
     assert(children.size == 2)
     copy(children.head, children(1))
+  }
+
+  override def equals(obj: Any): Boolean = obj match {
+    case that: Node2 => that.label == label && that._1 == this._1 && that._2 == this._2
+    case _ => false
   }
 }
 
@@ -155,6 +181,8 @@ trait Node3 extends Node with Product3[Term, Term, Term] {
     case 1 => this.copy(_1, t, _3)
     case 2 => this.copy(_1, _2, t)
   }
+
+  def map0(f: Term => Term): Term = this.copy(f(_1), f(_2), f(_3))
 
   def copy(_1: Term, _2: Term, _3: Term): Term = label(_1, _2, _3).updatePostProcess(this)
 
@@ -178,6 +206,8 @@ trait Node4 extends Node with Product4[Term, Term, Term, Term] {
     case 3 => this.copy(_1, _2, _3, t)
   }
 
+  def map0(f: Term => Term): Term = this.copy(f(_1), f(_2), f(_3), f(_4))
+
   def copy(_1: Term, _2: Term, _3: Term, _4: Term): Term = label(_1, _2, _3, _4).updatePostProcess(this)
 
   override def copy(children: Seq[Term]): Term = {
@@ -192,6 +222,8 @@ trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
   val label: Label5
 
   val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround
+
+  def map0(f: Term => Term): Term = this.copy(f(_1), f(_2), f(_3), f(_4), f(_5))
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 0 => this.copy(t, _2, _3, _4, _5)
@@ -215,6 +247,8 @@ trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
   val label: Label6
 
   val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround && _6.isGround
+
+  def map0(f: Term => Term): Term = this.copy(f(_1), f(_2), f(_3), f(_4), f(_5), f(_6))
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 0 => this.copy(t, _2, _3, _4, _5, _6)
