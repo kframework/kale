@@ -58,4 +58,6 @@ trait StandardEnvironment extends DNFEnvironment with importBOOLEAN with importI
       case Bottom => Bottom
     })
   }
+
+  def log = Logger("EnvironmentLogger" + this.hashCode())
 }
