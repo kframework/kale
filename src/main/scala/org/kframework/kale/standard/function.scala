@@ -2,8 +2,28 @@ package org.kframework.kale.standard
 
 import org.kframework.kale
 import org.kframework.kale._
+import org.kframework.kale.transformer.Binary
+import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.{NameFromObject, Named}
 
+trait FunctionByRewritingMixin extends Mixin with Environment with standard.MatchingLogicMixin with HasMatcher {
+  case class FunctionDefinedByRewritingMatcher(solver: Apply) extends Binary.F({(a: Term, b: Term) => {
+    val l = a.label.asInstanceOf[FunctionDefinedByRewriting]
+    And(Next(b), And(a.children.zip(b.children).map({
+      case (ca, cb) => solver(ca, cb) match {
+        case And.withNext(p, _) => p
+      }
+    })))
+  }})
+
+  override protected def makeMatcher = Binary.definePartialFunction({
+    case (_: FunctionDefinedByRewritingLabel0, _: FunctionDefinedByRewritingLabel0) => FunctionDefinedByRewritingMatcher
+    case (_: FunctionDefinedByRewritingLabel1, _: FunctionDefinedByRewritingLabel1) => FunctionDefinedByRewritingMatcher
+    case (_: FunctionDefinedByRewritingLabel2, _: FunctionDefinedByRewritingLabel2) => FunctionDefinedByRewritingMatcher
+    case (_: FunctionDefinedByRewritingLabel3, _: FunctionDefinedByRewritingLabel3) => FunctionDefinedByRewritingMatcher
+    case (_: FunctionDefinedByRewritingLabel4, _: FunctionDefinedByRewritingLabel4) => FunctionDefinedByRewritingMatcher
+  }).orElse(super.makeMatcher)
+}
 
 class InvokeLabel(implicit val env: Environment) extends NameFromObject with Label1 {
   // the rewriter is initialized after the creation of the label to break the cycle when creating the rewriter for applying functions

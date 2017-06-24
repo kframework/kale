@@ -2,8 +2,9 @@ package org.kframework.backend.skala
 
 import org.kframework.backend.skala.backendImplicits._
 import org.kframework.kale._
-import org.kframework.kale.builtin.{GenericTokenLabel, MapLabel, SetLabel}
+import org.kframework.kale.builtin.{TOKEN, MapLabel, SetLabel}
 import org.kframework.kale.standard._
+import org.kframework.kale.transformer.Binary
 import org.kframework.kale.util.Named
 import org.kframework.kore
 import org.kframework.kore.extended.Backend
@@ -63,9 +64,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
     */
   val substitutionApplier = SubstitutionWithContext(_)
 
-  val unifier: MatcherOrUnifier = SingleSortedMatcher()
-
-  val rewriterGenerator = Rewriter(substitutionApplier, unifier)
+  val rewriterGenerator = Rewriter(substitutionApplier, env.unifier)
 
   /**
     * Following old Translation
@@ -255,9 +254,9 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
       * Declare All Sorts With Tokens as Token Labels
       */
 
-    val tokenLabels: Seq[GenericTokenLabel] = m.allSentences.flatMap({
+    val tokenLabels: Seq[TOKEN] = m.allSentences.flatMap({
       case kore.SortDeclaration(kore.Sort(s), attributes) if attributes.getSymbolValue(Encodings.token).isDefined =>
-        Some(GenericTokenLabel(Sort(s)))
+        Some(TOKEN(Sort(s)))
       case _ => None
     })
 
@@ -353,7 +352,7 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 
     val kSeq = env.AssocWithIdLabel("~>", emptyKSeqLabel())
 
-    val kConfigVar = GenericTokenLabel(Sort("KConfigVar@BASIC-K"))
+    val kConfigVar = TOKEN(Sort("KConfigVar@BASIC-K"))
 
     env
   }

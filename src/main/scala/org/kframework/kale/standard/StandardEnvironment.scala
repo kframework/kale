@@ -15,7 +15,7 @@ object StandardEnvironment {
   }
 }
 
-trait StandardEnvironment extends MatchingLogicMixin with FreeMixin with builtin.BooleanMixin with builtin.IntMixin with builtin.DoubleMixin with builtin.StringMixin with builtin.IdMixin with PrettyMixin with strategy.StrategyMixin with ACMixin {
+trait StandardEnvironment extends MatchingLogicMixin with FreeMixin with builtin.BooleanMixin with builtin.IntMixin with builtin.DoubleMixin with builtin.StringMixin with builtin.IdMixin with PrettyMixin with strategy.StrategyMixin with ACMixin with standard.FunctionByRewritingMixin with builtin.MapMixin {
   val Hole = Variable("☐", Sort.K)
   val Hole1 = Variable("☐1", Sort.K)
   val Hole2 = Variable("☐2", Sort.K)
@@ -37,7 +37,8 @@ trait StandardEnvironment extends MatchingLogicMixin with FreeMixin with builtin
 
   override lazy val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)(this)
 
-  override lazy val unifier = SingleSortedMatcher()(this)
+  override lazy val unifier = matcher
+  lazy val matcher = new SingleSortedMatcher(this.makeMatcher)
 
   def pretty(t: Term): String = t match {
     case PrettyWrapper(p, c, s) => p + pretty(c) + s

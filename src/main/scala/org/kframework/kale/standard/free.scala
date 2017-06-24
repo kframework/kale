@@ -39,7 +39,7 @@ trait FreeMixin extends kale.FreeMixin with HasMatcher with HasUnifier {
 
   case class NoMatch(solver: Apply) extends Binary.F({(a: Term, b: Term) => Bottom})
 
-  override def makeMatcher = Binary.definePartialFunction({
+  override protected def makeMatcher = Binary.definePartialFunction({
     case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 || env.sort(l1) != env.sort(l2) => NoMatch
     case (_: FreeLabel0, _: FreeLabel0) => FreeNode0FreeNode0
     case (_: FreeLabel1, _: FreeLabel1) => FreeNode1FreeNode1

@@ -9,11 +9,8 @@ import org.kframework.kale.transformer.Binary
 case class MatchNotSupporteredError(l: Term, r: Term, message: String = "") extends
   AssertionError("Trying to match " + l + " with " + r + " not supported yet. " + message)
 
-object SingleSortedMatcher {
-  def apply()(implicit env: StandardEnvironment) = new SingleSortedMatcher(env.makeMatcher)
-}
 
-class SingleSortedMatcher(input: Binary.ProcessingFunctions)(implicit val env: StandardEnvironment) extends MatcherOrUnifier {
+class SingleSortedMatcher(input: Binary.ProcessingFunctions)(implicit val env: StandardEnvironment) extends Binary.Apply {
 
   import Binary._
   import env._
@@ -25,71 +22,6 @@ class SingleSortedMatcher(input: Binary.ProcessingFunctions)(implicit val env: S
     //    }))
     res
   }
-
-  case class MapTerm(solver: Apply) extends Binary.F({ (a: Term, b: Term) =>
-    a.label match {
-      case mapLabel: MapLabel =>
-        val mapLabel.map(left, leftUnindexed) = a
-        val mapLabel.map(right, rightUnindexed) = b
-
-        assert(left.size + leftUnindexed.size > 1, "There is some bug in the Piece registration")
-
-        if (rightUnindexed.nonEmpty) {
-          throw MatchNotSupporteredError(a, b, "Var on the rhs.")
-        }
-        else if (left.nonEmpty && right.isEmpty && rightUnindexed.isEmpty) {
-          Bottom
-        }
-        else if (left.nonEmpty && right.nonEmpty && leftUnindexed.size <= 1 && rightUnindexed.isEmpty) {
-          val leftKeys = left.keys.toSet
-          val rightKeys = right.keys.toSet
-
-
-          if (!rightKeys.forall(_.isGround)) {
-            throw MatchNotSupporteredError(a, b)
-          }
-
-          if (!(leftKeys filter (_.isGround) forall rightKeys.contains)) {
-            Bottom
-          }
-          else if (leftKeys.size - (leftKeys & rightKeys).size <= 1) {
-
-            val commonKeys = leftKeys & rightKeys
-
-            val valueMatches = if (commonKeys.nonEmpty)
-              And(commonKeys map (k => solver(left(k), right(k))))
-            else
-              Top
-
-            val lookupByKeyVariableAndValueMatch = if (leftKeys.size - commonKeys.size == 1) {
-              val v = (leftKeys -- rightKeys).head
-              val rightValue = (rightKeys -- leftKeys).head
-
-              And(Equality(v, rightValue), left(v), right(rightValue))
-            } else {
-              Top
-            }
-
-            val freeLeftVariableEquality = if (leftUnindexed.size == 1) {
-              Equality(leftUnindexed.head, mapLabel((rightKeys -- leftKeys).map(right)))
-            } else {
-              Top
-            }
-
-            if (lookupByKeyVariableAndValueMatch != Top && freeLeftVariableEquality != Top) {
-              throw MatchNotSupporteredError(a, b)
-            }
-
-            And(valueMatches, lookupByKeyVariableAndValueMatch, freeLeftVariableEquality)
-          } else {
-            throw MatchNotSupporteredError(a, b, "Only supported matches with at most one differing (i.e., symbolic somehow) key and at most a variable (at the top level) on the rhs.")
-          }
-        }
-        else {
-          throw MatchNotSupporteredError(a, b, "Not yet implemented. Should eventually default to AC.")
-        }
-    }
-  })
 
   case class IfThenElseTerm(solver: Apply) extends Binary.F({ (a: Node3, b: Term) =>
     val c = solver(a._1, b)
@@ -123,28 +55,11 @@ class SingleSortedMatcher(input: Binary.ProcessingFunctions)(implicit val env: S
 
   import standard._
 
-  val strategyProcessing = {
-    import STRATEGY._
-    definePartialFunction({
-      case (`orElse`, _) => strategy.orElseTerm
-      case (`compose`, _) => strategy.composeTerm
-      case (`repeat`, _) => strategy.repeatTerm
-      case (`fixpoint`, _) => strategy.fixpointTerm
-    })
-  }
-
   override def processingFunctions: ProcessingFunctions =
-    strategyProcessing.orElse(
       definePartialFunction({
         case (`Rewrite`, _) => RewriteMatcher
         case (`BindMatch`, _) => BindMatchMatcher
         case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
         case (capp: PatternContextApplicationLabel, _) => new PatternContextMatcher()(env)
-      }))
-      .orElse(functionDefinedByRewritingProcessing)
-      .orElse(definePartialFunction({
-        case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
-        case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm
-      }))
-      .orElse(input)
+      }).orElse(input)
 }

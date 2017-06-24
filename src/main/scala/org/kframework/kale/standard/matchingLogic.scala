@@ -56,9 +56,9 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
 
   case class TermOr(solver: Apply) extends Binary.F({ (a: Term, b: Or) => b map (solver(a, _)) })
 
-  override def makeMatcher: Binary.ProcessingFunctions
+  case class Constants(solver: Apply) extends Binary.F({ (a: DomainValue[_], b: DomainValue[_]) => And(Truth(a.data == b.data), Next(b)) })
 
-  = Binary.definePartialFunction({
+  override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
     case (_, `Not`) => OneIsFormula
     case (`Not`, _) => OneIsFormula
     case (`And`, _) => AndTerm
@@ -66,11 +66,10 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (`Or`, _) => OrTerm
     case (_, `Or`) => TermOr
     case (`Variable`, _) => SortedVarLeft
+    case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
   }).orElse(super.makeMatcher)
 
-  override def makeUnifier: Binary.ProcessingFunctions
-
-  = Binary.definePartialFunction({
+  override def makeUnifier: Binary.ProcessingFunctions = Binary.definePartialFunction({
     case (_, `Not`) => OneIsFormula
     case (`Not`, _) => OneIsFormula
     case (`And`, _) => AndTerm
@@ -79,6 +78,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (_, `Or`) => TermOr
     case (`Variable`, _) => SortedVarLeft
     case (_, `Variable`) => SortedVarRight
+    case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
   }).orElse(super.makeUnifier)
 }
 

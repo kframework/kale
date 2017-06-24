@@ -64,7 +64,7 @@ trait ACMixin extends kale.ACMixin with Environment with HasMatcher with HasUnif
     matchContents(b.label, Next(b.label.identity), l1, l2)(solver)
   })
 
-  override def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
+  override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
     case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
     case (left, _: AssocWithIdLabel) if !left.isInstanceOf[Variable] => TermAssocWithId
   }).orElse(super.makeMatcher)

@@ -1,10 +1,11 @@
 package org.kframework.kale.strategy
 
 import org.kframework.kale.standard.StandardEnvironment
+import org.kframework.kale.transformer.Binary.{ProcessingFunctions, definePartialFunction}
 import org.kframework.kale.util.Named
-import org.kframework.kale.{FreeNode1, FreeNode2, Label1, Label2, Mixin, Term, standard}
+import org.kframework.kale.{Environment, FreeNode1, FreeNode2, HasMatcher, Label1, Label2, Mixin, Term, standard, strategy}
 
-case class STRATEGY()(implicit env: StandardEnvironment) {
+case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin) {
 
   val orElse = new Named("orElse") with Label2 {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
@@ -27,9 +28,17 @@ case class STRATEGY()(implicit env: StandardEnvironment) {
   }
 }
 
-trait StrategyMixin extends Mixin {
-  protected val env: StandardEnvironment
-
+trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMixin with HasMatcher {
 
   val STRATEGY = org.kframework.kale.strategy.STRATEGY()(env)
+
+  import STRATEGY._
+
+  override protected def makeMatcher: ProcessingFunctions = definePartialFunction({
+    case (`orElse`, _) => strategy.orElseTerm
+    case (`compose`, _) => strategy.composeTerm
+    case (`repeat`, _) => strategy.repeatTerm
+    case (`fixpoint`, _) => strategy.fixpointTerm
+  }).orElse(super.makeMatcher)
+
 }

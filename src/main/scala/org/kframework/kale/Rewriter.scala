@@ -8,7 +8,7 @@ import scala.collection.immutable.TreeSet
 import scala.collection.{Set, mutable}
 
 object Rewriter {
-  def apply(substitutioner: Substitution => (Term => Term), matcher: MatcherOrUnifier) = new {
+  def apply(substitutioner: Substitution => (Term => Term), matcher: Binary.Apply) = new {
     def apply(rules: Set[_ <: Rewrite]): Rewriter = new Rewriter(substitutioner, matcher, rules, matcher.env)
 
     def apply(rule: Term): Rewriter = {

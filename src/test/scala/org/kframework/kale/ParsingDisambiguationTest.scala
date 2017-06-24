@@ -75,8 +75,6 @@ class ParsingDisambiguationTest extends FreeSpec {
 
   env.seal()
 
-  implicit val unifier = SingleSortedMatcher()
-
   val substitutionApplier = SubstitutionWithContext(_)
 
   val theAmbiguity: Term = amb(

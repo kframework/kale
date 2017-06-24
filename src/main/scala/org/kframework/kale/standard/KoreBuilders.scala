@@ -129,7 +129,7 @@ object StandardConverter {
     case kore.Rewrite(p1, p2) => env.Rewrite(StandardConverter(p1), StandardConverter(p2))
     case kore.DomainValue(symbol@kore.Symbol(s), value@kore.Value(v)) => {
       env.uniqueLabels.get("TOKEN_" + s) match {
-        case Some(l: GenericTokenLabel) => l(v)
+        case Some(l: TOKEN) => l(v)
         case _ => {
           var ls = s.toUpperCase()
           if (s.contains("@")) ls = ls.split("@")(0)

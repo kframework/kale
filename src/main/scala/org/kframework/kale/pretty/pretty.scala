@@ -1,13 +1,10 @@
 package org.kframework.kale.pretty
 
 import org.kframework.kale._
-import org.kframework.kale.builtin._
 import org.kframework.kale.standard.Sort
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.Named
-
-import scala.runtime.ScalaRunTime
 
 trait PrettyMixin extends Mixin with Environment with standard.MatchingLogicMixin with standard.FreeMixin with builtin.StringMixin {
 
@@ -66,7 +63,7 @@ trait PrettyMixin extends Mixin with Environment with standard.MatchingLogicMixi
     }
   })
 
-  override def makeMatcher = Binary.definePartialFunction({
+  override protected def makeMatcher = Binary.definePartialFunction({
     case (PrettyWrapper, PrettyWrapper) =>
       PrettyWrapperPrettyWrapper
     case (PrettyWrapper, term) =>
