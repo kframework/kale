@@ -9,7 +9,7 @@ import org.kframework.kale.util.Named
 
 import scala.runtime.ScalaRunTime
 
-trait PrettyMixin extends Mixin with Environment with standard.MatchingLogicMixin with standard.FreeMixin with importSTRING {
+trait PrettyMixin extends Mixin with Environment with standard.MatchingLogicMixin with standard.FreeMixin with builtin.StringMixin {
 
   val PrettyWrapper: PrettyWrapperLabel = new PrettyWrapperLabel()
 

@@ -1,5 +1,6 @@
 package org.kframework.kale.builtin
 
+import org.kframework.kale
 import org.kframework.kale.standard.ReferenceLabel
 import org.kframework.kale.{DomainValue, Environment, builtin}
 
@@ -9,7 +10,7 @@ case class ID()(implicit protected val penv: Environment) {
   }
 }
 
-trait importID {
+trait IdMixin extends kale.IdMixin {
   protected val env: Environment
 
   val ID = builtin.ID()(env)

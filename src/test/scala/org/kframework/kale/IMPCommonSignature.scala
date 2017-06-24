@@ -1,9 +1,9 @@
 package org.kframework.kale
 
-import org.kframework.kale.builtin.{MapLabel, importINT}
+import org.kframework.kale.builtin.MapLabel
 import org.kframework.kale.standard._
 
-class IMPCommonSignature(implicit val env: Environment with importINT) {
+class IMPCommonSignature(implicit val env: Environment with IntMixin) {
   import env._
 
   def lhs(t: Term): Term = t match {

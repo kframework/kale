@@ -4,7 +4,7 @@ import org.kframework.kale._
 
 import scala.collection.{Iterable, Set}
 
-case class SetLabel(name: String, identity: Term)(implicit val env: Environment with importBOOLEAN) extends AssocWithIdLabel {
+case class SetLabel(name: String, identity: Term)(implicit val env: Environment with BooleanMixin) extends AssocWithIdLabel {
   override def construct(l: Iterable[Term]): Term = SET(this, l.toSet)
 
   trait HasEnvironment {

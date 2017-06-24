@@ -15,7 +15,7 @@ object StandardEnvironment {
   }
 }
 
-trait StandardEnvironment extends MatchingLogicMixin with FreeMixin with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with PrettyMixin with strategy.importSTRATEGY with ACMixin {
+trait StandardEnvironment extends MatchingLogicMixin with FreeMixin with builtin.BooleanMixin with builtin.IntMixin with builtin.DoubleMixin with builtin.StringMixin with builtin.IdMixin with PrettyMixin with strategy.StrategyMixin with ACMixin {
   val Hole = Variable("☐", Sort.K)
   val Hole1 = Variable("☐1", Sort.K)
   val Hole2 = Variable("☐2", Sort.K)

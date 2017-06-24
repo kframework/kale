@@ -8,10 +8,10 @@ import org.kframework.kale.standard.Sort
 import scala.collection._
 
 trait importBuiltin
-  extends Environment with importBOOLEAN
-    with importINT // with HasINTbop with HasINTcmp
-    with importID
-    with importSTRING {
+  extends Environment with builtin.BooleanMixin
+    with builtin.IntMixin // with HasINTbop with HasINTcmp
+    with builtin.IdMixin
+    with builtin.StringMixin {
 
 }
 

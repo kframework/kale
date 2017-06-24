@@ -1,9 +1,10 @@
 package org.kframework.kale.builtin
 
+import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.standard.ReferenceLabel
 
-case class STRING()(implicit protected val penv: Environment with hasINT with hasBOOLEAN) {
+case class STRING()(implicit protected val penv: Environment with IntMixin with BooleanMixin) {
 
   import penv._
 
@@ -33,7 +34,7 @@ case class STRING()(implicit protected val penv: Environment with hasINT with ha
   val stringe = PrimitiveFunction2[String, String, Boolean]("_==String_", String, String, BOOLEAN.Boolean , (x, y) => x == y)
 }
 
-trait importSTRING extends Environment with importINT with importBOOLEAN with Mixin {
+trait StringMixin extends kale.StringMixin with Environment with IntMixin with BooleanMixin with Mixin {
 
   val STRING = builtin.STRING()
 

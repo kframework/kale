@@ -113,7 +113,7 @@ object StandardConverter {
           val cargs = args.map(StandardConverter.apply)
           l(cargs)
         }
-        case None => ???
+        case _ => ???
       }
     }
     case kore.And(p1, p2) => env.And(StandardConverter(p1), StandardConverter(p2))
@@ -130,7 +130,7 @@ object StandardConverter {
     case kore.DomainValue(symbol@kore.Symbol(s), value@kore.Value(v)) => {
       env.uniqueLabels.get("TOKEN_" + s) match {
         case Some(l: GenericTokenLabel) => l(v)
-        case None => {
+        case _ => {
           var ls = s.toUpperCase()
           if (s.contains("@")) ls = ls.split("@")(0)
           ls match {

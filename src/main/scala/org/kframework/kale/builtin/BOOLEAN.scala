@@ -1,5 +1,6 @@
 package org.kframework.kale.builtin
 
+import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.standard.ReferenceLabel
 
@@ -14,10 +15,9 @@ case class BOOLEAN()(implicit env: Environment) {
   val False = Boolean(false)
 }
 
-trait importBOOLEAN {
-  protected val env: Environment
+trait BooleanMixin extends kale.BooleanMixin with Environment {
 
-  val BOOLEAN = builtin.BOOLEAN()(env)
+  val BOOLEAN = builtin.BOOLEAN()
 
   implicit def toBoolean(b: Boolean): DomainValue[Boolean] = BOOLEAN.Boolean(b)
 }

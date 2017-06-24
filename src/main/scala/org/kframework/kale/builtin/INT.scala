@@ -1,9 +1,10 @@
 package org.kframework.kale.builtin
 
+import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.standard.ReferenceLabel
 
-case class INT(implicit protected val penv: Environment with hasBOOLEAN) {
+case class INT(implicit protected val penv: Environment with BooleanMixin) {
 
   import penv._
 
@@ -26,8 +27,8 @@ case class INT(implicit protected val penv: Environment with hasBOOLEAN) {
   lazy val all = Set(Int, plus, minus, mult, div, mod, lt, le, gt, ge, neq, eq)
 }
 
-trait importINT {
-  protected val env: Environment with hasBOOLEAN
+trait IntMixin extends kale.IntMixin {
+  protected val env: Environment with BooleanMixin
 
   val INT = builtin.INT()(env)
 

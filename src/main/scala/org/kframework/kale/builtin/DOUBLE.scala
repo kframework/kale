@@ -1,5 +1,6 @@
 package org.kframework.kale.builtin
 
+import org.kframework.kale
 import org.kframework.kale.standard.ReferenceLabel
 import org.kframework.kale.util.Named
 import org.kframework.kale.{FunctionLabel2, _}
@@ -19,7 +20,7 @@ case class DOUBLE()(implicit protected val env: Environment) {
   }
 }
 
-trait importDOUBLE {
+trait DoubleMixin extends kale.DoubleMixin {
   protected val env: Environment
 
   val DOUBLE = builtin.DOUBLE()(env)

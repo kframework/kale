@@ -2,17 +2,17 @@ package org.kframework.kale.strategy
 
 import org.kframework.kale.standard.StandardEnvironment
 import org.kframework.kale.util.Named
-import org.kframework.kale.{FreeNode1, FreeNode2, Label1, Label2, Term, standard}
+import org.kframework.kale.{FreeNode1, FreeNode2, Label1, Label2, Mixin, Term, standard}
 
-case class STRATEGY()(implicit penv: StandardEnvironment) {
+case class STRATEGY()(implicit env: StandardEnvironment) {
 
   val orElse = new Named("orElse") with Label2 {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
   }
 
-  val nextIsNow = standard.lift("nextIsNow", penv.And.nextIsNow _)
+  val nextIsNow = standard.lift("nextIsNow", env.And.nextIsNow _)
 
-  val onlyNext = standard.lift("onlyNext", penv.And.onlyNext _)
+  val onlyNext = standard.lift("onlyNext", env.And.onlyNext _)
 
   val compose = new Named("compose") with Label2 {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
@@ -27,7 +27,7 @@ case class STRATEGY()(implicit penv: StandardEnvironment) {
   }
 }
 
-trait importSTRATEGY {
+trait StrategyMixin extends Mixin {
   protected val env: StandardEnvironment
 
 
