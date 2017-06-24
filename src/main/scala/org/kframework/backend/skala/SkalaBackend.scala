@@ -107,7 +107,8 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
     val result = rewriter(convertedK)
     result.toList.head
   }
-  override def execute(p: Pattern): Pattern = {
+
+  def execute(p: Pattern): Pattern = {
     var previousResult = StandardConverter(p)
     var result = rewriter(previousResult)
     while (result.nonEmpty && result.head != previousResult) {
