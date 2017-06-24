@@ -8,7 +8,7 @@ import org.kframework.{kale, kore}
 
 import scala.collection.{Iterable, Seq}
 
-trait MatchingLogic extends Environment with HasMatcher with HasUnifier {
+trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
   override val Truth: TruthLabel = standard.StandardTruthLabel()
 
   override val Top: Top = standard.TopInstance()
@@ -30,47 +30,55 @@ trait MatchingLogic extends Environment with HasMatcher with HasUnifier {
     rename(t).asInstanceOf[T]
   }
 
-  def VarLeft(solver: Apply)(a: Variable, b: Term) = And(Equality(a.asInstanceOf[Variable], b), Next(b))
+  def SortedVarLeft(solver: Apply)(a: Variable, b: Term): Term =
+    if (a.sort == b.sort)
+      And(Equality(a.asInstanceOf[Variable], b), Next(b))
+    else
+      Bottom
 
-  def VarRight(solver: Apply)(a: Term, b: Variable): Term = VarLeft(solver)(b, a) // Equality(b.asInstanceOf[Variable], a)
+  case class SortedVarRight(solver: Apply) extends Binary.F({ (a: Term, b: Variable) => SortedVarLeft(solver)(b, a) })
 
-  def AndTerm(solver: Apply)(a: And, b: Term): Term = {
+  case class AndTerm(solver: Apply) extends Binary.F({ (a: And, b: Term) =>
     val solution = solver(a.nonPredicates.get, b)
     val fTerm = And(a.predicates, solution)
     fTerm
-  }
+  })
 
-  def TermAnd(solver: Apply)(a: Term, b: And): Term = {
+  case class TermAnd(solver: Apply) extends Binary.F({ (a: Term, b: And) =>
     val solution = solver(a, b.nonPredicates.get)
     And(solution, b.predicates)
-  }
+  })
 
   // TODO: something is not quite right with FormulaLabel -- make sure it is correct
-  def OneIsFormula(solver: Apply)(a: Term, b: Term) = And(a, b)
+  case class OneIsFormula(solver: Apply) extends Binary.F({ (a: Term, b: Term) => And(a, b) })
 
-  def OrTerm(solver: Apply)(a: Or, b: Term) = a map (solver(_, b))
+  case class OrTerm(solver: Apply) extends Binary.F({ (a: Or, b: Term) => a map (solver(_, b)) })
 
-  def TermOr(solver: Apply)(a: Term, b: Or) = b map (solver(a, _))
+  case class TermOr(solver: Apply) extends Binary.F({ (a: Term, b: Or) => b map (solver(a, _)) })
 
-  override def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
+  override def makeMatcher: Binary.ProcessingFunctions
+
+  = Binary.definePartialFunction({
     case (_, `Not`) => OneIsFormula
     case (`Not`, _) => OneIsFormula
     case (`And`, _) => AndTerm
     case (_, `And`) => TermAnd
     case (`Or`, _) => OrTerm
     case (_, `Or`) => TermOr
-    case (`Variable`, _) => VarLeft
+    case (`Variable`, _) => SortedVarLeft
   }).orElse(super.makeMatcher)
 
-  override def makeUnifier: Binary.ProcessingFunctions = Binary.definePartialFunction({
+  override def makeUnifier: Binary.ProcessingFunctions
+
+  = Binary.definePartialFunction({
     case (_, `Not`) => OneIsFormula
     case (`Not`, _) => OneIsFormula
     case (`And`, _) => AndTerm
     case (_, `And`) => TermAnd
     case (`Or`, _) => OrTerm
     case (_, `Or`) => TermOr
-    case (`Variable`, _) => VarLeft
-    case (_, `Variable`) => VarRight
+    case (`Variable`, _) => SortedVarLeft
+    case (_, `Variable`) => SortedVarRight
   }).orElse(super.makeUnifier)
 }
 
@@ -172,7 +180,7 @@ private[kale] class Matches(val _1: Term, val _2: Term)(implicit env: StandardEn
   val label = env.Match
 }
 
-private[standard] case class StandardEqualityLabel(implicit override val env: MatchingLogic) extends Named("=") with EqualityLabel {
+private[standard] case class StandardEqualityLabel(implicit override val env: MatchingLogicMixin) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = {
     if (_1 == _2)
       env.Top
@@ -211,7 +219,7 @@ private[kale] class Equals(val _1: Term, val _2: Term)(implicit env: Environment
 }
 
 
-class Binding(val variable: Variable, val term: Term)(implicit val env: MatchingLogic) extends Equals(variable, term) with kale.Binding {
+class Binding(val variable: Variable, val term: Term)(implicit val env: MatchingLogicMixin) extends Equals(variable, term) with kale.Binding {
   // TODO(Daejun): Cosmin: occur check failed due to the context variables
   // assert(!util.Util.contains(term, variable))
   assert(_1.isInstanceOf[Variable])
@@ -262,7 +270,7 @@ class Compose2(val name: String, functionLabel2: Label2, functionLabel1: Functio
   }
 }
 
-private[standard] case class DNFAndLabel(implicit val env: MatchingLogic) extends {
+private[standard] case class DNFAndLabel(implicit val env: MatchingLogicMixin) extends {
   val name = "∧"
 } with AndLabel {
 
@@ -575,7 +583,7 @@ private[standard] final class AndOfTerms(val terms: Set[Term])(implicit val env:
   override def asSet: Set[Term] = terms
 }
 
-final case class AndWithNext(conjunction: Term, nextTerm: Term)(implicit env: MatchingLogic) extends And {
+final case class AndWithNext(conjunction: Term, nextTerm: Term)(implicit env: MatchingLogicMixin) extends And {
 
   import env._
 
@@ -640,7 +648,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
   override def asSet: Set[Term] = And.asSet(terms) | And.asSet(s)
 }
 
-private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit val env: MatchingLogic) extends And with Substitution with BinaryInfix {
+private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit val env: MatchingLogicMixin) extends And with Substitution with BinaryInfix {
   assert(m.size >= 2)
   assert(m.forall({ case (a, b) => a != b }))
 
@@ -720,7 +728,7 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
   override def asSet: Set[Term] = terms
 }
 
-private[standard] case class SimpleExistsLabel(implicit val e: MatchingLogic) extends Named("∃") with ExistsLabel {
+private[standard] case class SimpleExistsLabel(implicit val e: MatchingLogicMixin) extends Named("∃") with ExistsLabel {
 
   import env._
 

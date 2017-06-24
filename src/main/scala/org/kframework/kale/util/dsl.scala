@@ -17,12 +17,6 @@ class dsl(implicit val env: StandardEnvironment) {
     def =:=(tt: Term): Term = env.And.filterOutNext(env.unify(t, tt))
   }
 
-  val plus = env.uniqueLabels.getOrElse("+", SimpleFreeLabel2("+")).asInstanceOf[Label2]
-
-  implicit class asTerm(x: Term) {
-    def +(y: Term): Term = plus(x, y)
-  }
-
   implicit def symbolWithApp(s: Symbol)(env: Environment) = new {
     val label = env.label(s.name)
 

@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-trait AC {
+trait ACMixin extends Mixin {
   def AssocWithIdLabel(name: String, id: Term): AssocWithIdLabel
 }
 

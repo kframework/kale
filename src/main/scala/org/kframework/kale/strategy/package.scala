@@ -1,24 +1,25 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard.SingleSortedMatcher
+import org.kframework.kale.transformer.Binary
 
 package object strategy {
 
   // only works for ground obj
-  def orElseTerm(solver: SingleSortedMatcher)(orElse: Term, obj: Term): Term = {
+  case class orElseTerm(solver: SingleSortedMatcher) extends Binary.F({ (orElse: Term, obj: Term) =>
     import solver.env._
     val STRATEGY.orElse(theThen, theElse) = orElse
 
     obj.asOr map { t =>
       val thenSol = unify(theThen, t)
-       thenSol match {
+      thenSol match {
         case Bottom => unify(theElse, t)
         case other => other
       }
     }
-  }
+  })
 
-  def composeTerm(solver: SingleSortedMatcher)(composed: Term, obj: Term): Term = {
+  case class composeTerm(solver: SingleSortedMatcher) extends Binary.F({ (composed: Term, obj: Term) =>
     import solver.env._
     import STRATEGY._
     val compose(f, g) = composed
@@ -27,9 +28,9 @@ package object strategy {
     val matchF = unify(f, takeRelevantFromGMatch)
 
     matchF
-  }
+  })
 
-  def repeatTerm(solver: SingleSortedMatcher)(fp: Term, obj: Term): Term = {
+  case class repeatTerm(solver: SingleSortedMatcher) extends Binary.F({ (fp: Term, obj: Term) =>
     import solver.env._
     import STRATEGY._
     val repeat(f) = fp
@@ -43,9 +44,9 @@ package object strategy {
           solver(fp, t) // TODO: pass in the remaining predicates
         }
     }
-  }
+  })
 
-  def fixpointTerm(solver: SingleSortedMatcher)(fp: Term, obj: Term): Term = {
+  case class fixpointTerm(solver: SingleSortedMatcher) extends Binary.F({ (fp: Term, obj: Term) =>
     import solver.env._
     import STRATEGY._
     val fixpoint(f) = fp
@@ -54,5 +55,6 @@ package object strategy {
       case Next(`obj`) => Next(obj)
       case res => solver(fp, And.nextIsNow(res))
     }
-  }
+  })
+
 }

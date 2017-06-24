@@ -1,16 +1,21 @@
 package org.kframework.kale.km
 
+import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kale.standard.{SimpleFreeLabel2, SimpleFreeLabel3, Sort}
+import org.kframework.kale.standard.{SimpleFreeLabel2, SimpleFreeLabel3, Sort, StandardEnvironment}
+import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
 
 class IMPSpec extends FreeSpec {
-  implicit val env = new KMEnvironment()
+
+  implicit val env = new StandardEnvironment with MultisortedMixing {
+
+  }
 
   import env._
 
-  // sort delcarations
-  import Sort._
+  val rich = new dsl()
+  import rich._
 
   object ImpSorts {
     val Id = Sort("Id")
@@ -53,22 +58,22 @@ class IMPSpec extends FreeSpec {
   sorted(seq, Stmt, Stmt, Stmt)
   sorted(program, Ids, Stmt, Pgm)
   sorted(T, Cell, Cell, Cell)
-  sorted(k, K, Cell)
+  sorted(k, Sort.K, Cell)
   sorted(state, StateMap, Cell)
   sorted(varBinding, Id, Int, StateMap)
   sorted(emptyIntList, IntList)
   sorted(emptyStates, StateMap)
   sorted(statesMap, StateMap, StateMap, StateMap)
-  sorted(emptyk, K)
+  sorted(emptyk, Sort.K)
 
   // symbol declarations
   val ints = SimpleFreeLabel2("_,_");
   sorted(ints, IntList, IntList, IntList)
   val kseq = SimpleFreeLabel2("_~>_");
-  sorted(kseq, K, KSeq, KSeq)
+  sorted(kseq, Sort.K, KSeq, KSeq)
   // TODO: testing purpose only
   val ppp = SimpleFreeLabel3("ppp");
-  sorted(ppp, Id, Id, Id, K)
+  sorted(ppp, Id, Id, Id, Sort.K)
 
   // variable declarations
   val X = Variable("X", Id)
@@ -91,32 +96,26 @@ class IMPSpec extends FreeSpec {
 
   env.seal()
 
-  // TODO(Daejun): move to unify test
-  val unifier = new MultiSortedUnifier(env)
-
-  def unify(a: Term, b: Term) = {
-    unifier(a, b).asOr map {
-      x => And(And.asSet(x).filter(_.label != Next))
-    }
-  }
-
 
   "first test" - {
 
     "simple" in {
-      assert(unify(X, 'foo) === Equality(X, 'foo))
-      assert(unify(X, Y) === Equality(X, Y))
-      assert(unify(X, INT.Int(2)) === Bottom)
+      assert((X := 'foo) === Equality(X, 'foo))
+      assert((X := Y) === Equality(X, Y))
+      assert((X := INT.Int(2)) === Bottom)
 
-      assert(unify(plus(E1, E2), leq(E1, E2)) == Bottom)
+      assert((plus(E1, E2) := leq(E1, E2)) == Bottom)
 
-      assert(unify(plus(E1, E2), plus(E2, E1)) == Equality(E1, E2))
+      assert((plus(E1, E2) := plus(E2, E1)) == Equality(E1, E2))
       //  assert(unify(plus(E1,E2), plus(E2,E1)) == Equality(E2, E1)) // TODO: is that ok?
     }
 
     val a = 'a
 
-    "div 1" in {
+    // TODO: un-ignore this test when re-enabling symbolic execution
+    // Cosmin: I disabled it as the unification should be part of matching engine, not put on top of the rewriter
+    // please talk with me before re-enabling!
+    "div 1" ignore {
 
       assert(
         // q(p(x,y), p(y,x)) =?= q(z,z)
@@ -133,7 +132,10 @@ class IMPSpec extends FreeSpec {
       )
     }
 
-    "div 2" in {
+    // TODO: un-ignore this test when re-enabling symbolic execution
+    // Cosmin: I disabled it as the unification should be part of matching engine, not put on top of the rewriter
+    // please talk with me before re-enabling!
+    "div 2" ignore {
 
       assert(
         // p(x,y,a) =?= p(y,x,x)

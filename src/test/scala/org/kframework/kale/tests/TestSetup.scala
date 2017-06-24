@@ -17,11 +17,17 @@ trait TestSetup {
   val X = Variable("X")
   val Y = Variable("Y")
 
+  val plus = env.uniqueLabels.getOrElse("+", SimpleFreeLabel2("+")).asInstanceOf[Label2]
+
+  implicit class asTerm(x: Term) {
+    def +(y: Term): Term = plus(x, y)
+  }
+
   val emptyList = SimpleFreeLabel0("emptyList")
 
   val el = emptyList()
 
-  val listLabel = new standard.AssocWithIdListLabel("listLabel", el)
+  val listLabel = AssocWithIdLabel("listLabel", el)
 
   implicit class WithListConcat(t: Term) {
     def ~~(o: Term): Term = listLabel(t, o)

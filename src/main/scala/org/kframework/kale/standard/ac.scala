@@ -7,7 +7,7 @@ import org.kframework.kale.transformer.Binary.Apply
 
 import scala.collection.{+:, Iterable, Seq}
 
-trait AC extends kale.AC with Environment with HasMatcher with HasUnifier {
+trait ACMixin extends kale.ACMixin with Environment with HasMatcher with HasUnifier {
 
   override def AssocWithIdLabel(name: String, id: Term): AssocWithIdLabel = new AssocWithIdListLabel(name, id)
 
@@ -57,21 +57,21 @@ trait AC extends kale.AC with Environment with HasMatcher with HasUnifier {
     matchContents(a.label, Next(a.label.identity), l1, l2)(solver)
   }
 
-  def TermAssocWithId(solver: Apply)(a: Term, b: AssocWithIdList): Term = {
+  case class TermAssocWithId(solver: Apply) extends Binary.F({ (a: Term, b: AssocWithIdList) =>
     val asList = b.label.asIterable _
     val l1 = asList(a)
     val l2 = asList(b)
     matchContents(b.label, Next(b.label.identity), l1, l2)(solver)
-  }
+  })
 
   override def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
-    case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm _
-    case (left, _: AssocWithIdLabel) if !left.isInstanceOf[Variable] => TermAssocWithId _
+    case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
+    case (left, _: AssocWithIdLabel) if !left.isInstanceOf[Variable] => TermAssocWithId
   }).orElse(super.makeMatcher)
 
   override def makeUnifier: Binary.ProcessingFunctions = Binary.definePartialFunction({
-    case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm _
-    case (left, _: AssocWithIdLabel) if !left.isInstanceOf[Variable] => TermAssocWithId _
+    case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
+    case (left, _: AssocWithIdLabel) if !left.isInstanceOf[Variable] => TermAssocWithId
   }).orElse(super.makeUnifier)
 }
 

@@ -7,6 +7,12 @@ import org.kframework.kale.transformer.{GenUnary, Unary}
 
 package object kale {
 
+  /**
+    * For marking traits that are meant to be mixed into an Environment
+    * By convention, postfix all extending traits with "Mixin"
+    */
+  trait Mixin
+
   def definePartialFunction[T, Solver <: Apply[T]](f: GenUnary.ProcessingFunctions[T, Solver]): GenUnary.ProcessingFunctions[T, Solver] = f
 
   implicit def PFtoTotal(f: PartialFunction[Term, Boolean]): (Term => Boolean) = x => f.lift(x).getOrElse(false)

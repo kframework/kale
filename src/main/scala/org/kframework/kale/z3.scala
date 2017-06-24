@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.km.Z3Stuff
+import org.kframework.kale.km.{MultisortedMixing, Z3Stuff}
 
 import scala.collection._
 import scala.sys.process._
@@ -11,7 +11,7 @@ trait Z3Builtin
   symbolsSeq: constructor symbols that need to be encoded using z3 datatypes instead of functions.
   It should be given as SCCs of symbols in topological order of dependency.
  */
-class z3(val env: Environment with Z3Stuff, val symbolsSeq: Seq[Seq[Label]]) {
+class z3(val env: Environment with MultisortedMixing with Z3Stuff, val symbolsSeq: Seq[Seq[Label]]) {
 
   import env._
 
@@ -64,12 +64,12 @@ class z3(val env: Environment with Z3Stuff, val symbolsSeq: Seq[Seq[Label]]) {
     // - non-zero-argument symbols as `fun`
     val declareFuns: String = symbols.map({
       case v:Variable => "(declare-const " + v.name + " " + v.sort.smtName + ")\n"
-      case l:FreeLabel0 => "(declare-const " + l.smtName + " " + sortTarget(l).smtName + ")\n"
-      case l:FreeLabel => "(declare-fun " + l.smtName + " (" + sortArgs(l).map(_.smtName).mkString(" ") + ") " + sortTarget(l).smtName + ")\n"
+      case l:FreeLabel0 => "(declare-const " + l.smtName + " " + sort(l).smtName + ")\n"
+      case l:FreeLabel => "(declare-fun " + l.smtName + " (" + sortArgs(l).map(_.smtName).mkString(" ") + ") " + sort(l).smtName + ")\n"
     }).mkString
     // remaining sorts not defined by constructor datatypes
     val sorts: Set[Sort] = symbols.flatMap({
-      case l:FreeLabel => sortArgs(l).toSet + sortTarget(l)
+      case l:FreeLabel => sortArgs(l).toSet + sort(l)
       case v:Variable => Set(v.sort)
       case _ => ???
     })
@@ -77,8 +77,8 @@ class z3(val env: Environment with Z3Stuff, val symbolsSeq: Seq[Seq[Label]]) {
       .map(sort => if (sort.isInstanceOf[Z3Builtin]) "" else "(declare-sort " + sort.smtName + ")\n").mkString
     declareSorts + declDatatypes + declareFuns
   }
-//lazy val datatypes: Set[Sort] = symbolsSeq.flatMap(_.flatMap(s => sortArgs(s).toSet + sortTarget(s)).toSet).toSet
-  lazy val datatypes: Set[Sort] = symbolsSeq.flatMap(_.map(sortTarget).toSet).toSet
+//lazy val datatypes: Set[Sort] = symbolsSeq.flatMap(_.flatMap(s => sortArgs(s).toSet + sort(s)).toSet).toSet
+  lazy val datatypes: Set[Sort] = symbolsSeq.flatMap(_.map(sort).toSet).toSet
   lazy val declDatatypes: String = declareDatatypesSeq(symbolsSeq)
 
   // symbolsSeq: SCCs of symbols in topological order
@@ -86,7 +86,7 @@ class z3(val env: Environment with Z3Stuff, val symbolsSeq: Seq[Seq[Label]]) {
   def declareDatatypes(symbols: Seq[Label]): String = {
     "(declare-datatypes () (\n" +
       symbols.filter(sym => !sym.isInstanceOf[Z3Builtin])
-        .groupBy(sortTarget)
+        .groupBy(sort)
         .map({case (sort, syms) =>
           "  (" + sort.smtName + "\n" +
             syms.map(sym =>

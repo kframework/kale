@@ -6,7 +6,7 @@ import org.scalatest.FreeSpec
 
 class RewriteTest extends FreeSpec {
 
-  implicit val env = new KMEnvironment()
+  implicit val env = new StandardEnvironment with MultisortedMixing
   import env._
 
   // sort delcarations
@@ -34,9 +34,7 @@ class RewriteTest extends FreeSpec {
 
   env.seal()
 
-  val unifier = new MultiSortedUnifier(env)
-
-  val rewriter = Rewriter(new SubstitutionApply(_), unifier)
+  val rewriter = Rewriter(new SubstitutionApply(_), env.unifier)
 
   "simple" in {
 

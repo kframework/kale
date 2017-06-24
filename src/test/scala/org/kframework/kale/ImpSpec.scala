@@ -85,8 +85,8 @@ object IMP {
   import signature._
   import env._
 
-  val ints = new standard.AssocWithIdListLabel("_,_", emptyIntList())
-  val kseq = new standard.AssocWithIdListLabel("_~>_", emptyk())
+  val ints = AssocWithIdLabel("_,_", emptyIntList())
+  val kseq = AssocWithIdLabel("_~>_", emptyk())
 
   case class isSort(label: LeafLabel[_])(implicit val env: Environment) extends {
     val name: String = "is" + label.name

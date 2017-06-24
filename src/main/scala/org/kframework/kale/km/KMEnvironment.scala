@@ -3,6 +3,7 @@ package org.kframework.kale.km
 import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.builtin._
+import org.kframework.kale.standard.Sort
 
 import scala.collection._
 
@@ -33,7 +34,7 @@ trait Z3Stuff extends importBuiltin {
   }
 }
 
-class KMEnvironment extends standard.MatchingLogic with Z3Stuff {
+trait MultisortedMixing extends Environment with standard.MatchingLogicMixin with Z3Stuff {
 
   private val sorts = mutable.Map[Label, Signature]()
 
@@ -43,7 +44,7 @@ class KMEnvironment extends standard.MatchingLogic with Z3Stuff {
     throw new AssertionError("Could not find Signature for label: " + l)
   })
 
-  def sortTarget(l: Label): kale.Sort = sorts.get(l).map({ signature => signature.target }).getOrElse({
+  def sort(l: Label): kale.Sort = sorts.get(l).map({ signature => signature.target }).getOrElse({
     throw new AssertionError("Could not find Signature for label: " + l)
   })
 
@@ -69,9 +70,4 @@ class KMEnvironment extends standard.MatchingLogic with Z3Stuff {
 
   def sorted(l: Label3, arg1: kale.Sort, arg2: kale.Sort, arg3: kale.Sort, target: kale.Sort): Unit = sorted(l, Signature(Seq(arg1, arg2, arg3), target))
 
-  override lazy val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionApply(_)
-
-  override protected lazy val unifier = new MultiSortedUnifier(this)
-
-  override def rewrite(rule: Term, obj: Term): Term = ???
 }

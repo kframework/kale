@@ -1,5 +1,20 @@
 package org.kframework.kale
 
+trait FreeMixin extends Mixin {
+  def FreeLabel0(name: String): FreeLabel0
+
+  def FreeLabel1(name: String): FreeLabel1
+
+  def FreeLabel2(name: String): FreeLabel2
+
+  def FreeLabel3(name: String): FreeLabel3
+
+  def FreeLabel4(name: String): FreeLabel4
+
+  def FreeLabel5(name: String): FreeLabel5
+
+  def FreeLabel6(name: String): FreeLabel6
+}
 
 trait Constructor extends NodeLabel
 
@@ -7,6 +22,7 @@ trait FreeLabel extends Constructor
 
 trait FreeLabel0 extends Label0 with FreeLabel {
   private lazy val uniqueInstance = FreeNode0(this)
+
   def apply(): Term = uniqueInstance
 }
 

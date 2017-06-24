@@ -10,8 +10,13 @@ object Binary {
     */
   type ProcessingFunction = (Apply => (Term, Term) => Term)
 
-
   type ProcessingFunctions = PartialFunction[(Label, Label), ProcessingFunction]
+
+  abstract class F[A <: Term, B <: Term](f: (A, B) => Term) extends ((Term, Term) => Term) with Product {
+    override def toString = getClass.getTypeName
+
+    override def apply(v1: Term, v2: Term): Term = f(v1.asInstanceOf[A], v2.asInstanceOf[B])
+  }
 
   def definePartialFunction[Process <: Apply, A <: Term, B <: Term](f: PartialFunction[(Label, Label), Process => (A, B) => Term]): ProcessingFunctions = f.asInstanceOf[ProcessingFunctions]
 
@@ -57,6 +62,14 @@ object Binary {
       assert(!(left == right && res == env.Bottom), left.toString)
       res
     }
+
+    lazy val processingFunctionsByLabelPair: Map[(Label, Label), (Term, Term) => Term] = arr.zipWithIndex.flatMap({
+      case (innerArray, i) => innerArray.zipWithIndex.filter(_._1 != null) map {
+        case (f, j) if f != null => (env.labelForIndex(i), env.labelForIndex(j)) -> f
+      }
+    }).toMap
+
+    override def toString: String = processingFunctionsByLabelPair.mkString("\n")
   }
 
 }

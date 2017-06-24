@@ -1,6 +1,7 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
+import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
 
 class MatchSpec extends FreeSpec with TestSetup {
@@ -203,8 +204,8 @@ class MatchSpec extends FreeSpec with TestSetup {
     assert((X := And(a, Equality(X, a))) === Equality(X, a))
     assert((X := And(a, Equality(X, b))) === Bottom)
 
-    val x = And.substitutionAndTerms.apply(Equality.binding(X, a), Seq(b))
-    val y = And.substitutionAndTerms.apply(Equality.binding(Y, c), Seq(d))
+    val x = And.substitutionAndTerms(Equality.binding(X, a), Seq(b))
+    val y = And.substitutionAndTerms(Equality.binding(Y, c), Seq(d))
     val xy = And.apply(x, y)
     assert(xy === And(Equality(X, a), Equality(Y, c), b, d))
     assert(xy === And(Equality(X, a), Equality(Y, c), d, b))

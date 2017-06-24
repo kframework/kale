@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.km.Z3Stuff
+import org.kframework.kale.km.{MultisortedMixing, Z3Stuff}
 import org.kframework.kale.standard.{AndOfSubstitutionAndTerms, StandardEnvironment}
 import org.kframework.kale.transformer.Binary
 
@@ -9,7 +9,7 @@ import scala.collection.{Set, mutable}
 
 object Rewriter {
   def apply(substitutioner: Substitution => (Term => Term), matcher: MatcherOrUnifier) = new {
-    def apply(rules: Set[_ <: Rewrite]): Rewriter = new Rewriter(substitutioner, matcher, rules, matcher.env.asInstanceOf[Environment with Z3Stuff])
+    def apply(rules: Set[_ <: Rewrite]): Rewriter = new Rewriter(substitutioner, matcher, rules, matcher.env)
 
     def apply(rule: Term): Rewriter = {
       implicit val e = matcher.env
@@ -18,7 +18,7 @@ object Rewriter {
   }
 }
 
-class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment with Z3Stuff) extends (Term => Stream[Term]) {
+class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment) extends (Term => Stream[Term]) {
   assert(env.isSealed)
   assert(rules != null)
 
@@ -46,7 +46,12 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
 
   sortedRules ++= rules
 
-  val z3 = new z3(env, Seq(Seq()))
+  // TODO: clean this
+  val z3 = env match {
+    case e: Environment with MultisortedMixing with Z3Stuff => new z3(e, Seq(Seq()))
+    case _ => null
+  }
+
 
   import env._
 
@@ -67,9 +72,9 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
               }).headOption.getOrElse(Bottom)
             case _ =>
               val oneGoodSub = (ands collect {
-            case s: Substitution => s
-            case a: AndOfSubstitutionAndTerms => a.s
-          }).headOption
+                case s: Substitution => s
+                case a: AndOfSubstitutionAndTerms => a.s
+              }).headOption
 
 
               oneGoodSub.map(substitutioner(_).apply(r._2)).getOrElse(Bottom)
@@ -97,11 +102,7 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
       case (or, rhs) =>
         val res = Or.asSet(or).flatMap(u => {
           env match {
-            case environment: StandardEnvironment =>
-              val withNext = environment.And.withNext
-              val withNext(sub, Some(Next(next))) = u
-              Set(next)
-            case _ =>
+            case _: Z3Stuff =>
               val (sub, terms) = And.asSubstitutionAndTerms(u)
               val constraints = And(terms.filterNot(_.label == env.Next))
               if (z3.sat(constraints)) {
@@ -109,6 +110,10 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
               } else {
                 Set[Term]()
               }
+            case environment: StandardEnvironment =>
+              val withNext = environment.And.withNext
+              val withNext(sub, Some(Next(next))) = u
+              Set(next)
           }
         })
         res

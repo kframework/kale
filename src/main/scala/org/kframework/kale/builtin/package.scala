@@ -1,6 +1,5 @@
 package org.kframework.kale
 
-import org.kframework.kale.pretty.PrettyWrapperLabel
 
 package object builtin {
   type hasINT = {
@@ -11,8 +10,5 @@ package object builtin {
   }
   type hasSTRING = {
     val STRING: STRING
-  }
-  type hasPrettyWrapper = {
-    val PrettyWrapper: PrettyWrapperLabel
   }
 }

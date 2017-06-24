@@ -338,7 +338,7 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
                   Some(SetLabel(x.symbol.str, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
               } else {
                 // Create the AssocLabel with Identity Term
-                Some(new AssocWithIdListLabel(x.symbol.str, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
+                Some(env.AssocWithIdLabel(x.symbol.str, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
               }
             }
           }
@@ -351,7 +351,7 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 
     val emptyKSeqLabel: SimpleFreeLabel0 = SimpleFreeLabel0(".K")
 
-    val kSeq = new AssocWithIdListLabel("~>", emptyKSeqLabel())
+    val kSeq = env.AssocWithIdLabel("~>", emptyKSeqLabel())
 
     val kConfigVar = GenericTokenLabel(Sort("KConfigVar@BASIC-K"))
 

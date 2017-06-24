@@ -5,15 +5,17 @@ import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.builtin._
 import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
-import org.kframework.kale.km.Z3Stuff
-import org.kframework.kale.pretty.importPrettyWrapper
+import org.kframework.kale.km.{MultisortedMixing, Z3Stuff}
+import org.kframework.kale.pretty.PrettyMixin
+
+import scala.collection.Seq
 
 object StandardEnvironment {
-  def apply(): StandardEnvironment = new StandardEnvironment with Z3Stuff {
+  def apply(): StandardEnvironment = new StandardEnvironment with NoSortingMixin {
   }
 }
 
-trait StandardEnvironment extends MatchingLogic with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with importPrettyWrapper with strategy.importSTRATEGY with AC {
+trait StandardEnvironment extends MatchingLogicMixin with FreeMixin with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with PrettyMixin with strategy.importSTRATEGY with ACMixin {
   val Hole = Variable("☐", Sort.K)
   val Hole1 = Variable("☐1", Sort.K)
   val Hole2 = Variable("☐2", Sort.K)
@@ -33,18 +35,9 @@ trait StandardEnvironment extends MatchingLogic with importBOOLEAN with importIN
 
   def ANYWHERE(t: Term) = AnywhereContext(Variable.freshVariable, t)
 
-  override def sort(l: Label, children: Seq[Term]): kale.Sort = Sort.K
+  override lazy val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)(this)
 
-  override def sortTarget(l: Label): kale.Sort = Sort.K
-
-  override def sortArgs(l: Label): Seq[kale.Sort] = l match {
-    case l: LeafLabel[_] => Seq()
-    case l: NodeLabel => Seq.fill(l.arity)(Sort.K)
-  }
-
-  override val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)(this)
-
-  protected override lazy val unifier = SingleSortedMatcher()(this)
+  override lazy val unifier = SingleSortedMatcher()(this)
 
   def pretty(t: Term): String = t match {
     case PrettyWrapper(p, c, s) => p + pretty(c) + s
@@ -66,6 +59,9 @@ trait StandardEnvironment extends MatchingLogic with importBOOLEAN with importIN
       case Bottom => Bottom
     }
   }
+}
 
-  def log = Logger("EnvironmentLogger" + this.hashCode())
+trait NoSortingMixin extends Environment {
+  def sort(l: Label, children: Seq[Term]): kale.Sort = Sort.Top
+  def sort(l: Label): Sort = Sort.Top
 }

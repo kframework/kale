@@ -1,17 +1,15 @@
 package org.kframework.kale
 
+import com.typesafe.scalalogging.Logger
+import org.kframework.kale
 import org.kframework.kale.standard.Bottomize
 import org.kframework.kale.transformer.{Binary, Unary}
 
 import scala.collection._
 
-trait Environment extends MatchingLogic with Bottomize {
+trait Environment extends MatchingLogicMixin with Bottomize {
 
   implicit protected val env: this.type = this
-
-  trait HasEnvironment {
-    val env = Environment.this
-  }
 
   val uniqueLabels = mutable.Map[String, Label]()
 
@@ -19,7 +17,9 @@ trait Environment extends MatchingLogic with Bottomize {
 
   private var pisSealed = false
 
-  def seal(): Unit = pisSealed = true
+  def seal(): Unit = {
+    pisSealed = true
+  }
 
   def isSealed = pisSealed
 
@@ -49,11 +49,7 @@ trait Environment extends MatchingLogic with Bottomize {
 
   def label(labelName: String): Label = uniqueLabels(labelName)
 
-  def sort(l: Label, children: Seq[Term]): Sort
-
-  def sortArgs(l: Label): Seq[Sort]
-
-  def sortTarget(l: Label): Sort
+  lazy val labelForIndex: Map[Int, Label] = labels map { l => (l.id, l) } toMap
 
   override def toString = {
     "nextId: " + uniqueLabels.size + "\n" + uniqueLabels.mkString("\n")
@@ -61,7 +57,8 @@ trait Environment extends MatchingLogic with Bottomize {
 
   def rewrite(rule: Term, obj: Term): Term
 
-//  protected def defineBinaryPFs[Process <: Apply, A <: Term, B <: Term](f: PartialFunction[(Label, Label), Process => (A, B) => Term]): Binary.ProcessingFunctions = f.asInstanceOf[Binary.ProcessingFunctions]
+  val log = Logger("EnvironmentLogger" + this.hashCode())
+  //  protected def defineBinaryPFs[Process <: Apply, A <: Term, B <: Term](f: PartialFunction[(Label, Label), Process => (A, B) => Term]): Binary.ProcessingFunctions = f.asInstanceOf[Binary.ProcessingFunctions]
 }
 
 trait HasMatcher {

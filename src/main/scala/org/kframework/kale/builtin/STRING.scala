@@ -33,10 +33,9 @@ case class STRING()(implicit protected val penv: Environment with hasINT with ha
   val stringe = PrimitiveFunction2[String, String, Boolean]("_==String_", String, String, BOOLEAN.Boolean , (x, y) => x == y)
 }
 
-trait importSTRING {
-  protected val env: Environment with hasINT with hasBOOLEAN
+trait importSTRING extends Environment with importINT with importBOOLEAN with Mixin {
 
-  val STRING = builtin.STRING()(env)
+  val STRING = builtin.STRING()
 
   implicit def toSTRING(s: String): DomainValue[String] = STRING.String(s)
 

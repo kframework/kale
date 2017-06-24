@@ -1,12 +1,12 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard.MightBeSolved
-import org.kframework.kore
+import org.kframework.{kale, kore}
 import org.kframework.kore.implementation.DefaultBuilders
 
 import scala.collection.Seq
 
-trait MatchingLogic {
+trait MatchingLogicMixin extends Mixin {
   // Constants
   val Bottom: Truth with kore.Bottom
   val Top: Truth with Substitution with kore.Top
@@ -21,6 +21,9 @@ trait MatchingLogic {
   val Not: NotLabel
   val Next: NextLabel
   val Exists: ExistsLabel
+
+  def sort(l: Label, children: Seq[Term]): Sort
+  def sort(l: Label): kale.Sort
 }
 
 trait DomainValueLabel[T] extends LeafLabel[T] {
