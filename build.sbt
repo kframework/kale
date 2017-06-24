@@ -19,7 +19,7 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic" % "0.7.0",
   "io.circe" %% "circe-parser" % "0.7.0",
 
-  "org.kframework" %% "kore" % "0.5-SNAPSHOT",
+  "org.kframework.k" %% "kore" % "0.6-SNAPSHOT",
 
   "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
 )
