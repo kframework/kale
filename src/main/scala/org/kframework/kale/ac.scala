@@ -1,5 +1,8 @@
 package org.kframework.kale
 
+trait AC {
+  def AssocWithIdLabel(name: String, id: Term): AssocWithIdLabel
+}
 
 trait HasId {
   val identity: Term

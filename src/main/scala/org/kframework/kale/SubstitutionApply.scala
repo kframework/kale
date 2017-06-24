@@ -6,7 +6,9 @@ object Var {
   def apply(solver: SubstitutionApply)(v: Variable): Term = solver.substitution.get(v).getOrElse(v)
 }
 
-class SubstitutionApply(val substitution: Substitution)(implicit env: Environment) extends Unary.Apply() {
+class SubstitutionApply(val substitution: Substitution)(implicit penv: Environment) extends Unary.Apply() {
+
+  import penv._
 
   override def processingFunctions = definePartialFunction[Term, this.type]({
     case `Variable` => Var.apply _

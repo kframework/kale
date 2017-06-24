@@ -9,7 +9,8 @@ import org.kframework.kale.km.Z3Stuff
 import org.kframework.kale.pretty.importPrettyWrapper
 
 object StandardEnvironment {
-  def apply(): StandardEnvironment = new StandardEnvironment with Z3Stuff {}
+  def apply(): StandardEnvironment = new StandardEnvironment with Z3Stuff {
+  }
 }
 
 trait StandardEnvironment extends MatchingLogic with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with importPrettyWrapper with strategy.importSTRATEGY with AC {

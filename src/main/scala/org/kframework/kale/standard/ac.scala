@@ -1,12 +1,15 @@
 package org.kframework.kale.standard
 
+import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
 
 import scala.collection.{+:, Iterable, Seq}
 
-trait AC extends Environment with HasMatcher with HasUnifier {
+trait AC extends kale.AC with Environment with HasMatcher with HasUnifier {
+
+  override def AssocWithIdLabel(name: String, id: Term): AssocWithIdLabel = new AssocWithIdListLabel(name, id)
 
   private object MatchesVar {
     def unapply(t: Term): Option[Term] = t match {
@@ -72,11 +75,11 @@ trait AC extends Environment with HasMatcher with HasUnifier {
   }).orElse(super.makeUnifier)
 }
 
-class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val env: Environment) extends AssocWithIdLabel with Constructor {
+private[standard] class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val env: Environment) extends AssocWithIdLabel with Constructor {
   protected override def construct(l: Iterable[Term]): Term = AssocWithIdList(this, l)
 }
 
-case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term]) extends Assoc {
+private[standard] case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term]) extends Assoc {
   assert(assocIterable.size > 1)
 
   assert(assocIterable.forall(_ != label.identity))

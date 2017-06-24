@@ -29,8 +29,8 @@ trait MatcherOrUnifier extends transformer.Binary.Apply {
 
   def NoMatch(solver: Apply)(a: Term, b: Term): Term = Bottom
 
-  val freeLabelProcessing = definePartialFunction({
-    case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 => NoMatch _
+  val freeLabelProcessing = Binary.definePartialFunction({
+    case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 => NoMatch
     case (_: FreeLabel0, _: FreeLabel0) => FreeNode0FreeNode0
     case (_: FreeLabel1, _: FreeLabel1) => FreeNode1FreeNode1
     case (_: FreeLabel2, _: FreeLabel2) => FreeNode2FreeNode2
@@ -47,11 +47,11 @@ trait MatcherOrUnifier extends transformer.Binary.Apply {
     })))
   }
 
-  val functionDefinedByRewritingProcessing = definePartialFunction({
-    case (_: FunctionDefinedByRewritingLabel0, _: FunctionDefinedByRewritingLabel0) => FunctionDefinedByRewritingMatcher _
-    case (_: FunctionDefinedByRewritingLabel1, _: FunctionDefinedByRewritingLabel1) => FunctionDefinedByRewritingMatcher _
-    case (_: FunctionDefinedByRewritingLabel2, _: FunctionDefinedByRewritingLabel2) => FunctionDefinedByRewritingMatcher _
-    case (_: FunctionDefinedByRewritingLabel3, _: FunctionDefinedByRewritingLabel3) => FunctionDefinedByRewritingMatcher _
-    case (_: FunctionDefinedByRewritingLabel4, _: FunctionDefinedByRewritingLabel4) => FunctionDefinedByRewritingMatcher _
+  val functionDefinedByRewritingProcessing = Binary.definePartialFunction({
+    case (_: FunctionDefinedByRewritingLabel0, _: FunctionDefinedByRewritingLabel0) => FunctionDefinedByRewritingMatcher
+    case (_: FunctionDefinedByRewritingLabel1, _: FunctionDefinedByRewritingLabel1) => FunctionDefinedByRewritingMatcher
+    case (_: FunctionDefinedByRewritingLabel2, _: FunctionDefinedByRewritingLabel2) => FunctionDefinedByRewritingMatcher
+    case (_: FunctionDefinedByRewritingLabel3, _: FunctionDefinedByRewritingLabel3) => FunctionDefinedByRewritingMatcher
+    case (_: FunctionDefinedByRewritingLabel4, _: FunctionDefinedByRewritingLabel4) => FunctionDefinedByRewritingMatcher
   })
 }
