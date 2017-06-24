@@ -2,11 +2,15 @@ package org.kframework.kale.context
 
 import org.kframework.kale._
 import org.kframework.kale.context.anywhere.ContextContentVariable
-import org.kframework.kale.standard.StandardEnvironment
+import org.kframework.kale.standard.{HolesMixin, StandardEnvironment}
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.transformer.{Binary, Unary}
 
 import scala.collection.Set
+
+trait PatternContextMixin extends Environment with standard.MatchingLogicMixin with HasMatcher {
+
+}
 
 object pattern {
 
@@ -55,7 +59,7 @@ object pattern {
     }
   }
 
-  class PatternContextMatcher(implicit env: StandardEnvironment) extends (Binary.Apply => (PatternContextApplication, Term) => Term)  {
+  class PatternContextMatcher(implicit env: Environment with BundledContextMixin) extends (Binary.Apply => (PatternContextApplication, Term) => Term)  {
 
     import env._
 
@@ -99,7 +103,7 @@ object pattern {
     }
   }
 
-  class PatternContextProcessingFunction(implicit env: StandardEnvironment) extends Unary.ProcessingFunction[SubstitutionApply] {
+  class PatternContextProcessingFunction(implicit env: Environment with HolesMixin with BundledContextMixin) extends Unary.ProcessingFunction[SubstitutionApply] {
     type Element = PatternContextApplication
 
     import env._

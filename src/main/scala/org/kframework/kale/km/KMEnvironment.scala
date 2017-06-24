@@ -2,8 +2,6 @@ package org.kframework.kale.km
 
 import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kale.builtin._
-import org.kframework.kale.standard.Sort
 
 import scala.collection._
 

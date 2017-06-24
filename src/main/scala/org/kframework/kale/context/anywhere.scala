@@ -1,10 +1,26 @@
 package org.kframework.kale.context
 
 import org.kframework.kale._
-import org.kframework.kale.standard.{Name, StandardEnvironment, SubstitutionWithContext}
-import org.kframework.kale.transformer.Binary.Apply
+import org.kframework.kale.context.anywhere.{AnywhereContextApplicationLabel, AnywhereContextMatcher}
+import org.kframework.kale.context.pattern.{PatternContextApplicationLabel, PatternContextMatcher}
+import org.kframework.kale.standard.{HolesMixin, Name, SubstitutionWithContext}
+import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 import org.kframework.kale.transformer.{Binary, Unary}
 import org.kframework.kale.util.Named
+
+trait AnywhereContextMixin extends Environment with standard.MatchingLogicMixin with HasMatcher {
+  val AnywhereContext = AnywhereContextApplicationLabel()
+
+  def ANYWHERE(t: Term) = AnywhereContext(Variable.freshVariable, t)
+}
+
+// TODO: un-bundle after we have decoupled the unary functions (substitution)
+trait BundledContextMixin extends HolesMixin with AnywhereContextMixin with PatternContextMixin {
+  override protected def makeMatcher: ProcessingFunctions = Binary.definePartialFunction({
+    case (capp: PatternContextApplicationLabel, _) => new PatternContextMatcher()(env)
+    case (`AnywhereContext`, _) => new AnywhereContextMatcher()(env)
+  }).orElse(super.makeMatcher)
+}
 
 object anywhere {
 
@@ -26,7 +42,7 @@ object anywhere {
   }
 
 
-  class AnywhereContextMatcher(implicit env: StandardEnvironment) extends (Binary.Apply => (AnywhereContextApplication, Term) => Term)  {
+  class AnywhereContextMatcher(implicit env: Environment with AnywhereContextMixin) extends (Binary.Apply => (AnywhereContextApplication, Term) => Term) {
 
     import env._
 
@@ -78,7 +94,7 @@ object anywhere {
     }
   }
 
-  class AnywhereContextProcessingFunction(implicit env: StandardEnvironment) extends Unary.ProcessingFunction[SubstitutionApply] {
+  class AnywhereContextProcessingFunction(implicit env: Environment with BundledContextMixin) extends Unary.ProcessingFunction[SubstitutionApply] {
     type Element = AnywhereContextApplication
 
     import env._

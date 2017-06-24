@@ -5,7 +5,6 @@ import org.scalatest.FreeSpec
 
 class SubstitutionTest extends FreeSpec with TestSetup {
 
-  import implicits._
   import env._
 
   "substitution" in {

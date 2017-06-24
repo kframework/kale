@@ -1,7 +1,6 @@
 package org.kframework.kale
 
 import com.typesafe.scalalogging.Logger
-import org.kframework.kale
 import org.kframework.kale.standard.Bottomize
 import org.kframework.kale.transformer.{Binary, Unary}
 
@@ -34,7 +33,7 @@ trait Environment extends MatchingLogicMixin with Bottomize {
       unifier(a, b)
   })
 
-  protected val unifier: Binary.Apply
+  protected def unifier: Binary.Apply
 
   def register(label: Label): Int = {
     assert(!isSealed, "Cannot register label " + label + " because the environment is sealed")

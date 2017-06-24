@@ -25,6 +25,9 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
 
   override val Rewrite = StandardRewriteLabel()
 
+  // TODO: non-ML
+  val BindMatch = new BindMatchLabel()
+
   def renameVariables[T <: Term](t: T): T = {
     val rename = And.substitution((t.variables map (v => (v, v.label(Name(v.name + "!" + Math.random().toInt), v.sort)))).toMap)
     rename(t).asInstanceOf[T]
@@ -58,6 +61,16 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
 
   case class Constants(solver: Apply) extends Binary.F({ (a: DomainValue[_], b: DomainValue[_]) => And(Truth(a.data == b.data), Next(b)) })
 
+  case class BindMatchMatcher(solver: Apply) extends Binary.F({ (a: Node2, b: Term) =>
+    val v = a._1.asInstanceOf[Variable]
+    val p = a._2
+    b.asOr map { bx =>
+      val sol = solver(p, bx)
+      And(Equality(v, bx), sol)
+    }
+  }
+  )
+
   override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
     case (_, `Not`) => OneIsFormula
     case (`Not`, _) => OneIsFormula
@@ -67,6 +80,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (_, `Or`) => TermOr
     case (`Variable`, _) => SortedVarLeft
     case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
+    case (`BindMatch`, _) => BindMatchMatcher
   }).orElse(super.makeMatcher)
 
   override def makeUnifier: Binary.ProcessingFunctions = Binary.definePartialFunction({
@@ -80,6 +94,22 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (_, `Variable`) => SortedVarRight
     case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
   }).orElse(super.makeUnifier)
+}
+
+trait MatchingLogicPostfixMixin extends Environment with MatchingLogicMixin {
+
+  case class RewriteMatcher(solver: Binary.Apply) extends Binary.F({ (a: SimpleRewrite, b: Term) =>
+    val m = solver(a._1, b)
+    m.asOr map {
+      case And.withNext(nonNext@And.substitutionAndTerms(subs, terms), _) =>
+        val s = substitutionMaker(subs)
+        And(Next(s(a._2)), nonNext)
+    }
+  })
+
+  override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
+    case (`Rewrite`, _) => RewriteMatcher
+  }).orElse(super.makeMatcher)
 }
 
 

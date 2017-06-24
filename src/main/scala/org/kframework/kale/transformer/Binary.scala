@@ -1,6 +1,7 @@
 package org.kframework.kale.transformer
 
 import org.kframework.kale._
+import org.kframework.kale.standard.StandardEnvironment
 
 object Binary {
 
@@ -20,11 +21,9 @@ object Binary {
 
   def definePartialFunction[Process <: Apply, A <: Term, B <: Term](f: PartialFunction[(Label, Label), Process => (A, B) => Term]): ProcessingFunctions = f.asInstanceOf[ProcessingFunctions]
 
-  trait Apply extends ((Term, Term) => Term) {
-    val env: Environment
+  case class Apply(processingFunctions: ProcessingFunctions)(implicit env: StandardEnvironment) extends ((Term, Term) => Term) {
     assert(env.isSealed)
 
-    protected def processingFunctions: ProcessingFunctions = PartialFunction.empty
 
     protected lazy val arr: Array[Array[(Term, Term) => Term]] = {
       val pf = processingFunctions.lift

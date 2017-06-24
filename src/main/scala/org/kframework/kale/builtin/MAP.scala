@@ -3,7 +3,7 @@ package org.kframework.kale.builtin
 import org.kframework.kale._
 import org.kframework.kale.standard.MatchNotSupporteredError
 import org.kframework.kale.transformer.Binary
-import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions, definePartialFunction}
+import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 
 import scala.collection.{Iterable, Map, Set}
 

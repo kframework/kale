@@ -1,6 +1,5 @@
 package org.kframework.kale.km
 
-import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.standard.{SimpleFreeLabel2, SimpleFreeLabel3, Sort, StandardEnvironment}
 import org.kframework.kale.util.dsl

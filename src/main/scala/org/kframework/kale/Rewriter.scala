@@ -2,23 +2,17 @@ package org.kframework.kale
 
 import org.kframework.kale.km.{MultisortedMixing, Z3Stuff}
 import org.kframework.kale.standard.{AndOfSubstitutionAndTerms, StandardEnvironment}
-import org.kframework.kale.transformer.Binary
 
 import scala.collection.immutable.TreeSet
 import scala.collection.{Set, mutable}
 
 object Rewriter {
-  def apply(substitutioner: Substitution => (Term => Term), matcher: Binary.Apply) = new {
-    def apply(rules: Set[_ <: Rewrite]): Rewriter = new Rewriter(substitutioner, matcher, rules, matcher.env)
-
-    def apply(rule: Term): Rewriter = {
-      implicit val e = matcher.env
-      apply(Set(rule.moveRewriteToTop))
-    }
+  def apply(env: Environment) = new {
+    def apply(rules: Set[_ <: Rewrite]): Rewriter = new Rewriter(env)(rules)
   }
 }
 
-class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment) extends (Term => Stream[Term]) {
+class Rewriter(val env: Environment)(val rules: Set[_ <: Rewrite]) extends (Term => Stream[Term]) {
   assert(env.isSealed)
   assert(rules != null)
 
@@ -60,7 +54,7 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
   def step(obj: Term): Stream[Term] = {
     var tries = 0
     val res = (sortedRules.toStream map { r =>
-      val m = doMatch(r, obj)
+      val m = unify(r, obj)
       tries += 1
       m match {
         case Or.set(ands) =>
@@ -77,7 +71,7 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
               }).headOption
 
 
-              oneGoodSub.map(substitutioner(_).apply(r._2)).getOrElse(Bottom)
+              oneGoodSub.map(substitutionMaker(_).apply(r._2)).getOrElse(Bottom)
           }
           //          if (afterSubstitution != Bottom) {
           //            println("   " + r)
@@ -97,7 +91,8 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
   }
 
   def searchStep(obj: Term): Term = {
-    Or(rules.map(r => (doMatch(r, obj), r._2)).flatMap({
+    val unificationRes = rules.map(r => (unify(r, obj), r._2))
+    Or(unificationRes.flatMap({
       case (Bottom, _) => Set[Term]()
       case (or, rhs) =>
         val res = Or.asSet(or).flatMap(u => {
@@ -106,7 +101,7 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
               val (sub, terms) = And.asSubstitutionAndTerms(u)
               val constraints = And(terms.filterNot(_.label == env.Next))
               if (z3.sat(constraints)) {
-                Set(And(substitutioner(sub)(rhs), constraints)) // TODO: consider when rhs.predicates is not satisfiable with constraints
+                Set(And(substitutionMaker(sub)(rhs), constraints)) // TODO: consider when rhs.predicates is not satisfiable with constraints
               } else {
                 Set[Term]()
               }
@@ -117,7 +112,8 @@ class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.A
           }
         })
         res
-    }))
+    })
+    )
   }
 }
 

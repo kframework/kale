@@ -58,7 +58,7 @@ trait TestSetup {
 
   env.seal()
 
-  implicit val rewriterBuilder: (collection.Set[_ <: Rewrite]) => Rewriter = Rewriter(SubstitutionWithContext(_)(env), env.matcher)(_)
+  implicit val rewriterBuilder: (collection.Set[_ <: Rewrite]) => Rewriter = Rewriter(env)(_)
 
   a2b.setRules(Or(a2bRules))
 

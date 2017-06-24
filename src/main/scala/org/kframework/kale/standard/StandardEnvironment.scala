@@ -1,12 +1,10 @@
 package org.kframework.kale.standard
 
-import com.typesafe.scalalogging.Logger
 import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kale.builtin._
-import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
-import org.kframework.kale.km.{MultisortedMixing, Z3Stuff}
+import org.kframework.kale.context.BundledContextMixin
 import org.kframework.kale.pretty.PrettyMixin
+import org.kframework.kale.transformer.Binary
 
 import scala.collection.Seq
 
@@ -15,13 +13,7 @@ object StandardEnvironment {
   }
 }
 
-trait StandardEnvironment extends MatchingLogicMixin with FreeMixin with builtin.BooleanMixin with builtin.IntMixin with builtin.DoubleMixin with builtin.StringMixin with builtin.IdMixin with PrettyMixin with strategy.StrategyMixin with ACMixin with standard.FunctionByRewritingMixin with builtin.MapMixin {
-  val Hole = Variable("☐", Sort.K)
-  val Hole1 = Variable("☐1", Sort.K)
-  val Hole2 = Variable("☐2", Sort.K)
-  val Hole3 = Variable("☐3", Sort.K)
-
-  val BindMatch = new BindMatchLabel()
+trait StandardEnvironment extends MatchingLogicMixin with HolesMixin with FreeMixin with builtin.BooleanMixin with builtin.IntMixin with builtin.DoubleMixin with builtin.StringMixin with builtin.IdMixin with PrettyMixin with ACMixin with standard.FunctionByRewritingMixin with builtin.MapMixin with BundledContextMixin with strategy.StrategyMixin with MatchingLogicPostfixMixin {
 
   val Match = new MatchLabel()
 
@@ -31,14 +23,11 @@ trait StandardEnvironment extends MatchingLogicMixin with FreeMixin with builtin
 
   val ApplySimpleRewrite = new Compose2("ApplySimpleRewrite", ApplyRewrite, OneResult)
 
-  val AnywhereContext = AnywhereContextApplicationLabel()
-
-  def ANYWHERE(t: Term) = AnywhereContext(Variable.freshVariable, t)
-
   override lazy val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)(this)
 
   override lazy val unifier = matcher
-  lazy val matcher = new SingleSortedMatcher(this.makeMatcher)
+
+  lazy val matcher = Binary.Apply(this.makeMatcher)
 
   def pretty(t: Term): String = t match {
     case PrettyWrapper(p, c, s) => p + pretty(c) + s
@@ -66,3 +55,13 @@ trait NoSortingMixin extends Environment {
   def sort(l: Label, children: Seq[Term]): kale.Sort = Sort.Top
   def sort(l: Label): Sort = Sort.Top
 }
+
+trait HolesMixin extends MatchingLogicMixin {
+  val Hole = Variable("☐", Sort.K)
+  val Hole1 = Variable("☐1", Sort.K)
+  val Hole2 = Variable("☐2", Sort.K)
+  val Hole3 = Variable("☐3", Sort.K)
+}
+
+case class MatchNotSupporteredError(l: Term, r: Term, message: String = "") extends
+  AssertionError("Trying to match " + l + " with " + r + " not supported yet. " + message)

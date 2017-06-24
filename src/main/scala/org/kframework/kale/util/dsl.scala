@@ -1,7 +1,7 @@
 package org.kframework.kale.util
 
 import org.kframework.kale._
-import org.kframework.kale.standard.{SimpleFreeLabel2, StandardEnvironment}
+import org.kframework.kale.standard.StandardEnvironment
 
 import scala.language.implicitConversions
 

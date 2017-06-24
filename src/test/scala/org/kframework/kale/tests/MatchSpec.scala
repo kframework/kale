@@ -1,7 +1,6 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
-import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
 
 class MatchSpec extends FreeSpec with TestSetup {

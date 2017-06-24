@@ -1,7 +1,7 @@
 package org.kframework.kale.km
 
 import org.kframework.kale.standard._
-import org.kframework.kale.{Rewriter, SubstitutionApply, Z3Builtin}
+import org.kframework.kale.{Rewriter, Z3Builtin}
 import org.scalatest.FreeSpec
 
 class RewriteTest extends FreeSpec {
@@ -34,7 +34,7 @@ class RewriteTest extends FreeSpec {
 
   env.seal()
 
-  val rewriter = Rewriter(new SubstitutionApply(_), env.unifier)
+  val rewriter = Rewriter(env)
 
   "simple" in {
 

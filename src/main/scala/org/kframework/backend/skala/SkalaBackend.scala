@@ -2,9 +2,8 @@ package org.kframework.backend.skala
 
 import org.kframework.backend.skala.backendImplicits._
 import org.kframework.kale._
-import org.kframework.kale.builtin.{TOKEN, MapLabel, SetLabel}
+import org.kframework.kale.builtin.{MapLabel, SetLabel, TOKEN}
 import org.kframework.kale.standard._
-import org.kframework.kale.transformer.Binary
 import org.kframework.kale.util.Named
 import org.kframework.kore
 import org.kframework.kore.extended.Backend
@@ -64,7 +63,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
     */
   val substitutionApplier = SubstitutionWithContext(_)
 
-  val rewriterGenerator = Rewriter(substitutionApplier, env.unifier)
+  val rewriterGenerator = Rewriter(env)
 
   /**
     * Following old Translation
