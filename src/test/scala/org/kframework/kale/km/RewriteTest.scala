@@ -1,7 +1,7 @@
 package org.kframework.kale.km
 
-import org.kframework.kale.{And, Rewriter, SubstitutionApply, Z3Builtin}
 import org.kframework.kale.standard._
+import org.kframework.kale.{Rewriter, SubstitutionApply, Z3Builtin}
 import org.scalatest.FreeSpec
 
 class RewriteTest extends FreeSpec {

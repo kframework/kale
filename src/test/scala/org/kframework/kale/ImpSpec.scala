@@ -83,7 +83,6 @@ object IMP {
 
   val signature = new IMPCommonSignature()
   import signature._
-
   import env._
 
   val ints = new standard.AssocWithIdListLabel("_,_", emptyIntList())
@@ -130,7 +129,6 @@ object IMP {
   val R = Variable("R")
 
   val implicits = new dsl()
-  import implicits._
 
   val rules = Set(
     T(k(kseq(Rewrite(X, I), R)), state(statesMap(varBinding(X, I), SO))),
@@ -181,10 +179,8 @@ object IMP {
 class ImpSpec extends FreeSpec {
   "IMP" ignore {
 
-    import IMP._
     import IMP.env._
     import IMP.signature._
-    import implicits._
 
     val term = T(k('foo), state(varBinding('foo, 5)))
 

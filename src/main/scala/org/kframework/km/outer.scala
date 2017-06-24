@@ -2,8 +2,8 @@ package org.kframework.km
 
 object outer {
 
-  import term._
   import builtin._
+  import term._
 
   case class SimplePattern(term: Term, constraint: Term) {
     assert(constraint.sort == SortBool)

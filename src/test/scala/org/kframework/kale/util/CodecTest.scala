@@ -1,8 +1,8 @@
 package org.kframework.kale.util
 
 import io.circe._
-import io.circe.syntax._
 import io.circe.parser._
+import io.circe.syntax._
 import org.kframework.kale._
 import org.kframework.kale.standard.{SimpleFreeLabel2, StandardEnvironment}
 import org.scalatest.FreeSpec

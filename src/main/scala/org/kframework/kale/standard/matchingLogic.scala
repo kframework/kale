@@ -2,7 +2,7 @@ package org.kframework.kale.standard
 
 import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
-import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunction}
+import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.{NameFromObject, Named, unreachable}
 import org.kframework.{kale, kore}
 

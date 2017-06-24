@@ -1,9 +1,9 @@
 package org.kframework
 
-import org.kframework.kale.standard.{SimpleRewrite, StandardEnvironment}
+import org.kframework.kale.standard.SimpleRewrite
 import org.kframework.kale.transformer.GenUnary.Apply
-import org.kframework.kale.transformer.{GenUnary, Unary}
 import org.kframework.kale.transformer.Unary.ProcessingFunction
+import org.kframework.kale.transformer.{GenUnary, Unary}
 
 package object kale {
 

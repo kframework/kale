@@ -1,9 +1,7 @@
 package org.kframework.kale.util
 
-import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kale.builtin.importINT
-import org.kframework.kale.standard.{SimpleFreeLabel2, Sort, StandardEnvironment}
+import org.kframework.kale.standard.{SimpleFreeLabel2, StandardEnvironment}
 
 import scala.language.implicitConversions
 

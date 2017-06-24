@@ -1,9 +1,9 @@
 package org.kframework.backend.skala
 
 import org.kframework.backend.skala.backendImplicits._
+import org.kframework.kale._
 import org.kframework.kale.builtin.{GenericTokenLabel, MapLabel, SetLabel}
 import org.kframework.kale.standard._
-import org.kframework.kale._
 import org.kframework.kale.util.Named
 import org.kframework.kore
 import org.kframework.kore.extended.Backend

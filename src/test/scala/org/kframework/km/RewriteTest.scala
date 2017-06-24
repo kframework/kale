@@ -4,9 +4,9 @@ import org.scalatest.FreeSpec
 
 class RewriteTest extends FreeSpec {
 
-  import term._
   import builtin._
   import outer._
+  import term._
 
   "simple" in {
     val tt = BOOL(true)

@@ -1,10 +1,9 @@
 package org.kframework.kale
 
+import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor}
 import org.kframework.kale.util.HasAtt
-import org.kframework.{kale, kore}
-import org.kframework.kore.implementation.DefaultBuilders
-import io.circe.syntax._
+import org.kframework.kore
 
 trait Label extends MemoizedHashCode with kore.Symbol {
   val env: Environment

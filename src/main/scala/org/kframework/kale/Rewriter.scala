@@ -1,8 +1,7 @@
 package org.kframework.kale
 
 import org.kframework.kale.km.Z3Stuff
-import org.kframework.kale.standard.AndOfSubstitutionAndTerms
-import org.kframework.kale.standard.StandardEnvironment
+import org.kframework.kale.standard.{AndOfSubstitutionAndTerms, StandardEnvironment}
 import org.kframework.kale.transformer.Binary
 
 import scala.collection.immutable.TreeSet

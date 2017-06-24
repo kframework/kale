@@ -4,8 +4,8 @@ import org.scalatest.FreeSpec
 
 class UnificationTest extends FreeSpec {
 
-  import term._
   import builtin._
+  import term._
   import unification._
 
   val tt = Seq() // BOOL(true)

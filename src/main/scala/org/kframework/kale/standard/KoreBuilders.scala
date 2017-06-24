@@ -1,14 +1,13 @@
 package org.kframework.kale.standard
 
+import org.kframework.backend.skala.Encodings
 import org.kframework.kale._
+import org.kframework.kale.builtin._
 import org.kframework.kore
+import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.DefaultBuilders
 
 import scala.collection.Seq
-import EnvironmentImplicit._
-import org.kframework.backend.skala.Encodings
-import org.kframework.kale.builtin._
-import org.kframework.kore.extended.implicits._
 
 class KoreBackend(d: kore.Definition, mainModule: kore.ModuleName) {
   val env = StandardEnvironment

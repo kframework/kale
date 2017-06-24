@@ -12,8 +12,6 @@ class KaleSpec extends FreeSpec {
 
   val impl = new dsl()
 
-  import impl._
-
   val X = Variable("X")
 
 

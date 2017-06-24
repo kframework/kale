@@ -1,7 +1,6 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale._
-import org.kframework.kale.context._
 import org.kframework.kale.context.anywhere.{AnywhereContextApplicationLabel, AnywhereContextProcessingFunction}
 import org.kframework.kale.context.pattern.{PatternContextApplicationLabel, PatternContextProcessingFunction}
 

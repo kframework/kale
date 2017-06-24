@@ -1,16 +1,14 @@
 package org.kframework.kale
 
-import org.apache.commons.io.FileUtils
 import org.kframework.backend.skala.SkalaBackend
-import org.kframework.kore.Builders
-import org.kframework.kore.implementation.DefaultBuilders
-import org.scalatest.FreeSpec
-import org.kframework.kore.parser
-import org.kframework.{kore => k}
 import org.kframework.kore.extended.Backend
+import org.kframework.kore.extended.implicits._
+import org.kframework.kore.implementation.DefaultBuilders
+import org.kframework.kore.{Builders, parser}
+import org.kframework.{kore => k}
+import org.scalatest.FreeSpec
 
 import scala.io.Source
-import org.kframework.kore.extended.implicits._
 
 class ImpOnSkalaTest extends FreeSpec {
 

@@ -4,8 +4,6 @@ import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.util.{NameFromObject, Named}
 
-import scala.collection.Set
-
 
 class InvokeLabel(implicit val env: Environment) extends NameFromObject with Label1 {
   // the rewriter is initialized after the creation of the label to break the cycle when creating the rewriter for applying functions

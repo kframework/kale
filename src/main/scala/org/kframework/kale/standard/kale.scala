@@ -1,8 +1,7 @@
 package org.kframework.kale.standard
 
-import org.kframework.{kale, kore}
+import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kore.Pattern
 
 import scala.language.implicitConversions
 

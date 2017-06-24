@@ -1,10 +1,10 @@
 package org.kframework.kale.km
 
 import org.kframework.kale
-import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunction}
 import org.kframework.kale._
-import org.kframework.kale.standard.{SimpleRewrite, SingleSortedMatcher}
+import org.kframework.kale.standard.SimpleRewrite
 import org.kframework.kale.transformer.Binary
+import org.kframework.kale.transformer.Binary.Apply
 
 class MultiSortedUnifier(val env: KMEnvironment) extends kale.MatcherOrUnifier {
 
@@ -19,8 +19,6 @@ class MultiSortedUnifier(val env: KMEnvironment) extends kale.MatcherOrUnifier {
   def SortedVarRight(solver: Apply)(a: Term, b: Variable) = SortedVarLeft(solver)(b, a)
 
   def RewriteMatcher(solver: kale.MatcherOrUnifier)(a: SimpleRewrite, b: Term) = solver(a._1, b)
-
-  import kale.standard._
 
   override def processingFunctions: Binary.ProcessingFunctions = Binary.definePartialFunction({
     case (Rewrite, _) => RewriteMatcher _

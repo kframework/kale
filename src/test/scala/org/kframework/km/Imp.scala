@@ -2,9 +2,9 @@ package org.kframework.km
 
 object Imp {
 
-  import term._
   import builtin._
   import outer._
+  import term._
 
   object Constructor1 {
     def apply(name: String, _smt: String, signature: Type): Constructor = new Constructor(name, signature) {

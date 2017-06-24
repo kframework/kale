@@ -1,10 +1,7 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard.Bottomize
-import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunction, ProcessingFunctions}
 import org.kframework.kale.transformer.{Binary, Unary}
-import org.kframework.kale.transformer.Unary.ProcessingFunctions
-import org.kframework.kore
 
 import scala.collection._
 

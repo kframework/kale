@@ -7,8 +7,6 @@ import org.kframework.kale.context.pattern.{PatternContextApplicationLabel, Patt
 import org.kframework.kale.pretty.PrettyWrapperHolder
 import org.kframework.kale.transformer.Binary
 
-import scala.collection.{+:, Iterable, Seq}
-
 case class MatchNotSupporteredError(l: Term, r: Term, message: String = "") extends
   AssertionError("Trying to match " + l + " with " + r + " not supported yet. " + message)
 
@@ -20,7 +18,6 @@ class SingleSortedMatcher(input:  Binary.ProcessingFunctions)(implicit val env: 
 
   import Binary._
   import env._
-  import org.kframework.kale.context._
 
   override def apply(left: Term, right: Term): Term = {
     val res = super.apply(left, right)

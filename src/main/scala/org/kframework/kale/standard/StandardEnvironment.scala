@@ -7,7 +7,6 @@ import org.kframework.kale.builtin._
 import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
 import org.kframework.kale.km.Z3Stuff
 import org.kframework.kale.pretty.importPrettyWrapper
-import org.kframework.kale.transformer.Binary
 
 object StandardEnvironment {
   def apply(): StandardEnvironment = new StandardEnvironment with Z3Stuff {}

@@ -4,10 +4,10 @@ import scala.collection.mutable
 
 class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
 
-  import term._
-  import unification._
   import builtin._
   import outer._
+  import term._
+  import unification._
 
   val z3 = new z3(symbols)
 

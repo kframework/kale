@@ -1,8 +1,8 @@
 package org.kframework.kale.context
 
 import org.kframework.kale._
-import org.kframework.kale.context.anywhere.{AnywhereContextApplication, ContextContentVariable}
-import org.kframework.kale.standard.{StandardEnvironment, SubstitutionWithContext}
+import org.kframework.kale.context.anywhere.ContextContentVariable
+import org.kframework.kale.standard.StandardEnvironment
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.transformer.{Binary, Unary}
 

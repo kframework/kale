@@ -1,5 +1,5 @@
 
-import language.dynamics
+import scala.language.dynamics
 
 trait Foo extends Dynamic {
   def applyDynamic(m: String)(args: Any*) = {

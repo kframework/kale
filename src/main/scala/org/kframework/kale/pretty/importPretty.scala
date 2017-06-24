@@ -1,8 +1,8 @@
 package org.kframework.kale.pretty
 
+import org.kframework.kale._
 import org.kframework.kale.builtin._
 import org.kframework.kale.util.Named
-import org.kframework.kale._
 
 class PrettyWrapperLabel(implicit penv: Environment with hasPrettyWrapper with hasSTRING) extends Named("œ") with Label3 {
 

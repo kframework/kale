@@ -1,8 +1,8 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard.MightBeSolved
+import org.kframework.kore
 import org.kframework.kore.implementation.DefaultBuilders
-import org.kframework.{kale, kore}
 
 import scala.collection.Seq
 

@@ -8,8 +8,6 @@ object Var {
 
 class SubstitutionApply(val substitution: Substitution)(implicit env: Environment) extends Unary.Apply() {
 
-  import env.Variable
-
   override def processingFunctions = definePartialFunction[Term, this.type]({
     case `Variable` => Var.apply _
   }) orElse env.unaryProcessingFunctions

@@ -1,8 +1,7 @@
 package org.kframework.kale.builtin
 
-import org.kframework.kale.{DomainValue, Environment, Label}
 import org.kframework.kale.standard.ReferenceLabel
-import org.kframework.kale.builtin
+import org.kframework.kale.{DomainValue, Environment, builtin}
 
 case class ID()(implicit protected val penv: Environment) {
   val Id = new ReferenceLabel[Symbol]("Id")(penv) {

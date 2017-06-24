@@ -2,7 +2,6 @@ package org.kframework.kale.transformer
 
 import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kale.transformer.GenUnary.{Apply, ProcessingFunctions}
 
 /**
   * Abstract stateful transformer from Term to Term
