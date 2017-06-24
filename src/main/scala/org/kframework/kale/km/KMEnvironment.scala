@@ -13,6 +13,9 @@ trait importBuiltin
     with importID
     with importSTRING {
 
+}
+
+trait Z3Stuff extends importBuiltin {
   def SMTName(l: Label): String = l match {
     case INT.mod => "mod"
     case INT.lt => "<"
@@ -26,9 +29,12 @@ trait importBuiltin
     case l => INT.all.contains(l)
   }
 
+  implicit class WithSMTname(l: Label) {
+    def smtName: String = SMTName(l)
+  }
 }
 
-class KMEnvironment extends DNFEnvironment with importBuiltin {
+class KMEnvironment extends standard.MatchingLogic with Z3Stuff {
 
   private val sorts = mutable.Map[Label, Signature]()
 

@@ -2,17 +2,18 @@ package org.kframework.kale.standard
 
 import com.typesafe.scalalogging.Logger
 import org.kframework.kale
+import org.kframework.kale._
 import org.kframework.kale.builtin._
 import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
-import org.kframework.kale.pretty.{PrettyWrapperHolder, importPrettyWrapper}
-import org.kframework.kale.transformer.Unary.{Apply, ProcessingFunctions}
-import org.kframework.kale.{standard, _}
+import org.kframework.kale.km.Z3Stuff
+import org.kframework.kale.pretty.importPrettyWrapper
+import org.kframework.kale.transformer.Binary
 
 object StandardEnvironment {
-  def apply(): StandardEnvironment = new StandardEnvironment {}
+  def apply(): StandardEnvironment = new StandardEnvironment with Z3Stuff {}
 }
 
-trait StandardEnvironment extends DNFEnvironment with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with importPrettyWrapper with strategy.importSTRATEGY {
+trait StandardEnvironment extends MatchingLogic with importBOOLEAN with importINT with importDOUBLE with importSTRING with importID with importPrettyWrapper with strategy.importSTRATEGY with AC {
   val Hole = Variable("☐", Sort.K)
   val Hole1 = Variable("☐1", Sort.K)
   val Hole2 = Variable("☐2", Sort.K)
@@ -49,10 +50,6 @@ trait StandardEnvironment extends DNFEnvironment with importBOOLEAN with importI
     case PrettyWrapper(p, c, s) => p + pretty(c) + s
     case _ => t.toString
   }
-
-  override def SMTName(l: Label): String = ???
-
-  override def isZ3Builtin(l: Label): Boolean = ???
 
   // HELPERS:
 

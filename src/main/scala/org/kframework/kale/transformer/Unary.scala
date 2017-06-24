@@ -23,7 +23,7 @@ object GenUnary {
   /**
     * Extend this class to define the transformation by implementing f.
     */
-  trait ProcessingFunction[ReturnType, -SpecificSolver <: Apply[ReturnType]] extends (SpecificSolver => Term => ReturnType) {
+  trait ProcessingFunction[ReturnType, -SpecificSolver] extends (SpecificSolver => Term => ReturnType) {
     type Element <: Term
 
     def apply(unarySolver: SpecificSolver): (Term => ReturnType) = { t: Term => f(unarySolver)(t.asInstanceOf[Element]) }
@@ -54,7 +54,7 @@ object GenUnary {
 }
 
 object Unary {
-  type ProcessingFunction[-SpecificSolver <: Apply] = GenUnary.ProcessingFunction[Term, SpecificSolver]
+  type ProcessingFunction[-SpecificSolver] = GenUnary.ProcessingFunction[Term, SpecificSolver]
 
   def Node0(solver: Apply)(t: Node0): Term = t.copy()
 

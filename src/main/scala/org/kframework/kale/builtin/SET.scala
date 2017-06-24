@@ -39,3 +39,4 @@ case class SET(label: SetLabel, elements: Set[Term]) extends Assoc {
 
   override def _2: Term = SET(label, elements.tail)
 }
+

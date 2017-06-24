@@ -2,8 +2,8 @@ package org.kframework.kale.context
 
 import org.kframework.kale._
 import org.kframework.kale.standard.{Name, StandardEnvironment, SubstitutionWithContext}
+import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.transformer.{Binary, Unary}
-import org.kframework.kale.transformer.Binary.TypedWith
 import org.kframework.kale.util.Named
 
 object anywhere {
@@ -26,18 +26,18 @@ object anywhere {
   }
 
 
-  class AnywhereContextMatcher(implicit env: StandardEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Apply] with TypedWith[AnywhereContextApplication, Term] {
+  class AnywhereContextMatcher(implicit env: StandardEnvironment) extends (Binary.Apply => (AnywhereContextApplication, Term) => Term)  {
 
     import env._
 
-    override def f(solver: Binary.Apply)(contextApplication: AnywhereContextApplication, term: Term): Term = {
+    override def apply(solver: Apply): (AnywhereContextApplication, Term) => Term = { (contextApplication: AnywhereContextApplication, term: Term) =>
       assert(contextApplication.label == AnywhereContext)
       val contextVar = contextApplication.contextVar
 
       def solutionFor(subterms: Seq[Term], reconstruct: (Int, Term) => Term, avoidIndices: Set[Int] = Set()) = {
         Or((subterms.indices.toSet &~ avoidIndices) map { i =>
           // calling f directly instead of solver because we know contextApplication is hooked to the current f
-          val solutionForSubtermI = f(solver)(contextApplication, subterms(i))
+          val solutionForSubtermI = apply(solver)(contextApplication, subterms(i))
           val res = Or.asSet(solutionForSubtermI) map {
             // this rewires C -> HOLE into C -> foo(HOLE)
             case And.withNext(And.substitution(m), Some(Next(next))) if m.contains(contextVar) =>

@@ -4,8 +4,8 @@ import org.kframework.kale.standard.ReferenceLabel
 import org.kframework.kale.util.Named
 import org.kframework.kale.{FunctionLabel2, _}
 
-case class DOUBLE()(implicit protected val penv: Environment) extends Module("DOUBLE") {
-  val Double = new ReferenceLabel[Double]("Double")(penv) {
+case class DOUBLE()(implicit protected val env: Environment) {
+  val Double = new ReferenceLabel[Double]("Double") {
     override protected[this] def internalInterpret(s: String): Double = s.toDouble
   }
 
@@ -17,8 +17,6 @@ case class DOUBLE()(implicit protected val penv: Environment) extends Module("DO
       case _ => None
     }
   }
-
-  override lazy val all: Set[Label] = Set(Double)
 }
 
 trait importDOUBLE {

@@ -1,13 +1,14 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard.Bottomize
-import org.kframework.kale.transformer.Unary
+import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunction, ProcessingFunctions}
+import org.kframework.kale.transformer.{Binary, Unary}
 import org.kframework.kale.transformer.Unary.ProcessingFunctions
 import org.kframework.kore
 
 import scala.collection._
 
-trait Environment extends KORELabels with Bottomize {
+trait Environment extends MatchingLogic with Bottomize {
 
   implicit protected val env: this.type = this
 
@@ -25,7 +26,7 @@ trait Environment extends KORELabels with Bottomize {
 
   def isSealed = pisSealed
 
-  def unaryProcessingFunctions: ProcessingFunctions = Unary.processingFunctions
+  def unaryProcessingFunctions: Unary.ProcessingFunctions = Unary.processingFunctions
 
   val substitutionMaker: Substitution => SubstitutionApply
 
@@ -61,31 +62,19 @@ trait Environment extends KORELabels with Bottomize {
     "nextId: " + uniqueLabels.size + "\n" + uniqueLabels.mkString("\n")
   }
 
-  def SMTName(l: Label): String
-
-  def isZ3Builtin(l: Label): Boolean
-
-  implicit class WithSMTname(l: Label) {
-    def smtName: String = SMTName(l)
-  }
-
   def rewrite(rule: Term, obj: Term): Term
+
+//  protected def defineBinaryPFs[Process <: Apply, A <: Term, B <: Term](f: PartialFunction[(Label, Label), Process => (A, B) => Term]): Binary.ProcessingFunctions = f.asInstanceOf[Binary.ProcessingFunctions]
 }
 
-trait KORELabels {
-  // Constants
-  val Bottom: Truth with kore.Bottom
-  val Top: Truth with Substitution with kore.Top
+trait HasMatcher {
+  self: Environment =>
 
-  // Labels
-  val Variable: VariableLabel
-  val And: AndLabel
-  val Or: OrLabel
-  val Rewrite: RewriteLabel
-  val Equality: EqualityLabel
-  val Truth: TruthLabel
-  val Not: NotLabel
-  val Next: NextLabel
-  val Exists: ExistsLabel
+  protected def makeMatcher: Binary.ProcessingFunctions = PartialFunction.empty
 }
 
+trait HasUnifier {
+  self: Environment =>
+
+  protected def makeUnifier: Binary.ProcessingFunctions = PartialFunction.empty
+}

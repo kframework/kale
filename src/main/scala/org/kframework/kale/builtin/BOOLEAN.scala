@@ -3,7 +3,7 @@ package org.kframework.kale.builtin
 import org.kframework.kale._
 import org.kframework.kale.standard.ReferenceLabel
 
-case class BOOLEAN()(implicit penv: Environment) extends Module("BOOLEAN") {
+case class BOOLEAN()(implicit env: Environment) extends Module {
   val Boolean = new ReferenceLabel[Boolean]("Boolean") {
     override protected[this] def internalInterpret(s: String): Boolean = s.toBoolean
   }
@@ -12,8 +12,6 @@ case class BOOLEAN()(implicit penv: Environment) extends Module("BOOLEAN") {
   val and = PrimitiveFunction2[Boolean]("_andBool_", Boolean, (x, y) => x && y)
   val True = Boolean(true)
   val False = Boolean(false)
-
-  override val all: Set[Label] = Set(Boolean, not)
 }
 
 trait importBOOLEAN {

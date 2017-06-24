@@ -1,7 +1,5 @@
 package org.kframework.kale
 
-import org.kframework.kore
-
 import scala.collection._
 
 trait Label0 extends (() => Term) with NodeLabel {

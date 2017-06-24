@@ -6,6 +6,23 @@ import org.kframework.{kale, kore}
 
 import scala.collection.Seq
 
+trait MatchingLogic {
+  // Constants
+  val Bottom: Truth with kore.Bottom
+  val Top: Truth with Substitution with kore.Top
+
+  // Labels
+  val Variable: VariableLabel
+  val And: AndLabel
+  val Or: OrLabel
+  val Rewrite: RewriteLabel
+  val Equality: EqualityLabel
+  val Truth: TruthLabel
+  val Not: NotLabel
+  val Next: NextLabel
+  val Exists: ExistsLabel
+}
+
 trait DomainValueLabel[T] extends LeafLabel[T] {
 
   def apply(v: T): DomainValue[T]

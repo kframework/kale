@@ -4,42 +4,20 @@ import org.kframework.kale._
 
 object Binary {
 
-  trait TypedWith[L <: Term, R <: Term] {
-    type Left = L
-    type Right = R
-  }
-
-  object ProcessingFunction {
-    implicit def functionToProcessingFunction[LeftIn <: Term, RightIn <: Term, SpecificSolver <: Apply](func: SpecificSolver => (LeftIn, RightIn) => Term): ProcessingFunction[SpecificSolver] = new ProcessingFunction[SpecificSolver] {
-      override type Left = LeftIn
-      override type Right = RightIn
-
-      override def f(state: SpecificSolver)(l: Left, r: Right): Term = func(state)(l, r)
-    }
-  }
-
   /**
     * f specifies how to process a pair of terms with labels (leftLabel, rightLabel).
     * f is automatically hooked and applied via Apply.
     */
-  trait ProcessingFunction[-SpecificSolver <: Apply] extends (SpecificSolver => ((Term, Term) => Term)) {
-    type Left <: Term
-    type Right <: Term
+  type ProcessingFunction = (Apply => (Term, Term) => Term)
 
-    def apply(solver: SpecificSolver): (Term, Term) => Term = {
-      (a: Term, b: Term) => f(solver)(a.asInstanceOf[Left], b.asInstanceOf[Right])
-    }
 
-    def f(solver: SpecificSolver)(a: Left, b: Right): Term
-  }
+  type ProcessingFunctions = PartialFunction[(Label, Label), ProcessingFunction]
+
+  def definePartialFunction[Process <: Apply, A <: Term, B <: Term](f: PartialFunction[(Label, Label), Process => (A, B) => Term]): ProcessingFunctions = f.asInstanceOf[ProcessingFunctions]
 
   trait Apply extends ((Term, Term) => Term) {
     val env: Environment
     assert(env.isSealed)
-
-    type ProcessingFunctions = PartialFunction[(Label, Label), ProcessingFunction[this.type]]
-
-    protected def definePartialFunction(f: ProcessingFunctions): ProcessingFunctions = f
 
     protected def processingFunctions: ProcessingFunctions = PartialFunction.empty
 
@@ -54,7 +32,7 @@ object Binary {
       for (left <- env.labels) {
         for (right <- env.labels) {
           assert(arr(left.id)(right.id) == null)
-          val f = pf((left, right)).map(_ (this)).orNull
+          val f = pf((left, right)).map(x => x(this)).orNull
           arr(left.id)(right.id) = f
         }
       }

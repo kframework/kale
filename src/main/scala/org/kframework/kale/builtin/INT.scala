@@ -4,8 +4,7 @@ import org.kframework.kale._
 import org.kframework.kale.pretty.PrettyWrapperLabel
 import org.kframework.kale.standard.ReferenceLabel
 
-
-case class INT(implicit protected val penv: Environment with hasBOOLEAN) extends Module("INT") {
+case class INT(implicit protected val penv: Environment with hasBOOLEAN) {
 
   import penv._
 

@@ -1,5 +1,6 @@
 package org.kframework.kale
 
+import org.kframework.kale.km.Z3Stuff
 import org.kframework.kale.standard.AndOfSubstitutionAndTerms
 import org.kframework.kale.standard.StandardEnvironment
 import org.kframework.kale.transformer.Binary
@@ -9,7 +10,7 @@ import scala.collection.{Set, mutable}
 
 object Rewriter {
   def apply(substitutioner: Substitution => (Term => Term), matcher: MatcherOrUnifier) = new {
-    def apply(rules: Set[_ <: Rewrite]): Rewriter = new Rewriter(substitutioner, matcher, rules, matcher.env)
+    def apply(rules: Set[_ <: Rewrite]): Rewriter = new Rewriter(substitutioner, matcher, rules, matcher.env.asInstanceOf[Environment with Z3Stuff])
 
     def apply(rule: Term): Rewriter = {
       implicit val e = matcher.env
@@ -18,7 +19,7 @@ object Rewriter {
   }
 }
 
-class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment) extends (Term => Stream[Term]) {
+class Rewriter(substitutioner: Substitution => (Term => Term), doMatch: Binary.Apply, val rules: Set[_ <: Rewrite], val env: Environment with Z3Stuff) extends (Term => Stream[Term]) {
   assert(env.isSealed)
   assert(rules != null)
 

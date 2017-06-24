@@ -1,5 +1,7 @@
 package org.kframework.kale
 
+import org.kframework.kale.km.Z3Stuff
+
 import scala.collection._
 import scala.sys.process._
 
@@ -9,7 +11,7 @@ trait Z3Builtin
   symbolsSeq: constructor symbols that need to be encoded using z3 datatypes instead of functions.
   It should be given as SCCs of symbols in topological order of dependency.
  */
-class z3(val env: Environment, val symbolsSeq: Seq[Seq[Label]]) {
+class z3(val env: Environment with Z3Stuff, val symbolsSeq: Seq[Seq[Label]]) {
 
   import env._
 

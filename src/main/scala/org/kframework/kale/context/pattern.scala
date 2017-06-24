@@ -1,9 +1,9 @@
 package org.kframework.kale.context
 
 import org.kframework.kale._
-import org.kframework.kale.context.anywhere.ContextContentVariable
+import org.kframework.kale.context.anywhere.{AnywhereContextApplication, ContextContentVariable}
 import org.kframework.kale.standard.{StandardEnvironment, SubstitutionWithContext}
-import org.kframework.kale.transformer.Binary.TypedWith
+import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.transformer.{Binary, Unary}
 
 import scala.collection.Set
@@ -55,11 +55,11 @@ object pattern {
     }
   }
 
-  class PatternContextMatcher(implicit env: StandardEnvironment) extends transformer.Binary.ProcessingFunction[Binary.Apply] with TypedWith[PatternContextApplication, Term] {
+  class PatternContextMatcher(implicit env: StandardEnvironment) extends (Binary.Apply => (PatternContextApplication, Term) => Term)  {
 
     import env._
 
-    override def f(solver: Binary.Apply)(contextApplication: PatternContextApplication, term: Term): Term = {
+    override def apply(solver: Apply): (PatternContextApplication, Term) => Term = { (contextApplication: PatternContextApplication, term: Term) =>
       val leftContextLabel = contextApplication.label
       val contextVar = contextApplication.contextVar
       val redex = contextApplication.redex

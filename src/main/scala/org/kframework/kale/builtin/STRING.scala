@@ -3,7 +3,7 @@ package org.kframework.kale.builtin
 import org.kframework.kale._
 import org.kframework.kale.standard.ReferenceLabel
 
-case class STRING()(implicit protected val penv: Environment with hasINT with hasBOOLEAN) extends Module("STRING") {
+case class STRING()(implicit protected val penv: Environment with hasINT with hasBOOLEAN) {
 
   import penv._
 
@@ -31,9 +31,6 @@ case class STRING()(implicit protected val penv: Environment with hasINT with ha
   val stringne = PrimitiveFunction2[String, String, Boolean]("_=/=String_", String, String, BOOLEAN.Boolean , (x, y) => x != y)
 
   val stringe = PrimitiveFunction2[String, String, Boolean]("_==String_", String, String, BOOLEAN.Boolean , (x, y) => x == y)
-
-
-  override val all: Set[Label] = Set(String, substr, rfindchar, findchar, rfindchar, strconcat, replaceall, replacefirst, stringe, stringne)
 }
 
 trait importSTRING {
