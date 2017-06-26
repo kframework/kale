@@ -38,6 +38,8 @@ trait MultisortedMixing extends Environment with standard.MatchingLogicMixin wit
 
   case class Signature(args: Seq[kale.Sort], target: kale.Sort)
 
+  override def compatible(left: kale.Sort, right: kale.Sort): Boolean = left == right
+
   def sortArgs(l: Label): Seq[kale.Sort] = sorts.get(l).map({ signature => signature.args }).getOrElse({
     throw new AssertionError("Could not find Signature for label: " + l)
   })

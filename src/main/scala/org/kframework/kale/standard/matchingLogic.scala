@@ -34,7 +34,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
   }
 
   def SortedVarLeft(solver: Apply)(a: Variable, b: Term): Term =
-    if (a.sort == b.sort)
+    if (compatible(a.sort, b.sort))
       And(Equality(a.asInstanceOf[Variable], b), Next(b))
     else
       Bottom
@@ -107,8 +107,18 @@ trait MatchingLogicPostfixMixin extends Environment with MatchingLogicMixin {
     }
   })
 
+  case class TruthMatcher(solver: Binary.Apply) extends Binary.F[Term, Term]({
+    case (Bottom, _) => Bottom
+    case (_, Bottom) => Bottom
+    case (Top, Top) => Top
+    case (Top, t) => Next(t)
+    case (t, Top) => Next(t)
+  })
+
   override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
     case (`Rewrite`, _) => RewriteMatcher
+    case (Truth, _) => TruthMatcher
+    case (_, Truth) => TruthMatcher
   }).orElse(super.makeMatcher)
 }
 
@@ -727,12 +737,19 @@ private[standard] case class DNFOrLabel(implicit override val env: Environment) 
 
   import env._
 
-  def apply(_1: Term, _2: Term): Term =
-    asSet(_1) | asSet(_2) match {
-      case s if s.isEmpty => Bottom
-      case s if s.size == 1 => s.head
-      case s => new OrWithAtLeastTwoElements(s)
+  def apply(_1: Term, _2: Term): Term = {
+    if (_1 == Bottom) {
+      _2
+    } else if (_2 == Bottom) {
+      _1
+    } else {
+      asSet(_1) | asSet(_2) match {
+        case s if s.isEmpty => Bottom
+        case s if s.size == 1 => s.head
+        case s => new OrWithAtLeastTwoElements(s)
+      }
     }
+  }
 
   override def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
 }
@@ -772,7 +789,8 @@ private[standard] case class SimpleExistsLabel(implicit val e: MatchingLogicMixi
       case Bottom => Bottom
       case And.substitutionAndTerms(s, terms) if s.get(v).exists(_.isGround) =>
         And.substitutionAndTerms(s.remove(v), terms)
-      case _ => SimpleExists(v, _2)
+      case _ =>
+        SimpleExists(v, _2)
     }
   }
 }

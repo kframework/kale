@@ -3,7 +3,7 @@ package org.kframework.kale.strategy
 import org.kframework.kale.tests.TestSetup
 import org.scalatest.FreeSpec
 
-class StrategyTest extends FreeSpec with TestSetup {
+class StrategyTest extends TestSetup {
 
   import env._
   import STRATEGY._

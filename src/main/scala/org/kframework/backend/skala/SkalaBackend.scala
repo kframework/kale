@@ -250,6 +250,8 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 
     implicit val env = StandardEnvironment()
 
+    import env._
+
     /**
       * Declare All Sorts With Tokens as Token Labels
       */
@@ -288,11 +290,11 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
           case None => {
             // Non Functional Symbol Declaration
             x.args match {
-              case Seq() => Some(SimpleFreeLabel0(x.symbol.str))
-              case Seq(_) => Some(SimpleFreeLabel1(x.symbol.str))
-              case Seq(_, _) => Some(SimpleFreeLabel2(x.symbol.str))
-              case Seq(_, _, _) => Some(SimpleFreeLabel3(x.symbol.str))
-              case Seq(_, _, _, _) => Some(SimpleFreeLabel4(x.symbol.str))
+              case Seq() => Some(FreeLabel0(x.symbol.str))
+              case Seq(_) => Some(FreeLabel1(x.symbol.str))
+              case Seq(_, _) => Some(FreeLabel2(x.symbol.str))
+              case Seq(_, _, _) => Some(FreeLabel3(x.symbol.str))
+              case Seq(_, _, _, _) => Some(FreeLabel4(x.symbol.str))
             }
           }
         }
@@ -348,7 +350,7 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 
     //Todo: Better Mechanism To Handle These
 
-    val emptyKSeqLabel: SimpleFreeLabel0 = SimpleFreeLabel0(".K")
+    val emptyKSeqLabel: FreeLabel0 = FreeLabel0(".K")
 
     val kSeq = env.AssocWithIdLabel("~>", emptyKSeqLabel())
 

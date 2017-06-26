@@ -24,6 +24,7 @@ trait MatchingLogicMixin extends Mixin {
 
   def sort(l: Label, children: Seq[Term]): Sort
   def sort(l: Label): kale.Sort
+  def compatible(left: kale.Sort, right: kale.Sort): Boolean
 }
 
 trait DomainValueLabel[T] extends LeafLabel[T] {

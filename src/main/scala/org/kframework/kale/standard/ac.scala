@@ -11,19 +11,13 @@ trait ACMixin extends kale.ACMixin with Environment with HasMatcher with HasUnif
 
   override def AssocWithIdLabel(name: String, id: Term): AssocWithIdLabel = new AssocWithIdListLabel(name, id)
 
-  private object MatchesVar {
-    def unapply(t: Term): Option[Term] = t match {
-      case v: Variable => Some(t)
-      case Rewrite(_: Variable, _) => Some(t)
-      case _ => None
-    }
-  }
+  private def matchContents(l: AssocLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = strongBottomize(soFar) {
 
-  private def matchContents(l: AssocLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = {
+
     val res = (ksLeft.toSeq, ksRight.toSeq) match {
       case (Seq(), Seq()) =>
         soFar
-      case (MatchesVar(t) +: tailL, ksR) =>
+      case (t +: tailL, ksR) =>
         (0 to ksR.size)
           .map {
             index => (ksR.take(index), ksR.drop(index))
@@ -33,9 +27,8 @@ trait ACMixin extends kale.ACMixin with Environment with HasMatcher with HasUnif
               val prefixTerm = l(prefix)
               val newSoFar = t match {
                 case v: Variable => And.combine(l)(Solved(soFar), Solved(And(Next(prefixTerm), Equality(v, prefixTerm))))
-                case Rewrite(v, right) => And.combine(l)(Solved(soFar), Solved(And(Next(right), Equality(v, prefixTerm))))
+                case _ => And.combine(l)(Solved(soFar), Task(t, prefixTerm))
               }
-
               matchContents(l, newSoFar, tailL, suffix)
           }
           .fold(Bottom)({
@@ -66,12 +59,10 @@ trait ACMixin extends kale.ACMixin with Environment with HasMatcher with HasUnif
 
   override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
     case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
-    case (left, _: AssocWithIdLabel) if !left.isInstanceOf[Variable] => TermAssocWithId
   }).orElse(super.makeMatcher)
 
   override def makeUnifier: Binary.ProcessingFunctions = Binary.definePartialFunction({
     case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
-    case (left, _: AssocWithIdLabel) if !left.isInstanceOf[Variable] => TermAssocWithId
   }).orElse(super.makeUnifier)
 }
 

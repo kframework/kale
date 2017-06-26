@@ -6,10 +6,12 @@ import org.scalatest.FreeSpec
 import scala.collection._
 import scala.language.implicitConversions
 
-class RewriteTest extends FreeSpec with TestSetup {
+class RewriteTest extends TestSetup() {
 
   import env._
   import implicits._
+
+  implicit val eeenv = env
 
   def assertRewrite(rule: Rewrite)(obj: Term, expected: Term) {
     val actual = unify(rule, obj)
@@ -131,7 +133,11 @@ class RewriteTest extends FreeSpec with TestSetup {
   "inline rewrite" - {
     "very simple" in {
       val rw = Rewrite(1, 2)
-      println(rw := 1)
+      assert((rw :== 1) === Next(2))
     }
+  }
+
+  "flip" in {
+    assert(Rewrite(foo(A, B), foo(B, A)).rewrite(foo(a, b)) === foo(b, a))
   }
 }

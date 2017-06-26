@@ -4,24 +4,25 @@ import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
+import org.kframework.kale.util.Named
 
 import scala.language.implicitConversions
 
 trait FreeMixin extends kale.FreeMixin with HasMatcher with HasUnifier {
   self: Environment =>
-  override def FreeLabel0(name: String): FreeLabel0 = ???
+  override def FreeLabel0(name: String): FreeLabel0 = new Named(name) with FreeLabel0
 
-  override def FreeLabel1(name: String): FreeLabel1 = ???
+  override def FreeLabel1(name: String): FreeLabel1 = new Named(name) with FreeLabel1
 
-  override def FreeLabel2(name: String): FreeLabel2 = ???
+  override def FreeLabel2(name: String): FreeLabel2 = new Named(name) with FreeLabel2
 
-  override def FreeLabel3(name: String): FreeLabel3 = ???
+  override def FreeLabel3(name: String): FreeLabel3 = new Named(name) with FreeLabel3
 
-  override def FreeLabel4(name: String): FreeLabel4 = ???
+  override def FreeLabel4(name: String): FreeLabel4 = new Named(name) with FreeLabel4
 
-  override def FreeLabel5(name: String): FreeLabel5 = ???
+  override def FreeLabel5(name: String): FreeLabel5 = new Named(name) with FreeLabel5
 
-  override def FreeLabel6(name: String): FreeLabel6 = ???
+  override def FreeLabel6(name: String): FreeLabel6 = new Named(name) with FreeLabel6
 
   case class FreeNode0FreeNode0(solver: Apply) extends Binary.F({(a: Node0, b: Node0) => Next(b)})
 
@@ -48,13 +49,3 @@ trait FreeMixin extends kale.FreeMixin with HasMatcher with HasUnifier {
     case (_: FreeLabel4, _: FreeLabel4) => FreeNode4FreeNode4
   }).orElse(super.makeMatcher)
 }
-
-case class SimpleFreeLabel0 private(name: String)(implicit val env: Environment) extends FreeLabel0
-
-case class SimpleFreeLabel1 private(name: String)(implicit val env: Environment) extends FreeLabel1
-
-case class SimpleFreeLabel2 private(name: String)(implicit val env: Environment) extends FreeLabel2
-
-case class SimpleFreeLabel3 private(name: String)(implicit val env: Environment) extends FreeLabel3
-
-case class SimpleFreeLabel4 private(name: String)(implicit val env: Environment) extends FreeLabel4

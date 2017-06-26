@@ -5,10 +5,9 @@ import org.kframework.kale.context.pattern.PatternContextApplicationLabel
 import org.kframework.kale.standard.{SimpleRewrite => _, _}
 import org.kframework.kale.util.dsl
 import org.scalactic.Prettifier
+import org.scalatest.FreeSpec
 
-trait TestSetup {
-
-  implicit val env = StandardEnvironment()
+abstract class TestSetup[E <: StandardEnvironment](implicit val env: E = StandardEnvironment()) extends FreeSpec {
 
   import env._
 
@@ -17,13 +16,13 @@ trait TestSetup {
   val X = Variable("X")
   val Y = Variable("Y")
 
-  val plus = env.uniqueLabels.getOrElse("+", SimpleFreeLabel2("+")).asInstanceOf[Label2]
+  val plus = env.uniqueLabels.getOrElse("+", FreeLabel2("+")).asInstanceOf[Label2]
 
   implicit class asTerm(x: Term) {
     def +(y: Term): Term = plus(x, y)
   }
 
-  val emptyList = SimpleFreeLabel0("emptyList")
+  val emptyList = FreeLabel0("emptyList")
 
   val el = emptyList()
 
@@ -33,13 +32,14 @@ trait TestSetup {
     def ~~(o: Term): Term = listLabel(t, o)
   }
 
-  val foo = SimpleFreeLabel2("foo")
-  val bar = SimpleFreeLabel1("bar")
-  val buz = SimpleFreeLabel2("buz")
-  val (a, b, c, d, e) = (STRING.String("a"), STRING.String("b"), STRING.String("c"), STRING.String("d"), STRING.String("e"))
-  val matched = SimpleFreeLabel1("matched")
-  val traversed = SimpleFreeLabel1("traversed")
-  val andMatchingY = SimpleFreeLabel0("andMatchingY")
+  val foo = FreeLabel2("foo")
+  val bar = FreeLabel1("bar")
+  val buz = FreeLabel2("buz")
+  val List(a, b, c, d, e) = List("a", "b", "c", "d", "e").map(STRING.String)
+  val List(u, v) = List("u", "v").map(STRING.String)
+  val matched = FreeLabel1("matched")
+  val traversed = FreeLabel1("traversed")
+  val andMatchingY = FreeLabel0("andMatchingY")
 
   val a2b = standard.FunctionDefinedByRewritingLabel1("a2b")
 

@@ -23,7 +23,9 @@ trait AssocLabel extends Label2 {
   }
 
   def map(f: Term => Term): Term => Term = { t: Term =>
-    this (asIterable(t) map f)
+    env.strongBottomize(t) {
+      this (asIterable(t) map f)
+    }
   }
 }
 

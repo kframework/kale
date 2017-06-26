@@ -3,17 +3,30 @@ package org.kframework.kale.standard
 import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.context.BundledContextMixin
-import org.kframework.kale.pretty.PrettyMixin
+import org.kframework.kale.pretty.PrettyWrapperMixin
 import org.kframework.kale.transformer.Binary
 
 import scala.collection.Seq
 
 object StandardEnvironment {
-  def apply(): StandardEnvironment = new StandardEnvironment with NoSortingMixin {
-  }
+  def apply(): StandardEnvironment = new StandardEnvironment with NoSortingMixin
 }
 
-trait StandardEnvironment extends MatchingLogicMixin with HolesMixin with FreeMixin with builtin.BooleanMixin with builtin.IntMixin with builtin.DoubleMixin with builtin.StringMixin with builtin.IdMixin with PrettyMixin with ACMixin with standard.FunctionByRewritingMixin with builtin.MapMixin with BundledContextMixin with strategy.StrategyMixin with MatchingLogicPostfixMixin {
+trait StandardEnvironment
+  extends MatchingLogicMixin
+    with HolesMixin
+    with FreeMixin
+    with builtin.BooleanMixin
+    with builtin.IntMixin
+    with builtin.DoubleMixin
+    with builtin.StringMixin
+    with builtin.IdMixin
+    with ACMixin
+    with standard.FunctionByRewritingMixin
+    with builtin.MapMixin
+    with BundledContextMixin
+    with strategy.StrategyMixin
+    with MatchingLogicPostfixMixin {
 
   val Match = new MatchLabel()
 
@@ -29,10 +42,7 @@ trait StandardEnvironment extends MatchingLogicMixin with HolesMixin with FreeMi
 
   lazy val matcher = Binary.Apply(this.makeMatcher)
 
-  def pretty(t: Term): String = t match {
-    case PrettyWrapper(p, c, s) => p + pretty(c) + s
-    case _ => t.toString
-  }
+
 
   // HELPERS:
 
@@ -53,7 +63,10 @@ trait StandardEnvironment extends MatchingLogicMixin with HolesMixin with FreeMi
 
 trait NoSortingMixin extends Environment {
   def sort(l: Label, children: Seq[Term]): kale.Sort = Sort.Top
+
   def sort(l: Label): Sort = Sort.Top
+
+  override def compatible(left: kale.Sort, right: kale.Sort): Boolean = true
 }
 
 trait HolesMixin extends MatchingLogicMixin {

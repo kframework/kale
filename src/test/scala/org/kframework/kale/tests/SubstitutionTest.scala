@@ -3,7 +3,7 @@ package org.kframework.kale.tests
 import org.kframework.kale._
 import org.scalatest.FreeSpec
 
-class SubstitutionTest extends FreeSpec with TestSetup {
+class SubstitutionTest extends TestSetup() {
 
   import env._
 

@@ -14,6 +14,8 @@ class dsl(implicit val env: StandardEnvironment) {
 
     def :==(tt: Term): Term = env.unify(t, tt)
 
+    def ==>(tt: Term): Term = Rewrite(t, tt)
+
     def =:=(tt: Term): Term = env.And.filterOutNext(env.unify(t, tt))
   }
 
@@ -27,7 +29,7 @@ class dsl(implicit val env: StandardEnvironment) {
     def apply(_1: Term, _2: Term): Term = label.asInstanceOf[Label2](_1, _2)
   }
 
-  val W = PrettyWrapper
+  val rw = Rewrite
 
   def __ = Variable.freshVariable()
 

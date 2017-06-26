@@ -3,7 +3,7 @@ package org.kframework.kale.tests
 import org.kframework.kale._
 import org.scalatest.FreeSpec
 
-class MatchSpec extends FreeSpec with TestSetup {
+class MatchSpec extends TestSetup() {
 
   import env._
   import implicits._
@@ -17,7 +17,16 @@ class MatchSpec extends FreeSpec with TestSetup {
     //    assert((2: Term).unify(2: Term) == Top)
   }
 
+  "Regex" in {
+    assert((STRING.Regex("a.*c".r) :== STRING.String("abbbc")) === Next(STRING.String("abbbc")))
+  }
+
+  "Top matches anything" in {
+    assert((Top :== a) === Next(a))
+  }
+
   "assoc" in {
+    println(env.unifier)
     assert(unifier(X ~~ 5, el ~~ 3 ~~ 5) === Equality(X, 3))
     assert(unifier(el ~~ 3 ~~ 4 ~~ X ~~ 7, el ~~ 3 ~~ 4 ~~ 5 ~~ 6 ~~ 7) === Equality(X, el ~~ 5 ~~ 6))
     assert(unifier(el ~~ 3 ~~ X ~~ 5 ~~ Y ~~ 7, el ~~ 3 ~~ 4 ~~ 5 ~~ 6 ~~ 7) === And.substitution(Map(X -> (4: Term), Y -> (6: Term))))
@@ -263,33 +272,5 @@ class MatchSpec extends FreeSpec with TestSetup {
     assert((BindMatch(X, bar(Y)) := 3) === Bottom)
 
     assert((BindMatch(X, bar(Y)) := Or(bar(1), 2)) === And(Equality(X, bar(1)), Equality(Y, 1)))
-  }
-
-  "pretty" - {
-    val three = PrettyWrapper("a", 3, "b")
-    "ground" in {
-
-      assert(three.pretty === "a3b")
-
-      assert(((3: Term) := three) === Top)
-
-      assert((X := three) === Equality(X, 3))
-    }
-
-    val fooThree = PrettyWrapper("c", foo(three, 6), "d")
-
-    "wrapper left" in {
-      assert(And(foo(X, 6) :== fooThree, Equality(X, 3)) === And(Equality(X, 3), Next(fooThree)))
-    }
-
-    "wrapper right" in {
-      assert(And(fooThree := foo(X, 6), Equality(X, 3)) === Bottom)
-    }
-
-    "wrapper wrapper" in {
-      val fooThreeDifferent = PrettyWrapper("e", foo(three, 6), "f")
-      assert((fooThree := fooThree) == Top)
-      assert((fooThree := fooThreeDifferent) == Bottom)
-    }
   }
 }

@@ -1,7 +1,7 @@
 package org.kframework.kale.km
 
 import org.kframework.kale._
-import org.kframework.kale.standard.{SimpleFreeLabel2, SimpleFreeLabel3, Sort, StandardEnvironment}
+import org.kframework.kale.standard.{Sort, StandardEnvironment}
 import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
 
@@ -66,12 +66,12 @@ class IMPSpec extends FreeSpec {
   sorted(emptyk, Sort.K)
 
   // symbol declarations
-  val ints = SimpleFreeLabel2("_,_");
+  val ints = FreeLabel2("_,_");
   sorted(ints, IntList, IntList, IntList)
-  val kseq = SimpleFreeLabel2("_~>_");
+  val kseq = FreeLabel2("_~>_");
   sorted(kseq, Sort.K, KSeq, KSeq)
   // TODO: testing purpose only
-  val ppp = SimpleFreeLabel3("ppp");
+  val ppp = FreeLabel3("ppp");
   sorted(ppp, Id, Id, Id, Sort.K)
 
   // variable declarations

@@ -4,7 +4,7 @@ import org.kframework.kale.Term
 import org.kframework.kale.util.Path
 import org.scalatest.FreeSpec
 
-class PathTest extends FreeSpec with TestSetup {
+class PathTest extends TestSetup() {
   import env._
 
   "apply empty path" in {

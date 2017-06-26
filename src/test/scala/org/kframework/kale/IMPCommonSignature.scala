@@ -3,7 +3,7 @@ package org.kframework.kale
 import org.kframework.kale.builtin.MapLabel
 import org.kframework.kale.standard._
 
-class IMPCommonSignature(implicit val env: Environment with IntMixin) {
+class IMPCommonSignature(implicit val env: Environment with IntMixin with FreeMixin) {
   import env._
 
   def lhs(t: Term): Term = t match {
@@ -18,32 +18,32 @@ class IMPCommonSignature(implicit val env: Environment with IntMixin) {
     case o => o
   }
 
-  val div = SimpleFreeLabel2("_/_")
-  val plus = SimpleFreeLabel2("_+_")
-  val leq = SimpleFreeLabel2("_<=_")
-  val not = SimpleFreeLabel1("!_")
-  val and = SimpleFreeLabel2("_&&_")
-  val emptyBlock = SimpleFreeLabel0("{}")
-  val block = SimpleFreeLabel1("{_}")
-  val assign = SimpleFreeLabel2("_:=_")
-  val ifthenelse = SimpleFreeLabel3("if_then_else_")
-  val whiledo = SimpleFreeLabel2("while(_)_")
-  val seq = SimpleFreeLabel2("__")
-  val program = SimpleFreeLabel2("_;_")
+  val div = FreeLabel2("_/_")
+  val plus = FreeLabel2("_+_")
+  val leq = FreeLabel2("_<=_")
+  val not = FreeLabel1("!_")
+  val and = FreeLabel2("_&&_")
+  val emptyBlock = FreeLabel0("{}")
+  val block = FreeLabel1("{_}")
+  val assign = FreeLabel2("_:=_")
+  val ifthenelse = FreeLabel3("if_then_else_")
+  val whiledo = FreeLabel2("while(_)_")
+  val seq = FreeLabel2("__")
+  val program = FreeLabel2("_;_")
 
-  val T = SimpleFreeLabel2("<T>")
-  val k = SimpleFreeLabel1("<k>")
-  val state = SimpleFreeLabel1("<state>")
+  val T = FreeLabel2("<T>")
+  val k = FreeLabel1("<k>")
+  val state = FreeLabel1("<state>")
 
-  val varBinding = SimpleFreeLabel2("_->_")
+  val varBinding = FreeLabel2("_->_")
 
-  val emptyIntList = SimpleFreeLabel0(".List{Int}")
+  val emptyIntList = FreeLabel0(".List{Int}")
 
-  val emptyStates = SimpleFreeLabel0("emptyStates")
+  val emptyStates = FreeLabel0("emptyStates")
 
   val statesMap = MapLabel("_StatesMap_", {
     case varBinding(variable, _) => variable
   }, emptyStates())
 
-  val emptyk = SimpleFreeLabel0(".K")
+  val emptyk = FreeLabel0(".K")
 }

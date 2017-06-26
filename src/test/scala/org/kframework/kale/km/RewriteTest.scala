@@ -22,15 +22,15 @@ class RewriteTest extends FreeSpec {
   sorted(INT.Int, Int)
 
   // symbol declarations
-  val a = SimpleFreeLabel0("a"); sorted(a, K)
-  val b = SimpleFreeLabel0("b"); sorted(b, K)
-  val c = SimpleFreeLabel0("c"); sorted(c, K)
-  val d = SimpleFreeLabel0("d"); sorted(d, K)
+  val a = FreeLabel0("a"); sorted(a, K)
+  val b = FreeLabel0("b"); sorted(b, K)
+  val c = FreeLabel0("c"); sorted(c, K)
+  val d = FreeLabel0("d"); sorted(d, K)
 
-  val p = SimpleFreeLabel1("p"); sorted(p, Int, K)
-  val q = SimpleFreeLabel1("q"); sorted(q, Int, K)
+  val p = FreeLabel1("p"); sorted(p, Int, K)
+  val q = FreeLabel1("q"); sorted(q, Int, K)
 
-  val f = SimpleFreeLabel1("f"); sorted(f, Int, Int)
+  val f = FreeLabel1("f"); sorted(f, Int, Int)
 
   env.seal()
 

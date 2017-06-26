@@ -51,9 +51,9 @@ object anywhere {
       val contextVar = contextApplication.contextVar
 
       def solutionFor(subterms: Seq[Term], reconstruct: (Int, Term) => Term, avoidIndices: Set[Int] = Set()) = {
-        Or((subterms.indices.toSet &~ avoidIndices) map { i =>
+        Or((subterms.indices.toSet &~ avoidIndices) map { i: Int =>
           // calling f directly instead of solver because we know contextApplication is hooked to the current f
-          val solutionForSubtermI = apply(solver)(contextApplication, subterms(i))
+          val solutionForSubtermI = solver(contextApplication, subterms(i))
           val res = Or.asSet(solutionForSubtermI) map {
             // this rewires C -> HOLE into C -> foo(HOLE)
             case And.withNext(And.substitution(m), Some(Next(next))) if m.contains(contextVar) =>
