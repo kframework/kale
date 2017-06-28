@@ -5,6 +5,11 @@ import org.kframework.kale.standard.StandardEnvironment
 
 import scala.language.implicitConversions
 
+trait DSLMixin {
+  self: StandardEnvironment =>
+  val DSL = new dsl()
+}
+
 class dsl(implicit val env: StandardEnvironment) {
 
   import env._
@@ -36,6 +41,12 @@ class dsl(implicit val env: StandardEnvironment) {
   def A(implicit env: StandardEnvironment) = env.Variable("A")
 
   def B(implicit env: StandardEnvironment) = env.Variable("B")
+
+  val Condition = Variable("Condition")
+  val Then = Variable("Then")
+  val Else = Variable("Else")
+  val X = Variable("X")
+  val Y = Variable("Y")
+  val P = Variable("P")
+  val S = Variable("S")
 }
-
-

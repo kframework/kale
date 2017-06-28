@@ -63,9 +63,11 @@ trait PrettyWrapperMixin extends Mixin with Environment with standard.MatchingLo
     override val label: Label3 = PrettyWrapper
   }
 
+  def shouldBePretty(term: Term): Boolean
 }
 
 class PrettyWrapperLabel(implicit eenv: Environment with StringMixin with PrettyWrapperMixin) extends Named("PrettyWrapper") with Label3 {
+
   import env._
 
   override def apply(_1: Term, _2: Term, _3: Term): Term = {
@@ -84,12 +86,14 @@ class PrettyWrapperLabel(implicit eenv: Environment with StringMixin with Pretty
     case _ => t
   }
 
-  def unwrapBU(t: Term): Term = t mapBU unwrap
-
   val Infer = FreeLabel0("InferWhiteSpace")()
 
   def wrapInInferTD(t: Term): Term = t match {
-    case PrettyWrapper(p, c, s) => PrettyWrapper(p, c map0 wrapInInferTD, s)
-    case o => PrettyWrapper(Infer, o, Infer)
+    case PrettyWrapper(p, c, s) =>
+      PrettyWrapper(p, c map0 wrapInInferTD, s)
+    case o if shouldBePretty(t) =>
+      PrettyWrapper(Infer, o map0 wrapInInferTD, Infer)
+    case o =>
+      o map0 wrapInInferTD
   }
 }

@@ -5,7 +5,9 @@ import org.kframework.kale.standard.{NoSortingMixin, StandardEnvironment}
 import org.kframework.kale.tests.TestSetup
 import org.scalatest.FreeSpec
 
-object TestEnv extends StandardEnvironment with PrettyWrapperMixin with NoSortingMixin
+object TestEnv extends StandardEnvironment with PrettyWrapperMixin with NoSortingMixin {
+  def shouldBePretty(term: Term) = true
+}
 
 class PrettyWrapperTest extends TestSetup()(TestEnv) {
   private def assertRewrite(rule: Term, input: Term, expected: Term) = {

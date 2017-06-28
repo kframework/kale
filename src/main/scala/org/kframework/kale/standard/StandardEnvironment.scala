@@ -16,6 +16,7 @@ trait StandardEnvironment
   extends MatchingLogicMixin
     with HolesMixin
     with FreeMixin
+    with TuplesMixing
     with builtin.BooleanMixin
     with builtin.IntMixin
     with builtin.DoubleMixin
