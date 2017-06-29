@@ -107,12 +107,13 @@ trait MatchingLogicPostfixMixin extends Environment with MatchingLogicMixin {
     }
   })
 
-  case class TruthMatcher(solver: Binary.Apply) extends Binary.F[Term, Term]({
+  case class TruthMatcher(solver: Binary.Apply) extends Binary.F[Truth, Truth]({
     case (Bottom, _) => Bottom
     case (_, Bottom) => Bottom
     case (Top, Top) => Top
     case (Top, t) => Next(t)
     case (t, Top) => Next(t)
+    case _ => throw new AssertionError("Use only the env.Top and env.Bottom Truth objects.")
   })
 
   override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
