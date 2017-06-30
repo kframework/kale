@@ -53,7 +53,7 @@ trait StandardEnvironment
         if (!p.exists(_.label == Not)) {
           t
         } else {
-          log.warn("Rewriter rule didn't apply because it's not clear if we can prove a Not");
+//          log.warn("Rewriter rule didn't apply because it's not clear if we can prove a Not");
           Bottom
         }
 

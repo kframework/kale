@@ -58,7 +58,7 @@ abstract class TestSetup[E <: StandardEnvironment](implicit val env: E = Standar
 
   env.seal()
 
-  implicit val rewriterBuilder: (collection.Set[_ <: Rewrite]) => Rewriter = Rewriter(env)(_)
+  implicit val rewriterBuilder: (collection.Set[Term]) => Rewriter = Rewriter(env)(_)
 
   a2b.setRules(Or(a2bRules))
 

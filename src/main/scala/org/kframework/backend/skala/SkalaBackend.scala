@@ -36,7 +36,7 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
     * Self-explanatory, rules that don't have functional Symbols. I just convert them to a set of Rewrite(s) in Kale.
     * The conversion follows the method used in the earlier hook, but with Kore structures instead of frontend structures.
     */
-  val regularRules: Set[Rewrite] = (modules.flatMap(_.rules).toSet[kore.Rule] -- functionKoreRules).filterNot(_.att.findSymbol(Encodings.macroEnc).isDefined).map(StandardConverter.apply)
+  val regularRules: Set[Term] = (modules.flatMap(_.rules).toSet[kore.Rule] -- functionKoreRules).filterNot(_.att.findSymbol(Encodings.macroEnc).isDefined).map(StandardConverter.apply)
 
   /**
     * Now, before sealing the environment, convert all Rules with functional Symbols from Kore Rules to Kale Rules.

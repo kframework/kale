@@ -7,21 +7,21 @@ import scala.collection.immutable.TreeSet
 import scala.collection.{Set, mutable}
 
 object Rewriter {
-  def apply(env: Environment) = new {
-    def apply(rules: Set[_ <: Rewrite]): Rewriter = new Rewriter(env)(rules)
+  def apply(env: StandardEnvironment) = new {
+    def apply(rules: Set[Term]): Rewriter = new Rewriter(env)(rules)
   }
 }
 
-class Rewriter(val env: Environment)(val rules: Set[_ <: Rewrite]) extends (Term => Stream[Term]) {
+class Rewriter(val env: StandardEnvironment)(val rules: Set[Term]) extends (Term => Stream[Term]) {
   assert(env.isSealed)
   assert(rules != null)
 
-  val ruleHits = mutable.Map[Rewrite, Int]()
+  val ruleHits = mutable.Map[Term, Int]()
 
   for (r <- rules)
     ruleHits += (r -> 0)
 
-  var sortedRules = TreeSet[Rewrite]()({ (r1, r2) =>
+  var sortedRules = TreeSet[Term]()({ (r1, r2) =>
     if (r1 == r2)
       0
     else {
@@ -64,14 +64,6 @@ class Rewriter(val env: Environment)(val rules: Set[_ <: Rewrite]) extends (Term
               ands.toStream.collect({
                 case And.withNext(_: Substitution, Some(Next(next))) => next
               }).headOption.getOrElse(Bottom)
-            case _ =>
-              val oneGoodSub = (ands collect {
-                case s: Substitution => s
-                case a: AndOfSubstitutionAndTerms => a.s
-              }).headOption
-
-
-              oneGoodSub.map(substitutionMaker(_).apply(r._2)).getOrElse(Bottom)
           }
           //          if (afterSubstitution != Bottom) {
           //            println("   " + r)
@@ -91,24 +83,17 @@ class Rewriter(val env: Environment)(val rules: Set[_ <: Rewrite]) extends (Term
   }
 
   def searchStep(obj: Term): Term = {
-    val unificationRes = rules.map(r => (unify(r, obj), r._2))
+    val unificationRes: Set[Term] = rules.map(r => unify(r, obj))
     Or(unificationRes.flatMap({
-      case (Bottom, _) => Set[Term]()
-      case (or, rhs) =>
+      case Bottom => Set[Term]()
+      case or =>
         val res = Or.asSet(or).flatMap(u => {
-          env match {
-            case _: Z3Stuff =>
-              val (sub, terms) = And.asSubstitutionAndTerms(u)
-              val constraints = And(terms.filterNot(_.label == env.Next))
-              if (z3.sat(constraints)) {
-                Set(And(substitutionMaker(sub)(rhs), constraints)) // TODO: consider when rhs.predicates is not satisfiable with constraints
-              } else {
-                Set[Term]()
-              }
-            case environment: StandardEnvironment =>
-              val withNext = environment.And.withNext
-              val withNext(sub, Some(Next(next))) = u
-              Set(next)
+          val And.withNext(constraints@And.substitutionAndTerms(_, unresolvedConstraints), Some(Next(next))) = u
+
+          if (unresolvedConstraints != Bottom && env.isInstanceOf[Z3Stuff] && !z3.sat(constraints)) {
+            Set[Term]()
+          } else {
+            Set(And(next, constraints))
           }
         })
         res

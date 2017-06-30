@@ -1,6 +1,5 @@
 package org.kframework.kale
 
-import com.typesafe.scalalogging.Logger
 import org.kframework.kale.standard.Bottomize
 import org.kframework.kale.transformer.{Binary, Unary}
 
@@ -56,8 +55,6 @@ trait Environment extends MatchingLogicMixin with Bottomize {
 
   def rewrite(rule: Term, obj: Term): Term
 
-  val log = Logger("EnvironmentLogger" + this.hashCode())
-  //  protected def defineBinaryPFs[Process <: Apply, A <: Term, B <: Term](f: PartialFunction[(Label, Label), Process => (A, B) => Term]): Binary.ProcessingFunctions = f.asInstanceOf[Binary.ProcessingFunctions]
 }
 
 trait HasMatcher {

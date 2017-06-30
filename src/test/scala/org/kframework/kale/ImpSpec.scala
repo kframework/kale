@@ -77,11 +77,11 @@ endmodule
  */
 
 
-
 object IMP {
   implicit val env = StandardEnvironment()
 
   val signature = new IMPCommonSignature()
+
   import signature._
   import env._
 
@@ -130,7 +130,7 @@ object IMP {
 
   val implicits = new dsl()
 
-  val rules = Set(
+  val rules: Set[Term] = Set(
     T(k(kseq(Rewrite(X, I), R)), state(statesMap(varBinding(X, I), SO))),
     T(k(kseq(Rewrite(div(And(I1, isInt(I1)), And(I2, isInt(I2))), INT.div(I1, I2)), R)), S)
   ) map (t => Rewrite(lhs(t), rhs(t)))

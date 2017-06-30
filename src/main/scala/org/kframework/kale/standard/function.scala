@@ -7,14 +7,16 @@ import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.{NameFromObject, Named}
 
 trait FunctionByRewritingMixin extends Mixin with Environment with standard.MatchingLogicMixin with HasMatcher {
-  case class FunctionDefinedByRewritingMatcher(solver: Apply) extends Binary.F({(a: Term, b: Term) => {
+
+  case class FunctionDefinedByRewritingMatcher(solver: Apply) extends Binary.F({ (a: Term, b: Term) => {
     val l = a.label.asInstanceOf[FunctionDefinedByRewriting]
     And(Next(b), And(a.children.zip(b.children).map({
       case (ca, cb) => solver(ca, cb) match {
         case And.withNext(p, _) => p
       }
     })))
-  }})
+  }
+  })
 
   override protected def makeMatcher = Binary.definePartialFunction({
     case (_: FunctionDefinedByRewritingLabel0, _: FunctionDefinedByRewritingLabel0) => FunctionDefinedByRewritingMatcher
@@ -83,7 +85,8 @@ trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel wi
       // and a Rewriter can only be built once the Environment is sealed
       unify(rewriter, res) match {
         case Bottom => None
-        case r => Some(OneResult(And.onlyNext(r)))
+        case r =>
+          Some(And.nextIsNow(OneResult(And.onlyNext(r))))
       }
     } else {
       None
@@ -111,6 +114,7 @@ case class FunctionDefinedByRewritingLabel4(name: String)(implicit val env: Stan
 }
 
 case class Macro1(name: String, rw: Term)(implicit val env: StandardEnvironment) extends Label1 {
+
   import env._
 
   def apply(_1: Term): Term = Equality.binding(Hole, _1)(rw)

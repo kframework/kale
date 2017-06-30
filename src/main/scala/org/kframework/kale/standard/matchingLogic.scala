@@ -107,7 +107,7 @@ trait MatchingLogicPostfixMixin extends Environment with MatchingLogicMixin {
     }
   })
 
-  case class TruthMatcher(solver: Binary.Apply) extends Binary.F[Truth, Truth]({
+  case class TruthMatcher(solver: Binary.Apply) extends Binary.F[Term, Term]({
     case (Bottom, _) => Bottom
     case (_, Bottom) => Bottom
     case (Top, Top) => Top
@@ -187,7 +187,7 @@ private[standard] case class SimpleNextLabel(implicit override val env: Environm
   def apply(t: Term) = SimpleNext(t)
 }
 
-private[standard] case class SimpleNext(_1: Term)(implicit env: Environment) extends Node1 {
+private[standard] case class SimpleNext(_1: Term)(implicit env: Environment) extends Node1 with kore.Next {
   override val label = env.Next
 
   override val isPredicate = true
