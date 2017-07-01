@@ -159,7 +159,8 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   val functionLabels: collection.mutable.Map[String, Label] = uniqueLabels.filter(_._2.isInstanceOf[FunctionDefinedByRewriting])
 
   val functionLabelRulesMap: Map[Label, Set[Rule]] = modules.flatMap(RichModule(_)(originalDefintion).rules).collect({
-    case r@kore.Rule(kore.Implies(_, kore.And(kore.Rewrite(kore.Application(kore.Symbol(l), _), _), _)), att) if functionLabels.contains(l) => (label(l), r)
+    case r@kore.Rule(kore.Implies(_, kore.And(kore.Rewrite(kore.Application(kore.Symbol(l), _), _), _)), att) if functionLabels.contains(l) =>
+      (label(l), r)
   }).groupBy(_._1).mapValues(_.map(_._2).toSet)
 
   /**
@@ -215,7 +216,6 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   val finalFunctionRules = fixpoint(resolveFunctionRHS)(functionLabelRewriteMap)
 
   setFunctionRules(finalFunctionRules)
-
 
   val rewriter = rewriterGenerator(regularRules)
 

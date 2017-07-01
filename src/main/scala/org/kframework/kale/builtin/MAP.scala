@@ -1,13 +1,13 @@
 package org.kframework.kale.builtin
 
 import org.kframework.kale._
-import org.kframework.kale.standard.MatchNotSupporteredError
+import org.kframework.kale.standard.{MatchNotSupporteredError, Solved, Task}
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 
 import scala.collection.{Iterable, Map, Set}
 
-trait MapMixin extends Environment with HasMatcher {
+trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatcher {
   override protected def makeMatcher: ProcessingFunctions = Binary.definePartialFunction({
     case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm
   }).orElse(super.makeMatcher)
@@ -15,20 +15,37 @@ trait MapMixin extends Environment with HasMatcher {
   case class MapTerm(solver: Apply) extends Binary.F({ (a: Term, b: Term) =>
     a.label match {
       case mapLabel: MapLabel =>
-        val mapLabel.map(left, leftUnindexed) = a
-        val mapLabel.map(right, rightUnindexed) = b
+        val mapLabel.indexedAndUnindexed(leftMap, leftUnindexed) = a
+        val mapLabel.indexedAndUnindexed(rightMap, rightUnindexed) = b
 
-        assert(left.size + leftUnindexed.size > 1, "There is some bug in the Piece registration")
+        assert(leftMap.size + leftUnindexed.size > 1, "There is some bug in the Piece registration")
+
 
         if (rightUnindexed.nonEmpty) {
-          throw MatchNotSupporteredError(a, b, "Var on the rhs.")
-        }
-        else if (left.nonEmpty && right.isEmpty && rightUnindexed.isEmpty) {
+          throw MatchNotSupporteredError(a, b, "Unindexed on the rhs.")
+        } else if (leftMap.nonEmpty && rightMap.isEmpty && rightUnindexed.isEmpty) {
           Bottom
-        }
-        else if (left.nonEmpty && right.nonEmpty && leftUnindexed.size <= 1 && rightUnindexed.isEmpty) {
-          val leftKeys = left.keys.toSet
-          val rightKeys = right.keys.toSet
+        } else if (
+          leftMap.isEmpty
+            && leftUnindexed.exists(_.label == Variable)
+            && leftUnindexed.exists({ case Rewrite(mapLabel.identity, _) => true; case _ => false })) {
+          val leftVar = leftUnindexed.find(_.label == Variable).get.asInstanceOf[Variable]
+          val rhs = leftUnindexed.collect({ case Rewrite(mapLabel.identity, r) => r }).head
+
+          val nextTerm = if (rightMap.size + rightUnindexed.size == 0) {
+            rhs
+          } else {
+            if (mapLabel.isIndexable(rhs)) {
+              MapImplementation(mapLabel, rightMap + (mapLabel.indexFunction(rhs) -> rhs), rightUnindexed)
+            } else {
+              MapImplementation(mapLabel, rightMap, rightUnindexed + rhs)
+            }
+          }
+          And(Equality.binding(leftVar, b), Next(nextTerm))
+
+        } else if (leftMap.nonEmpty && rightMap.nonEmpty && leftUnindexed.size <= 1 && rightUnindexed.isEmpty) {
+          val leftKeys = leftMap.keys.toSet
+          val rightKeys = rightMap.keys.toSet
 
 
           if (!rightKeys.forall(_.isGround)) {
@@ -37,36 +54,38 @@ trait MapMixin extends Environment with HasMatcher {
 
           if (!(leftKeys filter (_.isGround) forall rightKeys.contains)) {
             Bottom
-          }
-          else if (leftKeys.size - (leftKeys & rightKeys).size <= 1) {
+          } else if (leftKeys.size - (leftKeys & rightKeys).size <= 1) {
 
             val commonKeys = leftKeys & rightKeys
+            import mapLabel._
 
-            val valueMatches = if (commonKeys.nonEmpty)
-              And(commonKeys map (k => solver(left(k), right(k))))
+            val valueMatchesTasks: Term = if (commonKeys.nonEmpty)
+              And.combine(mapLabel)(commonKeys map (k => Task(leftMap(k), rightMap(k))) toSeq: _*)
             else
-              Top
+              Next(identity)
 
             val lookupByKeyVariableAndValueMatch = if (leftKeys.size - commonKeys.size == 1) {
               val v = (leftKeys -- rightKeys).head
               val rightValue = (rightKeys -- leftKeys).head
 
-              And(Equality(v, rightValue), left(v), right(rightValue))
+              And(Equality(v, rightValue), leftMap(v), rightMap(rightValue))
+              ???
             } else {
               Top
             }
 
-            val freeLeftVariableEquality = if (leftUnindexed.size == 1) {
-              Equality(leftUnindexed.head, mapLabel((rightKeys -- leftKeys).map(right)))
+            val freeLeftVariableEqualityTask = if (leftUnindexed.size == 1) {
+              val value = mapLabel((rightKeys -- leftKeys).map(rightMap))
+              And(Equality(leftUnindexed.head, value), Next(value))
             } else {
-              Top
+              Next(mapLabel.identity)
             }
 
-            if (lookupByKeyVariableAndValueMatch != Top && freeLeftVariableEquality != Top) {
+            if (And.filterOutNext(lookupByKeyVariableAndValueMatch) != Top && And.filterOutNext(freeLeftVariableEqualityTask) != Top) {
               throw MatchNotSupporteredError(a, b)
             }
 
-            And(valueMatches, lookupByKeyVariableAndValueMatch, freeLeftVariableEquality)
+            And.combine(mapLabel)(Solved(valueMatchesTasks), Solved(freeLeftVariableEqualityTask)) //lookupByKeyVariableAndValueMatch
           } else {
             throw MatchNotSupporteredError(a, b, "Only supported matches with at most one differing (i.e., symbolic somehow) key and at most a variable (at the top level) on the rhs.")
           }
@@ -80,7 +99,7 @@ trait MapMixin extends Environment with HasMatcher {
 }
 
 case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
-  def isIndexable(t: Term) = !t.label.isInstanceOf[VariableLabel] && !t.isInstanceOf[FunctionLabel] && !t.isInstanceOf[RewriteLabel]
+  def isIndexable(t: Term) = !t.label.isInstanceOf[VariableLabel] && !t.label.isInstanceOf[FunctionLabel] && !t.label.isInstanceOf[RewriteLabel]
 
   trait HasEnvironment {
     val env = MapLabel.this.env
@@ -104,7 +123,7 @@ case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(i
     case _ => new MapImplementation(this, map, unindexable)
   }
 
-  object map {
+  object indexedAndUnindexed {
     def unapply(m: Term): Option[(Map[Term, Term], Set[Term])] = m match {
       case m: MapImplementation if m.label == MapLabel.this => Some(m.map, m.unindexable)
       case `identity` => Some(Map[Term, Term](), Set[Term]())
@@ -118,7 +137,7 @@ case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(i
     val name = MapLabel.this.name + ".lookupByKey"
   } with HasEnvironment with FunctionLabel2 {
     def f(m: Term, key: Term) = m match {
-      case map(scalaMap, restOfElements) =>
+      case indexedAndUnindexed(scalaMap, restOfElements) =>
         scalaMap.get(key).orElse(
           if (restOfElements.isEmpty && key.isGround && scalaMap.keys.forall(_.isGround)) Some(env.Bottom) else None)
       case _ => None
@@ -130,7 +149,7 @@ case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(i
     val name = MapLabel.this.name + ".lookup"
   } with HasEnvironment with FunctionLabel2 {
     def f(m: Term, key: Term) = m match {
-      case map(scalaMap, restOfElements) =>
+      case indexedAndUnindexed(scalaMap, restOfElements) =>
         scalaMap.get(key).map(_.children.toList(1)).orElse(
           if (restOfElements.isEmpty && key.isGround && scalaMap.keys.forall(_.isGround)) Some(env.Bottom) else None)
       case _ => None
@@ -143,7 +162,7 @@ class KeysFunction(mapLabel: MapLabel, returnedSetLabel: SetLabel)(implicit val 
   val name = mapLabel.name + ".keys"
 } with FunctionLabel1 {
   def f(m: Term) = m match {
-    case mapLabel.map(scalaMap, restOfElements) =>
+    case mapLabel.indexedAndUnindexed(scalaMap, restOfElements) =>
       Some(returnedSetLabel(scalaMap.keys))
     case _ => None
   }

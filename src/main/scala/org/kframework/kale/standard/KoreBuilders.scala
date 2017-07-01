@@ -154,7 +154,7 @@ object StandardConverter {
       val convetedRequires = apply(requires)
       val convertedEnsures = apply(ensures)
       import env._
-      And(convertedLeft, env.Equality(convetedRequires, env.toBoolean(true)), Next(convertedEnsures))
+      And(convertedLeft, env.Equality(convetedRequires, env.toBoolean(true)))
     }
     case _ => throw ConversionException("Encountered Non Uniform Rule")
   }
