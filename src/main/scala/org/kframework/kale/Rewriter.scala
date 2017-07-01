@@ -90,7 +90,7 @@ class Rewriter(val env: StandardEnvironment)(val rules: Set[Term]) extends (Term
         val res = Or.asSet(or).flatMap(u => {
           val And.withNext(constraints@And.substitutionAndTerms(_, unresolvedConstraints), Some(Next(next))) = u
 
-          if (unresolvedConstraints != Bottom && env.isInstanceOf[Z3Mixin] && !z3.sat(constraints)) {
+          if (unresolvedConstraints.nonEmpty && env.isInstanceOf[Z3Mixin] && !z3.sat(constraints)) {
             Set[Term]()
           } else {
             Set(And(next, constraints))

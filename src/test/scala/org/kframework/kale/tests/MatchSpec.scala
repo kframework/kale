@@ -26,7 +26,6 @@ class MatchSpec extends TestSetup() {
   }
 
   "assoc" in {
-    println(env.unifier)
     assert(unifier(X ~~ 5, el ~~ 3 ~~ 5) === Equality(X, 3))
     assert(unifier(el ~~ 3 ~~ 4 ~~ X ~~ 7, el ~~ 3 ~~ 4 ~~ 5 ~~ 6 ~~ 7) === Equality(X, el ~~ 5 ~~ 6))
     assert(unifier(el ~~ 3 ~~ X ~~ 5 ~~ Y ~~ 7, el ~~ 3 ~~ 4 ~~ 5 ~~ 6 ~~ 7) === And.substitution(Map(X -> (4: Term), Y -> (6: Term))))
@@ -272,5 +271,9 @@ class MatchSpec extends TestSetup() {
     assert((BindMatch(X, bar(Y)) := 3) === Bottom)
 
     assert((BindMatch(X, bar(Y)) := Or(bar(1), 2)) === And(Equality(X, bar(1)), Equality(Y, 1)))
+  }
+
+  "MAP" in {
+
   }
 }

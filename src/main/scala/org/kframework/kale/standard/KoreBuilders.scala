@@ -15,7 +15,7 @@ class KoreBackend(d: kore.Definition, mainModule: kore.ModuleName) {
 
 trait KoreBuilders extends kore.Builders with DefaultOuterBuilders {
 
-  implicit val env: Environment
+  implicit protected val env: Environment
 
   override def Symbol(str: String): kore.Symbol = env.label(str)
 
@@ -27,10 +27,6 @@ trait KoreBuilders extends kore.Builders with DefaultOuterBuilders {
     instantiate()
 
   }
-
-  override def Top(): kore.Top = env.Top
-
-  override def Bottom(): kore.Bottom = env.Bottom
 
   override def Not(_1: kore.Pattern): kore.Pattern = ???
 
@@ -57,7 +53,7 @@ trait KoreBuilders extends kore.Builders with DefaultOuterBuilders {
     }
   }
 
-  def Sort(str: String): kore.Sort = standard.Sort(str)
+  def Sort(str: String) = standard.Sort(str)
 
   def Value(str: String): kore.Value = DefaultBuilders.Value(str)
 
@@ -107,15 +103,11 @@ object StandardConverter {
 
   def apply(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
     case p@kore.Application(kore.Symbol(str), args) if specialSymbolsSet.contains(str) => specialPatternHandler(p)
-    case kore.Application(kore.Symbol(s), args) => {
-      env.uniqueLabels.get(s) match {
-        case Some(l: NodeLabel) => {
-          val cargs = args.map(StandardConverter.apply)
-          l(cargs)
-        }
-        case _ => ???
-      }
-    }
+    case kore.Application(kore.Symbol(s), args) =>
+      val l = env.uniqueLabels(s).asInstanceOf[NodeLabel]
+      val cargs = args.map(StandardConverter.apply)
+      l(cargs)
+
     case kore.And(p1, p2) => env.And(StandardConverter(p1), StandardConverter(p2))
     case kore.Or(p1, p2) => env.Or(StandardConverter(p1), StandardConverter(p2))
     case kore.Top() => env.Top
@@ -138,8 +130,7 @@ object StandardConverter {
             case "BOOL" => env.toBoolean(v.toBoolean)
             case "STRING" => env.toSTRING(v)
             case "ID" => env.toID(Symbol(v))
-            //Todo: Throw Exception Here
-            case _ => ???
+            case _ => throw new AssertionError("Couldn't find " + ls)
           }
         }
       }
@@ -148,7 +139,7 @@ object StandardConverter {
   }
 
 
-  def apply(r: kore.Rule)(implicit env: StandardEnvironment): Rewrite = r match {
+  def apply(r: kore.Rule)(implicit env: StandardEnvironment): Term = r match {
     case kore.Rule(kore.Implies(requires, kore.And(kore.Rewrite(left, right), kore.Next(ensures))), att)
       if att.findSymbol(Encodings.macroEnc).isEmpty => {
       val convertedLeft = apply(left)
@@ -156,6 +147,14 @@ object StandardConverter {
       val convetedRequires = apply(requires)
       val convertedEnsures = apply(ensures)
       env.Rewrite(env.And(convertedLeft, env.Equality(convetedRequires, env.toBoolean(true))), convertedRight)
+    }
+    case kore.Rule(kore.Implies(requires, kore.And(body, kore.Next(ensures))), att)
+      if att.findSymbol(Encodings.macroEnc).isEmpty => {
+      val convertedLeft = apply(body)
+      val convetedRequires = apply(requires)
+      val convertedEnsures = apply(ensures)
+      import env._
+      And(convertedLeft, env.Equality(convetedRequires, env.toBoolean(true)), Next(convertedEnsures))
     }
     case _ => throw ConversionException("Encountered Non Uniform Rule")
   }

@@ -5,7 +5,7 @@ import org.kframework.kale._
 import org.kframework.kale.standard.ReferenceLabel
 
 case class BOOLEAN()(implicit env: Environment) {
-  val Boolean = new ReferenceLabel[Boolean]("Boolean") {
+  val Boolean = new ReferenceLabel[Boolean]("Bool@BOOL-SYNTAX") {
     override protected[this] def internalInterpret(s: String): Boolean = s.toBoolean
   }
 

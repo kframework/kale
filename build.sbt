@@ -21,8 +21,7 @@ libraryDependencies ++= Seq(
 
   "org.kframework.k" %% "kore" % "0.6-SNAPSHOT",
 
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
-  libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
 )
 
 lazy val installZ3 = taskKey[Unit]("Install Z3 theorem prover")

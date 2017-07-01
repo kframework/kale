@@ -34,7 +34,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
   }
 
   def SortedVarLeft(solver: Apply)(a: Variable, b: Term): Term =
-    if (compatible(a.sort, b.sort))
+    if (isSort(a.sort, b))
       And(Equality(a.asInstanceOf[Variable], b), Next(b))
     else
       Bottom

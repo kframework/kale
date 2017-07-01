@@ -24,7 +24,7 @@ trait MatchingLogicMixin extends Mixin {
 
   def sort(l: Label, children: Seq[Term]): Sort
   def sort(l: Label): kale.Sort
-  def compatible(left: kale.Sort, right: kale.Sort): Boolean
+  def isSort(sort: kore.Sort, term: Term): Boolean
 }
 
 trait DomainValueLabel[T] extends LeafLabel[T] {
@@ -70,7 +70,7 @@ trait Name extends kore.Name {
   override def toString = str
 }
 
-trait Variable extends Leaf[(Name, Sort)] with kore.Variable {
+trait Variable extends Leaf[(Name, Sort)] with kore.SortedVariable {
   val label: VariableLabel
   val name: Name
   val sort: Sort

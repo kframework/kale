@@ -2,6 +2,7 @@ package org.kframework.kale.km
 
 import org.kframework.kale
 import org.kframework.kale._
+import org.kframework.kore.Sort
 import org.kframework.kale.transformer.Binary
 
 import scala.collection._
@@ -40,7 +41,7 @@ trait MultisortedMixing extends Environment with standard.MatchingLogicMixin wit
 
   case class Signature(args: Seq[kale.Sort], target: kale.Sort)
 
-  override def compatible(left: kale.Sort, right: kale.Sort): Boolean = left == right
+  override def isSort(sort: Sort, term: Term): Boolean = sort == term.sort
 
   def sortArgs(l: Label): Seq[kale.Sort] = sorts.get(l).map({ signature => signature.args }).getOrElse({
     throw new AssertionError("Could not find Signature for label: " + l)

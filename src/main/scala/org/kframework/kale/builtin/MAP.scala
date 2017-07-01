@@ -80,7 +80,7 @@ trait MapMixin extends Environment with HasMatcher {
 }
 
 case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
-  def isIndexable(t: Term) = !t.label.isInstanceOf[VariableLabel] && !t.isInstanceOf[FunctionLabel]
+  def isIndexable(t: Term) = !t.label.isInstanceOf[VariableLabel] && !t.isInstanceOf[FunctionLabel] && !t.isInstanceOf[RewriteLabel]
 
   trait HasEnvironment {
     val env = MapLabel.this.env

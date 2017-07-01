@@ -8,7 +8,7 @@ case class INT(implicit protected val penv: Environment with BooleanMixin) {
 
   import penv._
 
-  val Int = new ReferenceLabel[Int]("Int") {
+  val Int = new ReferenceLabel[Int]("Int@INT-SYNTAX") {
     override protected[this] def internalInterpret(s: String): Int = s.toInt
   }
 
