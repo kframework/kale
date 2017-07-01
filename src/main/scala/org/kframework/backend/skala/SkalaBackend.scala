@@ -133,8 +133,9 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   //Todo: Better Mechanism To Handle These
 
   val emptyKSeqLabel: FreeLabel0 = FreeLabel0("#EmptyK")
+  val emptyKSeq = emptyKSeqLabel()
 
-  val kSeq = NonAssocWithIdLabel("#KSequence", emptyKSeqLabel())
+  val kSeq = NonAssocWithIdLabel("#KSequence", emptyKSeq)
 
   val kConfigVar = TOKEN(Sort("KConfigVar@BASIC-K"))
 
@@ -173,7 +174,9 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     * Self-explanatory, rules that don't have functional Symbols. I just convert them to a set of Rewrite(s) in Kale.
     * The conversion follows the method used in the earlier hook, but with Kore structures instead of frontend structures.
     */
-  val regularRules: Set[Term] = (modules.flatMap(RichModule(_)(originalDefintion).rules).toSet[kore.Rule] -- functionKoreRules).filterNot(_.att.findSymbol(Encodings.macroEnc).isDefined).map(StandardConverter.apply)
+  val regularRulesInitial: Set[Term] = (modules.flatMap(RichModule(_)(originalDefintion).rules).toSet[kore.Rule] -- functionKoreRules).filterNot(_.att.findSymbol(Encodings.macroEnc).isDefined).map(StandardConverter.apply)
+
+  val regularRules = regularRulesInitial map (_ mapTD normalizedKSequenceLocalRewrite)
 
   /**
     * Now, before sealing the environment, convert all Rules with functional Symbols from Kore Rules to Kale Rules.
@@ -216,6 +219,14 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   val finalFunctionRules = fixpoint(resolveFunctionRHS)(functionLabelRewriteMap)
 
   setFunctionRules(finalFunctionRules)
+
+  def normalizedKSequenceLocalRewrite(t: Term): Term = t match {
+    case Rewrite(a@Node(label: NonAssocWithIdLabel, _), b) =>
+      val label(a1, a2) = a
+      label(Rewrite(a1, b), Rewrite(a2, label.identity))
+    case _ => t
+  }
+
 
   val rewriter = rewriterGenerator(regularRules)
 

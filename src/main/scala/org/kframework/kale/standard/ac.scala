@@ -27,18 +27,18 @@ trait NonAssocWithIdListMixing extends Environment with FreeMixin with HasMatche
     val identity = label.identity
 
     val res = (a, b) match {
-      case (label(rw@Rewrite(label(_, _), _), a3), label(b1, label(b2, b3))) =>
-        And.combine(label)(Task(rw, label(b1, b2)), Task(a3, b3))
       case (label(a1, a2), label(b1, b2)) =>
         Or(List(
-          FreeNode2FreeNode2(solver)(a, b),
-          And.combine(label)(Task(a1, b), Task(a2, identity)),
-          And.combine(label)(Task(a1, identity), Task(a2, b))
+          FreeNode2FreeNode2(solver)(a, b)
+//          ,
+//          And.combine(label)(Task(a1, b), Task(a2, identity)),
+//          And.combine(label)(Task(a1, identity), Task(a2, b))
         ))
       case (label(a1, a2), _) =>
         Or(List(
-          And.combine(label)(Task(a1, b), Task(a2, identity)),
-          And.combine(label)(Task(a1, identity), Task(a2, b))
+          And.combine(label)(Task(a1, b), Task(a2, identity))
+//          ,
+//          And.combine(label)(Task(a1, identity), Task(a2, b))
         ))
     }
     res
