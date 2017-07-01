@@ -15,13 +15,13 @@ class SubstitutionApply(val substitution: Substitution)(implicit penv: Environme
   }) orElse env.unaryProcessingFunctions
 
   override def apply(t: Term): Term = {
-    if (t.isGround)
+    if (t.isGround) {
       t
-    else if ((t.variables & substitution.boundVariables).nonEmpty) {
+    } else if ((t.variables & substitution.boundVariables).nonEmpty) {
       arr(t.label.id)(t)
-    }
-    else
+    } else {
       t
+    }
   }
 }
 
