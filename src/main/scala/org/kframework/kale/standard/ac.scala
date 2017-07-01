@@ -4,10 +4,44 @@ import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
+import org.kframework.kale.util.Named
 
 import scala.collection.{+:, Iterable, Seq}
 
-trait ACMixin extends kale.ACMixin with Environment with HasMatcher with HasUnifier {
+trait NonAssocWithIdListMixing extends Environment with FreeMixin with HasMatcher {
+
+  case class NonAssocWithIdLabel(override val name: String, identity: Term) extends Named(name) with Label2 with HasId {
+    val self = this
+    override def apply(_1: Term, _2: Term): Term = (_1, _2) match {
+      case (`identity`, b) => b
+      case (a, `identity`) => a
+      case (self(a, b), c) =>
+        FreeNode2(this, a, FreeNode2(this, b, c))
+      case (a, b) =>
+        FreeNode2(this, a, b)
+    }
+  }
+
+  case class NonAssocWithIdTerm(solver: Apply) extends Binary.F({ (a: Node2, b: Term) =>
+    val label = a.label.asInstanceOf[NonAssocWithIdLabel]
+    val identity = label.identity
+    if (b.label == label) {
+      FreeNode2FreeNode2(solver)(a, b)
+    } else a match {
+      case label(v: Variable, t) => And(solver(t, b), Equality.binding(v, identity))
+      case label(t, v: Variable) => And(solver(t, b), Equality.binding(v, identity))
+      case _ => FreeNode2FreeNode2(solver)(a, b)
+    }
+  })
+
+  //#KSequence(__(_=_;('n, 10), _=_;('sum, 0)), while(_)_(!_(_<=_('n, 0)), {_}(__(_=_;('sum, _+_('sum, 'n)), _=_;('n, _+_('n, -1))))))
+
+  override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
+    case (_: NonAssocWithIdLabel, right) if !right.isInstanceOf[Variable] => NonAssocWithIdTerm
+  }).orElse(super.makeMatcher)
+}
+
+trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher with HasUnifier {
 
   override def AssocWithIdLabel(name: String, id: Term): AssocWithIdLabel = new AssocWithIdListLabel(name, id)
 

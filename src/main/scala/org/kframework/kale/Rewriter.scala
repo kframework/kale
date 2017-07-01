@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.km.{MultisortedMixing, Z3Stuff}
+import org.kframework.kale.km.{MultisortedMixing, Z3Mixin}
 import org.kframework.kale.standard.{AndOfSubstitutionAndTerms, StandardEnvironment}
 
 import scala.collection.immutable.TreeSet
@@ -42,7 +42,7 @@ class Rewriter(val env: StandardEnvironment)(val rules: Set[Term]) extends (Term
 
   // TODO: clean this
   val z3 = env match {
-    case e: Environment with MultisortedMixing with Z3Stuff => new z3(e, Seq(Seq()))
+    case e: Environment with MultisortedMixing with Z3Mixin => new z3(e, Seq(Seq()))
     case _ => null
   }
 
@@ -90,7 +90,7 @@ class Rewriter(val env: StandardEnvironment)(val rules: Set[Term]) extends (Term
         val res = Or.asSet(or).flatMap(u => {
           val And.withNext(constraints@And.substitutionAndTerms(_, unresolvedConstraints), Some(Next(next))) = u
 
-          if (unresolvedConstraints != Bottom && env.isInstanceOf[Z3Stuff] && !z3.sat(constraints)) {
+          if (unresolvedConstraints != Bottom && env.isInstanceOf[Z3Mixin] && !z3.sat(constraints)) {
             Set[Term]()
           } else {
             Set(And(next, constraints))

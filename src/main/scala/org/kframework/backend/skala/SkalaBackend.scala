@@ -111,11 +111,19 @@ class SkalaBackend(implicit val env: StandardEnvironment, implicit val originalD
   def execute(p: Pattern): Pattern = {
     var previousResult = StandardConverter(p)
     var result = rewriter(previousResult)
+    var steps = 0
     while (result.nonEmpty && result.head != previousResult) {
       previousResult = result.head
       var stepResult = rewriter(previousResult)
       result = stepResult
+      steps += 1
     }
+
+//    println("steps: " + steps)
+//
+//    println(env.unifier.statsInvocations.toList.sortBy(-_._2).map({
+//      case (k, v) => k + " -> invocations: " + v
+//    }).mkString("\n"))
 
     if (result.isEmpty) {
       previousResult
@@ -222,7 +230,8 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 
   private def isAssoc(s: kore.SymbolDeclaration): Boolean = {
     s.att.findSymbol(Encodings.assoc) match {
-      case Some(_) => true
+      case Some(_) =>
+        true
       case None => s.att.findSymbol(Encodings.bag) match {
         case Some(_) => true
         case None => false
@@ -352,7 +361,7 @@ object DefinitionToStandardEnvironment extends (kore.Definition => StandardEnvir
 
     val emptyKSeqLabel: FreeLabel0 = FreeLabel0(".K")
 
-    val kSeq = env.AssocWithIdLabel("~>", emptyKSeqLabel())
+    val kSeq = env.NonAssocWithIdLabel("#KSequence", emptyKSeqLabel())
 
     val kConfigVar = TOKEN(Sort("KConfigVar@BASIC-K"))
 

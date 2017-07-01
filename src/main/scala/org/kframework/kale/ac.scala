@@ -95,4 +95,7 @@ trait AssocCommWithIdLabel extends AssocCommLabel with HasId {
     } else {
       super.asSet(t)
     }
+
+  // normalizing
+  override def apply(list: Iterable[Term]): Term = list.foldLeft(identity)(apply)
 }

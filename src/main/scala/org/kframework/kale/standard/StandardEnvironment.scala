@@ -22,7 +22,8 @@ trait StandardEnvironment
     with builtin.DoubleMixin
     with builtin.StringMixin
     with builtin.IdMixin
-    with ACMixin
+    with AssocWithIdListMixin
+    with NonAssocWithIdListMixing
     with standard.FunctionByRewritingMixin
     with builtin.MapMixin
     with BundledContextMixin
@@ -44,7 +45,6 @@ trait StandardEnvironment
   lazy val matcher = Binary.Apply(this.makeMatcher)
 
 
-
   // HELPERS:
 
   def rewrite(rule: Term, obj: Term): Term = {
@@ -53,7 +53,7 @@ trait StandardEnvironment
         if (!p.exists(_.label == Not)) {
           t
         } else {
-//          log.warn("Rewriter rule didn't apply because it's not clear if we can prove a Not");
+          //          log.warn("Rewriter rule didn't apply because it's not clear if we can prove a Not");
           Bottom
         }
 

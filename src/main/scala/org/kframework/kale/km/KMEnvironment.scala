@@ -2,6 +2,7 @@ package org.kframework.kale.km
 
 import org.kframework.kale
 import org.kframework.kale._
+import org.kframework.kale.transformer.Binary
 
 import scala.collection._
 
@@ -13,7 +14,7 @@ trait importBuiltin
 
 }
 
-trait Z3Stuff extends importBuiltin {
+trait Z3Mixin extends importBuiltin {
   def SMTName(l: Label): String = l match {
     case INT.mod => "mod"
     case INT.lt => "<"
@@ -30,9 +31,10 @@ trait Z3Stuff extends importBuiltin {
   implicit class WithSMTname(l: Label) {
     def smtName: String = SMTName(l)
   }
+
 }
 
-trait MultisortedMixing extends Environment with standard.MatchingLogicMixin with Z3Stuff {
+trait MultisortedMixing extends Environment with standard.MatchingLogicMixin with standard.FreeMixin with Z3Mixin {
 
   private val sorts = mutable.Map[Label, Signature]()
 
@@ -70,4 +72,7 @@ trait MultisortedMixing extends Environment with standard.MatchingLogicMixin wit
 
   def sorted(l: Label3, arg1: kale.Sort, arg2: kale.Sort, arg3: kale.Sort, target: kale.Sort): Unit = sorted(l, Signature(Seq(arg1, arg2, arg3), target))
 
+  override protected def makeMatcher = Binary.definePartialFunction({
+    case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 || env.sort(l1) != env.sort(l2) => NoMatch
+  }).orElse(super.makeMatcher)
 }

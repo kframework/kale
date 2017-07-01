@@ -3,16 +3,19 @@ package org.kframework.kale
 import org.kframework.kale.standard.Bottomize
 import org.kframework.kale.transformer.{Binary, Unary}
 
-import scala.collection._
-
 trait Environment extends MatchingLogicMixin with Bottomize {
 
   implicit protected val env: this.type = this
 
-  val uniqueLabels = mutable.Map[String, Label]()
+  val uniqueLabels = collection.mutable.Map[String, Label]()
 
-  def labels = uniqueLabels.values.toSet
+  def labels: Set[Label] = if (isSealed) {
+    labelSet
+  } else {
+    uniqueLabels.values.toSet
+  }
 
+  private lazy val labelSet = uniqueLabels.values.toSet
   private var pisSealed = false
 
   def seal(): Unit = {

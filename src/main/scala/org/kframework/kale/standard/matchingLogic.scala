@@ -321,33 +321,16 @@ private[standard] case class DNFAndLabel(implicit val env: MatchingLogicMixin) e
     * normalizing
     */
   override def apply(_1: Term, _2: Term): Term = {
-    if (_1 == Bottom || _2 == Bottom)
+    if (_1 == Bottom || _2 == Bottom) {
       Bottom
-    else {
-      apply(Set(_1, _2))
-    }
-    /*
-      val substitutionAndTerms(sub1, terms1) = _1
-      val substitutionAndTerms(sub2, terms2) = _2
-      val allElements: Set[Term] = terms1.toSet ++ terms2 + sub1 + sub2
-      Or(allElements map Or.asSet reduce cartezianProduct)
-     */
-  }
-
-  /**
-    * normalizing
-    */
-  override def apply(terms: Iterable[Term]): Term = {
-    if (terms.isEmpty) Top
-    else {
-      val disjunction = terms map Or.asSet reduce cartezianProduct
+    } else if (_1 == Top) {
+      _2
+    } else if (_2 == Top) {
+      _1
+    } else {
+      val disjunction = cartezianProduct(Or.asSet(_1), Or.asSet(_2))
       Or(disjunction)
     }
-
-    //    val bindings: Map[Variable, Term] = terms.collect({ case Equality(v: Variable, t) => v -> t }).toMap
-    //    val pureSubstitution = Substitution(bindings)
-    //    val others: Iterable[Term] = terms.filter({ case Equality(v: Variable, t) => false; case _ => true })
-    //    apply(pureSubstitution, others)
   }
 
   /**
@@ -485,7 +468,8 @@ private[standard] case class DNFAndLabel(implicit val env: MatchingLogicMixin) e
   }
 
   private def cartezianProduct(t1: Iterable[Term], t2: Iterable[Term]): Seq[Term] = {
-    for (e1 <- t1.toSeq; e2 <- t2.toSeq) yield {
+    for (e1 <- t1.toSeq;
+         e2 <- t2.toSeq) yield {
       applyOnNonOrs(e1, e2)
     }
   }
@@ -550,7 +534,6 @@ private[standard] case class DNFAndLabel(implicit val env: MatchingLogicMixin) e
     if (soFar.isEmpty) {
       soFar
     } else {
-
       soFar flatMap {
         case (solutionSoFar, nexts) =>
           val solvedTask = task match {
@@ -751,8 +734,6 @@ private[standard] case class DNFOrLabel(implicit override val env: Environment) 
       }
     }
   }
-
-  override def apply(l: Iterable[Term]): Term = l.foldLeft(Bottom: Term)(apply)
 }
 
 private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env: Environment) extends Or {

@@ -43,12 +43,14 @@ object Binary {
       arr
     }
 
+    val statsInvocations = collection.mutable.Map[(Term, Term) => Term, Int]().withDefaultValue(0)
+
     def apply(left: Term, right: Term): Term = {
       //      assert(labels.contains(left.label) && labels.contains(right.label))
       assert(left.label.id <= env.labels.size, "Left label " + left.label + " with id " + left.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
       assert(right.label.id <= env.labels.size, "Right label " + right.label + " with id " + right.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
 
-      val u = try {
+      val u: (Term, Term) => Term = try {
         arr(left.label.id)(right.label.id)
       } catch {
         case _: IndexOutOfBoundsException => throw new AssertionError("No processing function registered for: " + left.label + " and " + right.label)
@@ -57,6 +59,8 @@ object Binary {
         u(left, right)
       else
         env.Bottom
+
+      statsInvocations.update(u, statsInvocations(u) + 1)
 
       assert(!(left == right && res == env.Bottom), left.toString)
       res
