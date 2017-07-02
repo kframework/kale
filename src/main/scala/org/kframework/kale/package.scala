@@ -127,7 +127,7 @@ package object kale {
       if (f(t))
         Some(t)
       else {
-        t.children.view map this collect {
+        t.children.toStream map apply collect {
           case Some(c) => c
         } headOption
       }
@@ -190,7 +190,7 @@ package object kale {
 
   trait BinaryInfix {
     self: Node2 =>
-    override def toString: String =  _1 + " " + label.name + " " + _2
+    override def toString: String = _1 + " " + label.name + " " + _2
   }
 
   trait MemoizedHashCode {
@@ -200,4 +200,5 @@ package object kale {
 
     def computeHashCode: Int
   }
+
 }

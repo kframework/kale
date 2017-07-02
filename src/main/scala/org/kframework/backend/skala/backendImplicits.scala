@@ -9,6 +9,7 @@ import org.kframework.kore.implementation.{DefaultBuilders => db}
   */
 object backendImplicits {
 
+  // TODO: these are computed on EVERY call to one of their implicit methods!!! crazy expensive
   implicit class ModuleWithSubsorting(m: kore.Module)(implicit definiton: kore.Definition) {
     private lazy val subsortRelations: Set[(kore.Sort, kore.Sort)] = m.allSentences.collect({
       case kore.SymbolDeclaration(startSort, _, Seq(endSort), att) if att.findSymbol(db.Symbol("klabel")).isEmpty => (endSort, startSort)

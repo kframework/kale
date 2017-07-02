@@ -5,13 +5,13 @@ import org.kframework.kale.{Sort, _}
 import org.kframework.kale.builtin.{MapLabel, SetLabel, TOKEN}
 import org.kframework.kale.standard.{Sort, _}
 import org.kframework.kale.util.Named
-import org.kframework.kore
+import org.kframework.{kale, kore}
 import org.kframework.kore.extended.Backend
 import org.kframework.kore.implementation.DefaultBuilders
 import org.kframework.kore.{Pattern, Rule, extended}
 import org.kframework.kore.extended.implicits._
 
-class SkalaBackend(implicit val originalDefintion: kore.Definition, val originalModule: kore.Module) extends StandardEnvironment with NoSortingMixin with KoreBuilders with extended.Backend {
+class SkalaBackend(implicit val originalDefintion: kore.Definition, val originalModule: kore.Module) extends StandardEnvironment with KoreBuilders with extended.Backend {
 
   private def isAssoc(s: kore.SymbolDeclaration): Boolean = {
     s.att.is(Encodings.assoc) || s.att.is(Encodings.bag)
@@ -174,9 +174,44 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     * Self-explanatory, rules that don't have functional Symbols. I just convert them to a set of Rewrite(s) in Kale.
     * The conversion follows the method used in the earlier hook, but with Kore structures instead of frontend structures.
     */
-  val regularRulesInitial: Set[Term] = (modules.flatMap(RichModule(_)(originalDefintion).rules).toSet[kore.Rule] -- functionKoreRules).filterNot(_.att.findSymbol(Encodings.macroEnc).isDefined).map(StandardConverter.apply)
+  val regularRulesInitial: Set[Term] = (modules.flatMap(RichModule(_)(originalDefintion).rules).toSet[kore.Rule] -- functionKoreRules)
+    .filterNot(_.att.is(Encodings.macroEnc)).map(StandardConverter.apply)
+    .filter({ r =>
+      And.asSet(r).exists({
+        case Node(l, _) => l.name.startsWith("<") // TODO: ad-hoc check that this is actually a regular rule; replace with something better
+        case Rewrite(Node(l, _), _) => l.name.startsWith("<")
+      })
+    })
 
-  val regularRules = regularRulesInitial map (_ mapTD normalizedKSequenceLocalRewrite)
+  def localizeIsKResult(t: Term): Term = {
+    val theIsKResult = t findTD {
+      case p@BOOLEAN.not(Node(l: IsSort, List(v: Variable))) if v.name == Name("HOLE") => true
+      case p@Node(l: IsSort, List(v: Variable)) if v.name == Name("HOLE") => true
+      case _ => false
+    }
+
+    def changeLhs(f: Term => Term) = {
+      def cff(t: Term): Term = t match {
+        case Rewrite(l, r) => Rewrite(cff(l), r)
+        case o: Term => f(o map0 cff)
+      }
+      cff _
+    }
+
+    theIsKResult.map({ isKResult =>
+      t mapBU {
+        case `isKResult` =>
+          BOOLEAN.True
+        case o => o
+      } map0 changeLhs({
+        case v@Variable((Name("HOLE"), _)) =>
+          And(v, Equality(isKResult, BOOLEAN.True))
+        case o: Term => o
+      })
+    }).getOrElse(t)
+  }
+
+  val regularRules = regularRulesInitial map (_ mapTD normalizedKSequenceLocalRewrite) map localizeIsKResult
 
   /**
     * Now, before sealing the environment, convert all Rules with functional Symbols from Kore Rules to Kale Rules.
@@ -227,7 +262,6 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     case _ => t
   }
 
-
   val rewriter = rewriterGenerator(regularRules)
 
 
@@ -273,13 +307,15 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
     println(unifier)
     println(uniqueLabels.mapValues(_.getClass).mkString("\n"))
-    println(rewriter.rules.mkString("\n"))
+    println(regularRules.mkString("\n"))
 
-    //    println("steps: " + steps)
-    //
-    //    println(unifier.statsInvocations.toList.sortBy(-_._2).map({
-    //      case (k, v) => k + " -> invocations: " + v
-    //    }).mkString("\n"))
+    println("steps: " + steps)
+
+    println("rule hits: \n" + rewriter.ruleHits.mkString("\n"))
+
+    println(unifier.statsInvocations.toList.sortBy(-_._2).map({
+      case (k, v) => k + " -> invocations: " + v
+    }).mkString("\n"))
 
     if (result.isEmpty) {
       previousResult
@@ -289,7 +325,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     }
   }
 
-  def checkSort(sort: kore.Sort, term: Term): Boolean = {
+  def checkSort(sort: kore.Sort, term: Term): Boolean = (sort.str == "K@SORT-K") || {
     val ss = term match {
       case v: Variable => Set(v.sort)
       case _ => sortsFor.getOrElse(DefaultBuilders.Symbol(term.label.name), Set(org.kframework.kale.standard.Sort.Top))
@@ -311,6 +347,9 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   def hook(s: kore.SymbolDeclaration): Option[Label] =
     s.att.getSymbolValue(Encodings.hook) flatMap { case kore.Value(v) => uniqueLabels.get(s.symbol.str) }
+  override def sort(l: Label, children: Seq[Term]): kale.Sort = ???
+  override def sort(l: Label): kale.Sort = ???
+  override def isSort(sort: kore.Sort, term: Term): Boolean = checkSort(DefaultBuilders.Sort(sort.str), term)
 }
 
 //Todo: Move somewhere else
