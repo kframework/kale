@@ -64,6 +64,8 @@ trait AssocWithoutIdLabel extends AssocLabel {
 trait Assoc extends Node2 with BinaryInfix {
   override val label: AssocLabel
   val assocIterable: Iterable[Term]
+
+  override def map0(f: (Term) => Term): Term = label(assocIterable map f)
 }
 
 trait Comm

@@ -40,7 +40,7 @@ case class Invoke(label: InvokeLabel, _1: Term) extends Node1 {
   override lazy val isPredicate: Boolean = ???
 }
 
-case class NotLabel(implicit override val env: Environment) extends Named("¬") with kale.NotLabel with FunctionLabel {
+case class NotLabel()(implicit override val env: Environment) extends Named("¬") with kale.NotLabel with FunctionLabel {
 
   import env._
 

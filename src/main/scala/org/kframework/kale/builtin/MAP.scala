@@ -27,9 +27,9 @@ trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatc
           Bottom
         } else if (
           leftMap.isEmpty
-            && leftUnindexed.exists(_.label == Variable)
+            && leftUnindexed.exists({ case ForAll(v1, v2) => v1 == v2; case v: Variable => true; case _ => false })
             && leftUnindexed.exists({ case Rewrite(mapLabel.identity, _) => true; case _ => false })) {
-          val leftVar = leftUnindexed.find(_.label == Variable).get.asInstanceOf[Variable]
+          val leftVar = leftUnindexed.find({ case ForAll(v1, v2) => v1 == v2; case v: Variable => true; case _ => false }).get
           val rhs = leftUnindexed.collect({ case Rewrite(mapLabel.identity, r) => r }).head
 
           val nextTerm = if (rightMap.size + rightUnindexed.size == 0) {
@@ -41,7 +41,7 @@ trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatc
               MapImplementation(mapLabel, rightMap, rightUnindexed + rhs)
             }
           }
-          And(Equality.binding(leftVar, b), Next(nextTerm))
+          And(And.filterOutNext(solver(leftVar, b)), Next(nextTerm))
 
         } else if (leftMap.nonEmpty && rightMap.nonEmpty && leftUnindexed.size <= 1 && rightUnindexed.isEmpty) {
           val leftKeys = leftMap.keys.toSet
@@ -76,7 +76,7 @@ trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatc
 
             val freeLeftVariableEqualityTask = if (leftUnindexed.size == 1) {
               val value = mapLabel((rightKeys -- leftKeys).map(rightMap))
-              And(Equality(leftUnindexed.head, value), Next(value))
+              And(And.filterOutNext(solver(leftUnindexed.head, value)), Next(value))
             } else {
               Next(mapLabel.identity)
             }
@@ -89,8 +89,7 @@ trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatc
           } else {
             throw MatchNotSupporteredError(a, b, "Only supported matches with at most one differing (i.e., symbolic somehow) key and at most a variable (at the top level) on the rhs.")
           }
-        }
-        else {
+        } else {
           throw MatchNotSupporteredError(a, b, "Not yet implemented. Should eventually default to AC.")
         }
     }
@@ -99,7 +98,11 @@ trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatc
 }
 
 case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
-  def isIndexable(t: Term) = !t.label.isInstanceOf[VariableLabel] && !t.label.isInstanceOf[FunctionLabel] && !t.label.isInstanceOf[RewriteLabel]
+  def isIndexable(t: Term) =
+    !t.label.isInstanceOf[VariableLabel] &&
+      !t.label.isInstanceOf[FunctionLabel] &&
+      !t.label.isInstanceOf[RewriteLabel] &&
+      !t.label.isInstanceOf[ForAllLabel]
 
   trait HasEnvironment {
     val env = MapLabel.this.env

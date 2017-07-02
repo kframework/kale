@@ -5,7 +5,6 @@ import org.kframework.kale.standard._
 import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
 
-import scala.collection._
 import scala.language.implicitConversions
 
 class ParsingDisambiguationTest extends FreeSpec {

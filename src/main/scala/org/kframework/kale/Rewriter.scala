@@ -4,17 +4,40 @@ import org.kframework.kale.km.{MultisortedMixing, Z3Mixin}
 import org.kframework.kale.standard.StandardEnvironment
 
 import scala.collection.immutable.TreeSet
-import scala.collection.{Set, mutable}
+import scala.collection.mutable
 
 object Rewriter {
   def apply(env: StandardEnvironment) = new {
-    def apply(rules: Set[Term]): Rewriter = new Rewriter(env)(rules)
+    def apply(rules: Set[_ <: Term]): Rewriter = new Rewriter(env)(rules)
   }
 }
 
-class Rewriter(val env: StandardEnvironment)(val rules: Set[Term]) extends (Term => Stream[Term]) {
+class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) extends (Term => Stream[Term]) {
   assert(env.isSealed)
-  assert(rules != null)
+  assert(inputRules != null)
+
+  private def lowerForAll(keep: Set[Variable]): Term => Term = {
+    case v: Variable =>
+      if (keep.contains(v))
+        v
+      else
+        env.ForAll(v, v)
+
+    case t =>
+      val newKeep: Set[Variable] = t.variables filter (v => t.children.count(_.contains(v)) > 1)
+      val kill = newKeep &~ keep
+
+      val newLowerForAll = lowerForAll(keep | newKeep)
+      val solvedChildren = t map0 newLowerForAll
+
+      val withKill: Term = kill.foldLeft(solvedChildren) { (tt, v) => env.ForAll(v, tt) }
+      withKill
+  }
+
+
+  val rules = inputRules map lowerForAll(Set())
+
+  println(rules.mkString("\n"))
 
   val ruleHits = mutable.Map[Term, Int]()
 
@@ -84,7 +107,7 @@ class Rewriter(val env: StandardEnvironment)(val rules: Set[Term]) extends (Term
 
   def searchStep(obj: Term): Term = {
     val unificationRes: Set[Term] = rules.map(r => unify(r, obj))
-    Or(unificationRes.flatMap({
+    val finalRes = Or(unificationRes.flatMap({
       case Bottom => Set[Term]()
       case or =>
         val res = Or.asSet(or).flatMap(u => {
@@ -99,6 +122,7 @@ class Rewriter(val env: StandardEnvironment)(val rules: Set[Term]) extends (Term
         res
     })
     )
+    finalRes
   }
 }
 

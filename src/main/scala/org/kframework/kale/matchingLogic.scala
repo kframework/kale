@@ -21,6 +21,7 @@ trait MatchingLogicMixin extends Mixin {
   val Not: NotLabel
   val Next: NextLabel
   val Exists: ExistsLabel
+  val ForAll: ForAllLabel
 
   def sort(l: Label, children: Seq[Term]): Sort
   def sort(l: Label): kale.Sort
@@ -136,6 +137,10 @@ trait NotLabel extends Label1 with Z3Builtin
 trait ExistsLabel extends Label2
 
 trait Exists extends kore.Exists
+
+trait ForAllLabel extends Label2
+
+trait ForAll extends Node2 with kore.ForAll
 
 trait Equals extends kore.Equals with Node2 with BinaryInfix {
   override lazy val isPredicate: Boolean = true

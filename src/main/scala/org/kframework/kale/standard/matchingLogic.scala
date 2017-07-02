@@ -21,6 +21,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
   override val Equality: EqualityLabel = standard.StandardEqualityLabel()
 
   override val Exists: ExistsLabel = standard.SimpleExistsLabel()
+  override val ForAll: ForAllLabel = standard.SimpleForAllLabel()
   override val Next: NextLabel = standard.SimpleNextLabel()
 
   override val Rewrite = StandardRewriteLabel()
@@ -71,6 +72,10 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
   }
   )
 
+  case class ForAllTerm(solver: Apply) extends Binary.F({ (a: SimpleForAll, b: Term) =>
+    And.removeVariable(a.v, solver(a.p, b))
+  })
+
   override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
     case (_, `Not`) => OneIsFormula
     case (`Not`, _) => OneIsFormula
@@ -78,6 +83,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (_, `And`) => TermAnd
     case (`Or`, _) => OrTerm
     case (_, `Or`) => TermOr
+    case (`ForAll`, _) => ForAllTerm
     case (`Variable`, _) => SortedVarLeft
     case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
     case (`BindMatch`, _) => BindMatchMatcher
@@ -190,7 +196,7 @@ private[standard] case class SimpleNextLabel()(implicit override val env: Enviro
 private[standard] case class SimpleNext(_1: Term)(implicit env: Environment) extends Node1 with kore.Next {
   override val label = env.Next
 
-  override val isPredicate = true
+  override val isPredicate = false
 }
 
 private[standard] case class MatchLabel()(implicit override val env: StandardEnvironment) extends Named(":=") with EqualityLabel {
@@ -421,7 +427,7 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
   @PerformanceCritical
   def asSubstitutionAndTerms(t: Term): (Substitution, Set[Term]) = t match {
     case s: Substitution => (s, Set.empty)
-    case and: AndOfSubstitutionAndTerms => (and.s, And.asSet(and.terms))
+    case and: AndOfSubstitutionAndPredicates => (and.s, And.asSet(and.terms))
     case and: AndOfTerms => (Top, and.terms)
     case And.withNext(rest, Some(next)) =>
       val (s, terms) = asSubstitutionAndTerms(rest)
@@ -429,6 +435,55 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
     case t if t.label == And => ???
     case o => (Top, Set(o))
   }
+
+  /**
+    * SON is a an acronym for substitution, other, next
+    * It splits the And into a substitution, non-substitution like predicates,
+    * and other, a non-predicate (usually the Next from a rewrite)
+    */
+  @PerformanceCritical
+  object SPO {
+    @PerformanceCritical
+    def from(t: Term): (Substitution, Term, Term) = t match {
+      case s: Substitution => (s, Top, Top)
+      case and: AndOfSubstitutionAndPredicates => (and.s, and.terms, Top)
+      case and: AndOfTerms => (Top, and, Top)
+      case and: AndWithNext =>
+        val Some((s, t, _)) = unapply(and.conjunction)
+        (s, t, and.nextTerm)
+      case o =>
+        assert(o.label != And)
+        if (o.isPredicate) {
+          (Top, o, Top)
+        } else {
+          (Top, Top, o)
+        }
+    }
+
+    @PerformanceCritical
+    def unapply(t: Term): Some[(Substitution, Term, Term)] = Some(from(t))
+
+    @NonNormalizing
+    @PerformanceCritical
+    def apply(substitution: Substitution, predicates: Term, other: Term): Term = {
+      val substitutionAndPredicates = if (substitution == Top) {
+        predicates
+      } else if (predicates == Top) {
+        substitution
+      } else {
+        new AndOfSubstitutionAndPredicates(substitution, predicates)
+      }
+
+      if (other == Top) {
+        substitutionAndPredicates
+      } else if (substitutionAndPredicates == Top) {
+        other
+      } else {
+        new AndWithNext(substitutionAndPredicates, other)
+      }
+    }
+  }
+
 
   /**
     * Unwraps into a substitution and non-substitution terms
@@ -450,7 +505,7 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
           if (pureSubstitution == Top) {
             terms
           } else {
-            new AndOfSubstitutionAndTerms(pureSubstitution, terms)
+            new AndOfSubstitutionAndPredicates(pureSubstitution, terms)
           }
         }
       }
@@ -479,6 +534,16 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
     t.asOr map {
       case env.And.withNext(_, Some(n)) => n
     }
+  }
+
+  /**
+    * @param v   the variable to remove
+    * @param and the and
+    */
+  @PerformanceCritical
+  def removeVariable(v: Variable, and: Term): Term = and match {
+    case s: Substitution => s.remove(v)
+    case And.SPO(s, terms, next) => And.SPO(s.remove(v), terms, next)
   }
 
   def filterOutNext(t: Term): Term = {
@@ -546,9 +611,9 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
 
   override def combine(originalTerm: Node)(solutions: MightBeSolved*): Term = {
     val res = solutions.foldLeft(Set((Top: Term, List[Term]())))(cartezianProductWithNext)
-    Or(res map {
+    Or(res map (_ match {
       case (other@And.substitutionAndTerms(s, _), l) => And.withNext(other, Next(originalTerm.copy(l map s)))
-    })
+    }))
   }
 
   override def combine(label: NodeLabel)(solutions: MightBeSolved*): Term = {
@@ -631,7 +696,7 @@ final case class AndWithNext(conjunction: Term, nextTerm: Term)(implicit env: Ma
 }
 
 
-private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val terms: Term)(implicit env: Environment) extends And with Assoc {
+private[kale] final class AndOfSubstitutionAndPredicates(val s: Substitution, val terms: Term)(implicit env: Environment) extends And with Assoc {
 
   import env._
 
@@ -646,6 +711,9 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
     case _ => s
   }
 
+  /**
+    * TODO: this should eventually be replaced by the WithNext
+    */
   lazy val nonPredicates: Option[Term] = terms match {
     case a: AndOfTerms => a.nonPredicates
     case t if !t.isPredicate => Some(t)
@@ -657,7 +725,7 @@ private[kale] final class AndOfSubstitutionAndTerms(val s: Substitution, val ter
   override lazy val assocIterable: Iterable[Term] = And.asIterable(s) ++ And.asIterable(terms)
 
   override def equals(other: Any): Boolean = other match {
-    case that: AndOfSubstitutionAndTerms => this.s == that.s && this.terms == that.terms
+    case that: AndOfSubstitutionAndPredicates => this.s == that.s && this.terms == that.terms
     case _ => false
   }
 
@@ -749,13 +817,35 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
   override def asSet: Set[Term] = terms
 }
 
-private[standard] case class SimpleExistsLabel(implicit val e: MatchingLogicMixin) extends Named("∃") with ExistsLabel {
+private[standard] case class SimpleForAllLabel()(implicit val e: MatchingLogicMixin) extends Named("∀") with ForAllLabel {
+
+  import env._
+
+  override def apply(_1: Term, _2: Term): Term = {
+    val v = _1.asInstanceOf[Variable]
+    _2 match {
+      case Bottom => Bottom
+      case _ => SimpleForAll(v, _2)
+    }
+  }
+}
+
+case class SimpleForAll(v: Variable, p: Term)(implicit val env: Environment) extends Node2 with ForAll {
+  val label = env.ForAll
+  override val isPredicate = true
+
+  override def _1: Term = v
+
+  override def _2: Term = p
+}
+
+private[standard] case class SimpleExistsLabel()(implicit val e: MatchingLogicMixin) extends Named("∃") with ExistsLabel {
 
   import env._
 
   // 1. Bottom ... Bottom
   // 2. X -> concrete ... remove binding
-  // 3. X -> symbolic ... leave in place
+  // 3. X -> symbolic ... leave in place ..... should probably remove it anyhow
   // 4. no X -> leave in place
   override def apply(_1: Term, _2: Term): Term = {
     val v = _1.asInstanceOf[Variable]

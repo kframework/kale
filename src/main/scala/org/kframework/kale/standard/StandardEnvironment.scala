@@ -3,7 +3,6 @@ package org.kframework.kale.standard
 import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.context.BundledContextMixin
-import org.kframework.kale.pretty.PrettyWrapperMixin
 import org.kframework.kale.transformer.Binary
 
 import scala.collection.Seq

@@ -56,8 +56,6 @@ trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher
   override def AssocWithIdLabel(name: String, id: Term): AssocWithIdLabel = new AssocWithIdListLabel(name, id)
 
   private def matchContents(l: AssocLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = strongBottomize(soFar) {
-
-
     val res = (ksLeft.toSeq, ksRight.toSeq) match {
       case (Seq(), Seq()) =>
         soFar

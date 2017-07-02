@@ -3,7 +3,6 @@ package org.kframework.kale.tests
 import org.kframework.kale._
 import org.scalatest.FreeSpec
 
-import scala.collection._
 import scala.language.implicitConversions
 
 class RewriteTest extends TestSetup() {
@@ -58,7 +57,7 @@ class RewriteTest extends TestSetup() {
   }
 
   "search" in {
-    assert(rewriter.searchStep((1: Term) + 0) === And(1, Equality(X, 1)))
+    assert(rewriter.searchStep((1: Term) + 0) === (1: Term))
     assert(rewriter.searchStep(1: Term) === Bottom)
   }
 

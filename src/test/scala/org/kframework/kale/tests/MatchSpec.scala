@@ -273,7 +273,11 @@ class MatchSpec extends TestSetup() {
     assert((BindMatch(X, bar(Y)) := Or(bar(1), 2)) === And(Equality(X, bar(1)), Equality(Y, 1)))
   }
 
-  "MAP" in {
-
+  "ForAll" in {
+    assert((ForAll(X, X) :== X) === Next(X))
+    assert((ForAll(X, X) :== 3) === Next(3))
+    assert((ForAll(X, bar(X)) :== 3) === Bottom)
+    assert((ForAll(X, bar(X)) :== bar(3)) === Next(bar(3)))
+    assert((ForAll(X, foo(X, Y)) :== foo(3, 4)) === And(Equality(Y, 4), Next(foo(3, 4))))
   }
 }
