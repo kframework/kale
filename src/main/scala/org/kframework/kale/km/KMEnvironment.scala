@@ -2,8 +2,8 @@ package org.kframework.kale.km
 
 import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kore.Sort
 import org.kframework.kale.transformer.Binary
+import org.kframework.kore.Sort
 
 import scala.collection._
 

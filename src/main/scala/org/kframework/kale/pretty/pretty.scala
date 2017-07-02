@@ -1,7 +1,6 @@
 package org.kframework.kale.pretty
 
 import org.kframework.kale._
-import org.kframework.kale.standard.Sort
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.Named

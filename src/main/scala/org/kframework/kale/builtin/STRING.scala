@@ -5,7 +5,6 @@ import org.kframework.kale._
 import org.kframework.kale.standard.ReferenceLabel
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
-import org.kframework.kale.util.Named
 
 
 case class STRING()(implicit protected val penv: Environment with IntMixin with BooleanMixin) {

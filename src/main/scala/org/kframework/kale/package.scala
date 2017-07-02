@@ -15,6 +15,29 @@ package object kale {
 
   def definePartialFunction[T, Solver <: Apply[T]](f: GenUnary.ProcessingFunctions[T, Solver]): GenUnary.ProcessingFunctions[T, Solver] = f
 
+  /**
+    * Annotation for methods that are called very, very many times.
+    * Do not add expensive operations to them.
+    * The annotation is not meant for "outer" entities for which performance is important, but their performance
+    * stems from calling other entities many times.
+    */
+  case class PerformanceCritical()
+
+  /**
+    * Annotation for pattern constructors that automatically normalize their content.
+    * E.g., a normalizing And constructor could bring the expression to DNF form
+    * Unless otherwise specified, we assume constructors are normalizing -- the default is @Normalizing
+    * We use this annotation just for emphasis.
+    * When a constructor is not `Normalizing`, use `NonNormalizing` to emphasize that.
+    * We use usually @NonNormalizing constructors when performance is very important
+    */
+  case class Normalizing()
+
+  /**
+    * Opposite of @Normalizing
+    */
+  case class NonNormalizing()
+
   implicit def PFtoTotal(f: PartialFunction[Term, Boolean]): (Term => Boolean) = x => f.lift(x).getOrElse(false)
 
   class ExplicitOr(private val t: Term) extends AnyVal {

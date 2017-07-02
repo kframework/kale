@@ -1,9 +1,9 @@
 package org.kframework.kale.standard
 
-import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.{NameFromObject, Named, unreachable}
+import org.kframework.kale.{Substitution, _}
 import org.kframework.{kale, kore}
 
 import scala.collection.{Iterable, Seq}
@@ -132,7 +132,7 @@ trait PrimordialDomainValueLabel[T] extends DomainValueLabel[T] {
 
 private[standard] case class StandardDomainValue[T](label: DomainValueLabel[T], data: T) extends DomainValue[T]
 
-private[standard] case class StandardVariableLabel(implicit override val env: Environment) extends Named("#Variable") with VariableLabel {
+private[standard] case class StandardVariableLabel()(implicit override val env: Environment) extends Named("#Variable") with VariableLabel {
   def apply(name: String): Variable = apply((Name(name), Sort.K))
 
   def apply(name: String, sort: kale.Sort): Variable = apply((Name(name), sort))
@@ -159,7 +159,7 @@ private[standard] case class StandardVariable(name: kale.Name, givenSort: kale.S
   val label = env.Variable
 }
 
-private[standard] case class StandardTruthLabel(implicit val env: Environment) extends NameFromObject with TruthLabel {
+private[standard] case class StandardTruthLabel()(implicit val env: Environment) extends NameFromObject with TruthLabel {
   def apply(v: Boolean) = if (v) env.Top else env.Bottom
 }
 
@@ -167,7 +167,7 @@ private[standard] abstract class Truth(val data: Boolean)(implicit val env: Envi
   val label = env.Truth
 }
 
-private[standard] case class TopInstance(implicit eenv: Environment) extends Truth(true) with kale.Top {
+private[standard] case class TopInstance()(implicit eenv: Environment) extends Truth(true) with kale.Top {
   override def get(v: Variable): Option[Term] = None
 
   def asMap = Map()
@@ -179,11 +179,11 @@ private[standard] case class TopInstance(implicit eenv: Environment) extends Tru
   override def remove(v: Variable): Substitution = this
 }
 
-private[standard] case class BottomInstance(implicit eenv: Environment) extends Truth(false) with kale.Bottom {
+private[standard] case class BottomInstance()(implicit eenv: Environment) extends Truth(false) with kale.Bottom {
   override def toString: String = "⊥"
 }
 
-private[standard] case class SimpleNextLabel(implicit override val env: Environment) extends Named("=>_") with NextLabel {
+private[standard] case class SimpleNextLabel()(implicit override val env: Environment) extends Named("=>_") with NextLabel {
   def apply(t: Term) = SimpleNext(t)
 }
 
@@ -193,7 +193,7 @@ private[standard] case class SimpleNext(_1: Term)(implicit env: Environment) ext
   override val isPredicate = true
 }
 
-private[standard] case class MatchLabel(implicit override val env: StandardEnvironment) extends Named(":=") with EqualityLabel {
+private[standard] case class MatchLabel()(implicit override val env: StandardEnvironment) extends Named(":=") with EqualityLabel {
 
   import env._
 
@@ -221,7 +221,7 @@ private[kale] class Matches(val _1: Term, val _2: Term)(implicit env: StandardEn
   val label = env.Match
 }
 
-private[standard] case class StandardEqualityLabel(implicit override val env: MatchingLogicMixin) extends Named("=") with EqualityLabel {
+private[standard] case class StandardEqualityLabel()(implicit override val env: MatchingLogicMixin) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = {
     if (_1 == _2)
       env.Top
@@ -272,7 +272,7 @@ class Binding(val variable: Variable, val term: Term)(implicit val env: Matching
   override def toString: String = super[Equals].toString
 }
 
-private[standard] case class StandardRewriteLabel(implicit val env: Environment) extends {
+private[standard] case class StandardRewriteLabel()(implicit val env: Environment) extends {
   val name = "=>"
 } with RewriteLabel {
   def apply(_1: Term, _2: Term) = SimpleRewrite(_1, _2)
@@ -311,15 +311,13 @@ class Compose2(val name: String, functionLabel2: Label2, functionLabel1: Functio
   }
 }
 
-private[standard] case class DNFAndLabel(implicit val env: MatchingLogicMixin) extends {
+private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin) extends {
   val name = "∧"
 } with AndLabel {
 
   import env._
 
-  /**
-    * normalizing
-    */
+  @Normalizing
   override def apply(_1: Term, _2: Term): Term = {
     if (_1 == Bottom || _2 == Bottom) {
       Bottom
@@ -333,9 +331,7 @@ private[standard] case class DNFAndLabel(implicit val env: MatchingLogicMixin) e
     }
   }
 
-  /**
-    * normalizing
-    */
+  @Normalizing
   def applyOnNonOrs(_1: Term, _2: Term): Term = {
     if (_1 == Bottom || _2 == Bottom)
       Bottom
@@ -355,19 +351,13 @@ private[standard] case class DNFAndLabel(implicit val env: MatchingLogicMixin) e
     }
   }
 
-  /**
-    * not-normalizing
-    */
+  @NonNormalizing
   def apply(m: Map[Variable, Term]): Substitution = substitution(m)
 
-  /**
-    * normalizing
-    */
+  @Normalizing
   def apply(_1: Substitution, _2: Substitution): Term = substitution(_1, _2)
 
-  /**
-    * not-normalizing
-    */
+  @NonNormalizing
   def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = {
     val negatedANot = others exists {
       case Not(n) => pureSubstitution.contains(n)
@@ -425,13 +415,17 @@ private[standard] case class DNFAndLabel(implicit val env: MatchingLogicMixin) e
     }
   }
 
+  /**
+    * @deprecated ("Use SON instead")
+    */
+  @PerformanceCritical
   def asSubstitutionAndTerms(t: Term): (Substitution, Set[Term]) = t match {
     case s: Substitution => (s, Set.empty)
     case and: AndOfSubstitutionAndTerms => (and.s, And.asSet(and.terms))
     case and: AndOfTerms => (Top, and.terms)
     case And.withNext(rest, Some(next)) =>
       val (s, terms) = asSubstitutionAndTerms(rest)
-      (s, terms.toSet + next)
+      (s, terms + next)
     case t if t.label == And => ???
     case o => (Top, Set(o))
   }
@@ -440,9 +434,7 @@ private[standard] case class DNFAndLabel(implicit val env: MatchingLogicMixin) e
     * Unwraps into a substitution and non-substitution terms
     */
   object substitutionAndTerms {
-    /**
-      * not normalizing
-      */
+    @NonNormalizing
     def apply(pureSubstitution: Substitution, otherTerms: Iterable[Term]): Term = {
       val others = otherTerms filterNot (_ == env.Top)
 
@@ -717,7 +709,7 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
   }
 }
 
-private[standard] case class DNFOrLabel(implicit override val env: Environment) extends Named("∨") with OrLabel {
+private[standard] case class DNFOrLabel()(implicit override val env: Environment) extends Named("∨") with OrLabel {
 
   import env._
 

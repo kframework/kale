@@ -31,7 +31,7 @@ trait AssocLabel extends Label2 {
 
 trait AssocWithIdLabel extends AssocLabel with HasId {
 
-  // normalizing
+  @Normalizing
   def apply(_1: Term, _2: Term): Term = {
     val l1 = asIterable(_1)
     val l2 = asIterable(_2)
@@ -50,10 +50,10 @@ trait AssocWithIdLabel extends AssocLabel with HasId {
     case y => List(y)
   }
 
-  // normalizing
+  @Normalizing
   override def apply(list: Iterable[Term]): Term = (list fold identity) ((a, b) => apply(a, b))
 
-  // not normalizing
+  @NonNormalizing
   protected def construct(l: Iterable[Term]): Term
 }
 
@@ -96,6 +96,6 @@ trait AssocCommWithIdLabel extends AssocCommLabel with HasId {
       super.asSet(t)
     }
 
-  // normalizing
+  @Normalizing
   override def apply(list: Iterable[Term]): Term = list.foldLeft(identity)(apply)
 }

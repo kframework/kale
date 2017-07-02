@@ -1,7 +1,7 @@
 package org.kframework.kale
 
 import org.kframework.kale.km.{MultisortedMixing, Z3Mixin}
-import org.kframework.kale.standard.{AndOfSubstitutionAndTerms, StandardEnvironment}
+import org.kframework.kale.standard.StandardEnvironment
 
 import scala.collection.immutable.TreeSet
 import scala.collection.{Set, mutable}

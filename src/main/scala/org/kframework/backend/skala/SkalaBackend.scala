@@ -1,15 +1,15 @@
 package org.kframework.backend.skala
 
 import org.kframework.backend.skala.backendImplicits._
-import org.kframework.kale.{Sort, _}
+import org.kframework.kale._
 import org.kframework.kale.builtin.{MapLabel, SetLabel, TOKEN}
-import org.kframework.kale.standard.{Sort, _}
+import org.kframework.kale.standard._
 import org.kframework.kale.util.Named
-import org.kframework.{kale, kore}
 import org.kframework.kore.extended.Backend
+import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.DefaultBuilders
 import org.kframework.kore.{Pattern, Rule, extended}
-import org.kframework.kore.extended.implicits._
+import org.kframework.{kale, kore}
 
 class SkalaBackend(implicit val originalDefintion: kore.Definition, val originalModule: kore.Module) extends StandardEnvironment with KoreBuilders with extended.Backend {
 
