@@ -35,12 +35,12 @@ class CodecTest extends FreeSpec {
 
   "encode" in {
     val actual = pattern.asJson.noSpaces
-    val expected = "{\"label\":\"foo\",\"att\":{},\"children\":[{\"label\":\"Int\",\"att\":{},\"data\":\"3\"},{\"label\":\"String\",\"att\":{},\"data\":\"bar\"}]}"
+    val expected = "{\"label\":\"foo\",\"att\":{},\"children\":[{\"label\":\"Int@INT-SYNTAX\",\"att\":{},\"data\":\"3\"},{\"label\":\"String\",\"att\":{},\"data\":\"bar\"}]}"
     assert(actual == expected)
   }
 
   "decode int" in {
-    val actual = decode[Term]("{\"label\":\"Int\",\"att\":{},\"data\":\"3\"}")
+    val actual = decode[Term]("{\"label\":\"Int@INT-SYNTAX\",\"att\":{},\"data\":\"3\"}")
     val expected = Right(INT.Int(3))
     assert(actual === expected)
   }
@@ -70,7 +70,7 @@ class CodecTest extends FreeSpec {
     val expectedTerm: Term = INT.Int(3)
     expectedTerm.att(TestAtt)
 
-    val expectedJson = "{\"label\":\"Int\",\"att\":{\"test\":0},\"data\":\"3\"}"
+    val expectedJson = "{\"label\":\"Int@INT-SYNTAX\",\"att\":{\"test\":0},\"data\":\"3\"}"
 
     assertEncodings(expectedTerm, expectedJson)
   }
