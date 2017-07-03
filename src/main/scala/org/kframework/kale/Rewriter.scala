@@ -12,7 +12,7 @@ object Rewriter {
   }
 }
 
-class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) extends (Term => Stream[Term]) {
+class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) extends (Term => Option[Term]) {
   assert(env.isSealed)
   assert(inputRules != null)
 
@@ -42,7 +42,7 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
   val ruleHits = mutable.Map[Term, Int]()
 
   for (r <- rules)
-    ruleHits += (r -> 0)
+    ruleHits += (r -> (Math.random() * 20).toInt)
 
   var sortedRules = TreeSet[Term]()({ (r1, r2) =>
     if (r1 == r2)
@@ -61,6 +61,10 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
     }
   })
 
+  //  def index(t: Term) = t findTD {
+  //    kseq(ForAll(_, ))
+  //  }
+
   sortedRules ++= rules
 
   // TODO: clean this
@@ -69,14 +73,44 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
     case _ => null
   }
 
+  import env._
+
+  val kseq = label("#KSequence").asInstanceOf[Label2]
+
+  val topCell = label("<T>").asInstanceOf[Label2]
+
+  val kCell = label("<k>").asInstanceOf[Label1]
+
+  def indexTerm(t: Term): Option[Label] = (t findTD {
+    case kseq(a, _) => true
+    case _ => false
+  }).map(_.asInstanceOf[Node2]._1.label)
+
+  def index(t: Term): Option[Label] = t match {
+    case topCell(x, _) => index(x)
+    case kCell(x) => index(x)
+    case env.ForAll(_, x) => index(x)
+    case kseq(x, _) => index(x)
+    case Rewrite(x, _) => index(x)
+    case v: Variable => None
+    case x => Some(x.label)
+  }
+
+  val indexedRules = sortedRules.groupBy(index).filterKeys(_.isDefined).map({ case (k, v) => (k.get, v) })
 
   import env._
 
-  def apply(t: Term): Stream[Term] = step(t)
+  def apply(t: Term): Option[Term] = step(t)
 
-  def step(obj: Term): Stream[Term] = {
+  var indexHits = 0
+  var sortedHits = 0
+
+  def step(obj: Term): Option[Term] = {
     var tries = 0
-    val res = (sortedRules.toStream map { r =>
+
+    val indexed = indexTerm(obj).flatMap(indexedRules.get).getOrElse(Set())
+
+    val res0 = indexed.view map { r =>
       val m = unify(r, obj)
       tries += 1
       m match {
@@ -84,30 +118,48 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
           val afterSubstitution = env match {
             case env: StandardEnvironment =>
               import env._
-              ands.toStream.collect({
+              ands.view.collect({
                 case And.withNext(_: Substitution, Some(Next(next))) => next
               }).headOption.getOrElse(Bottom)
           }
-          //          if (afterSubstitution != Bottom) {
-          //            println("   " + r)
-          //            println("       " + oneGoodSub)
-          //          }
           if (afterSubstitution != Bottom) {
-            val prev = ruleHits(r)
-            sortedRules -= r
-            ruleHits.update(r, prev + 1)
-            sortedRules += r
+            indexHits += 1
           }
           afterSubstitution
         case Bottom => Bottom
       }
-    }).filterNot(_ == Bottom)
-    res
+    }
+
+    val res = sortedRules.view map { r =>
+      val m = unify(r, obj)
+      tries += 1
+      m match {
+        case Or.set(ands) =>
+          val afterSubstitution = env match {
+            case env: StandardEnvironment =>
+              import env._
+              ands.view.collect({
+                case And.withNext(_: Substitution, Some(Next(next))) => next
+              }).headOption.getOrElse(Bottom)
+          }
+          if (afterSubstitution != Bottom) {
+            val prev = ruleHits(r)
+            sortedRules -= r
+            ruleHits.update(r, prev + (Math.random() * 3).toInt)
+            sortedRules += r
+            sortedHits += 1
+          }
+          afterSubstitution
+        case Bottom => Bottom
+      }
+    }
+
+    res0.find(_ != Bottom).orElse(res.find(_ != Bottom))
   }
 
   def searchStep(obj: Term): Term = {
     val unificationRes: Set[Term] = rules.map(r => unify(r, obj))
-    val finalRes = Or(unificationRes.flatMap({
+    Or(unificationRes.flatMap({
       case Bottom => Set[Term]()
       case or =>
         val res = Or.asSet(or).flatMap(u => {
@@ -120,9 +172,7 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
           }
         })
         res
-    })
-    )
-    finalRes
+    }))
   }
 }
 
