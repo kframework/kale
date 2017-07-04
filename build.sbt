@@ -8,8 +8,6 @@ scalaVersion := "2.12.2"
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-//resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository"
-
 resolvers += Resolver.mavenLocal
 
 libraryDependencies ++= Seq(
