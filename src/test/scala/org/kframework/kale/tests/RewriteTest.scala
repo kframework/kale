@@ -32,11 +32,11 @@ class RewriteTest extends TestSetup() {
     assertRewrite(Rewrite((2: Term) + X + 3, (5: Term) + X))((2: Term) + 4 + 3, (5: Term) + 4)
   }
 
-  val rewriter = Rewriter(env)(Set(
+  val rewriter = Or(
     Rewrite(X + 0, X),
     Rewrite((0: Term) + X, X),
     Rewrite(el ~~ 3 ~~ X ~~ Y ~~ 6, el ~~ X ~~ 0 ~~ Y)
-  ))
+  )
 
   def justNext(t: Term) = t.asOr map {
     case And.withNext(_, Some(Next(next))) => next
@@ -52,18 +52,18 @@ class RewriteTest extends TestSetup() {
   }
 
   "step" in {
-    assert(rewriter.step((1: Term) + 0).toList === List(1: Term))
-    assert(rewriter.step(1: Term).toList === List())
+    assert((rewriter =:= ((1: Term) + 0)) === Next(1))
+    assert((rewriter =:= (1: Term)) === Bottom)
   }
 
   "search" in {
-    assert(rewriter.searchStep((1: Term) + 0) === (1: Term))
-    assert(rewriter.searchStep(1: Term) === Bottom)
+    assert((rewriter =:= ((1: Term) + 0)) === Next(1))
+    assert((rewriter =:= (1: Term)) === Bottom)
   }
 
   // TODO: check this test
   "search assoc" ignore {
-    assert(rewriter.searchStep(el ~~ 3 ~~ 4 ~~ 5 ~~ 6) ===
+    assert((rewriter := (el ~~ 3 ~~ 4 ~~ 5 ~~ 6)) ===
       Or(List(el ~~ 4 ~~ 0 ~~ 5, el ~~ 0 ~~ 4 ~~ 5, el ~~ 4 ~~ 5 ~~ 0)))
   }
 

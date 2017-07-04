@@ -21,7 +21,7 @@ class dsl(implicit val env: StandardEnvironment) {
 
     def ==>(tt: Term): Term = Rewrite(t, tt)
 
-    def =:=(tt: Term): Term = env.And.filterOutNext(env.unify(t, tt))
+    def =:=(tt: Term): Term = env.And.onlyNext(env.unify(t, tt))
   }
 
   implicit def symbolWithApp(s: Symbol)(env: Environment) = new {

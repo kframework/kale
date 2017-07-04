@@ -58,8 +58,6 @@ abstract class TestSetup[E <: StandardEnvironment](implicit val env: E = Standar
 
   env.seal()
 
-  implicit val rewriterBuilder: (Set[_ <: Term]) => Rewriter = Rewriter(env)(_)
-
   a2b.setRules(Or(a2bRules))
 
   def unifier(t1: Term, t2: Term): Term = env.And.filterOutNext(matcher(t1, t2))

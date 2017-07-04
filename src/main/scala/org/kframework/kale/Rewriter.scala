@@ -6,12 +6,14 @@ import org.kframework.kale.standard.StandardEnvironment
 import scala.collection.immutable.TreeSet
 import scala.collection.mutable
 
+@Deprecated
 object Rewriter {
   def apply(env: StandardEnvironment) = new {
     def apply(rules: Set[_ <: Term]): Rewriter = new Rewriter(env)(rules)
   }
 }
 
+@Deprecated
 class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) extends (Term => Option[Term]) {
   assert(env.isSealed)
   assert(inputRules != null)
@@ -75,28 +77,26 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
 
   import env._
 
-  val kseq = label("#KSequence").asInstanceOf[Label2]
-
-  val topCell = label("<T>").asInstanceOf[Label2]
-
-  val kCell = label("<k>").asInstanceOf[Label1]
-
-  def indexTerm(t: Term): Option[Label] = (t findTD {
-    case kseq(a, _) => true
-    case _ => false
-  }).map(_.asInstanceOf[Node2]._1.label)
-
-  def index(t: Term): Option[Label] = t match {
-    case topCell(x, _) => index(x)
-    case kCell(x) => index(x)
-    case env.ForAll(_, x) => index(x)
-    case kseq(x, _) => index(x)
-    case Rewrite(x, _) => index(x)
-    case v: Variable => None
-    case x => Some(x.label)
-  }
-
-  val indexedRules = sortedRules.groupBy(index).filterKeys(_.isDefined).map({ case (k, v) => (k.get, v) })
+  //  val kseq = label("#KSequence").asInstanceOf[Label2]
+  //  val topCell = label("<T>").asInstanceOf[Label2]
+  //  val kCell = label("<k>").asInstanceOf[Label1]
+  //
+  //  def indexTerm(t: Term): Option[Label] = (t findTD {
+  //    case kseq(a, _) => true
+  //    case _ => false
+  //  }).map(_.asInstanceOf[Node2]._1.label)
+  //
+  //  def index(t: Term): Option[Label] = t match {
+  //    case topCell(x, _) => index(x)
+  //    case kCell(x) => index(x)
+  //    case env.ForAll(_, x) => index(x)
+  //    case kseq(x, _) => index(x)
+  //    case Rewrite(x, _) => index(x)
+  //    case v: Variable => None
+  //    case x => Some(x.label)
+  //  }
+  //
+  //  val indexedRules = sortedRules.groupBy(index).filterKeys(_.isDefined).map({ case (k, v) => (k.get, v) })
 
   import env._
 
@@ -108,27 +108,27 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
   def step(obj: Term): Option[Term] = {
     var tries = 0
 
-    val indexed = indexTerm(obj).flatMap(indexedRules.get).getOrElse(Set())
-
-    val res0 = indexed.view map { r =>
-      val m = unify(r, obj)
-      tries += 1
-      m match {
-        case Or.set(ands) =>
-          val afterSubstitution = env match {
-            case env: StandardEnvironment =>
-              import env._
-              ands.view.collect({
-                case And.withNext(_: Substitution, Some(Next(next))) => next
-              }).headOption.getOrElse(Bottom)
-          }
-          if (afterSubstitution != Bottom) {
-            indexHits += 1
-          }
-          afterSubstitution
-        case Bottom => Bottom
-      }
-    }
+    //    val indexed = indexTerm(obj).flatMap(indexedRules.get).getOrElse(Set())
+    //
+    //    val res0 = indexed.view map { r =>
+    //      val m = unify(r, obj)
+    //      tries += 1
+    //      m match {
+    //        case Or.set(ands) =>
+    //          val afterSubstitution = env match {
+    //            case env: StandardEnvironment =>
+    //              import env._
+    //              ands.view.collect({
+    //                case And.withNext(_: Substitution, Some(Next(next))) => next
+    //              }).headOption.getOrElse(Bottom)
+    //          }
+    //          if (afterSubstitution != Bottom) {
+    //            indexHits += 1
+    //          }
+    //          afterSubstitution
+    //        case Bottom => Bottom
+    //      }
+    //    }
 
     val res = sortedRules.view map { r =>
       val m = unify(r, obj)
@@ -154,7 +154,8 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
       }
     }
 
-    res0.find(_ != Bottom).orElse(res.find(_ != Bottom))
+    //    res0.find(_ != Bottom).orElse()
+    res.find(_ != Bottom)
   }
 
   def searchStep(obj: Term): Term = {
