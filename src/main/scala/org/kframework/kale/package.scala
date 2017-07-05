@@ -72,6 +72,7 @@ package object kale {
 
 
     def asOr = new ExplicitOr(t)
+
     def asAnd = new ExplicitAnd(t)
   }
 
