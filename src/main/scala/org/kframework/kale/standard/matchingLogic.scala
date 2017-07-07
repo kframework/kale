@@ -85,6 +85,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (_, `Or`) => TermOr
     case (`ForAll`, _) => ForAllTerm
     case (`Variable`, _) => SortedVarLeft
+    case (_, `Variable`) => SortedVarRight
     case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
     case (`BindMatch`, _) => BindMatchMatcher
   }).orElse(super.makeMatcher)

@@ -65,7 +65,7 @@ class RewriteTest extends FreeSpec {
 
   }
 
-  "symbolic" ignore {
+  "symbolic" in {
 
     // variable declarations
     val X = Variable("X", Int)

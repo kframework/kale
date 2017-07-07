@@ -14,6 +14,7 @@ class IMPSpec extends FreeSpec {
   import env._
 
   val rich = new dsl()
+
   import rich._
 
   object ImpSorts {
@@ -114,18 +115,15 @@ class IMPSpec extends FreeSpec {
 
     val a = 'a
 
-    // TODO: un-ignore this test when re-enabling symbolic execution
-    // Cosmin: I disabled it as the unification should be part of matching engine, not put on top of the rewriter
-    // please talk with me before re-enabling!
-    "div 1" ignore {
+    "div 1" in {
 
       assert(
         // q(p(x,y), p(y,x)) =?= q(z,z)
-        unify(
+        And.filterOutNext(unify(
           div(plus(E1, E2), plus(E2, E1)),
           div(E3, E3)
-        )
-          ==
+        ))
+          ===
           // E3 = _+_(E1, E1) ∧ E2 = E1
           And(
             Equality(E3, plus(E1, E2)),
@@ -134,17 +132,14 @@ class IMPSpec extends FreeSpec {
       )
     }
 
-    // TODO: un-ignore this test when re-enabling symbolic execution
-    // Cosmin: I disabled it as the unification should be part of matching engine, not put on top of the rewriter
-    // please talk with me before re-enabling!
-    "div 2" ignore {
+    "div 2" in {
 
       assert(
         // p(x,y,a) =?= p(y,x,x)
-        unify(
+        And.filterOutNext(unify(
           ppp(X, Y, a),
           ppp(Y, X, X)
-        )
+        ))
           ==
           // X = a ∧ Y = a
           And(
