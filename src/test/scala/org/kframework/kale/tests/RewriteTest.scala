@@ -1,11 +1,12 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
+import org.kframework.kale.standard.StandardEnvironment
 import org.scalatest.FreeSpec
 
 import scala.language.implicitConversions
 
-class RewriteTest extends TestSetup() {
+class RewriteTest extends TestSetup[StandardEnvironment]() {
 
   import env._
   import implicits._

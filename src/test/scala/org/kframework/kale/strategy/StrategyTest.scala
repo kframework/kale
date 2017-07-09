@@ -1,9 +1,10 @@
 package org.kframework.kale.strategy
 
+import org.kframework.kale.standard.StandardEnvironment
 import org.kframework.kale.tests.TestSetup
 import org.scalatest.FreeSpec
 
-class StrategyTest extends TestSetup {
+class StrategyTest extends TestSetup[StandardEnvironment]() {
 
   import env._
   import STRATEGY._

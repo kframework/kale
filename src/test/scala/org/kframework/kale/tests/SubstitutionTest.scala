@@ -1,9 +1,10 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
+import org.kframework.kale.standard.StandardEnvironment
 import org.scalatest.FreeSpec
 
-class SubstitutionTest extends TestSetup() {
+class SubstitutionTest extends TestSetup[StandardEnvironment]() {
 
   import env._
 

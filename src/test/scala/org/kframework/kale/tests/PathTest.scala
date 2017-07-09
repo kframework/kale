@@ -1,10 +1,11 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale.Term
+import org.kframework.kale.standard.StandardEnvironment
 import org.kframework.kale.util.Path
 import org.scalatest.FreeSpec
 
-class PathTest extends TestSetup() {
+class PathTest extends TestSetup[StandardEnvironment]() {
   import env._
 
   "apply empty path" in {
