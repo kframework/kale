@@ -114,14 +114,6 @@ class ParsingDisambiguationTest extends FreeSpec {
   val Mult = Variable("Mult")
   val Decl = Variable("Decl")
 
-  var anywhereCounter = 0
-
-  def ANYWHERE(p: Term) = {
-    anywhereCounter += 1
-    AnywhereContext(
-      Variable("ANYWHERE" + anywhereCounter), p)
-  }
-
   "with two rules and amb" in {
     val keepVarDecl =
       ANYWHERE(

@@ -167,7 +167,7 @@ trait Node2 extends Node with Product2[Term, Term] {
 trait Node3 extends Node with Product3[Term, Term, Term] {
   val label: Label3
 
-  val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround
+  lazy val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 0 => this.copy(t, _2, _3)

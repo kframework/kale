@@ -26,6 +26,7 @@ trait StandardEnvironment
     with standard.FunctionByRewritingMixin
     with builtin.MapMixin
     with BundledContextMixin
+    with MacroMixin
     with strategy.StrategyMixin
     with MatchingLogicPostfixMixin {
 

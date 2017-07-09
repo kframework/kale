@@ -2,7 +2,7 @@ package org.kframework.kale.context
 
 import org.kframework.kale._
 import org.kframework.kale.context.anywhere.ContextContentVariable
-import org.kframework.kale.standard.{HolesMixin, StandardEnvironment}
+import org.kframework.kale.standard.{AssocWithIdList, HolesMixin, StandardEnvironment}
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.transformer.{Binary, Unary}
 
@@ -59,48 +59,45 @@ object pattern {
     }
   }
 
-  class PatternContextMatcher(implicit env: Environment with BundledContextMixin) extends (Binary.Apply => (PatternContextApplication, Term) => Term)  {
-
+  def PatternContextMatcher(solver: Apply)(implicit env: Environment with BundledContextMixin) = { (contextApplication: PatternContextApplication, term: Term) =>
     import env._
 
-    override def apply(solver: Apply): (PatternContextApplication, Term) => Term = { (contextApplication: PatternContextApplication, term: Term) =>
-      val leftContextLabel = contextApplication.label
-      val contextVar = contextApplication.contextVar
-      val redex = contextApplication.redex
+    val leftContextLabel = contextApplication.label
+    val contextVar = contextApplication.contextVar
+    val redex = contextApplication.redex
 
 
-      Or(contextApplication.patternsWithRedexHolesAndTheirContextVariables map {
-        case (Equality(And.predicatesAndNonPredicate(leftFormulas, Some(theContextDeclaration)), right), withHoles, contextVars) =>
-          val contextMatch = solver(right, term)
-          val contextMatchSolutions = Or.asSet(contextMatch)
-          Or(contextMatchSolutions map {
-            case And.withNext(And.substitutionAndTerms(sub@And.substitution(substitutionAsAMap), rhsLeftoverConstraints), Some(next)) =>
-              val partiallySolvedLeftFormulas = sub(leftFormulas)
-              val matchSubAppliedToWithHoles = sub(withHoles)
-              val contextSub = Equality(contextVar, matchSubAppliedToWithHoles)
-              // TODO: filter out less
-              And(And(partiallySolvedLeftFormulas, contextSub, And.substitution(substitutionAsAMap.filter({ case (k, _) => !contextVars.contains(k) }))),
-                next)
-          })
-      })
+    Or(contextApplication.patternsWithRedexHolesAndTheirContextVariables map {
+      case (Equality(And.predicatesAndNonPredicate(leftFormulas, Some(theContextDeclaration)), right), withHoles, contextVars) =>
+        val contextMatch = solver(right, term)
+        val contextMatchSolutions = Or.asSet(contextMatch)
+        Or(contextMatchSolutions map {
+          case And.withNext(And.substitutionAndTerms(sub@And.substitution(substitutionAsAMap), rhsLeftoverConstraints), Some(next)) =>
+            val partiallySolvedLeftFormulas = sub(leftFormulas)
+            val matchSubAppliedToWithHoles = sub(withHoles)
+            val contextSub = Equality(contextVar, matchSubAppliedToWithHoles)
+            // TODO: filter out less
+            And(And(partiallySolvedLeftFormulas, contextSub, And.substitution(substitutionAsAMap.filter({ case (k, _) => !contextVars.contains(k) }))),
+              next)
+        })
+    })
 
-      // `buz(H)`[H] = buz(C[H])
-      // `H`[H] = H
-      // foo(C[bar(X)])
-      // foo(buz(bar(1)))
-      // C -> buz(H)
-      // X -> 1
+    // `buz(H)`[H] = buz(C[H])
+    // `H`[H] = H
+    // foo(C[bar(X)])
+    // foo(buz(bar(1)))
+    // C -> buz(H)
+    // X -> 1
 
-      // foo(...)
-      // ... solving C[bar(X)]
-      //     ... matching context C[H] buz(bar(X))
-      //         ... regular match buz(...) upto matching context C[H] bar(1)
-      //             ... H bar(1) ==> H -> bar(1)
-      //             C -> H, H -> bar(1)
-      //         C -> buz(H), H -> bar(1)
-      //     ... matching bar(X) bar(1)
-      //     C -> buz(H), H -> bar(1), X -> 1
-    }
+    // foo(...)
+    // ... solving C[bar(X)]
+    //     ... matching context C[H] buz(bar(X))
+    //         ... regular match buz(...) upto matching context C[H] bar(1)
+    //             ... H bar(1) ==> H -> bar(1)
+    //             C -> H, H -> bar(1)
+    //         C -> buz(H), H -> bar(1)
+    //     ... matching bar(X) bar(1)
+    //     C -> buz(H), H -> bar(1), X -> 1
   }
 
   class PatternContextProcessingFunction(implicit env: Environment with HolesMixin with BundledContextMixin) extends Unary.ProcessingFunction[SubstitutionApply] {
