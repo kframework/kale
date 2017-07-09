@@ -112,17 +112,3 @@ case class FunctionDefinedByRewritingLabel3(name: String)(implicit val env: Stan
 case class FunctionDefinedByRewritingLabel4(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel4 {
   def f(_1: Term, _2: Term, _3: Term, _4: Term): Option[Term] = tryToApply(FreeNode4(this, _1, _2, _3, _4))
 }
-
-case class Macro1(name: String, rw: Term)(implicit val env: StandardEnvironment) extends Label1 {
-
-  import env._
-
-  def apply(_1: Term): Term = Equality.binding(Hole, _1)(rw)
-}
-
-case class Macro2(name: String, rw: Term)(implicit val env: StandardEnvironment) extends Label2 {
-
-  import env._
-
-  def apply(_1: Term, _2: Term): Term = And.substitution(Map(Hole1 -> _1, Hole2 -> _2))(rw)
-}
