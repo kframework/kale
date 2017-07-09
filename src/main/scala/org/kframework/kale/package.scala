@@ -48,32 +48,32 @@ package object kale {
     def map(f: Term => Term): Term = (t.label.env.And map f) (t)
   }
 
-  implicit class RichTerm(private val t: Term) extends AnyVal {
-    def mapBU(f: Term => Term): Term = kale.mapBU(f)(t)
+  implicit class RichTerm(private val term: Term) extends AnyVal {
+    def mapBU(f: Term => Term): Term = kale.mapBU(f)(term)
 
-    def mapTD(f: Term => Term): Term = kale.mapTD(f)(t)
+    def mapTD(f: Term => Term): Term = kale.mapTD(f)(term)
 
-    def contains(subterm: Term): Boolean = kale.contains(subterm)(t)
+    def contains(subterm: Term): Boolean = kale.contains(subterm)(term)
 
-    def findTD(f: Term => Boolean): Option[Term] = kale.findTD(f)(t)
+    def findTD(f: Term => Boolean): Option[Term] = kale.findTD(f)(term)
 
-    def findBU(f: Term => Boolean): Option[Term] = kale.findBU(f)(t)
+    def findBU(f: Term => Boolean): Option[Term] = kale.findBU(f)(term)
 
     def find(f: Term => Boolean): Option[Term] = this.findTD(f)
 
     def exists(f: Term => Boolean): Boolean = find(f).isDefined
 
     // if (t == subterm) true else t.children.exists(_.contains(subterm))
-    def containsInConstructor(subterm: Term): Boolean = kale.containsInConstructor(t, subterm)
+    def containsInConstructor(subterm: Term): Boolean = kale.containsInConstructor(term, subterm)
 
-    def rewrite(obj: Term): Term = t.label.env.rewrite(t, obj)
+    def rewrite(obj: Term): Term = term.label.env.rewrite(term, obj)
 
-    def unify(obj: Term): Term = t.label.env.unify(t, obj)
+    def unify(obj: Term): Term = term.label.env.unify(term, obj)
 
 
-    def asOr = new ExplicitOr(t)
+    def asOr = new ExplicitOr(term)
 
-    def asAnd = new ExplicitAnd(t)
+    def asAnd = new ExplicitAnd(term)
   }
 
   implicit class StaticRichAssocLabel(label: AssocLabel) {

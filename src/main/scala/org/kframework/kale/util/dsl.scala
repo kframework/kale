@@ -34,8 +34,6 @@ class dsl(implicit val env: StandardEnvironment) {
     def apply(_1: Term, _2: Term): Term = label.asInstanceOf[Label2](_1, _2)
   }
 
-  val rw = Rewrite
-
   def __ = Variable.freshVariable()
 
   def A(implicit env: StandardEnvironment) = env.Variable("A")

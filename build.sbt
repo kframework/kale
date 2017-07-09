@@ -27,7 +27,3 @@ lazy val installZ3 = taskKey[Unit]("Install Z3 theorem prover")
 installZ3 := {"./installZ3.sh" !}
 
 (test in Test) := (test in Test).dependsOn(installZ3).value
-
-
-
-

@@ -77,4 +77,17 @@ class PrettyWrapperTest extends TestSetup()(TestEnv) {
 
     assertRewrite(A(X, rw(el, v)), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), W("p", A(W("1", a, "2"), W("3", b, "4"), v), "s"))
   }
+
+  "bu not loosing wrappers" in {
+    assertRewrite(
+      STRATEGY.bu(foo(a, Y) ==> foo(c, Y)))(
+      W("7", foo(W("9", foo(W("1", a, "2"), W("3", b, "4")), "8"), W("5", b, "6")), "6"),
+      W("7", foo(W("9", foo(c, b), "8"), W("5", b, "6")), "6")
+    )
+    assertRewrite(
+      STRATEGY.bu(foo(a ==> c, __)))(
+      W("7", foo(W("9", foo(W("1", a, "2"), W("3", b, "4")), "8"), W("5", b, "6")), "6"),
+      W("7", foo(W("9", foo(W("1", c, "2"), W("3", b, "4")), "8"), W("5", b, "6")), "6")
+    )
+  }
 }

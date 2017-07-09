@@ -1,13 +1,14 @@
 package org.kframework.kale.strategy
 
+import org.kframework.kale.Term
 import org.kframework.kale.standard.StandardEnvironment
 import org.kframework.kale.tests.TestSetup
-import org.scalatest.FreeSpec
 
 class StrategyTest extends TestSetup[StandardEnvironment]() {
 
   import env._
   import STRATEGY._
+  import implicits._
 
   "orElse" - {
     "then" in {
@@ -48,6 +49,24 @@ class StrategyTest extends TestSetup[StandardEnvironment]() {
     }
     "disjunction" in {
       assert(fp.unify(Or(a, d)) === Next(b))
+    }
+  }
+
+  "bu" - {
+    "simple" in {
+      assertRewrite(
+        bu(a ==> c))(
+        foo(a, b),
+        foo(c, b)
+      )
+    }
+
+    "show that it is bottom-up" in {
+      assertRewrite(
+        bu(foo(a, X) ==> a))(
+        foo(foo(a, b), b),
+        a
+      )
     }
   }
 }

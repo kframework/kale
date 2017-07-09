@@ -1,9 +1,10 @@
 package org.kframework.kale.strategy
 
+import org.kframework.kale
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.{ProcessingFunctions, definePartialFunction}
 import org.kframework.kale.util.Named
-import org.kframework.kale.{Environment, FreeNode1, FreeNode2, HasMatcher, Label1, Label2, Mixin, Term, standard}
+import org.kframework.kale.{Environment, FreeNode1, FreeNode2, HasMatcher, Label1, Label2, Mixin, Node1, Term, standard}
 
 case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin) {
 
@@ -26,6 +27,17 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
   val fixpoint = new Named("fixpoint") with Label1 {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
+
+  /**
+    * Takes a partial function
+    */
+  val bu = new Named("bu") with Label1 {
+    override def apply(f: Term): Term = FreeNode1(this, f)
+  }
+
+  val rw = new Named("rewrite") with Label1 {
+    override def apply(f: Term): Term = FreeNode1(this, f)
+  }
 }
 
 trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMixin with HasMatcher {
@@ -39,6 +51,8 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
     case (`compose`, _) => composeTerm
     case (`repeat`, _) => repeatTerm
     case (`fixpoint`, _) => fixpointTerm
+    case (`bu`, _) => buTerm
+    case (`rw`, _) => rewriteTerm
   }).orElse(super.makeMatcher)
 
   // only works for ground obj
@@ -84,6 +98,31 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
       case Next(`obj`) => Next(obj)
       case res => solver(fp, And.nextIsNow(res))
     }
+  })
+
+  case class buTerm(solver: Binary.Apply) extends Binary.F({ (bu: Node1, obj: Term) =>
+    Next(obj.mapBU(t => {
+      val res = solver(bu._1, t)
+      val justNext = res match {
+        case Bottom => t
+        case _ => res.asOr map {
+          case And.SPO(_, _, Next(x)) =>
+            x
+        }
+      }
+      justNext
+    }
+    ))
+  })
+
+  case class rewriteTerm(solver: Binary.Apply) extends Binary.F({ (rewrite: Node1, obj: Term) =>
+    rewrite._1.rewrite(obj) match {
+      case Bottom =>
+        Bottom
+      case x =>
+        Next(x)
+    }
+
   })
 
 }

@@ -13,18 +13,6 @@ class RewriteTest extends TestSetup[StandardEnvironment]() {
 
   implicit val eeenv = env
 
-  def assertRewrite(rule: Rewrite)(obj: Term, expected: Term) {
-    val actual = unify(rule, obj)
-    //    val unificationRes = unifier(rule._1, obj)
-    //    val res = Or.asSet(unificationRes) map (s => substitutionApplier(s.asInstanceOf[Substitution])(rule._2))
-    assert(justNext(actual) === expected)
-  }
-
-  def assertRewrite(rule0: Term)(obj: Term, expected: Term) {
-    val rule = moveRewriteSymbolToTop(rule0)(env)
-    assertRewrite(rule)(obj, expected)
-  }
-
   "X + 0 => X" in {
     assertRewrite(Rewrite(X + 0, X))((5: Term) + 0, 5: Term)
   }

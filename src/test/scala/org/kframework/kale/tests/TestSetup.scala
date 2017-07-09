@@ -77,4 +77,9 @@ abstract class TestSetup[E <: StandardEnvironment](implicit val env: E = Standar
       case o => Prettifier.default(o)
     }
   }
+
+  def assertRewrite(rule: Term)(obj: Term, expected: Term) {
+    val actual = rule.rewrite(obj)
+    assert(actual === expected)
+  }
 }
