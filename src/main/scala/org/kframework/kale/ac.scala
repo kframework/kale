@@ -8,15 +8,8 @@ trait HasId {
   val identity: Term
 }
 
-trait AssocLabel extends Label2 {
-  override def apply(l: Iterable[Term]): Term
-
-  private val thisthis = this
-
-  def asIterable(t: Term): Iterable[Term] = t.label match {
-    case `thisthis` => t.asInstanceOf[Assoc].assocIterable
-    case _ => List(t)
-  }
+trait CollectionLabel extends Label2 {
+  def asIterable(t: Term): Iterable[Term]
 
   object iterable {
     def unapply(t: Term): Option[Iterable[Term]] = Some(asIterable(t))
@@ -26,6 +19,17 @@ trait AssocLabel extends Label2 {
     env.strongBottomize(t) {
       this (asIterable(t) map f)
     }
+  }
+}
+
+trait AssocLabel extends CollectionLabel {
+  override def apply(l: Iterable[Term]): Term
+
+  private val thisthis = this
+
+  def asIterable(t: Term): Iterable[Term] = t.label match {
+    case `thisthis` => t.asInstanceOf[Assoc].assocIterable
+    case _ => List(t)
   }
 }
 

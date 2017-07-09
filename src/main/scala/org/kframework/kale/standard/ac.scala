@@ -12,6 +12,7 @@ trait NonAssocWithIdListMixing extends Environment with FreeMixin with HasMatche
 
   case class NonAssocWithIdLabel(override val name: String, identity: Term) extends Named(name) with Label2 with HasId {
     val self = this
+
     override def apply(_1: Term, _2: Term): Term = (_1, _2) match {
       case (`identity`, b) => b
       case (a, `identity`) => a
@@ -30,15 +31,10 @@ trait NonAssocWithIdListMixing extends Environment with FreeMixin with HasMatche
       case (label(a1, a2), label(b1, b2)) =>
         Or(List(
           FreeNode2FreeNode2(solver)(a, b)
-//          ,
-//          And.combine(label)(Task(a1, b), Task(a2, identity)),
-//          And.combine(label)(Task(a1, identity), Task(a2, b))
         ))
       case (label(a1, a2), _) =>
         Or(List(
           And.combine(label)(Task(a1, b), Task(a2, identity))
-//          ,
-//          And.combine(label)(Task(a1, identity), Task(a2, b))
         ))
     }
     res
@@ -51,7 +47,11 @@ trait NonAssocWithIdListMixing extends Environment with FreeMixin with HasMatche
   }).orElse(super.makeMatcher)
 }
 
-trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher with HasUnifier {
+trait AssocWithIdLabel extends kale.AssocWithIdLabel {
+  def size: Label1
+}
+
+trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher with HasUnifier with IntMixin {
 
   override def AssocWithIdLabel(name: String, id: Term): AssocWithIdLabel = new AssocWithIdListLabel(name, id)
 
@@ -108,7 +108,18 @@ trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher
   }).orElse(super.makeUnifier)
 }
 
-private[standard] class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val env: Environment) extends AssocWithIdLabel with Constructor {
+case class CollectionSize(collectionLabel: CollectionLabel)(implicit env: Environment with IntMixin) extends Named(collectionLabel.name + ".size") with FunctionLabel1 {
+  override def f(_1: Term): Option[Term] =
+    if (_1.isGround)
+      Some(env.INT.Int(collectionLabel.asIterable(_1).size))
+    else
+      None
+}
+
+private[standard] class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val env: Environment with IntMixin) extends AssocWithIdLabel with Constructor {
+
+  val size = CollectionSize(this)
+
   protected override def construct(l: Iterable[Term]): Term = AssocWithIdList(this, l)
 }
 
