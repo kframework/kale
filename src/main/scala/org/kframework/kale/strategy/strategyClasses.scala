@@ -1,6 +1,5 @@
 package org.kframework.kale.strategy
 
-import org.kframework.kale
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.{ProcessingFunctions, definePartialFunction}
 import org.kframework.kale.util.Named
@@ -19,6 +18,8 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
   val repeat = new Named("repeat") with Label1 {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
+
+  def orElseLeave(t: Term): Term = orElse(t, env.Variable.freshVariable())
 
   val fixpoint = new Named("fixpoint") with Label1 {
     override def apply(f: Term): Term = FreeNode1(this, f)

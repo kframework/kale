@@ -67,7 +67,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     val p = a._2
     b.asOr map { bx =>
       val sol = solver(p, bx)
-      And(Equality(v, bx), sol)
+      And(Equality(v, And.nextIsNow(And.onlyNext(sol))), sol)
     }
   }
   )
