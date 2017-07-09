@@ -4,13 +4,9 @@ import org.kframework.kale
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.{ProcessingFunctions, definePartialFunction}
 import org.kframework.kale.util.Named
-import org.kframework.kale.{Environment, FreeNode1, FreeNode2, HasMatcher, Label1, Label2, Mixin, Node1, Term, standard}
+import org.kframework.kale.{Environment, FreeNode1, FreeNode2, FreeNode3, HasMatcher, Label1, Label2, Label3, Mixin, Node1, Term, standard}
 
 case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin) {
-
-  val orElse = new Named("orElse") with Label2 {
-    override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
-  }
 
   val nextIsNow = standard.lift("nextIsNow", env.And.nextIsNow _)
 
@@ -37,6 +33,22 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
 
   val rw = new Named("rewrite") with Label1 {
     override def apply(f: Term): Term = FreeNode1(this, f)
+  }
+
+  val orElse = new Named("orElse") with Label2 {
+    override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
+  }
+
+  /**
+    * ifThenElse(c, t, e) is semantically equivalent to Or(And(c, t), And(Not(c), t)) but evaluated lazily
+    * i.e., the t and e are only touched when we know whether the condition is Top or Bottom
+    */
+  val ifThenElse = new Named("STRATEGY.ifThenElse") with Label3 {
+    override def apply(condition: Term, thenTerm: Term, elseTerm: Term): Term = condition match {
+      case env.Top => thenTerm
+      case env.Bottom => elseTerm
+      case _ => FreeNode3(this, condition, thenTerm, elseTerm)
+    }
   }
 }
 
@@ -122,7 +134,6 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
       case x =>
         Next(x)
     }
-
   })
 
 }
