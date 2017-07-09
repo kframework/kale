@@ -21,6 +21,8 @@ class dsl(implicit val env: StandardEnvironment) {
 
     def ==>(tt: Term): Term = Rewrite(t, tt)
 
+    def ?=>(tt: Term): Term = STRATEGY.orElseLeave(Rewrite(t, tt))
+
     def =:=(tt: Term): Term = env.And.onlyNext(env.unify(t, tt))
   }
 
