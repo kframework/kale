@@ -23,7 +23,7 @@ class SubstitutionTest extends TestSetup[StandardEnvironment]() {
     val substitution = substitutionApplier(s)
 
     assert(substitution(
-      foo(3, AnywhereContext(X, bar(Y)))
+      foo(3, Context(X, bar(Y)))
     ) === foo(3, buz(bar(1), bar(bar(2)))))
   }
 }

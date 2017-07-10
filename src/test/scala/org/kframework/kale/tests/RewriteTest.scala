@@ -59,13 +59,13 @@ class RewriteTest extends TestSetup[StandardEnvironment]() {
   "contexts" - {
 
     "zero-level" in {
-      assertRewrite(foo(a, AnywhereContext(X, Rewrite(Y, bar(Y)))))(
+      assertRewrite(foo(a, Context(X, Rewrite(Y, bar(Y)))))(
         foo(a, b),
         foo(a, bar(b)))
     }
 
     "a bit more" in {
-      assertRewrite(foo(a, AnywhereContext(X, Rewrite(Y, bar(Y)))))(
+      assertRewrite(foo(a, Context(X, Rewrite(Y, bar(Y)))))(
         foo(a, traversed(b)),
         Or(
           foo(a, traversed(bar(b))),
@@ -75,19 +75,19 @@ class RewriteTest extends TestSetup[StandardEnvironment]() {
     }
 
     "with traversal" in {
-      assertRewrite(foo(a, AnywhereContext(X, Rewrite(matched(Y), bar(Y)))))(
+      assertRewrite(foo(a, Context(X, Rewrite(matched(Y), bar(Y)))))(
         foo(a, traversed(matched(andMatchingY()))),
         foo(a, traversed(bar(andMatchingY()))))
     }
 
     "with traversal outer rewrite" in {
-      assertRewrite(foo(a, Rewrite(AnywhereContext(X, matched(Y)), bar(Y))))(
+      assertRewrite(foo(a, Rewrite(Context(X, matched(Y)), bar(Y))))(
         foo(a, traversed(matched(andMatchingY()))),
         foo(a, bar(andMatchingY())))
     }
 
     "referring to context" in {
-      assertRewrite(foo(a, Rewrite(AnywhereContext(X, matched(Y)), bar(X))))(
+      assertRewrite(foo(a, Rewrite(Context(X, matched(Y)), bar(X))))(
         foo(a, traversed(matched(andMatchingY()))),
         foo(a, bar(traversed(X_1))))
     }

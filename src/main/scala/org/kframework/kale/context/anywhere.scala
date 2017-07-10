@@ -8,8 +8,8 @@ import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 import org.kframework.kale.transformer.{Binary, Unary}
 import org.kframework.kale.util.Named
 
-trait AnywhereContextMixin extends Environment with standard.MatchingLogicMixin with HasMatcher {
-  val AnywhereContext = new Named("AnywhereContext") with Label3 {
+trait ContextMixin extends Environment with standard.MatchingLogicMixin with HasMatcher {
+  val Context = new Named("Context") with Label3 {
     override def apply(variable: Term, redex: Term, contextPredicate: Term = Or(anywhereTag, Variable.freshVariable())): AnywhereContextApplication = variable match {
       case v: Variable => AnywhereContextApplication(v, redex, contextPredicate)
       case env.ForAll(v: Variable, _) => AnywhereContextApplication(v, redex, contextPredicate)
@@ -25,11 +25,18 @@ trait AnywhereContextMixin extends Environment with standard.MatchingLogicMixin 
     def hole(x: Variable) = ContextContentVariable(x, 1)
   }
 
-  def ANYWHERE(t: Term) = AnywhereContext(Variable.freshVariable(), t, AnywhereContext.anywhereTag)
+  val SolvingContext = new Named("SolvingContext") with Label1 {
+    override def apply(_1: Term): Term = {
+      assert(_1.label == Context)
+      FreeNode1(this, _1)
+    }
+  }
+
+  def ANYWHERE(t: Term) = Context(Variable.freshVariable(), t, Context.anywhereTag)
 
   case class AnywhereContextApplication(contextVar: Variable, redex: Term, contextPredicate: Term) extends Node3 with Context {
 
-    val label = AnywhereContext
+    val label = Context
 
     val _1: Variable = contextVar
     val _2: Term = redex
@@ -37,11 +44,11 @@ trait AnywhereContextMixin extends Environment with standard.MatchingLogicMixin 
     val hole: ContextContentVariable = label.hole(contextVar)
 
     private val unfoldedContextPredicate = contextPredicate.mapBU({
-      case AnywhereContext.hole => this;
+      case Context.hole => SolvingContext(this);
       case o => o
     })
 
-    val finalContextPredicate = unfoldedContextPredicate.variables.filter(_ != AnywhereContext.hole).foldLeft(unfoldedContextPredicate) {
+    val finalContextPredicate = unfoldedContextPredicate.variables.filter(_ != Context.hole).foldLeft(unfoldedContextPredicate) {
       case (t, v) => Exists(v, t)
     }
 
@@ -49,19 +56,33 @@ trait AnywhereContextMixin extends Environment with standard.MatchingLogicMixin 
   }
 
   def AnywhereTagMatcher(solver: Apply): (Term, Term) => Term = { (anywhereTag: Term, term: Term) =>
-    assert(anywhereTag == AnywhereContext.anywhereTag)
+    assert(anywhereTag == Context.anywhereTag)
     Next(anywhereTag)
   }
 
-  def AnywhereContextMatcher(solver: Apply): (AnywhereContextApplication, Term) => Term = { (contextApplication: AnywhereContextApplication, term: Term) =>
+  def ContextMatcher(solver: Apply): (AnywhereContextApplication, Term) => Term = { (contextApp: AnywhereContextApplication, term: Term) =>
+    solver(SolvingContext(contextApp), term).asOr map {
+      case And.SPO(s, p@And.set(setOfp), Next(n)) =>
+        val redex = setOfp.collect({
+          case Exists(Context.hole, r) => r
+        }).head
+        And.SPO(And.substitution(s.asMap + (contextApp.contextVar -> n)), And(setOfp.filter({
+          case Exists(Context.hole, _) => false
+          case _ => true
+        })), Next(Equality.binding(Context.hole, redex)(n)))
+    }
+  }
 
-    assert(contextApplication.label == AnywhereContext)
+  def SolvingContextMatcher(solver: Apply): (Node1, Term) => Term = { (solvingContext: Node1, term: Term) =>
+    val contextApplication = solvingContext._1.asInstanceOf[AnywhereContextApplication]
+
+    assert(contextApplication.label == Context)
     val contextVar = contextApplication.contextVar
 
     def solutionFor(subterms: Seq[Term], reconstruct: (Int, Term) => Term, avoidIndices: Set[Int] = Set()) = {
       Or((subterms.indices.toSet &~ avoidIndices) map { i: Int =>
         // calling f directly instead of solver because we know contextApplication is hooked to the current f
-        val solutionForSubtermI = solver(contextApplication, subterms(i))
+        val solutionForSubtermI = solver(solvingContext, subterms(i))
         val res = Or.asSet(solutionForSubtermI) map {
           // this rewires C -> HOLE into C -> foo(HOLE)
           case And.SPO(And.substitution(m), p, Next(next)) =>
@@ -72,9 +93,9 @@ trait AnywhereContextMixin extends Environment with standard.MatchingLogicMixin 
     }
 
     term.label match {
-      case AnywhereContext =>
-        val (rightContextVar, rightContextRedex, rightContextPredicate) = AnywhereContext.unapply(term).get
-        solutionFor(term.children.toSeq, (_: Int, tt: Term) => AnywhereContext(rightContextVar, tt, rightContextPredicate), Set(0, 2))
+      case Context =>
+        val (rightContextVar, rightContextRedex, rightContextPredicate) = Context.unapply(term).get
+        solutionFor(term.children.toSeq, (_: Int, tt: Term) => Context(rightContextVar, tt, rightContextPredicate), Set(0, 2))
       case `Or` => {
         term.asOr map (solver(contextApplication, _))
       }
@@ -85,7 +106,7 @@ trait AnywhereContextMixin extends Environment with standard.MatchingLogicMixin 
         val matchPredicate = unify(contextApplication.finalContextPredicate, term)
 
         val res = matchPredicate.asOr map {
-          case And.SPO(_, _, Next(AnywhereContext.anywhereTag)) =>
+          case And.SPO(_, _, Next(Context.anywhereTag)) =>
             val theAnywhereMatch = other match {
               case l: AssocLabel =>
                 val subresults = l.asIterable(term).toList
@@ -98,11 +119,11 @@ trait AnywhereContextMixin extends Environment with standard.MatchingLogicMixin 
                 recursive
             }
             theAnywhereMatch
-          case And.SPO(s, p, Next(n)) if p.findBU({ case Exists(AnywhereContext.hole, _) => true; case _ => false }).isEmpty =>
+          case And.SPO(s, p, Next(n)) if p.findBU({ case Exists(Context.hole, _) => true; case _ => false }).isEmpty =>
             val redexSol = solver(contextApplication.redex, n)
             redexSol match {
               case And.SPO(ss, pp, Next(redexTerm)) =>
-                And.SPO(ss, And(pp, Exists(AnywhereContext.hole, redexTerm)), Next(AnywhereContext.hole))
+                And.SPO(ss, And(pp, Exists(Context.hole, redexTerm)), Next(Context.hole))
               case Bottom => Bottom
             }
           case other => other
@@ -114,7 +135,7 @@ trait AnywhereContextMixin extends Environment with standard.MatchingLogicMixin 
 }
 
 // TODO: un-bundle after we have decoupled the unary functions (substitution)
-trait BundledContextMixin extends HolesMixin with AnywhereContextMixin with PatternContextMixin {
+trait BundledContextMixin extends HolesMixin with ContextMixin with PatternContextMixin {
 
   object AnywhereContextProcessingFunction extends Unary.ProcessingFunction[SubstitutionApply] {
     type Element = AnywhereContextApplication
@@ -125,7 +146,7 @@ trait BundledContextMixin extends HolesMixin with AnywhereContextMixin with Patt
         case And.withNext(subs: Substitution, _) =>
           val innerSolver = new SubstitutionWithContext(subs)
 
-          solver.substitution.get(t.contextVar) map innerSolver getOrElse AnywhereContext(t.contextVar, solver(t.redex), t.contextPredicate)
+          solver.substitution.get(t.contextVar) map innerSolver getOrElse Context(t.contextVar, solver(t.redex), t.contextPredicate)
         case `Bottom` => Bottom
         case _ => t // TODO: risky case; look into this at some point
       }
@@ -134,7 +155,7 @@ trait BundledContextMixin extends HolesMixin with AnywhereContextMixin with Patt
 
   case class SubstitutionWithContext(override val substitution: Substitution) extends SubstitutionApply(substitution)(env) {
     override def processingFunctions: ProcessingFunctions = definePartialFunction[Term, this.type]({
-      case AnywhereContext => AnywhereContextProcessingFunction
+      case Context => AnywhereContextProcessingFunction
       case l: PatternContextApplicationLabel => PatternContextProcessingFunction
     }) orElse super.processingFunctions
   }
@@ -153,8 +174,9 @@ trait BundledContextMixin extends HolesMixin with AnywhereContextMixin with Patt
 
   override protected def makeMatcher: ProcessingFunctions = Binary.definePartialFunction({
     case (capp: PatternContextApplicationLabel, _) => pattern.PatternContextMatcher
-    case (`AnywhereContext`, _) => AnywhereContextMatcher
-    case (AnywhereContext.anywhereTag.label, _) => AnywhereTagMatcher
+    case (Context, _) => ContextMatcher
+    case (SolvingContext, _) => SolvingContextMatcher
+    case (Context.anywhereTag.label, _) => AnywhereTagMatcher
   }).orElse(super.makeMatcher)
 }
 

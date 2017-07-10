@@ -64,7 +64,7 @@ abstract class TestSetup[E <: StandardEnvironment](implicit val env: E = Standar
 
   val substitutionApplier = SubstitutionWithContext(_)
 
-  val X_1 = AnywhereContext.hole(X)
+  val X_1 = Context.hole(X)
 
   def toAssert(t: Term): String = t match {
     case Variable((name, _)) => name.str
