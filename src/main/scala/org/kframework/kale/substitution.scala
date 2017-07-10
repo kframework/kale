@@ -1,7 +1,5 @@
 package org.kframework.kale
 
-import scala.collection.Map
-
 trait Substitution extends (Term => Term) with Term {
   val boundVariables: Set[Variable]
 

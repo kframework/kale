@@ -6,8 +6,6 @@ import org.kframework.kale.util.{NameFromObject, Named, unreachable}
 import org.kframework.kale.{Substitution, _}
 import org.kframework.{kale, kore}
 
-import scala.collection.{Iterable, Seq}
-
 trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
   override val Truth: TruthLabel = standard.StandardTruthLabel()
 
@@ -72,8 +70,8 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
   }
   )
 
-  case class ForAllTerm(solver: Apply) extends Binary.F({ (a: SimpleForAll, b: Term) =>
-    And.removeVariable(a.v, solver(a.p, b))
+  case class QuantifierTerm(solver: Apply) extends Binary.F({ (a: Node2, b: Term) =>
+    And.removeVariable(a._1.asInstanceOf[Variable], solver(a._2, b))
   })
 
   override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
@@ -83,7 +81,8 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (_, `And`) => TermAnd
     case (`Or`, _) => OrTerm
     case (_, `Or`) => TermOr
-    case (`ForAll`, _) => ForAllTerm
+    case (`ForAll`, _) => QuantifierTerm
+    case (`Exists`, _) => QuantifierTerm
     case (`Variable`, _) => SortedVarLeft
     case (_, `Variable`) => SortedVarRight
     case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants

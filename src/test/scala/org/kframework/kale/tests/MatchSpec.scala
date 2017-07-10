@@ -84,9 +84,15 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
   }
 
   "contexts with predicate" - {
-    "stops traversal when predicate fails" in {
+    "traverses as the predicate is true" in {
       val term = foo(1, bar(buz(3, bar(2))))
       assert((AnywhereContext(C, bar(X), Or(__, foo(__, AnywhereContext.hole))) :== term)
+        === And(And.substitution(Map(C -> foo(1, Variable("C☐1")), X -> buz(3, bar(2)))), Next(term)))
+    }
+
+    "stops traversal when predicate fails" in {
+      val term = foo(1, bar(buz(3, bar(2))))
+      assert((AnywhereContext(C, bar(X), Or(bar(2), AnywhereContext.anywhereTag)) :== term)
         === And(And.substitution(Map(C -> foo(1, Variable("C☐1")), X -> buz(3, bar(2)))), Next(term)))
     }
   }

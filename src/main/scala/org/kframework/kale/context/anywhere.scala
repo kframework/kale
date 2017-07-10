@@ -64,8 +64,8 @@ trait AnywhereContextMixin extends Environment with standard.MatchingLogicMixin 
         val solutionForSubtermI = solver(contextApplication, subterms(i))
         val res = Or.asSet(solutionForSubtermI) map {
           // this rewires C -> HOLE into C -> foo(HOLE)
-          case And.withNext(And.substitution(m), Some(Next(next))) =>
-            Next(reconstruct(i, next))
+          case And.SPO(And.substitution(m), p, Next(next)) =>
+            And(p, Next(reconstruct(i, next)))
         }
         Or(res)
       })
@@ -98,14 +98,14 @@ trait AnywhereContextMixin extends Environment with standard.MatchingLogicMixin 
                 recursive
             }
             theAnywhereMatch
-          case And.SPO(s, p, Next(n)) =>
+          case And.SPO(s, p, Next(n)) if p.findBU({ case Exists(AnywhereContext.hole, _) => true; case _ => false }).isEmpty =>
             val redexSol = solver(contextApplication.redex, n)
             redexSol match {
               case And.SPO(ss, pp, Next(redexTerm)) =>
-                And.SPO(ss, pp, Next(Exists(AnywhereContext.hole, redexTerm)))
+                And.SPO(ss, And(pp, Exists(AnywhereContext.hole, redexTerm)), Next(AnywhereContext.hole))
               case Bottom => Bottom
             }
-          //            And(BindMatch(hole, redex), Equality(contextVar, Exists(hole, hole))),
+          case other => other
         }
 
         res
