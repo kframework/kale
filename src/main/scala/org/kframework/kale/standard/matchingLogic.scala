@@ -71,7 +71,10 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
   )
 
   case class QuantifierTerm(solver: Apply) extends Binary.F({ (a: Node2, b: Term) =>
-    And.removeVariable(a._1.asInstanceOf[Variable], solver(a._2, b))
+    val res = solver(a._2, b)
+    res.asOr map {
+      And.removeVariable(a._1.asInstanceOf[Variable], _)
+    }
   })
 
   override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({

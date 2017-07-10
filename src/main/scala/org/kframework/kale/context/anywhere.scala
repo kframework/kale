@@ -48,7 +48,7 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
       case o => o
     })
 
-    val finalContextPredicate = unfoldedContextPredicate.variables.filter(_ != Context.hole).foldLeft(unfoldedContextPredicate) {
+    val finalContextPredicate = contextPredicate.variables.filter(_ != Context.hole).foldLeft(unfoldedContextPredicate) {
       case (t, v) => Exists(v, t)
     }
 
@@ -64,31 +64,30 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
     solver(SolvingContext(contextApp), term).asOr map {
       case And.SPO(s, p@And.set(setOfp), Next(n)) =>
         val redex = setOfp.collect({
-          case Exists(Context.hole, r) => r
+          case Exists(contextApp.specificHole, r) => r
         }).head
-        And.SPO(And.substitution(s.asMap + (contextApp.contextVar -> n)), And(setOfp.filter({
-          case Exists(Context.hole, _) => false
-          case _ => true
-        })), Next(Equality.binding(Context.hole, redex)(n)))
+        And.SPO(
+          And.substitution(s.asMap + (contextApp.contextVar -> n)),
+          And(setOfp.filter({ case Exists(contextApp.specificHole, _) => false; case _ => true })),
+          Next(Equality.binding(contextApp.specificHole, redex)(n)))
     }
   }
 
   def SolvingContextMatcher(solver: Apply): (Node1, Term) => Term = { (solvingContext: Node1, term: Term) =>
-    val contextApplication = solvingContext._1.asInstanceOf[AnywhereContextApplication]
+    val contextApp = solvingContext._1.asInstanceOf[AnywhereContextApplication]
 
-    assert(contextApplication.label == Context)
-    val contextVar = contextApplication.contextVar
+    assert(contextApp.label == Context)
+    val contextVar = contextApp.contextVar
 
     def solutionFor(subterms: Seq[Term], reconstruct: (Int, Term) => Term, avoidIndices: Set[Int] = Set()) = {
       Or((subterms.indices.toSet &~ avoidIndices) map { i: Int =>
-        // calling f directly instead of solver because we know contextApplication is hooked to the current f
+        // calling f directly instead of solver because we know contextApp is hooked to the current f
         val solutionForSubtermI = solver(solvingContext, subterms(i))
-        val res = Or.asSet(solutionForSubtermI) map {
+        solutionForSubtermI.asOr map {
           // this rewires C -> HOLE into C -> foo(HOLE)
-          case And.SPO(And.substitution(m), p, Next(next)) =>
-            And(p, Next(reconstruct(i, next)))
+          case And.SPO(s, p, Next(next)) =>
+            And.SPO(s, p, Next(reconstruct(i, next)))
         }
-        Or(res)
       })
     }
 
@@ -97,13 +96,13 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
         val (rightContextVar, rightContextRedex, rightContextPredicate) = Context.unapply(term).get
         solutionFor(term.children.toSeq, (_: Int, tt: Term) => Context(rightContextVar, tt, rightContextPredicate), Set(0, 2))
       case `Or` => {
-        term.asOr map (solver(contextApplication, _))
+        term.asOr map (solver(contextApp, _))
       }
       case `And` => {
         ???
       }
       case other =>
-        val matchPredicate = unify(contextApplication.finalContextPredicate, term)
+        val matchPredicate = unify(contextApp.finalContextPredicate, term)
 
         val res = matchPredicate.asOr map {
           case And.SPO(_, _, Next(Context.anywhereTag)) =>
@@ -119,14 +118,14 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
                 recursive
             }
             theAnywhereMatch
-          case And.SPO(s, p, Next(n)) if p.findBU({ case Exists(Context.hole, _) => true; case _ => false }).isEmpty =>
-            val redexSol = solver(contextApplication.redex, n)
-            redexSol match {
+          case And.SPO(s, p, Next(n)) if p.findBU({ case Exists(contextApp.specificHole, _) => true; case _ => false }).isEmpty =>
+            val redexSol = solver(contextApp.redex, n)
+            redexSol.asOr map {
               case And.SPO(ss, pp, Next(redexTerm)) =>
-                And.SPO(ss, And(pp, Exists(Context.hole, redexTerm)), Next(Context.hole))
-              case Bottom => Bottom
+                And.SPO(And.substitution(s.asMap ++ ss.asMap), And(p, pp, Exists(contextApp.specificHole, redexTerm)), Next(contextApp.specificHole))
             }
-          case other => other
+          case other =>
+            other
         }
 
         res
