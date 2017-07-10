@@ -41,7 +41,7 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
     val _1: Variable = contextVar
     val _2: Term = redex
     val _3: Term = contextPredicate
-    val hole: ContextContentVariable = label.hole(contextVar)
+    val specificHole: ContextContentVariable = label.hole(contextVar)
 
     private val unfoldedContextPredicate = contextPredicate.mapBU({
       case Context.hole => SolvingContext(this);
@@ -141,7 +141,7 @@ trait BundledContextMixin extends HolesMixin with ContextMixin with PatternConte
     type Element = AnywhereContextApplication
 
     override def f(solver: SubstitutionApply)(t: AnywhereContextApplication): Term = {
-      val recursiveResult = Equality.binding(t.hole, solver(t.redex))
+      val recursiveResult = Equality.binding(t.specificHole, solver(t.redex))
       And(solver.substitution, recursiveResult) match {
         case And.withNext(subs: Substitution, _) =>
           val innerSolver = new SubstitutionWithContext(subs)
