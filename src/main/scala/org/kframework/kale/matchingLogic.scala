@@ -136,7 +136,10 @@ trait NotLabel extends Label1 with Z3Builtin
 
 trait ExistsLabel extends Label2
 
-trait Exists extends kore.Exists
+trait Exists extends kore.Exists {
+  val v: Variable
+  val p: Term
+}
 
 trait ForAllLabel extends Label2
 
@@ -167,7 +170,7 @@ trait Or extends kore.Or with AssocComm {
 }
 
 trait Rewrite extends kore.Rewrite with Node2 with BinaryInfix {
-  override lazy val isPredicate: Boolean = ???
+  override lazy val isPredicate: Boolean = false
 }
 
 trait Application extends Node with kore.Application {

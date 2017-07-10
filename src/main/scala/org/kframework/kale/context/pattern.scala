@@ -59,7 +59,7 @@ object pattern {
     }
   }
 
-  def PatternContextMatcher(solver: Apply)(implicit env: Environment with BundledContextMixin) = { (contextApplication: PatternContextApplication, term: Term) =>
+  def PatternContextMatcher(solver: Apply)(implicit env: Environment with BundledContextMixin): (PatternContextApplication, Term) => Term = { (contextApplication: PatternContextApplication, term: Term) =>
     import env._
 
     val leftContextLabel = contextApplication.label
@@ -99,18 +99,4 @@ object pattern {
     //     ... matching bar(X) bar(1)
     //     C -> buz(H), H -> bar(1), X -> 1
   }
-
-  class PatternContextProcessingFunction(implicit env: Environment with HolesMixin with BundledContextMixin) extends Unary.ProcessingFunction[SubstitutionApply] {
-    type Element = PatternContextApplication
-
-    import env._
-
-    override def f(solver: SubstitutionApply)(t: PatternContextApplication): Term = {
-      val contextVar = t.contextVar
-      solver.substitution.get(contextVar).map({ context =>
-        solver(new standard.Binding(Hole, t.redex)(env)(context))
-      }).getOrElse(t.label(contextVar, solver(t.redex)))
-    }
-  }
-
 }

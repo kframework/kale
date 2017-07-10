@@ -38,7 +38,7 @@ trait StandardEnvironment
 
   val ApplySimpleRewrite = new Compose2("ApplySimpleRewrite", ApplyRewrite, OneResult)
 
-  override lazy val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)(this)
+  override lazy val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)
 
   override lazy val unifier = matcher
 
