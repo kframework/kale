@@ -22,6 +22,7 @@ trait DSLMixin {
 
   def ?(t: Term): Term = STRATEGY.orElseLeave(t)
 
+
   implicit class RichStandardTerm(t: Term) {
     def :=(tt: Term): Term = env.And.filterOutNext(env.unify(t, tt))
 
@@ -35,11 +36,13 @@ trait DSLMixin {
 
     def :::(tt: Term): Term = STRATEGY.compose(t, tt)
 
-    def %(redex: Term) = Context(__, redex, t)
+    def %(redex: Term): env.ContextApplication = Context(__, redex, Or(And(t, Context.anywhere), __))
 
     def |(tt: Term) = Or(t, tt)
 
     def &(tt: Term) = And(t, tt)
+
+    def unary_! : Term = STRATEGY.unsat(t)
   }
 
   implicit def symbolWithApp(s: Symbol)(env: Environment) = new {
