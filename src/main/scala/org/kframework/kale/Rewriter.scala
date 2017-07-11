@@ -77,7 +77,7 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
 
   val kseq = label("#KSequence").asInstanceOf[Label2]
 
-  val topCell = label("<T>").asInstanceOf[Label2]
+  val topCell = label("<T>")
 
   val kCell = label("<k>").asInstanceOf[Label1]
 
@@ -87,7 +87,7 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
   }).map(_.asInstanceOf[Node2]._1.label)
 
   def index(t: Term): Option[Label] = t match {
-    case topCell(x, _) => index(x)
+    case Node(`topCell`, l) => index(l.head)
     case kCell(x) => index(x)
     case env.ForAll(_, x) => index(x)
     case kseq(x, _) => index(x)
