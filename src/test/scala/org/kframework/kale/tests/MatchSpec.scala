@@ -92,8 +92,8 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
 
     "stops traversal when predicate fails" in {
       val term = foo(1, bar(buz(3, bar(2))))
-      assert((Context(C, bar(X), Or(bar(2), Context.anywhereTag)) :== term)
-        === And(And.substitution(Map(C -> foo(1, bar(buz(3, Variable("C☐1")))), X -> 2)), Next(term))
+      assert((Context(C, bar(X), Or(__, And(STRATEGY.unsat(bar(__)), Context.anywhere))) :== term)
+        === And(And.substitution(Map(C -> foo(1, Variable("C☐1")), X -> buz(3, bar(2)))), Next(term))
       )
     }
   }

@@ -4,6 +4,7 @@ import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.{ProcessingFunctions, definePartialFunction}
 import org.kframework.kale.util.Named
 import org.kframework.kale.{Environment, FreeNode1, FreeNode2, FreeNode3, HasMatcher, Label1, Label2, Label3, Mixin, Node1, Term, standard}
+import org.kframework.kore.Bottom
 
 case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin) {
 
@@ -51,6 +52,28 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
       case _ => FreeNode3(this, condition, thenTerm, elseTerm)
     }
   }
+
+  /**
+    * "Waits" for the object (second argument) to be ground, tries to match, returns Top if unsat.
+    */
+  val doesNotMatch = new Named("!=") with Label2 {
+    override def apply(pattern: Term, obj: Term): Term =
+      if (obj.isGround) {
+        val res = env.unify(pattern, obj)
+        env.Truth(res == env.Bottom)
+      } else {
+        new FreeNode2(this, pattern, obj) {
+          override lazy val isPredicate = true
+        }
+      }
+  }
+
+  /**
+    * Matches/unifies it's argument and returns Next(obj) if unsat. See also doesNotMatch.
+    */
+  val unsat = new Named("unsat") with Label1 {
+    override def apply(pattern: Term): Term = FreeNode1(this, pattern)
+  }
 }
 
 trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMixin with HasMatcher {
@@ -64,9 +87,17 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
     case (`compose`, _) => composeTerm
     case (`repeat`, _) => repeatTerm
     case (`fixpoint`, _) => fixpointTerm
+    case (`unsat`, _) => unsatTerm
     case (`bu`, _) => buTerm
     case (`rw`, _) => rewriteTerm
   }).orElse(super.makeMatcher)
+
+  def unsatTerm(solver: Binary.Apply) = { (pattern: Node1, obj: Term) =>
+    solver(pattern._1, obj) match {
+      case Bottom => Next(obj)
+      case _ => Bottom
+    }
+  }
 
   // only works for ground obj
   case class orElseTerm(solver: Binary.Apply) extends Binary.F({ (orElse: Term, obj: Term) =>

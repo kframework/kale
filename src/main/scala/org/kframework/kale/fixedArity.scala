@@ -109,7 +109,7 @@ trait Node0 extends Node with Application {
 trait Node1 extends Node with Product1[Term] {
   val label: Label1
 
-  val isGround: Boolean = _1.isGround
+  lazy val isGround: Boolean = _1.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 0 => this.copy(t)
@@ -190,7 +190,7 @@ trait Node3 extends Node with Product3[Term, Term, Term] {
 trait Node4 extends Node with Product4[Term, Term, Term, Term] {
   val label: Label4
 
-  val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround
+  lazy val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround
 
   def innerUpdateAt(i: Int, t: Term): Term = i match {
     case 0 => this.copy(t, _2, _3, _4)
@@ -214,7 +214,7 @@ trait Node4 extends Node with Product4[Term, Term, Term, Term] {
 trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
   val label: Label5
 
-  val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround
+  lazy val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround
 
   def map0(f: Term => Term): Term = this.copy(f(_1), f(_2), f(_3), f(_4), f(_5))
 
@@ -239,7 +239,7 @@ trait Node5 extends Node with Product5[Term, Term, Term, Term, Term] {
 trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
   val label: Label6
 
-  val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround && _6.isGround
+  lazy val isGround: Boolean = _1.isGround && _2.isGround && _3.isGround && _4.isGround && _5.isGround && _6.isGround
 
   def map0(f: Term => Term): Term = this.copy(f(_1), f(_2), f(_3), f(_4), f(_5), f(_6))
 

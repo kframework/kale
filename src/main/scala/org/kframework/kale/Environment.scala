@@ -29,7 +29,7 @@ trait Environment extends MatchingLogicMixin with Bottomize {
   val substitutionMaker: Substitution => SubstitutionApply
 
 
-  final val unify = standard.lift("unify", {
+  final val unify: Label2 = standard.lift("unify", {
     (a: Term, b: Term) =>
       assert(this.isSealed)
       unifier(a, b)
