@@ -120,16 +120,16 @@ object StandardConverter {
     case kore.Not(p) => env.Not(StandardConverter(p))
     case kore.Rewrite(p1, p2) => env.Rewrite(StandardConverter(p1), StandardConverter(p2))
     case kore.DomainValue(symbol@kore.Symbol(s), value@kore.Value(v)) => {
-      env.uniqueLabels.get("TOKEN_" + s) match {
+      env.uniqueLabels.get(s) match {
         case Some(l: TOKEN) => l(v)
         case _ => {
           var ls = s.toUpperCase()
           if (s.contains("@")) ls = ls.split("@")(0)
           ls match {
-            case "INT" => env.toINT(v.toInt)
-            case "BOOL" => env.toBoolean(v.toBoolean)
-            case "STRING" => env.toSTRING(v)
-            case "ID" => env.toID(Symbol(v))
+            case "TOKEN_INT" => env.toINT(v.toInt)
+            case "TOKEN_BOOL" => env.toBoolean(v.toBoolean)
+            case "TOKEN_STRING" => env.toSTRING(v)
+            case "TOKEN_ID" => env.toID(Symbol(v))
             case _ => throw new AssertionError("Couldn't find " + ls)
           }
         }

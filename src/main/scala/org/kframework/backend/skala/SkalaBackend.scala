@@ -8,6 +8,7 @@ import org.kframework.kale.util.Named
 import org.kframework.kore.extended.Backend
 import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.DefaultBuilders
+import org.kframework.kore.parser.KoreToText
 import org.kframework.kore.{Pattern, Rule, extended}
 import org.kframework.{kale, kore}
 
@@ -23,26 +24,20 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   val allImports = module.imports
 
-  val uniqueSymbolDecs: Seq[kore.SymbolDeclaration] = module.allSentences.collect({
+  private val allSentences = module.allSentences.toSet
+
+  println(allSentences.filter(_.toString.contains("Name@PLUTUS-CORE-SYNTAX")).mkString("\n"))
+
+  val uniqueSymbolDecs: Set[kore.SymbolDeclaration] = allSentences.collect({
     case sd@kore.SymbolDeclaration(_, s, _, _) => sd
-  }).groupBy(_.symbol).mapValues(_.head).values.toSeq
+  })
 
-  val assocSymbols: Seq[kore.SymbolDeclaration] = uniqueSymbolDecs.filter(isAssoc)
+  val assocSymbols: Set[kore.SymbolDeclaration] = uniqueSymbolDecs.filter(isAssoc)
 
-  val nonAssocSymbols: Seq[kore.SymbolDeclaration] = uniqueSymbolDecs.diff(assocSymbols)
+  val nonAssocSymbols: Set[kore.SymbolDeclaration] = uniqueSymbolDecs.diff(assocSymbols)
 
   private val subsorts = ModuleWithSubsorting(originalModule)(originalDefintion).subsorts
   private val sortsFor = ModuleWithSubsorting(originalModule)(originalDefintion).sortsFor
-
-  /**
-    * Declare All Sorts With Tokens as Token Labels
-    */
-  val tokenLabels: Seq[TOKEN] = module.allSentences.flatMap({
-    case kore.SortDeclaration(kore.Sort(s), attributes)
-      if attributes.is(Encodings.token) =>
-      Some(TOKEN(Sort(s)))
-    case _ => None
-  })
 
   /**
     * General operations on Maps/Sets
@@ -69,24 +64,30 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
           }
         }
         //
-        case None => {
-          // Non Functional Symbol Declaration
-          x.args match {
-            case Seq() => Some(FreeLabel0(x.symbol.str))
-            case Seq(_) => Some(FreeLabel1(x.symbol.str))
-            case Seq(_, _) => Some(FreeLabel2(x.symbol.str))
-            case Seq(_, _, _) => Some(FreeLabel3(x.symbol.str))
-            case Seq(_, _, _, _) => Some(FreeLabel4(x.symbol.str))
+        case None =>
+          if (x.att.findSymbol(Encodings.token).isDefined) {
+            Some(TOKEN(x.symbol.str, env.Sort(x.sort.str)))
+          } else {
+            // Non Functional Symbol Declaration
+            x.args match {
+              case Seq() => Some(FreeLabel0(x.symbol.str))
+              case Seq(_) => Some(FreeLabel1(x.symbol.str))
+              case Seq(_, _) => Some(FreeLabel2(x.symbol.str))
+              case Seq(_, _, _) => Some(FreeLabel3(x.symbol.str))
+              case Seq(_, _, _, _) => Some(FreeLabel4(x.symbol.str))
+              case Seq(_, _, _, _, _) => Some(FreeLabel5(x.symbol.str))
+              case Seq(_, _, _, _, _, _) => Some(FreeLabel6(x.symbol.str))
+              case l: Seq[_] => Some(FreeLabelN(x.symbol.str, l.size))
+            }
           }
-        }
       }
     }
   }
 
 
-  val hookedLabels: Set[Label] = nonAssocSymbols.flatMap(hook).toSet
+  val hookedLabels: Set[Label] = nonAssocSymbols.flatMap(hook)
 
-  val unhookedLabels: Set[Label] = nonAssocSymbols.flatMap(declareNonHookedSymbol).toSet
+  val unhookedLabels: Set[Label] = nonAssocSymbols.flatMap(declareNonHookedSymbol)
 
   val nonAssocLabels = hookedLabels ++ unhookedLabels
 
@@ -112,7 +113,9 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
               if (index.isDefined) {
                 // Both Commutative and Assoc with Index
                 val indexStr: String = decodeAttributePattern(index, Encodings.index.str).get
+
                 def indexFunction(t: Term): Term = t.children.toList(indexStr.toInt)
+
                 // Create the AC Label with Identity Term
                 Some(MapLabel(x.symbol.str, indexFunction, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
               }
@@ -137,7 +140,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   val kSeq = NonAssocWithIdLabel("#KSequence", emptyKSeq)
 
-  val kConfigVar = TOKEN(Sort("KConfigVar@BASIC-K"))
+  val kConfigVar = TOKEN("TOKEN_KConfigVar@BASIC-K", Sort("KConfigVar@BASIC-K"))
 
   private def decodeAttributePattern(p: Option[Pattern], symbol: String): Option[String] = p match {
     case Some(kore.Application(kore.Symbol(`symbol`), Seq(kore.DomainValue(Encodings.`attributeValue`, kore.Value(v))))) => Some(v)
@@ -195,6 +198,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
         case Rewrite(l, r) => Rewrite(cff(l), r)
         case o: Term => f(o map0 cff)
       }
+
       cff _
     }
 
@@ -305,17 +309,17 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
       steps += 1
     }
 
-    println(unifier)
-    println(uniqueLabels.mapValues(_.getClass).mkString("\n"))
-    println(regularRules.mkString("\n"))
+    //    println(unifier)
+    //    println(uniqueLabels.mapValues(_.getClass).mkString("\n"))
+    //    println(regularRules.mkString("\n"))
 
-    println("steps: " + steps)
+    //    println("steps: " + steps)
 
-    println("rule hits: \n" + rewriter.ruleHits.mkString("\n"))
+    //    println("rule hits: \n" + rewriter.ruleHits.mkString("\n"))
 
-    println(unifier.statsInvocations.toList.sortBy(-_._2).map({
-      case (k, v) => k + " -> invocations: " + v
-    }).mkString("\n"))
+    //    println(unifier.statsInvocations.toList.sortBy(-_._2).map({
+    //      case (k, v) => k + " -> invocations: " + v
+    //    }).mkString("\n"))
 
     if (result.isEmpty) {
       previousResult
@@ -346,16 +350,23 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   }
 
   def hook(s: kore.SymbolDeclaration): Option[Label] =
-    s.att.getSymbolValue(Encodings.hook) flatMap { case kore.Value(v) => uniqueLabels.get(s.symbol.str) }
+    s.att.getSymbolValue(Encodings.hook) map {
+      case kore.Value(v) => uniqueLabels.get(s.symbol.str) match {
+        case l: Label => l
+        case _ => ???
+      }
+    }
+
   override def sort(l: Label, children: Seq[Term]): kale.Sort = ???
+
   override def sort(l: Label): kale.Sort = ???
+
   override def isSort(sort: kore.Sort, term: Term): Boolean = checkSort(DefaultBuilders.Sort(sort.str), term)
 }
 
 //Todo: Move somewhere else
 object Encodings {
   val iMainModule = DefaultBuilders.Symbol("#MainModule")
-  val iNone = DefaultBuilders.Symbol("#None")
   val assoc = DefaultBuilders.Symbol("assoc")
   val bag = DefaultBuilders.Symbol("bag")
   val relativeHook = DefaultBuilders.Symbol("relativeHook")
@@ -366,7 +377,7 @@ object Encodings {
   val comm = DefaultBuilders.Symbol("comm")
   val macroEnc = DefaultBuilders.Symbol("macro")
   val rewrite = DefaultBuilders.Symbol("#KRewrite")
-  val attributeValue = DefaultBuilders.Symbol("AttributeValue")
+  val attributeValue = DefaultBuilders.Symbol("TOKEN_AttributeValue")
   val att = DefaultBuilders.Symbol("#")
   val token = DefaultBuilders.Symbol("token")
 }

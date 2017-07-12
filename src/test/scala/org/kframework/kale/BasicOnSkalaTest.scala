@@ -60,7 +60,7 @@ class BasicOnSkalaTest extends FreeSpec {
 //      assert(skalaBackend.step(pattern) == skalaBackend.DomainValue(skalaBackend.Symbol("Int"), skalaBackend.Value("3")))
 //    }
 
-    "Text Kore Parse and Rewrite" in {
+    "Text Kore Parse and Rewrite" ignore {
       val parser: TextToKore = TextToKore(db)
       val basic = Source.fromResource("basic.kore")
       implicit val koreDefinition: k.Definition = parser.parse(basic)

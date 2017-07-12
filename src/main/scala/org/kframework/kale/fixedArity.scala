@@ -87,6 +87,13 @@ trait Label6 extends NodeLabel {
   override def toString: String = super[NodeLabel].toString
 }
 
+trait LabelN extends NodeLabel {
+  override protected def constructFromChildren(l: Iterable[Term]): Term = apply(l.toSeq)
+
+  override def toString: String = super[NodeLabel].toString
+}
+
+
 trait Node0 extends Node with Application {
   val label: Label0
 
@@ -260,4 +267,21 @@ trait Node6 extends Node with Product6[Term, Term, Term, Term, Term, Term] {
   }
 
   override def children: Iterable[Term] = Iterable(_1, _2, _3, _4, _5, _6)
+}
+
+trait NodeN extends Node {
+  val label: NodeLabel
+
+  val isGround: Boolean = children forall (_.isGround)
+
+  def innerUpdateAt(i: Int, t: Term): Term = copy(children.updated(i, t))
+
+  def map0(f: Term => Term): Term = this.copy(children map f)
+
+  def copy(newChildren: Seq[Term]): Term = {
+    assert(newChildren.size == label.arity)
+    label(newChildren).updatePostProcess(this)
+  }
+
+  override def children: Seq[Term]
 }

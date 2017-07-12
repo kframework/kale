@@ -24,6 +24,10 @@ trait FreeMixin extends kale.FreeMixin with HasMatcher with HasUnifier {
 
   override def FreeLabel6(name: String): FreeLabel6 = new Named(name) with FreeLabel6
 
+  override def FreeLabelN(name: String, theArity: Int): FreeLabelN = new Named(name) with FreeLabelN {
+    override val arity: Int = theArity
+  }
+
   case class FreeNode0FreeNode0(solver: Apply) extends Binary.F({ (a: Node0, b: Node0) => Next(b) })
 
   case class FreeNode1FreeNode1(solver: Apply) extends Binary.F({ (a: Node1, b: Node1) => And.combine(b)(Task(a._1, b._1)) })

@@ -14,6 +14,8 @@ trait FreeMixin extends Mixin {
   def FreeLabel5(name: String): FreeLabel5
 
   def FreeLabel6(name: String): FreeLabel6
+
+  def FreeLabelN(name: String, arity: Int): FreeLabelN
 }
 
 trait Constructor extends NodeLabel
@@ -62,6 +64,12 @@ trait FreeLabel6 extends Label6 with FreeLabel {
   }
 }
 
+trait FreeLabelN extends LabelN with FreeLabel {
+  def apply(children: Seq[Term]): Term = env.bottomize(children: _*) {
+    FreeNodeN(this, children)
+  }
+}
+
 trait FreeNode // extends Node
 
 case class FreeNode0(label: Label0) extends Node0 with FreeNode with Application
@@ -77,3 +85,5 @@ case class FreeNode4(label: Label4, _1: Term, _2: Term, _3: Term, _4: Term) exte
 case class FreeNode5(label: Label5, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term) extends Node5 with FreeNode with Application
 
 case class FreeNode6(label: Label6, _1: Term, _2: Term, _3: Term, _4: Term, _5: Term, _6: Term) extends Node6 with FreeNode with Application
+
+case class FreeNodeN(label: NodeLabel, children: Seq[Term]) extends NodeN with FreeNode with Application
