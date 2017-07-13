@@ -8,9 +8,11 @@ import org.kframework.kale.util.Named
 import org.kframework.kore.extended.Backend
 import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.DefaultBuilders
-import org.kframework.kore.parser.KoreToText
-import org.kframework.kore.{Pattern, Rule, extended}
+import org.kframework.kore.parser.{KoreToText, TextToKore}
+import org.kframework.kore.{Rewrite => _, Variable => _, _}
 import org.kframework.{kale, kore}
+
+import scala.io.Source
 
 class SkalaBackend(implicit val originalDefintion: kore.Definition, val originalModule: kore.Module) extends StandardEnvironment with KoreBuilders with extended.Backend {
 
@@ -38,6 +40,8 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   private val subsorts = ModuleWithSubsorting(originalModule)(originalDefintion).subsorts
   private val sortsFor = ModuleWithSubsorting(originalModule)(originalDefintion).sortsFor
+
+  val hooks: Map[String, Hook] = Map("INT.Int" -> intHook, "INT.add" -> plusHook)
 
   /**
     * General operations on Maps/Sets
@@ -84,54 +88,49 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     }
   }
 
+  def hookToFix(symbols: Set[SymbolDeclaration]): Set[SymbolDeclaration] =
+    symbols filter (hook(_).isEmpty)
 
-  val hookedLabels: Set[Label] = nonAssocSymbols.flatMap(hook)
+  fixpoint(hookToFix)(nonAssocSymbols)
 
   val unhookedLabels: Set[Label] = nonAssocSymbols.flatMap(declareNonHookedSymbol)
 
-  val nonAssocLabels = hookedLabels ++ unhookedLabels
-
-  def getLabelForAtt(att: String): Label = {
-    val label = nonAssocLabels.filter(p => p.name == att)
-    assert(label.size == 1)
-    label.head
-  }
-
+  //val nonAssocLabels = hookedLabels ++ unhookedLabels
 
   // Initialize Assoc Labels.
-  val assocLabels: Set[Label] = assocSymbols.flatMap(x => {
-    val unitLabel: Option[Pattern] = x.att.findSymbol(Encodings.unit)
-    val unitLabelValue: Option[String] = decodeAttributePattern(unitLabel, Encodings.unit.str)
-
-    unitLabel match {
-      case Some(_) => {
-        uniqueLabels.get(x.symbol.str) match {
-          case a@Some(_) => a
-          case None => {
-            val index: Option[Pattern] = x.att.findSymbol(Encodings.index)
-            if (x.att.findSymbol(Encodings.comm).isDefined) {
-              if (index.isDefined) {
-                // Both Commutative and Assoc with Index
-                val indexStr: String = decodeAttributePattern(index, Encodings.index.str).get
-
-                def indexFunction(t: Term): Term = t.children.toList(indexStr.toInt)
-
-                // Create the AC Label with Identity Term
-                Some(MapLabel(x.symbol.str, indexFunction, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
-              }
-              else
-              // AC Without Index
-                Some(SetLabel(x.symbol.str, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
-            } else {
-              // Create the AssocLabel with Identity Term
-              Some(AssocWithIdLabel(x.symbol.str, getLabelForAtt(unitLabelValue.get).asInstanceOf[Label0]()))
-            }
-          }
-        }
-      }
-      case None => None
-    }
-  }).toSet
+//  val assocLabels: Set[Label] = assocSymbols.flatMap(x => {
+//    val unitLabel: Option[Pattern] = x.att.findSymbol(Encodings.unit)
+//    val unitLabelValue: Option[String] = decodeAttributePattern(unitLabel, Encodings.unit.str)
+//
+//    unitLabel match {
+//      case Some(_) => {
+//        uniqueLabels.get(x.symbol.str) match {
+//          case a@Some(_) => a
+//          case None => {
+//            val index: Option[Pattern] = x.att.findSymbol(Encodings.index)
+//            if (x.att.findSymbol(Encodings.comm).isDefined) {
+//              if (index.isDefined) {
+//                // Both Commutative and Assoc with Index
+//                val indexStr: String = decodeAttributePattern(index, Encodings.index.str).get
+//
+//                def indexFunction(t: Term): Term = t.children.toList(indexStr.toInt)
+//
+//                // Create the AC Label with Identity Term
+//                Some(MapLabel(x.symbol.str, indexFunction, label(unitLabelValue.get).asInstanceOf[Label0]()))
+//              }
+//              else
+//              // AC Without Index
+//                Some(SetLabel(x.symbol.str, label(unitLabelValue.get).asInstanceOf[Label0]()))
+//            } else {
+//              // Create the AssocLabel with Identity Term
+//              Some(AssocWithIdLabel(x.symbol.str, label(unitLabelValue.get).asInstanceOf[Label0]()))
+//            }
+//          }
+//        }
+//      }
+//      case None => None
+//    }
+//  }).toSet
 
   //Todo: Better Mechanism To Handle These
 
@@ -208,7 +207,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
           BOOLEAN.True
         case o => o
       } map0 changeLhs({
-        case v@Variable((Name("HOLE"), _)) =>
+        case v@Variable((kore.Name("HOLE"), _)) =>
           And(v, Equality(isKResult, BOOLEAN.True))
         case o: Term => o
       })
@@ -350,12 +349,43 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   }
 
   def hook(s: kore.SymbolDeclaration): Option[Label] =
-    s.att.getSymbolValue(Encodings.hook) map {
-      case kore.Value(v) => uniqueLabels.get(s.symbol.str) match {
-        case l: Label => l
-        case _ => ???
+    s.att.getSymbolValue(Encodings.hook) flatMap {
+      case kore.Value(hookName: String) => uniqueLabels.get(s.symbol.str) match {
+        case Some(l) => println("SOME--hook: " + hookName); Some(l)
+        case None => println("NONE--hook: " + hookName + "\n" + "symbol: " + s.symbol.str)
+          val achievement = getLabelFromHook(hookName, s.symbol.str, s.args.toList)
+          if (achievement.isDefined) println("achievement: " + achievement); achievement
       }
     }
+
+  import kale._
+
+  type Hook = (String, List[Label], List[Term]) => kale.Label
+
+  def intHook(labelName: String, labels: List[Label], terms: List[Term]): kale.Label = {
+    assert(labels.isEmpty && terms.isEmpty)
+    new ReferenceLabel[Int](labelName) {
+      override protected[this] def internalInterpret(s: String): Int = s.toInt
+    }
+  }
+
+  def plusHook(labelName: String, labels: List[Label], terms: List[Term]): kale.Label = {
+    assert(labels.size == 1 && terms.isEmpty)
+    PrimitiveFunction2[Int](labelName, labels.head.asInstanceOf[LeafLabel[Int]], _ + _)
+  }
+
+  def getLabelFromHook(hookContent: String, labelName: String, sorts: List[kore.Sort]): Option[Label] = {
+    val hookName :: termsStrings = hookContent.split(",").toList
+    val hook: Option[Hook] = hooks.get(hookName)
+    val patterns: Seq[Pattern] = (termsStrings map Source.fromString) map new TextToKore(DefaultBuilders).parsePattern
+    try {
+      val terms = patterns map StandardConverter.apply toList
+      val sortLabels = sorts map (_.str) flatMap uniqueLabels.get
+      hook map (_ (labelName, sortLabels, terms))
+    } catch {
+      case e: NoSuchElementException => None
+    }
+  }
 
   override def sort(l: Label, children: Seq[Term]): kale.Sort = ???
 
