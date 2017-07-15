@@ -1,6 +1,7 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard.Bottomize
+import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.transformer.{Binary, Unary}
 
 trait Environment extends MatchingLogicMixin with Bottomize {
@@ -35,7 +36,7 @@ trait Environment extends MatchingLogicMixin with Bottomize {
       unifier(a, b)
   })
 
-  protected def unifier: Binary.Apply
+  def unifier: Binary.Apply
 
   def register(label: Label): Int = {
     assert(!isSealed, "Cannot register label " + label + " because the environment is sealed")
@@ -62,6 +63,12 @@ trait Environment extends MatchingLogicMixin with Bottomize {
 
 trait HasMatcher {
   self: Environment =>
+
+  case class NoMatch(solver: Apply) extends Binary.F({ (a: Term, b: Term) => Bottom })
+
+  case class LeaveAlone(solver: Apply) extends Binary.F({ (a: Term, b: Term) => And(a, b) })
+
+  case class AssertNotPossible(solver: Apply) extends Binary.F({ (a: Term, b: Term) => throw new AssertionError("Should not try to match " + a + " with " + b) })
 
   protected def makeMatcher: Binary.ProcessingFunctions = PartialFunction.empty
 }

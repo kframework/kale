@@ -38,7 +38,7 @@ class PrettyWrapperTest extends TestSetup()(TestEnv) {
     val fooThree = PrettyWrapper("c", foo(three, 6), "d")
 
     "wrapper left" in {
-      assert(And(foo(X, 6) :== fooThree, Equality(X, 3)) === And(Equality(X, 3), Next(fooThree)))
+      assert(And(foo(X, 6) =:= fooThree, Equality(X, 3)) === And(Equality(X, 3), Next(fooThree)))
     }
 
     "wrapper right" in {

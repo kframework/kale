@@ -140,7 +140,7 @@ trait BundledContextMixin extends HolesMixin with ContextMixin with PatternConte
         case And.withNext(subs: Substitution, _) =>
           val innerSolver = new SubstitutionWithContext(subs)
 
-          solver.substitution.get(t.contextVar) map innerSolver getOrElse Context(t.contextVar, solver(t.redex), t.contextPredicate)
+          solver.substitution.get(t.contextVar) map innerSolver getOrElse Context(t.contextVar, solver(t.redex), solver(t.contextPredicate))
         case `Bottom` => Bottom
         case _ => t // TODO: risky case; look into this at some point
       }

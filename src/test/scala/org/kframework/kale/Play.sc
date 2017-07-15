@@ -1,20 +1,6 @@
 
-import scala.language.dynamics
 
-trait Foo extends Dynamic {
-  def applyDynamic(m: String)(args: Any*) = {
-    "dynamic"
-  }
-}
 
-trait Bar extends Foo {
-  def a(): String = {
-    "a"
-  }
-}
+List(1, 2, 3) take 2
 
-val x: Foo = new Bar {}
-
-x.a()
-
-x.b()
+def x[T]: (List[T]) => List[T] = (_: List[T]) take 2

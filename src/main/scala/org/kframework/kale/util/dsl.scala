@@ -13,11 +13,8 @@ trait DSLMixin {
   def __ : Variable = Variable.freshVariable()
 
   implicit class RichVariable(v: Variable) {
-    def ::(s: Sort) = Variable(v.name.str, s)
 
-    def |=(t: Term) = BindMatch(v, t)
-
-    def |!=(t: Term) = And(v, STRATEGY.doesNotMatch(t, v))
+    def =!=(tt: Term): Term = STRATEGY.doesNotMatch(tt, v)
   }
 
   def ?(t: Term): Term = STRATEGY.orElseLeave(t)
@@ -26,13 +23,13 @@ trait DSLMixin {
   implicit class RichStandardTerm(t: Term) {
     def :=(tt: Term): Term = env.And.filterOutNext(env.unify(t, tt))
 
-    def :==(tt: Term): Term = env.unify(t, tt)
+    def =:=(tt: Term): Term = env.unify(t, tt)
 
     def ==>(tt: Term): Term = Rewrite(t, tt)
 
     def ?=>(tt: Term): Term = STRATEGY.orElseLeave(Rewrite(t, tt))
 
-    def =:=(tt: Term): Term = env.And.onlyNext(env.unify(t, tt))
+    def ==:=(tt: Term): Term = env.And.onlyNext(env.unify(t, tt))
 
     def :::(tt: Term): Term = STRATEGY.compose(t, tt)
 

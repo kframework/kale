@@ -45,16 +45,26 @@ object Binary {
 
     val statsInvocations = collection.mutable.Map[(Term, Term) => Term, Int]().withDefaultValue(0)
 
-    def apply(left: Term, right: Term): Term = {
+    val memo = collection.mutable.Map[(Term, Term), Term]()
+
+    def functionFor(left: Label, right: Label): (Term, Term) => Term = {
+      try {
+        arr(left.id)(right.id)
+      } catch {
+        case _: IndexOutOfBoundsException => throw new AssertionError("No processing function registered for: " + left + " and " + right)
+      }
+    }
+
+    def apply(left: Term, right: Term): Term = memo.getOrElseUpdate((left, right), {
+
       //      assert(labels.contains(left.label) && labels.contains(right.label))
       assert(left.label.id <= env.labels.size, "Left label " + left.label + " with id " + left.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
       assert(right.label.id <= env.labels.size, "Right label " + right.label + " with id " + right.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
 
-      val u: (Term, Term) => Term = try {
-        arr(left.label.id)(right.label.id)
-      } catch {
-        case _: IndexOutOfBoundsException => throw new AssertionError("No processing function registered for: " + left.label + " and " + right.label)
-      }
+      if (left == right)
+        return env.Next(right)
+      val u = functionFor(left.label, right.label)
+
       val res = if (u != null)
         u(left, right)
       else
@@ -64,7 +74,7 @@ object Binary {
 
       assert(!(left == right && res == env.Bottom), left.toString)
       res
-    }
+    })
 
     lazy val processingFunctionsByLabelPair: Map[(Label, Label), (Term, Term) => Term] = arr.zipWithIndex.flatMap({
       case (innerArray, i) => innerArray.zipWithIndex.filter(_._1 != null) map {
@@ -74,5 +84,4 @@ object Binary {
 
     override def toString: String = processingFunctionsByLabelPair.mkString("\n")
   }
-
 }

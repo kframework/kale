@@ -33,21 +33,21 @@ class RewriteTest extends TestSetup[StandardEnvironment]() {
 
   "inner rewrite" - {
     "simple" in {
-      assert(justNext(bar(Rewrite(X, b)) :== bar(a)) === bar(b))
+      assert(justNext(bar(Rewrite(X, b)) =:= bar(a)) === bar(b))
     }
     "swap" in {
-      assert(justNext(foo(Rewrite(X, Y), Rewrite(Y, X)) :== foo(a, b)) === foo(b, a))
+      assert(justNext(foo(Rewrite(X, Y), Rewrite(Y, X)) =:= foo(a, b)) === foo(b, a))
     }
   }
 
   "step" in {
-    assert((rewriter =:= ((1: Term) + 0)) === Next(1))
-    assert((rewriter =:= (1: Term)) === Bottom)
+    assert((rewriter ==:= ((1: Term) + 0)) === Next(1))
+    assert((rewriter ==:= (1: Term)) === Bottom)
   }
 
   "search" in {
-    assert((rewriter =:= ((1: Term) + 0)) === Next(1))
-    assert((rewriter =:= (1: Term)) === Bottom)
+    assert((rewriter ==:= ((1: Term) + 0)) === Next(1))
+    assert((rewriter ==:= (1: Term)) === Bottom)
   }
 
   // TODO: check this test
@@ -122,7 +122,7 @@ class RewriteTest extends TestSetup[StandardEnvironment]() {
   "inline rewrite" - {
     "very simple" in {
       val rw = Rewrite(1, 2)
-      assert((rw :== 1) === Next(2))
+      assert((rw =:= 1) === Next(2))
     }
   }
 

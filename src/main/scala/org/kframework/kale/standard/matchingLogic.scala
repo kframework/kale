@@ -90,6 +90,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (_, `Variable`) => SortedVarRight
     case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
     case (`BindMatch`, _) => BindMatchMatcher
+    case (`Equality`, `Equality`) => LeaveAlone
   }).orElse(super.makeMatcher)
 
   override def makeUnifier: Binary.ProcessingFunctions = Binary.definePartialFunction({
@@ -327,7 +328,7 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
   import env._
 
   @Normalizing
-  override def apply(_1: Term, _2: Term): Term = {
+  override def apply(_1: Term, _2: Term): Term = env.unifier.memo.getOrElseUpdate((_1, _2), {
     if (_1 == Bottom || _2 == Bottom) {
       Bottom
     } else if (_1 == Top) {
@@ -338,7 +339,7 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
       val disjunction = cartezianProduct(Or.asSet(_1), Or.asSet(_2))
       Or(disjunction)
     }
-  }
+  })
 
   @Normalizing
   def applyOnNonOrs(_1: Term, _2: Term): Term = {
@@ -633,18 +634,20 @@ case class Task(a: Term, b: Term) extends MightBeSolved
 
 case class Solved(t: Term) extends MightBeSolved
 
-private[standard] final class AndOfTerms(val terms: Set[Term])(implicit val env: Environment) extends And with Assoc {
+private[standard] final class AndOfTerms(val terms: Set[Term])(implicit val env: Environment with MatchingLogicMixin) extends And with Assoc {
 
   import env._
 
   lazy val predicates: Term = And(terms filter (_.isPredicate))
 
   val nonPredicates: Option[Term] = {
-    val nonFormulas = terms filter (!_.isPredicate)
-    if (nonFormulas.size > 1) {
-      throw new NotImplementedError("only handle at most one term for now")
+    val nonPredicates = terms filter (!_.isPredicate)
+    if (nonPredicates.size > 1) {
+      // We could easily unify here, but in practice we noticed that this is a constant source of bugs.
+      // I.e., conjuncting two non-predicates is rarely intended and, when it is, it can be expressed in other ways.
+      throw new AssertionError("We do not allow more than one non-predicate in a conjunction. Found :\n" + nonPredicates.mkString("\n"))
     }
-    nonFormulas.headOption
+    nonPredicates.headOption
   }
 
   assert(terms.size > 1, terms.toString())

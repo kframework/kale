@@ -58,7 +58,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     */
   val doesNotMatch = new Named("!=") with Label2 {
     override def apply(pattern: Term, obj: Term): Term =
-      if (obj.isGround) {
+      if ((obj.variables | pattern.variables).forall(_.name.str.startsWith("_"))) {
         val res = env.unify(pattern, obj)
         env.Truth(res == env.Bottom)
       } else {
@@ -87,6 +87,7 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
     case (`compose`, _) => composeTerm
     case (`repeat`, _) => repeatTerm
     case (`fixpoint`, _) => fixpointTerm
+    case (`unsat`, `unsat`) => LeaveAlone
     case (`unsat`, _) => unsatTerm
     case (`bu`, _) => buTerm
     case (`rw`, _) => rewriteTerm
@@ -94,8 +95,10 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
 
   def unsatTerm(solver: Binary.Apply) = { (pattern: Node1, obj: Term) =>
     solver(pattern._1, obj) match {
-      case Bottom => Next(obj)
-      case _ => Bottom
+      case Bottom =>
+        Next(obj)
+      case _ =>
+        Bottom
     }
   }
 

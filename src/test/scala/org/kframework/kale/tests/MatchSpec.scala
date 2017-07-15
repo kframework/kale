@@ -19,11 +19,11 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
   }
 
   "Regex" in {
-    assert((STRING.Regex("a.*c".r) :== STRING.String("abbbc")) === Next(STRING.String("abbbc")))
+    assert((STRING.Regex("a.*c".r) =:= STRING.String("abbbc")) === Next(STRING.String("abbbc")))
   }
 
   "Top matches anything" in {
-    assert((Top :== a) === Next(a))
+    assert((Top =:= a) === Next(a))
   }
 
   "assoc" in {
@@ -47,13 +47,13 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
     }
 
     "a bit more" in {
-      assert((foo(a, Context(X, b)) :== foo(a, traversed(b))) === And(Equality(X, traversed(X_1)), Next(foo(a, traversed(b)))))
+      assert((foo(a, Context(X, b)) =:= foo(a, traversed(b))) === And(Equality(X, traversed(X_1)), Next(foo(a, traversed(b)))))
     }
 
     "with traversal" in {
       val term = foo(a, traversed(matched(andMatchingY())))
       assert(
-        (foo(a, Context(X, matched(Y))) :== term)
+        (foo(a, Context(X, matched(Y))) =:= term)
           ===
           And(And.substitution(Map(X -> traversed(X_1), Y -> andMatchingY())), Next(term)))
     }
@@ -61,7 +61,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
     "example on the board" in {
       val term = foo(3, buz(bar(1), bar(bar(2))))
       assert(
-        (foo(3, Context(X, bar(Y))) :== term)
+        (foo(3, Context(X, bar(Y))) =:= term)
           === Or(
           And(And.substitution(Map(X -> buz(X_1, bar(bar(2))), Y -> (1: Term))), Next(term)),
           And(And.substitution(Map(X -> buz(bar(1), X_1), Y -> bar(2))), Next(term)),
@@ -73,7 +73,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
     "assoc inside one element" in {
       val term = bar(el ~~ 1 ~~ 2 ~~ bar(2) ~~ bar(bar(3)))
       assert(
-        (bar(Context(X, bar(Y))) :== term)
+        (bar(Context(X, bar(Y))) =:= term)
           ===
           Or(
             And(And.substitution(Map(X -> (el ~~ 1 ~~ 2 ~~ X_1 ~~ bar(bar(3))), Y -> (2: Term))), Next(term)),
@@ -86,13 +86,13 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
   "contexts with predicate" - {
     "traverses as the predicate is true" in {
       val term = foo(1, bar(buz(3, bar(2))))
-      assert((Context(C, bar(X), Or(__, foo(__, Context.hole))) :== term)
+      assert((Context(C, bar(X), Or(__, foo(__, Context.hole))) =:= term)
         === And(And.substitution(Map(C -> foo(1, Variable("C☐1")), X -> buz(3, bar(2)))), Next(term)))
     }
 
     "stops traversal when predicate fails" in {
       val term = foo(1, bar(buz(3, bar(2))))
-      assert((Context(C, bar(X), Or(__, And(STRATEGY.unsat(bar(__)), Context.anywhere))) :== term)
+      assert((Context(C, bar(X), Or(__, And(STRATEGY.unsat(bar(__)), Context.anywhere))) =:= term)
         === And(And.substitution(Map(C -> foo(1, Variable("C☐1")), X -> buz(3, bar(2)))), Next(term))
       )
     }
@@ -148,13 +148,13 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
     val YY = Variable("YY")
 
     "zero level" in {
-      assert((CAPP(C, X) :== 1)
+      assert((CAPP(C, X) =:= 1)
         === And(And.substitution(Map(C -> Hole, X -> 1)), Next(1)))
     }
 
     "one level" in {
       val term = foo(1, bar(2))
-      assert((CAPP(C, bar(X)) :== term)
+      assert((CAPP(C, bar(X)) =:= term)
         === And(
         And.substitution(Map(C -> foo(1, Hole), X -> 2)),
         Next(term)))
@@ -163,7 +163,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
 
     "two levels" in {
       val term = foo(1, bar(bar(2)))
-      assert((CAPP(C, bar(X)) :== term)
+      assert((CAPP(C, bar(X)) =:= term)
         === Or(
         And(And.substitution(Map(C -> foo(1, Hole), X -> bar(2))),
           Next(term)),
@@ -173,7 +173,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
 
     "stops traversal when encountering unknown" in {
       val term = foo(1, bar(buz(3, bar(2))))
-      assert((CAPP(C, bar(X)) :== term)
+      assert((CAPP(C, bar(X)) =:= term)
         === And(And.substitution(Map(C -> foo(1, Hole), X -> buz(3, bar(2)))), Next(term)))
     }
   }
@@ -184,7 +184,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
       val ACx_1 = Variable("ACx☐1")
       val term = buz(1, foo(2, bar(3)))
 
-      assert((Context(ACx, CAPP(C, bar(X))) :== term)
+      assert((Context(ACx, CAPP(C, bar(X))) =:= term)
         === Or(
         And(And.substitution(Map(C -> Hole, X -> 3, ACx -> buz(1, foo(2, ACx_1)))), Next(term)),
         And(And.substitution(Map(C -> foo(2, Hole), X -> 3, ACx -> buz(1, ACx_1))), Next(term)))
@@ -276,7 +276,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
     }
 
     "leave condition in place" in {
-      assert((X :== Or(a, And(Y, Not(Equality(X, a))))) ===
+      assert((X =:= Or(a, And(Y, Not(Equality(X, a))))) ===
         Or(And(Equality(X, a), Next(a)),
           And(Equality(X, Y), Not(Equality(X, a)), Next(Y))))
     }
@@ -290,10 +290,10 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
   }
 
   "ForAll" in {
-    assert((ForAll(X, X) :== X) === Next(X))
-    assert((ForAll(X, X) :== 3) === Next(3))
-    assert((ForAll(X, bar(X)) :== 3) === Bottom)
-    assert((ForAll(X, bar(X)) :== bar(3)) === Next(bar(3)))
-    assert((ForAll(X, foo(X, Y)) :== foo(3, 4)) === And(Equality(Y, 4), Next(foo(3, 4))))
+    assert((ForAll(X, X) =:= X) === Next(X))
+    assert((ForAll(X, X) =:= 3) === Next(3))
+    assert((ForAll(X, bar(X)) =:= 3) === Bottom)
+    assert((ForAll(X, bar(X)) =:= bar(3)) === Next(bar(3)))
+    assert((ForAll(X, foo(X, Y)) =:= foo(3, 4)) === And(Equality(Y, 4), Next(foo(3, 4))))
   }
 }
