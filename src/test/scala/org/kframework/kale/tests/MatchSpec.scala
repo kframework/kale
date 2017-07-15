@@ -222,23 +222,6 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
       === And(Equality(X, a), Equality(Y, b)))
   }
 
-  // TODO: Daejun, not sure exactly what you're testing for here but it fails because there are multiple constraint terms
-  "and" ignore {
-    assert((X := And(a, Equality(X, a))) === Equality(X, a))
-    assert((X := And(a, Equality(X, b))) === Bottom)
-
-    val x = And.substitutionAndTerms(Equality.binding(X, a), Seq(b))
-    val y = And.substitutionAndTerms(Equality.binding(Y, c), Seq(d))
-    val xy = And.apply(x, y)
-    assert(xy === And(Equality(X, a), Equality(Y, c), b, d))
-    assert(xy === And(Equality(X, a), Equality(Y, c), d, b))
-
-    assert(And.apply(Or(a, b), Or(c, d)) == Or(And(a, c), And(a, d), And(b, c), And(b, d)))
-
-    // testing equivalence of DNFAndLabel.apply(Term,Term) vs DNFAndLabel.apply(Iterable[Term])
-    assert(And.apply(And(a, b), c) == And.apply(Seq(And(a, b), c)))
-  }
-
   "context and and" in {
     assert((And(CAPP(C, bar(X)), Equality(X, 2)) := foo(1, bar(2)))
       === And.substitution(Map(C -> foo(1, Hole), X -> 2)))

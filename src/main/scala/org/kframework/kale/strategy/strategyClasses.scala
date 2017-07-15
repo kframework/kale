@@ -153,7 +153,7 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
       val justNext = res match {
         case Bottom => t
         case _ => res.asOr map {
-          case And.SPO(_, _, Next(x)) =>
+          case And.SPN(_, _, Next(x)) =>
             x
         }
       }

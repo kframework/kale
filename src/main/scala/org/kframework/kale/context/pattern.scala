@@ -24,7 +24,7 @@ object pattern {
       this.patterns = ps
 
       assert(env.Or.asSet(patterns) map {
-        case env.Equality(_, env.And.predicatesAndNonPredicate(_, Some(_))) => true;
+        case env.Equality(_, env.And.predicatesAndNonPredicate(_, _)) => true
         case _ => false
       } reduce (_ && _))
     }
@@ -68,11 +68,11 @@ object pattern {
 
 
     Or(contextApplication.patternsWithRedexHolesAndTheirContextVariables map {
-      case (Equality(And.predicatesAndNonPredicate(leftFormulas, Some(theContextDeclaration)), right), withHoles, contextVars) =>
+      case (Equality(And.predicatesAndNonPredicate(leftFormulas, theContextDeclaration), right), withHoles, contextVars) =>
         val contextMatch = solver(right, term)
         val contextMatchSolutions = Or.asSet(contextMatch)
         Or(contextMatchSolutions map {
-          case And.withNext(And.substitutionAndTerms(sub@And.substitution(substitutionAsAMap), rhsLeftoverConstraints), Some(next)) =>
+          case And.SPN(sub@And.substitution(substitutionAsAMap), rhsLeftoverConstraints, next) =>
             val partiallySolvedLeftFormulas = sub(leftFormulas)
             val matchSubAppliedToWithHoles = sub(withHoles)
             val contextSub = Equality(contextVar, matchSubAppliedToWithHoles)

@@ -164,12 +164,14 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
       case Bottom => Set[Term]()
       case or =>
         val res = Or.asSet(or).flatMap(u => {
-          val And.withNext(constraints@And.substitutionAndTerms(_, unresolvedConstraints), Some(Next(next))) = u
+          val And.SPN(sub, pred@And.set(unresolvedConstraints), Next(next)) = u
 
-          if (unresolvedConstraints.nonEmpty && env.isInstanceOf[Z3Mixin] && !z3.sat(constraints)) {
+          val allConstraints = And(sub, pred)
+
+          if (unresolvedConstraints.nonEmpty && env.isInstanceOf[Z3Mixin] && !z3.sat(allConstraints)) {
             Set[Term]()
           } else {
-            Set(And(next, constraints))
+            Set(And(next, allConstraints))
           }
         })
         res

@@ -41,14 +41,14 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
   case class SortedVarRight(solver: Apply) extends Binary.F({ (a: Term, b: Variable) => SortedVarLeft(solver)(b, a) })
 
   case class AndTerm(solver: Apply) extends Binary.F({ (a: And, b: Term) =>
-    val solution = solver(a.nonPredicates.get, b)
-    val fTerm = And(a.predicates, solution)
+    val solution = solver(a.nonPredicate, b)
+    val fTerm = And(a.predicate, solution)
     fTerm
   })
 
   case class TermAnd(solver: Apply) extends Binary.F({ (a: Term, b: And) =>
-    val solution = solver(a, b.nonPredicates.get)
-    And(solution, b.predicates)
+    val solution = solver(a, b.nonPredicate)
+    And(solution, b.predicate)
   })
 
   // TODO: something is not quite right with FormulaLabel -- make sure it is correct
@@ -111,9 +111,9 @@ trait MatchingLogicPostfixMixin extends Environment with MatchingLogicMixin {
   case class RewriteMatcher(solver: Binary.Apply) extends Binary.F({ (a: SimpleRewrite, b: Term) =>
     val m = solver(a._1, b)
     m.asOr map {
-      case And.withNext(nonNext@And.substitutionAndTerms(subs, terms), _) =>
+      case And.SPN(subs, predicates, _) =>
         val s = substitutionMaker(subs)
-        And(Next(s(a._2)), nonNext)
+        And.SPN(subs, predicates, Next(s(a._2)))
     }
   })
 
@@ -346,17 +346,24 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
     if (_1 == Bottom || _2 == Bottom)
       Bottom
     else {
-      val withNext(substitutionAndTerms(sub1, terms1), next1) = _1
-      val withNext(substitutionAndTerms(sub2, terms2), next2) = _2
+      val And.SPN(sub1, pred1, nonPred1) = _1
+      val And.SPN(sub2, pred2, nonPred2) = _2
 
-      assert(!(next1.isDefined && next2.isDefined))
+      assert(!(nonPred1 != Top && nonPred2 != Top))
 
       apply(sub1, sub2) match {
         case `Bottom` => Bottom
-        case substitutionAndTerms(sub, terms) =>
-          val x = apply(sub, (terms1 ++ terms2 map sub) ++ terms)
-          next1.orElse(next2).map(t => And.withNext(x, sub(t))).getOrElse(x)
-        case _ => unreachable()
+        case And.SPN(sub, pred, Top) =>
+          val updatedPred = sub(Predicates(And.asSet(pred1) | And.asSet(pred2)))
+
+          strongBottomize(updatedPred) {
+            val And.SPN(newSub, And.set(other), Top) = updatedPred
+
+            And.SPN(
+              substitution(sub.asMap ++ newSub.asMap),
+              Predicates(other | And.asSet(pred)),
+              nonPredicates(Set(nonPred1, nonPred2)))
+          }
       }
     }
   }
@@ -366,22 +373,6 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
 
   @Normalizing
   def apply(_1: Substitution, _2: Substitution): Term = substitution(_1, _2)
-
-  @NonNormalizing
-  def apply(pureSubstitution: Substitution, others: Iterable[Term]): Term = {
-    val negatedANot = others exists {
-      case Not(n) => pureSubstitution.contains(n)
-      case _ => false
-    }
-
-    if (negatedANot)
-      Bottom
-    else
-      others.find(_.label == Next).map({
-        next =>
-          And.withNext(substitutionAndTerms(pureSubstitution, others.filterNot(_.label == Next)), next)
-      }).getOrElse(substitutionAndTerms(pureSubstitution, others))
-  }
 
 
   def asMap(t: Substitution): Map[Variable, Term] = t match {
@@ -396,18 +387,25 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
       * normalizing
       */
     def apply(_1: Substitution, _2: Substitution): Term = {
-      // TODO(Daejun): exhaustively apply to get a fixpoint, but be careful to guarantee termination
-      // TODO: optimize to use the larger substitution as the first one
-      val substitutionAndTerms(newSubs2, termsOutOfSubs2: Iterable[Term]) = _1(_2)
 
-      val applyingTheSubsOutOf2To1 = newSubs2(_1).asInstanceOf[Substitution]
+      val merged = _1(_2)
 
-      val m1 = asMap(applyingTheSubsOutOf2To1)
-      val m2 = asMap(newSubs2)
+      if (merged == Bottom)
+        Bottom
+      else {
+        // TODO(Daejun): exhaustively apply to get a fixpoint, but be careful to guarantee termination
+        // TODO: optimize to use the larger substitution as the first one
+        val And.SPN(newSubs2, pred2: Term, nonPred2) = _1(_2)
 
-      val newSub: Substitution = substitution(m1 ++ m2)
+        val applyingTheSubsOutOf2To1 = newSubs2(_1).asInstanceOf[Substitution]
 
-      DNFAndLabel.this.apply(newSub, termsOutOfSubs2)
+        val m1 = asMap(applyingTheSubsOutOf2To1)
+        val m2 = asMap(newSubs2)
+
+        val newSub: Substitution = substitution(m1 ++ m2)
+
+        And.SPN(newSub, pred2, nonPred2)
+      }
     }
 
     /**
@@ -431,8 +429,8 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
   @PerformanceCritical
   def asSubstitutionAndTerms(t: Term): (Substitution, Set[Term]) = t match {
     case s: Substitution => (s, Set.empty)
-    case and: AndOfSubstitutionAndPredicates => (and.s, And.asSet(and.terms))
-    case and: AndOfTerms => (Top, and.terms)
+    case and: AndOfSubstitutionAndPredicates => (and.s, And.asSet(and.preds))
+    case and: Predicates => (Top, and.terms)
     case And.withNext(rest, Some(next)) =>
       val (s, terms) = asSubstitutionAndTerms(rest)
       (s, terms + next)
@@ -441,35 +439,36 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
   }
 
   /**
-    * SON is a an acronym for substitution, other, next
+    * SON is a an acronym for substitution, other predicates, non-predicates
     * It splits the And into a substitution, non-substitution like predicates,
     * and other, a non-predicate (usually the Next from a rewrite)
     */
   @PerformanceCritical
-  object SPO {
+  object SPN {
     @PerformanceCritical
     def from(t: Term): (Substitution, Term, Term) = t match {
+      case Bottom => throw new AssertionError("Should not try to split Bottom")
       case s: Substitution => (s, Top, Top)
-      case and: AndOfSubstitutionAndPredicates => (and.s, and.terms, Top)
-      case and: AndOfTerms => (Top, and, Top)
-      case and: AndWithNext =>
-        val Some((s, t, _)) = unapply(and.conjunction)
-        (s, t, and.nextTerm)
-      case o =>
-        assert(o.label != And)
-        if (o.isPredicate) {
-          (Top, o, Top)
-        } else {
-          (Top, Top, o)
-        }
+      case and: AndOfSubstitutionAndPredicates => (and.s, and.preds, Top)
+      case and: Predicates => (Top, and, Top)
+      case and: PredicatesAndNonPredicates =>
+        val SPN(sub, pred, Top) = and.predicate
+        (sub, pred, and.nonPredicate)
+      case np: NonPredicates => (Top, Top, np)
+      case o: Substitution => (o, Top, Top)
+      case o if o.isPredicate => (Top, o, Top)
+      case o => (Top, Top, o)
     }
 
     @PerformanceCritical
-    def unapply(t: Term): Some[(Substitution, Term, Term)] = Some(from(t))
+    def unapply(t: Term): Option[(Substitution, Term, Term)] = t match {
+      case Bottom => None
+      case _ => Some(from(t))
+    }
 
     @NonNormalizing
     @PerformanceCritical
-    def apply(substitution: Substitution, predicates: Term, other: Term): Term = {
+    def apply(substitution: Substitution, predicates: Term, nonPredicates: Term): Term = {
       val substitutionAndPredicates = if (substitution == Top) {
         predicates
       } else if (predicates == Top) {
@@ -478,12 +477,12 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
         new AndOfSubstitutionAndPredicates(substitution, predicates)
       }
 
-      if (other == Top) {
+      if (nonPredicates == Top) {
         substitutionAndPredicates
       } else if (substitutionAndPredicates == Top) {
-        other
+        nonPredicates
       } else {
-        new AndWithNext(substitutionAndPredicates, other)
+        PredicatesAndNonPredicates(substitutionAndPredicates, nonPredicates)
       }
     }
   }
@@ -492,31 +491,31 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
   /**
     * Unwraps into a substitution and non-substitution terms
     */
-  object substitutionAndTerms {
-    @NonNormalizing
-    def apply(pureSubstitution: Substitution, otherTerms: Iterable[Term]): Term = {
-      val others = otherTerms filterNot (_ == env.Top)
-
-      assert(others forall { t => t == pureSubstitution(t) })
-
-      if (others.isEmpty) {
-        pureSubstitution
-      } else if (pureSubstitution == Top && others.size == 1) {
-        others.head
-      } else {
-        strongBottomize(others.toSeq: _*) {
-          val terms = if (others.size > 1) new AndOfTerms(others.toSet) else others.head
-          if (pureSubstitution == Top) {
-            terms
-          } else {
-            new AndOfSubstitutionAndPredicates(pureSubstitution, terms)
-          }
-        }
-      }
-    }
-
-    def unapply(t: Term): Option[(Substitution, Iterable[Term])] = Some(asSubstitutionAndTerms(t))
-  }
+  //  object substitutionAndTerms {
+  //    @NonNormalizing
+  //    def apply(pureSubstitution: Substitution, otherTerms: Iterable[Term]): Term = {
+  //      val others = otherTerms filterNot (_ == env.Top)
+  //
+  //      assert(others forall { t => t == pureSubstitution(t) })
+  //
+  //      if (others.isEmpty) {
+  //        pureSubstitution
+  //      } else if (pureSubstitution == Top && others.size == 1) {
+  //        others.head
+  //      } else {
+  //        strongBottomize(others.toSeq: _*) {
+  //          val terms = if (others.size > 1) new Predicates(others.toSet) else others.head
+  //          if (pureSubstitution == Top) {
+  //            terms
+  //          } else {
+  //            new AndOfSubstitutionAndPredicates(pureSubstitution, terms)
+  //          }
+  //        }
+  //      }
+  //    }
+  //
+  //    def unapply(t: Term): Option[(Substitution, Iterable[Term])] = Some(asSubstitutionAndTerms(t))
+  //  }
 
   private def cartezianProduct(t1: Iterable[Term], t2: Iterable[Term]): Seq[Term] = {
     for (e1 <- t1.toSeq;
@@ -525,12 +524,25 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
     }
   }
 
+  @NonNormalizing
+  object nonPredicates {
+    def apply(s: Set[Term]): Term = {
+      val set = s - Top
+      assert(set.forall(!_.isPredicate))
+      set.size match {
+        case 0 => Top
+        case 1 => set.head
+        case _ => NonPredicates(set)
+      }
+    }
+  }
+
 
   object predicatesAndNonPredicate {
-    def unapply(t: Term): Some[(Term, Option[Term])] = t match {
-      case tt: And => Some(tt.predicates, tt.nonPredicates)
-      case tt if tt.isPredicate => Some(tt, None)
-      case tt if !tt.isPredicate => Some(Top, Some(tt))
+    def unapply(t: Term): Some[(Term, Term)] = t match {
+      case tt: And => Some(tt.predicate, tt.nonPredicate)
+      case tt if tt.isPredicate => Some(tt, Top)
+      case tt if !tt.isPredicate => Some(Top, tt)
     }
   }
 
@@ -547,7 +559,7 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
   @PerformanceCritical
   def removeVariable(v: Variable, and: Term): Term = and match {
     case s: Substitution => s.remove(v)
-    case And.SPO(s, terms, next) => And.SPO(s.remove(v), terms, next)
+    case And.SPN(s, terms, next) => And.SPN(s.remove(v), terms, next)
   }
 
   def filterOutNext(t: Term): Term = {
@@ -569,12 +581,12 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
         if (t == Top)
           next
         else
-          AndWithNext(t, next)
+          PredicatesAndNonPredicates(t, next)
       }
     }
 
     def unapply(t: Term): Some[(Term, Option[Term])] = t match {
-      case standard.AndWithNext(and, next) =>
+      case standard.PredicatesAndNonPredicates(and, next) =>
         Some(and, Some(next))
       case next if t.label == Next =>
         Some(Top, Some(next))
@@ -601,7 +613,7 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
             case Solved(term) => term
             case Task(a, b) =>
               val sub = solutionSoFar match {
-                case And.withNext(And.substitutionAndTerms(sub, _), _) => sub
+                case And.SPN(s, _, _) => s
               }
               env.unify(sub(a), sub(b))
           }
@@ -616,14 +628,14 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
   override def combine(originalTerm: Node)(solutions: MightBeSolved*): Term = {
     val res = solutions.foldLeft(Set((Top: Term, List[Term]())))(cartezianProductWithNext)
     Or(res map (_ match {
-      case (other@And.substitutionAndTerms(s, _), l) => And.withNext(other, Next(originalTerm.copy(l map s)))
+      case (And.SPN(s, other, _), l) => And.SPN(s, other, Next(originalTerm.copy(l map s)))
     }))
   }
 
   override def combine(label: NodeLabel)(solutions: MightBeSolved*): Term = {
     val res = solutions.foldLeft(Set((Top: Term, List[Term]())))(cartezianProductWithNext)
     Or(res map {
-      case (other@And.substitutionAndTerms(s, _), l) => And.withNext(other, Next(label(l map s)))
+      case (And.SPN(s, other, _), l) => And.SPN(s, other, Next(label(l map s)))
     })
   }
 }
@@ -634,108 +646,109 @@ case class Task(a: Term, b: Term) extends MightBeSolved
 
 case class Solved(t: Term) extends MightBeSolved
 
-private[standard] final class AndOfTerms(val terms: Set[Term])(implicit val env: Environment with MatchingLogicMixin) extends And with Assoc {
+object Predicates {
+  def apply(terms: Set[Term])(implicit env: Environment with MatchingLogicMixin): Term = {
+    val s = terms - env.Top
+    assert(s.forall(_.isPredicate))
+    assert(s.forall(!_.isInstanceOf[Substitution]))
+    s.size match {
+      case 0 => env.Top
+      case 1 => s.head
+      case _ => new Predicates(s)
+    }
+  }
+}
+
+private[standard] final case class Predicates(terms: Set[Term])(implicit val env: Environment with MatchingLogicMixin) extends And with Assoc {
 
   import env._
 
-  lazy val predicates: Term = And(terms filter (_.isPredicate))
-
-  val nonPredicates: Option[Term] = {
-    val nonPredicates = terms filter (!_.isPredicate)
-    if (nonPredicates.size > 1) {
-      // We could easily unify here, but in practice we noticed that this is a constant source of bugs.
-      // I.e., conjuncting two non-predicates is rarely intended and, when it is, it can be expressed in other ways.
-      throw new AssertionError("We do not allow more than one non-predicate in a conjunction. Found :\n" + nonPredicates.mkString("\n"))
-    }
-    nonPredicates.headOption
-  }
-
+  assert(terms.forall(_.isPredicate))
+  assert(terms.forall(!_.isInstanceOf[Substitution]))
   assert(terms.size > 1, terms.toString())
   assert(!terms.contains(Bottom))
   assert(!terms.contains(Top))
   assert(terms.forall(_.label != Next))
 
   override val label = And
-  override val assocIterable: Iterable[Term] = terms
 
   override def _1: Term = terms.head
 
-  override def _2: Term = if (terms.size == 2) terms.tail.head else new AndOfTerms(terms.tail)
+  override def _2: Term = if (terms.size == 2) terms.tail.head else new Predicates(terms.tail)
 
   override def equals(other: Any): Boolean = other match {
-    case that: AndOfTerms => this.terms == that.terms
+    case that: Predicates => this.terms == that.terms
     case _ => false
   }
 
   override def asSet: Set[Term] = terms
+
+  override val predicate: Term = this
+  override val nonPredicate: Term = Top
 }
 
-final case class AndWithNext(conjunction: Term, nextTerm: Term)(implicit env: MatchingLogicMixin) extends And {
+final case class NonPredicates(terms: Set[Term])(implicit env: MatchingLogicMixin) extends And {
+
+  assert(terms.forall(!_.isPredicate))
+
+  override val predicate: Term = env.Top
+  override val nonPredicate = this
+  override val label = env.And
+
+  override def asSet: Set[Term] = terms
+
+  override def _1: Term = terms.head
+
+  override def _2: Term = if (terms.size == 2) terms.tail.head else NonPredicates(terms.tail)
+}
+
+final case class PredicatesAndNonPredicates(predicate: Term, nonPredicate: Term)(implicit env: MatchingLogicMixin) extends And {
 
   import env._
 
-  assert(conjunction != Bottom)
-
-  assert(nextTerm.label == Next)
-
-  val And.predicatesAndNonPredicate(ps, nonPredicates) = conjunction
-  override val predicates: Term =
-    if (nonPredicates.isDefined)
-      And(ps, nextTerm)
-    else
-      this
-
   override val label = And
 
-  override def asSet: Set[Term] = And.asSet(conjunction) + nextTerm
+  override def asSet: Set[Term] = And.asSet(predicate) | And.asSet(nonPredicate)
 
-  override val assocIterable: Iterable[Term] = asSet
+  override def _1: Term = predicate
 
-  override def _1: Term = conjunction
-
-  override def _2: Term = nextTerm
+  override def _2: Term = nonPredicate
 
   override def equals(obj: Any): Boolean = obj match {
-    case that: AndWithNext => that.conjunction == this.conjunction && that.nextTerm == this.nextTerm
+    case that: PredicatesAndNonPredicates => that.predicate == this.predicate && that.nonPredicate == this.nonPredicate
     case _ => false
   }
 }
 
 
-private[kale] final class AndOfSubstitutionAndPredicates(val s: Substitution, val terms: Term)(implicit env: Environment) extends And with Assoc {
+private[kale] final class AndOfSubstitutionAndPredicates(val s: Substitution, val preds: Term)(implicit env: Environment) extends And with Assoc {
 
   import env._
 
-  assert(terms != Bottom)
-  assert(!And.asSet(terms).exists(_.label == Next))
+  assert(And.asSet(preds).forall(_.isPredicate))
+  assert(And.asSet(preds).forall(!_.isInstanceOf[Substitution]))
+  assert(preds != Bottom)
+  assert(!And.asSet(preds).exists(_.label == Next))
 
   val label = And
 
-  lazy val predicates: Term = terms match {
-    case a: AndOfTerms => And(s, a.predicates)
+  lazy val predicate: Term = preds match {
+    case a: Predicates => And(s, a.predicate)
     case t if t.isPredicate => And(s, t)
     case _ => s
   }
 
-  /**
-    * TODO: this should eventually be replaced by the WithNext
-    */
-  lazy val nonPredicates: Option[Term] = terms match {
-    case a: AndOfTerms => a.nonPredicates
-    case t if !t.isPredicate => Some(t)
-    case _ => None
-  }
+  lazy val nonPredicate = Top
 
   lazy val _1: Term = s
-  lazy val _2: Term = terms
-  override lazy val assocIterable: Iterable[Term] = And.asIterable(s) ++ And.asIterable(terms)
+  lazy val _2: Term = preds
 
   override def equals(other: Any): Boolean = other match {
-    case that: AndOfSubstitutionAndPredicates => this.s == that.s && this.terms == that.terms
+    case that: AndOfSubstitutionAndPredicates => this.s == that.s && this.preds == that.preds
     case _ => false
   }
 
-  override def asSet: Set[Term] = And.asSet(terms) | And.asSet(s)
+  override def asSet: Set[Term] = And.asSet(preds) | And.asSet(s)
 }
 
 private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit val env: MatchingLogicMixin) extends And with Substitution with BinaryInfix {
@@ -759,12 +772,10 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
 
   override def asMap: Map[Variable, Term] = m
 
-  override val assocIterable: Iterable[Term] = And.asIterable(this)
-
   override def toString: String = super[BinaryInfix].toString
 
-  override val predicates: Term = this
-  override val nonPredicates: Option[Term] = None
+  override val predicate: Term = this
+  override val nonPredicate = Top
 
   override def asSet: Set[Term] = m.map({ case (k, v) => Equality.binding(k, v) }).toSet
 
@@ -811,7 +822,6 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
 
   lazy val _1: Term = terms.head
   lazy val _2 = Or(terms.tail.toSeq)
-  override val assocIterable: Iterable[Term] = terms
 
   override lazy val isPredicate: Boolean = terms.forall(_.isPredicate)
 
@@ -857,8 +867,8 @@ private[standard] case class SimpleExistsLabel()(implicit val e: MatchingLogicMi
     val v = _1.asInstanceOf[Variable]
     _2 match {
       case Bottom => Bottom
-      case And.substitutionAndTerms(s, terms) if s.get(v).exists(_.isGround) =>
-        And.substitutionAndTerms(s.remove(v), terms)
+      case And.SPN(s, pred, nonPred) if s.get(v).exists(_.isGround) =>
+        And.SPN(s.remove(v), pred, nonPred)
       case _ =>
         SimpleExists(v, _2)
     }

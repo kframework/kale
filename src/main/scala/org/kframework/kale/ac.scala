@@ -78,6 +78,8 @@ trait AssocComm extends Assoc with Comm {
   override val label: AssocCommLabel
 
   def asSet: Set[Term]
+
+  override val assocIterable: Set[Term] = asSet
 }
 
 trait CommLabel

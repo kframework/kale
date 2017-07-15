@@ -24,7 +24,9 @@ trait MatchingLogicMixin extends Mixin {
   val ForAll: ForAllLabel
 
   def sort(l: Label, children: Seq[Term]): Sort
+
   def sort(l: Label): kale.Sort
+
   def isSort(sort: kore.Sort, term: Term): Boolean
 }
 
@@ -157,10 +159,10 @@ trait Binding extends Equals with Substitution {
 
 trait And extends kore.And with AssocComm {
   self: And =>
-  val predicates: Term
-  val nonPredicates: Option[Term]
+  val predicate: Term
+  val nonPredicate: Term
 
-  override lazy val isPredicate: Boolean = nonPredicates.isEmpty
+  override lazy val isPredicate: Boolean = nonPredicate != label.env.Top
 }
 
 trait Or extends kore.Or with AssocComm {

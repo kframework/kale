@@ -59,11 +59,11 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
 
   def ContextMatcher(solver: Apply): (ContextApplication, Term) => Term = { (contextApp: ContextApplication, term: Term) =>
     solver(SolvingContext(contextApp), term).asOr map {
-      case And.SPO(s, p@And.set(setOfp), Next(n)) =>
+      case And.SPN(s, p@And.set(setOfp), Next(n)) =>
         val redex = setOfp.collect({
           case Exists(contextApp.specificHole, r) => r
         }).head
-        And.SPO(
+        And.SPN(
           And.substitution(s.asMap + (contextApp.contextVar -> n)),
           And(setOfp.filter({ case Exists(contextApp.specificHole, _) => false; case _ => true })),
           Next(Equality.binding(contextApp.specificHole, redex)(n)))
@@ -82,8 +82,8 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
         val solutionForSubtermI = solver(solvingContext, subterms(i))
         solutionForSubtermI.asOr map {
           // this rewires C -> HOLE into C -> foo(HOLE)
-          case And.SPO(s, p, Next(next)) =>
-            And.SPO(s, p, Next(reconstruct(i, next)))
+          case And.SPN(s, p, Next(next)) =>
+            And.SPN(s, p, Next(reconstruct(i, next)))
         }
       })
     }
@@ -102,7 +102,7 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
         val matchPredicate = unify(contextApp.finalContextPredicate, term)
 
         val res = matchPredicate.asOr map {
-          case And.SPO(_, p, Next(_)) if p.contains(Context.anywhere) =>
+          case And.SPN(_, p, Next(_)) if p.contains(Context.anywhere) =>
             val theAnywhereMatch = other match {
               case l: AssocLabel =>
                 val subresults = l.asIterable(term).toList
@@ -115,11 +115,11 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
                 recursive
             }
             theAnywhereMatch
-          case And.SPO(s, p, Next(n)) if p.findBU({ case Exists(contextApp.specificHole, _) => true; case _ => false }).isEmpty =>
+          case And.SPN(s, p, Next(n)) if p.findBU({ case Exists(contextApp.specificHole, _) => true; case _ => false }).isEmpty =>
             val redexSol = solver(contextApp.redex, n)
             redexSol.asOr map {
-              case And.SPO(ss, pp, Next(redexTerm)) =>
-                And.SPO(And.substitution(s.asMap ++ ss.asMap), And(p, pp, Exists(contextApp.specificHole, redexTerm)), Next(contextApp.specificHole))
+              case And.SPN(ss, pp, Next(redexTerm)) =>
+                And.SPN(And.substitution(s.asMap ++ ss.asMap), And(p, pp, Exists(contextApp.specificHole, redexTerm)), Next(contextApp.specificHole))
             }
           case o => o
         }
