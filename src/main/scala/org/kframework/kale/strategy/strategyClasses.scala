@@ -129,11 +129,11 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
     val someVar = Variable.freshVariable()
     val sol = solver(orElse(f, Rewrite(someVar, someVar)), obj)
     sol.asOr map {
-      case And.SPN(s, p, Next(t)) =>
-        if (s.contains(someVar) || p.contains(someVar)) {
-          Next(t)
+      case And.SPN(s, p, t) =>
+        if (s.boundVariables.contains(someVar)) {
+          And(p, Next(nextIsNow(t)))
         } else {
-          solver(fp, t) // TODO: pass in the remaining predicates
+          solver(fp, nextIsNow(t)) // TODO: pass in the remaining predicates
         }
     }
   })

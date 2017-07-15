@@ -28,7 +28,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
   }
 
   "Top matches anything" in {
-    assert((Top =:= a) === Next(a))
+    assert((Top =:= a) === a)
   }
 
   "assoc" in {

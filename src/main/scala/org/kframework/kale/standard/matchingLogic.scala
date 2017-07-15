@@ -58,7 +58,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
 
   case class TermOr(solver: Apply) extends Binary.F({ (a: Term, b: Or) => b map (solver(a, _)) })
 
-  case class Constants(solver: Apply) extends Binary.F({ (a: DomainValue[_], b: DomainValue[_]) => And(Truth(a.data == b.data), Next(b)) })
+  case class Constants(solver: Apply) extends Binary.F({ (a: DomainValue[_], b: DomainValue[_]) => And(Truth(a.data == b.data), b) })
 
   case class BindMatchMatcher(solver: Apply) extends Binary.F({ (a: Node2, b: Term) =>
     val v = a._1.asInstanceOf[Variable]
@@ -123,8 +123,8 @@ trait MatchingLogicPostfixMixin extends Environment with MatchingLogicMixin {
     case (Bottom, _) => Bottom
     case (_, Bottom) => Bottom
     case (Top, Top) => Top
-    case (Top, t) => Next(t)
-    case (t, Top) => Next(t)
+    case (Top, t) => t
+    case (t, Top) => t
     case _ => throw new AssertionError("Use only the env.Top and env.Bottom Truth objects.")
   })
 
@@ -358,10 +358,12 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
           strongBottomize(updatedPred) {
             val And.SPN(newSub, And.set(other), Top) = updatedPred
 
+            val finalSub = substitution(sub.asMap ++ newSub.asMap)
+
             And.SPN(
-              substitution(sub.asMap ++ newSub.asMap),
-              Predicates(other | And.asSet(pred)),
-              nonPredicates(Set(nonPred1, nonPred2)))
+              finalSub,
+              Predicates(other | And.asSet(finalSub(pred))),
+              nonPredicates(Set(finalSub(nonPred1), finalSub(nonPred2))))
           }
       }
     }
