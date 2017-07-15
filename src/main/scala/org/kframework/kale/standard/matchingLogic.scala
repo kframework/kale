@@ -34,7 +34,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
 
   def SortedVarLeft(solver: Apply)(a: Variable, b: Term): Term =
     if (isSort(a.sort, b))
-      And(Equality(a.asInstanceOf[Variable], b), Next(b))
+      And(Equality(a.asInstanceOf[Variable], b), b)
     else
       Bottom
 
@@ -65,7 +65,9 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     val p = a._2
     b.asOr map { bx =>
       val sol = solver(p, bx)
-      And(Equality(v, And.nextIsNow(And.onlyNext(sol))), sol)
+      sol.asOr map {
+        case And.SPN(s, p, n) => And.SPN(And.substitution(s.asMap + (v -> n)), p, n)
+      }
     }
   }
   )
@@ -211,7 +213,7 @@ private[standard] case class MatchLabel()(implicit override val env: StandardEnv
     if (env.isSealed) {
       Equality(_1, _2) match {
         case Equality(a, b) =>
-          val unified = And.filterOutNext(And.env.unify(a, b))
+          val unified = And.onlyPredicate(And.env.unify(a, b))
           unified match {
             case Equality(a, b) => new Matches(a, b)
             case _ => unified
@@ -237,8 +239,7 @@ private[standard] case class StandardEqualityLabel()(implicit override val env: 
       env.Top
     else if (_1.isGround && _2.isGround) {
       if (env.isSealed) {
-        val env.And.withNext(p, _) = env.unify(_1, _2)
-        p
+        env.And.onlyPredicate(env.unify(_1, _2))
       } else
         new Equals(_1, _2)
     } else {
@@ -309,9 +310,7 @@ private[standard] class OneResult(implicit penv: StandardEnvironment) extends Na
     if (_1 == Bottom) {
       Some(Bottom)
     } else {
-      (Or.asSet(_1).view collect {
-        case t@And.withNext(_, _) => t
-      }).headOption
+      Or.asSet(_1).headOption
     }
 }
 
@@ -424,21 +423,6 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
   }
 
   /**
-    * @deprecated ("Use SON instead")
-    */
-  @PerformanceCritical
-  def asSubstitutionAndTerms(t: Term): (Substitution, Set[Term]) = t match {
-    case s: Substitution => (s, Set.empty)
-    case and: AndOfSubstitutionAndPredicates => (and.s, And.asSet(and.preds))
-    case and: Predicates => (Top, and.terms)
-    case And.withNext(rest, Some(next)) =>
-      val (s, terms) = asSubstitutionAndTerms(rest)
-      (s, terms + next)
-    case t if t.label == And => ???
-    case o => (Top, Set(o))
-  }
-
-  /**
     * SON is a an acronym for substitution, other predicates, non-predicates
     * It splits the And into a substitution, non-substitution like predicates,
     * and other, a non-predicate (usually the Next from a rewrite)
@@ -455,7 +439,6 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
         val SPN(sub, pred, Top) = and.predicate
         (sub, pred, and.nonPredicate)
       case np: NonPredicates => (Top, Top, np)
-      case o: Substitution => (o, Top, Top)
       case o if o.isPredicate => (Top, o, Top)
       case o => (Top, Top, o)
     }
@@ -546,12 +529,6 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
     }
   }
 
-  def onlyNext(t: Term): Term = {
-    t.asOr map {
-      case env.And.withNext(_, Some(n)) => n
-    }
-  }
-
   /**
     * @param v   the variable to remove
     * @param and the and
@@ -562,43 +539,20 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
     case And.SPN(s, terms, next) => And.SPN(s.remove(v), terms, next)
   }
 
-  def filterOutNext(t: Term): Term = {
+  def onlyPredicate(t: Term): Term = {
     t.asOr map {
-      case env.And.withNext(t, _) => t
+      case And.SPN(s, p, _) => And.SPN(s, p, Top)
     }
   }
 
-  def nextIsNow(t: Term): Term = strongBottomize(t) {
+  def onlyNonPredicate(t: Term): Term = {
     t.asOr map {
-      case env.And.withNext(t, Some(Next(n))) => And(t, n)
+      case And.SPN(_, _, n) => n
     }
   }
 
-  object withNext {
-    def apply(t: Term, next: Term): Term = {
-      assert(next.label == Next)
-      strongBottomize(t) {
-        if (t == Top)
-          next
-        else
-          PredicatesAndNonPredicates(t, next)
-      }
-    }
-
-    def unapply(t: Term): Some[(Term, Option[Term])] = t match {
-      case standard.PredicatesAndNonPredicates(and, next) =>
-        Some(and, Some(next))
-      case next if t.label == Next =>
-        Some(Top, Some(next))
-      case _ => Some(t, None)
-    }
-  }
-
-  private object an {
-    def unapply(t: Term): Option[(Term, Term)] = t match {
-      case withNext(and, Some(next)) => Some(and, next.asInstanceOf[SimpleNext]._1)
-      case _ => None
-    }
+  def nextIsNow(t: Term): Term = {
+    t mapBU (t => if (t.label == Next) t.asInstanceOf[Node1]._1 else t)
   }
 
   private type TheFold = Set[(Term, List[Term])]
@@ -618,8 +572,8 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
               env.unify(sub(a), sub(b))
           }
           Or.asSet(solvedTask) map {
-            case an(p2, next2) =>
-              (applyOnNonOrs(solutionSoFar, p2), nexts :+ next2)
+            case And.SPN(s, p, n) =>
+              (applyOnNonOrs(solutionSoFar, And.SPN(s, p, Top)), nexts :+ n)
           }
       }
     }
@@ -627,15 +581,15 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
 
   override def combine(originalTerm: Node)(solutions: MightBeSolved*): Term = {
     val res = solutions.foldLeft(Set((Top: Term, List[Term]())))(cartezianProductWithNext)
-    Or(res map (_ match {
-      case (And.SPN(s, other, _), l) => And.SPN(s, other, Next(originalTerm.copy(l map s)))
-    }))
+    Or(res map {
+      case (And.SPN(s, other, _), l) => And.SPN(s, other, originalTerm.copy(l map s))
+    })
   }
 
   override def combine(label: NodeLabel)(solutions: MightBeSolved*): Term = {
     val res = solutions.foldLeft(Set((Top: Term, List[Term]())))(cartezianProductWithNext)
     Or(res map {
-      case (And.SPN(s, other, _), l) => And.SPN(s, other, Next(label(l map s)))
+      case (And.SPN(s, other, _), l) => And.SPN(s, other, label(l map s))
     })
   }
 }
@@ -728,7 +682,7 @@ private[kale] final class AndOfSubstitutionAndPredicates(val s: Substitution, va
   assert(And.asSet(preds).forall(_.isPredicate))
   assert(And.asSet(preds).forall(!_.isInstanceOf[Substitution]))
   assert(preds != Bottom)
-  assert(!And.asSet(preds).exists(_.label == Next))
+  assert(And.asSet(preds).forall(_.label != Next))
 
   val label = And
 

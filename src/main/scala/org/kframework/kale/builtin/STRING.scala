@@ -53,7 +53,7 @@ trait StringMixin extends kale.StringMixin with Environment with IntMixin with B
   case class RegexMatch(solver: Apply) extends Binary.F({ (r: DomainValue[scala.util.matching.Regex], s: Term) =>
     val reg = r.data
     s match {
-      case String(reg()) => Next(s)
+      case String(reg()) => s
       case _ => Bottom
     }
   })

@@ -10,9 +10,10 @@ trait FunctionByRewritingMixin extends Mixin with Environment with standard.Matc
 
   case class FunctionDefinedByRewritingMatcher(solver: Apply) extends Binary.F({ (a: Term, b: Term) => {
     val l = a.label.asInstanceOf[FunctionDefinedByRewriting]
-    And(Next(b), And(a.children.zip(b.children).map({
+    And(b, And(a.children.zip(b.children).map({
       case (ca, cb) => solver(ca, cb) match {
-        case And.withNext(p, _) => p
+        case And.SPN(s, p, _) => And(s, p, Top)
+        case Bottom => Bottom
       }
     })))
   }
@@ -86,7 +87,7 @@ trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel wi
       unify(rewriter, res) match {
         case Bottom => None
         case r =>
-          Some(And.nextIsNow(OneResult(And.onlyNext(r))))
+          Some(And.nextIsNow(OneResult(And.onlyNonPredicate(r))))
       }
     } else {
       None

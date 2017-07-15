@@ -23,7 +23,7 @@ trait PrettyWrapperMixin extends Mixin with Environment with standard.MatchingLo
       if (t.isGround)
         Bottom
       else
-        And.withNext(Equality(a, t), Next(a))
+        And(Equality(a, t), a)
   })
 
   case class PrettyWrapperPrettyWrapper(solver: Apply) extends Binary.F({
@@ -32,7 +32,7 @@ trait PrettyWrapperMixin extends Mixin with Environment with standard.MatchingLo
 
   case class TermPrettyWrapper(solver: Apply) extends Binary.F({ (t: Term, a: PrettyWrapperHolder) =>
     solver(t, a.content).asOr map {
-      case And.withNext(p, Some(Next(n))) => And.withNext(p, Next(a.copy(a._1, n, a._3)))
+      case And.SPN(s, p, n) => And.SPN(s, p, a.copy(a._1, n, a._3))
       case Bottom => Bottom
     }
   })

@@ -41,7 +41,7 @@ trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatc
               MapImplementation(mapLabel, rightMap, rightUnindexed + rhs)
             }
           }
-          And(And.filterOutNext(solver(leftVar, b)), Next(nextTerm))
+          And(And.onlyPredicate(solver(leftVar, b)), nextTerm)
 
         } else if (leftMap.nonEmpty && rightMap.nonEmpty && leftUnindexed.size <= 1 && rightUnindexed.isEmpty) {
           val leftKeys = leftMap.keys.toSet
@@ -62,7 +62,7 @@ trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatc
             val valueMatchesTasks: Term = if (commonKeys.nonEmpty)
               And.combine(mapLabel)(commonKeys map (k => Task(leftMap(k), rightMap(k))) toSeq: _*)
             else
-              Next(identity)
+              identity
 
             val lookupByKeyVariableAndValueMatch = if (leftKeys.size - commonKeys.size == 1) {
               val v = (leftKeys -- rightKeys).head
@@ -76,12 +76,12 @@ trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatc
 
             val freeLeftVariableEqualityTask = if (leftUnindexed.size == 1) {
               val value = mapLabel((rightKeys -- leftKeys).map(rightMap))
-              And(And.filterOutNext(solver(leftUnindexed.head, value)), Next(value))
+              And(And.onlyPredicate(solver(leftUnindexed.head, value)), value)
             } else {
-              Next(mapLabel.identity)
+              mapLabel.identity
             }
 
-            if (And.filterOutNext(lookupByKeyVariableAndValueMatch) != Top && And.filterOutNext(freeLeftVariableEqualityTask) != Top) {
+            if (And.onlyPredicate(lookupByKeyVariableAndValueMatch) != Top && And.onlyPredicate(freeLeftVariableEqualityTask) != Top) {
               throw MatchNotSupporteredError(a, b)
             }
 

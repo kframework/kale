@@ -10,7 +10,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
 
   val nextIsNow = standard.lift("nextIsNow", env.And.nextIsNow _)
 
-  val onlyNext = standard.lift("onlyNext", env.And.onlyNext _)
+  val onlyNonPredicate = standard.lift("onlyNext", env.And.onlyNonPredicate _)
 
   val compose = new Named("compose") with Label2 {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
@@ -118,7 +118,7 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
   case class composeTerm(solver: Binary.Apply) extends Binary.F({ (composed: Term, obj: Term) =>
     val compose(f, g) = composed
     val matchG = unify(g, obj)
-    val takeRelevantFromGMatch = nextIsNow(onlyNext(matchG))
+    val takeRelevantFromGMatch = nextIsNow(onlyNonPredicate(matchG))
     val matchF = unify(f, takeRelevantFromGMatch)
 
     matchF
@@ -127,10 +127,10 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
   case class repeatTerm(solver: Binary.Apply) extends Binary.F({ (fp: Term, obj: Term) =>
     val repeat(f) = fp
     val someVar = Variable.freshVariable()
-    val sol = solver(orElse(f, someVar), obj)
+    val sol = solver(orElse(f, Rewrite(someVar, someVar)), obj)
     sol.asOr map {
-      case And.withNext(p, Some(Next(t))) =>
-        if (p.contains(someVar)) {
+      case And.SPN(s, p, Next(t)) =>
+        if (s.contains(someVar) || p.contains(someVar)) {
           Next(t)
         } else {
           solver(fp, t) // TODO: pass in the remaining predicates
@@ -148,18 +148,13 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
   })
 
   case class buTerm(solver: Binary.Apply) extends Binary.F({ (bu: Node1, obj: Term) =>
-    Next(obj.mapBU(t => {
+    obj.mapBU(t => {
       val res = solver(bu._1, t)
-      val justNext = res match {
+      res match {
         case Bottom => t
-        case _ => res.asOr map {
-          case And.SPN(_, _, Next(x)) =>
-            x
-        }
+        case _ => nextIsNow(onlyNonPredicate(res))
       }
-      justNext
-    }
-    ))
+    })
   })
 
   case class rewriteTerm(solver: Binary.Apply) extends Binary.F({ (rewrite: Node1, obj: Term) =>

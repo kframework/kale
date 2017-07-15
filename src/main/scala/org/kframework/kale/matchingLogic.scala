@@ -116,8 +116,6 @@ trait AndLabel extends AssocCommWithIdLabel with Z3Builtin {
   override val identity = Top
   assert(identity != null)
 
-  def asSubstitutionAndTerms(t: Term): (Substitution, Set[Term])
-
   def combine(label: Node)(tasks: MightBeSolved*): Term
 
   def combine(label: NodeLabel)(tasks: MightBeSolved*): Term

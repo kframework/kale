@@ -59,14 +59,14 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
 
   def ContextMatcher(solver: Apply): (ContextApplication, Term) => Term = { (contextApp: ContextApplication, term: Term) =>
     solver(SolvingContext(contextApp), term).asOr map {
-      case And.SPN(s, p@And.set(setOfp), Next(n)) =>
+      case And.SPN(s, p@And.set(setOfp), n) =>
         val redex = setOfp.collect({
           case Exists(contextApp.specificHole, r) => r
         }).head
         And.SPN(
           And.substitution(s.asMap + (contextApp.contextVar -> n)),
           And(setOfp.filter({ case Exists(contextApp.specificHole, _) => false; case _ => true })),
-          Next(Equality.binding(contextApp.specificHole, redex)(n)))
+          Equality.binding(contextApp.specificHole, redex)(n))
     }
   }
 
@@ -82,8 +82,8 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
         val solutionForSubtermI = solver(solvingContext, subterms(i))
         solutionForSubtermI.asOr map {
           // this rewires C -> HOLE into C -> foo(HOLE)
-          case And.SPN(s, p, Next(next)) =>
-            And.SPN(s, p, Next(reconstruct(i, next)))
+          case And.SPN(s, p, next) =>
+            And.SPN(s, p, reconstruct(i, next))
         }
       })
     }
@@ -102,7 +102,7 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
         val matchPredicate = unify(contextApp.finalContextPredicate, term)
 
         val res = matchPredicate.asOr map {
-          case And.SPN(_, p, Next(_)) if p.contains(Context.anywhere) =>
+          case And.SPN(_, p, _) if p.contains(Context.anywhere) =>
             val theAnywhereMatch = other match {
               case l: AssocLabel =>
                 val subresults = l.asIterable(term).toList
@@ -115,11 +115,11 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
                 recursive
             }
             theAnywhereMatch
-          case And.SPN(s, p, Next(n)) if p.findBU({ case Exists(contextApp.specificHole, _) => true; case _ => false }).isEmpty =>
+          case And.SPN(s, p, n) if p.findBU({ case Exists(contextApp.specificHole, _) => true; case _ => false }).isEmpty =>
             val redexSol = solver(contextApp.redex, n)
             redexSol.asOr map {
-              case And.SPN(ss, pp, Next(redexTerm)) =>
-                And.SPN(And.substitution(s.asMap ++ ss.asMap), And(p, pp, Exists(contextApp.specificHole, redexTerm)), Next(contextApp.specificHole))
+              case And.SPN(ss, pp, redexTerm) =>
+                And.SPN(And.substitution(s.asMap ++ ss.asMap), And(p, pp, Exists(contextApp.specificHole, redexTerm)), contextApp.specificHole)
             }
           case o => o
         }
@@ -137,7 +137,7 @@ trait BundledContextMixin extends HolesMixin with ContextMixin with PatternConte
     override def f(solver: SubstitutionApply)(t: ContextApplication): Term = {
       val recursiveResult = Equality.binding(t.specificHole, solver(t.redex))
       And(solver.substitution, recursiveResult) match {
-        case And.withNext(subs: Substitution, _) =>
+        case And.SPN(subs, _, _) =>
           val innerSolver = new SubstitutionWithContext(subs)
 
           solver.substitution.get(t.contextVar) map innerSolver getOrElse Context(t.contextVar, solver(t.redex), solver(t.contextPredicate))

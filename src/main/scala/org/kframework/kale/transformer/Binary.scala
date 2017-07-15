@@ -62,7 +62,7 @@ object Binary {
       assert(right.label.id <= env.labels.size, "Right label " + right.label + " with id " + right.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
 
       if (left == right)
-        return env.Next(right)
+        return right
       val u = functionFor(left.label, right.label)
 
       val res = if (u != null)
@@ -84,4 +84,5 @@ object Binary {
 
     override def toString: String = processingFunctionsByLabelPair.mkString("\n")
   }
+
 }

@@ -119,7 +119,7 @@ class IMPSpec extends FreeSpec {
 
       assert(
         // q(p(x,y), p(y,x)) =?= q(z,z)
-        And.filterOutNext(unify(
+        And.onlyPredicate(unify(
           div(plus(E1, E2), plus(E2, E1)),
           div(E3, E3)
         ))
@@ -136,7 +136,7 @@ class IMPSpec extends FreeSpec {
 
       assert(
         // p(x,y,a) =?= p(y,x,x)
-        And.filterOutNext(unify(
+        And.onlyPredicate(unify(
           ppp(X, Y, a),
           ppp(Y, X, X)
         ))

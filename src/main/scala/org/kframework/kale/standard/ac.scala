@@ -51,7 +51,7 @@ trait AssocWithIdLabel extends kale.AssocWithIdLabel {
   def size: Label1
 }
 
-trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher with HasUnifier with IntMixin {
+trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher with HasUnifier with IntMixin with MatchingLogicMixin {
 
   override def AssocWithIdLabel(name: String, id: Term): AssocWithIdLabel = new AssocWithIdListLabel(name, id)
 
@@ -68,7 +68,7 @@ trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher
             case (prefix, suffix) =>
               val prefixTerm = l(prefix)
               val newSoFar = t match {
-                case v: Variable => And.combine(l)(Solved(soFar), Solved(And(Next(prefixTerm), Equality(v, prefixTerm))))
+                case v: Variable => And.combine(l)(Solved(soFar), Solved(And(prefixTerm, Equality(v, prefixTerm))))
                 case _ => And.combine(l)(Solved(soFar), Task(t, prefixTerm))
               }
               matchContents(l, newSoFar, tailL, suffix)
@@ -77,7 +77,7 @@ trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher
             (a, b) => Or(a, b)
           })
       case (left, right) if left.nonEmpty && right.nonEmpty =>
-        val (sub, _) = And.asSubstitutionAndTerms(soFar)
+        val And.SPN(sub, _, _) = soFar
         val headSolution: Term = And.combine(l)(Solved(soFar), Task(sub(left.head), sub(right.head)))
         matchContents(l, headSolution, left.tail, right.tail)
       case _ => Bottom
@@ -89,14 +89,14 @@ trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher
     val asList = a.label.asIterable _
     val l1 = asList(a)
     val l2 = asList(b)
-    matchContents(a.label, Next(a.label.identity), l1, l2)(solver)
+    matchContents(a.label, a.label.identity, l1, l2)(solver)
   }
 
   case class TermAssocWithId(solver: Apply) extends Binary.F({ (a: Term, b: AssocWithIdList) =>
     val asList = b.label.asIterable _
     val l1 = asList(a)
     val l2 = asList(b)
-    matchContents(b.label, Next(b.label.identity), l1, l2)(solver)
+    matchContents(b.label, b.label.identity, l1, l2)(solver)
   })
 
   override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({

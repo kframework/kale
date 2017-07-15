@@ -60,7 +60,7 @@ abstract class TestSetup[E <: StandardEnvironment](implicit val env: E = Standar
 
   a2b.setRules(Or(a2bRules))
 
-  def unifier(t1: Term, t2: Term): Term = env.And.filterOutNext(matcher(t1, t2))
+  def unifier(t1: Term, t2: Term): Term = env.And.onlyPredicate(matcher(t1, t2))
 
   val substitutionApplier = SubstitutionWithContext(_)
 

@@ -27,16 +27,12 @@ class RewriteTest extends TestSetup[StandardEnvironment]() {
     Rewrite(el ~~ 3 ~~ X ~~ Y ~~ 6, el ~~ X ~~ 0 ~~ Y)
   )
 
-  def justNext(t: Term) = t.asOr map {
-    case And.withNext(_, Some(Next(next))) => next
-  }
-
   "inner rewrite" - {
     "simple" in {
-      assert(justNext(bar(Rewrite(X, b)) =:= bar(a)) === bar(b))
+      assert((bar(Rewrite(X, b)) =:= bar(a)) === And(Equality(X, a), bar(Next(b))))
     }
     "swap" in {
-      assert(justNext(foo(Rewrite(X, Y), Rewrite(Y, X)) =:= foo(a, b)) === foo(b, a))
+      assert((foo(Rewrite(X, Y), Rewrite(Y, X)) =:= foo(a, b)) === And(Equality(X, a), Equality(Y, b), foo(Next(b), Next(a))))
     }
   }
 

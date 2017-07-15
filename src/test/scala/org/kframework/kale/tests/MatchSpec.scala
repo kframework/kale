@@ -9,7 +9,12 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
   import env._
   import implicits._
 
+  "very simple" in {
+    assert(unify(X, a) === And(a, Equality(X, a)))
+  }
+
   "simple" in {
+    assert(unify(a, a) === a)
     assert(unifier(X, 5) === Equality(X, 5))
     assert(unifier(X + Y, (5: Term) + 7) === And.substitution(Map(X -> (5: Term), Y -> (7: Term))))
     assert(unifier(X + X, (5: Term) + 7) === Bottom)
@@ -19,7 +24,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
   }
 
   "Regex" in {
-    assert((STRING.Regex("a.*c".r) =:= STRING.String("abbbc")) === Next(STRING.String("abbbc")))
+    assert((STRING.Regex("a.*c".r) =:= STRING.String("abbbc")) === STRING.String("abbbc"))
   }
 
   "Top matches anything" in {
@@ -47,7 +52,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
     }
 
     "a bit more" in {
-      assert((foo(a, Context(X, b)) =:= foo(a, traversed(b))) === And(Equality(X, traversed(X_1)), Next(foo(a, traversed(b)))))
+      assert((foo(a, Context(X, b)) =:= foo(a, traversed(b))) === And(Equality(X, traversed(X_1)), foo(a, traversed(b))))
     }
 
     "with traversal" in {
@@ -55,7 +60,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
       assert(
         (foo(a, Context(X, matched(Y))) =:= term)
           ===
-          And(And.substitution(Map(X -> traversed(X_1), Y -> andMatchingY())), Next(term)))
+          And(And.substitution(Map(X -> traversed(X_1), Y -> andMatchingY())), term))
     }
 
     "example on the board" in {
@@ -63,9 +68,9 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
       assert(
         (foo(3, Context(X, bar(Y))) =:= term)
           === Or(
-          And(And.substitution(Map(X -> buz(X_1, bar(bar(2))), Y -> (1: Term))), Next(term)),
-          And(And.substitution(Map(X -> buz(bar(1), X_1), Y -> bar(2))), Next(term)),
-          And(And.substitution(Map(X -> buz(bar(1), bar(X_1)), Y -> (2: Term))), Next(term))
+          And(And.substitution(Map(X -> buz(X_1, bar(bar(2))), Y -> (1: Term))), term),
+          And(And.substitution(Map(X -> buz(bar(1), X_1), Y -> bar(2))), term),
+          And(And.substitution(Map(X -> buz(bar(1), bar(X_1)), Y -> (2: Term))), term)
         )
       )
     }
@@ -76,9 +81,9 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
         (bar(Context(X, bar(Y))) =:= term)
           ===
           Or(
-            And(And.substitution(Map(X -> (el ~~ 1 ~~ 2 ~~ X_1 ~~ bar(bar(3))), Y -> (2: Term))), Next(term)),
-            And(And.substitution(Map(X -> (el ~~ 1 ~~ 2 ~~ bar(2) ~~ X_1), Y -> bar(3))), Next(term)),
-            And(And.substitution(Map(X -> (el ~~ 1 ~~ 2 ~~ bar(2) ~~ bar(X_1)), Y -> (3: Term))), Next(term)))
+            And(And.substitution(Map(X -> (el ~~ 1 ~~ 2 ~~ X_1 ~~ bar(bar(3))), Y -> (2: Term))), term),
+            And(And.substitution(Map(X -> (el ~~ 1 ~~ 2 ~~ bar(2) ~~ X_1), Y -> bar(3))), term),
+            And(And.substitution(Map(X -> (el ~~ 1 ~~ 2 ~~ bar(2) ~~ bar(X_1)), Y -> (3: Term))), term))
       )
     }
   }
@@ -87,13 +92,13 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
     "traverses as the predicate is true" in {
       val term = foo(1, bar(buz(3, bar(2))))
       assert((Context(C, bar(X), Or(__, foo(__, Context.hole))) =:= term)
-        === And(And.substitution(Map(C -> foo(1, Variable("C☐1")), X -> buz(3, bar(2)))), Next(term)))
+        === And(And.substitution(Map(C -> foo(1, Variable("C☐1")), X -> buz(3, bar(2)))), term))
     }
 
     "stops traversal when predicate fails" in {
       val term = foo(1, bar(buz(3, bar(2))))
       assert((Context(C, bar(X), Or(__, And(STRATEGY.unsat(bar(__)), Context.anywhere))) =:= term)
-        === And(And.substitution(Map(C -> foo(1, Variable("C☐1")), X -> buz(3, bar(2)))), Next(term))
+        === And(And.substitution(Map(C -> foo(1, Variable("C☐1")), X -> buz(3, bar(2)))), term)
       )
     }
   }
@@ -133,9 +138,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
       )
     }
 
-    // TODO: ignored as it was slow
     "4" ignore {
-
       assert((foo(Context(XX, Context(X, Y)), Context(YY, Context(Z, ZZ)))
         := foo(Context(XX1, Context(X1, bar(Y1))), Context(YY1, Context(Z1, ZZ1))))
         !== Bottom)
@@ -149,7 +152,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
 
     "zero level" in {
       assert((CAPP(C, X) =:= 1)
-        === And(And.substitution(Map(C -> Hole, X -> 1)), Next(1)))
+        === And(And.substitution(Map(C -> Hole, X -> 1)), 1))
     }
 
     "one level" in {
@@ -157,7 +160,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
       assert((CAPP(C, bar(X)) =:= term)
         === And(
         And.substitution(Map(C -> foo(1, Hole), X -> 2)),
-        Next(term)))
+        term))
 
     }
 
@@ -166,15 +169,15 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
       assert((CAPP(C, bar(X)) =:= term)
         === Or(
         And(And.substitution(Map(C -> foo(1, Hole), X -> bar(2))),
-          Next(term)),
+          term),
         And(And.substitution(Map(C -> foo(1, bar(Hole)), X -> 2)),
-          Next(term))))
+          term)))
     }
 
     "stops traversal when encountering unknown" in {
       val term = foo(1, bar(buz(3, bar(2))))
       assert((CAPP(C, bar(X)) =:= term)
-        === And(And.substitution(Map(C -> foo(1, Hole), X -> buz(3, bar(2)))), Next(term)))
+        === And(And.substitution(Map(C -> foo(1, Hole), X -> buz(3, bar(2)))), term))
     }
   }
 
@@ -186,8 +189,8 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
 
       assert((Context(ACx, CAPP(C, bar(X))) =:= term)
         === Or(
-        And(And.substitution(Map(C -> Hole, X -> 3, ACx -> buz(1, foo(2, ACx_1)))), Next(term)),
-        And(And.substitution(Map(C -> foo(2, Hole), X -> 3, ACx -> buz(1, ACx_1))), Next(term)))
+        And(And.substitution(Map(C -> Hole, X -> 3, ACx -> buz(1, foo(2, ACx_1)))), term),
+        And(And.substitution(Map(C -> foo(2, Hole), X -> 3, ACx -> buz(1, ACx_1))), term))
       )
     }
   }
@@ -260,8 +263,8 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
 
     "leave condition in place" in {
       assert((X =:= Or(a, And(Y, Not(Equality(X, a))))) ===
-        Or(And(Equality(X, a), Next(a)),
-          And(Equality(X, Y), Not(Equality(X, a)), Next(Y))))
+        Or(And(Equality(X, a), a),
+          And(Equality(X, Y), Not(Equality(X, a)), Y)))
     }
   }
 
@@ -273,10 +276,10 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
   }
 
   "ForAll" in {
-    assert((ForAll(X, X) =:= X) === Next(X))
-    assert((ForAll(X, X) =:= 3) === Next(3))
+    assert((ForAll(X, X) =:= X) === X)
+    assert((ForAll(X, X) =:= 3) === (3: Term))
     assert((ForAll(X, bar(X)) =:= 3) === Bottom)
-    assert((ForAll(X, bar(X)) =:= bar(3)) === Next(bar(3)))
-    assert((ForAll(X, foo(X, Y)) =:= foo(3, 4)) === And(Equality(Y, 4), Next(foo(3, 4))))
+    assert((ForAll(X, bar(X)) =:= bar(3)) === bar(3))
+    assert((ForAll(X, foo(X, Y)) =:= foo(3, 4)) === And(Equality(Y, 4), foo(3, 4)))
   }
 }

@@ -12,10 +12,10 @@ class StrategyTest extends TestSetup[StandardEnvironment]() {
 
   "orElse" - {
     "then" in {
-      assert(orElse(X, b).unify(a) === And(Next(a), Equality(X, a)))
+      assert(orElse(X, b).unify(a) === And(a, Equality(X, a)))
     }
     "else" in {
-      assert(orElse(a, Y).unify(b) === And(Next(b), Equality(Y, b)))
+      assert(orElse(a, Y).unify(b) === And(b, Equality(Y, b)))
     }
     "mixed" in {
       assert(orElse(Rewrite(a, c), Rewrite(b, d)).unify(Or(a, b)) === Or(Next(c), Next(d)))
@@ -23,7 +23,7 @@ class StrategyTest extends TestSetup[StandardEnvironment]() {
   }
 
   "nextIsNow" in {
-    assert(nextIsNow(And(Next(a), Equality(X, a))) === And(a, Equality(X, a)))
+    assert(nextIsNow(And(Next(a), Equality(X, a))) === And(Equality(X, a), a))
   }
 
   "compose" in {

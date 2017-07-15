@@ -21,7 +21,7 @@ trait DSLMixin {
 
 
   implicit class RichStandardTerm(t: Term) {
-    def :=(tt: Term): Term = env.And.filterOutNext(env.unify(t, tt))
+    def :=(tt: Term): Term = env.And.onlyPredicate(env.unify(t, tt))
 
     def =:=(tt: Term): Term = env.unify(t, tt)
 
@@ -29,7 +29,7 @@ trait DSLMixin {
 
     def ?=>(tt: Term): Term = STRATEGY.orElseLeave(Rewrite(t, tt))
 
-    def ==:=(tt: Term): Term = env.And.onlyNext(env.unify(t, tt))
+    def ==:=(tt: Term): Term = env.And.onlyNonPredicate(env.unify(t, tt))
 
     def :::(tt: Term): Term = STRATEGY.compose(t, tt)
 

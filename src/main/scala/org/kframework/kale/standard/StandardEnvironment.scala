@@ -48,17 +48,7 @@ trait StandardEnvironment
   // HELPERS:
 
   def rewrite(rule: Term, obj: Term): Term = {
-    unify(rule, obj).asOr map {
-      case And.withNext(p, Some(Next(t))) =>
-        if (!p.exists(_.label == Not)) {
-          t
-        } else {
-          //          log.warn("Rewriter rule didn't apply because it's not clear if we can prove a Not");
-          Bottom
-        }
-
-      case Bottom => Bottom
-    }
+    And.nextIsNow(And.onlyNonPredicate(unify(rule, obj)))
   }
 }
 
