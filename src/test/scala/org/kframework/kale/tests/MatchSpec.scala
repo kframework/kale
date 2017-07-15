@@ -45,6 +45,10 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
       ))
   }
 
+  "rewrite and something" in {
+    println(unify(And(X, Equality(X, bar(Y) ==> b), Equality(X, bar(Z))), bar(c)))
+  }
+
   "contexts" - {
 
     "zero-level" in {

@@ -15,6 +15,7 @@ abstract class TestSetup[E <: StandardEnvironment](implicit val env: E = Standar
 
   val X = Variable("X")
   val Y = Variable("Y")
+  val Z = Variable("Z")
 
   val plus = env.uniqueLabels.getOrElse("+", FreeLabel2("+")).asInstanceOf[Label2]
 

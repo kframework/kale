@@ -79,6 +79,14 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     }
   })
 
+  def NextTerm(solver: Apply) = { (a: Term, b: Term) =>
+    And(a, b)
+  }
+
+  def NextNext(solver: Apply) = { (a: Term, b: Term) =>
+    Next(solver(a, b))
+  }
+
   override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
     case (_, `Not`) => OneIsFormula
     case (`Not`, _) => OneIsFormula
@@ -93,6 +101,9 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
     case (`BindMatch`, _) => BindMatchMatcher
     case (`Equality`, `Equality`) => LeaveAlone
+    case (`Next`, `Next`) => NextNext
+    case (`Next`, _) => NextTerm
+    case (_, `Next`) => NextTerm
   }).orElse(super.makeMatcher)
 
   override def makeUnifier: Binary.ProcessingFunctions = Binary.definePartialFunction({
