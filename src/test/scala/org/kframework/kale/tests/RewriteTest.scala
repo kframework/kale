@@ -47,8 +47,8 @@ class RewriteTest extends TestSetup[StandardEnvironment]() {
   }
 
   // TODO: check this test
-  "search assoc" ignore {
-    assert((rewriter := (el ~~ 3 ~~ 4 ~~ 5 ~~ 6)) ===
+  "search assoc" in {
+    assert(And.nextIsNow(rewriter ==:= (el ~~ 3 ~~ 4 ~~ 5 ~~ 6)) ===
       Or(List(el ~~ 4 ~~ 0 ~~ 5, el ~~ 0 ~~ 4 ~~ 5, el ~~ 4 ~~ 5 ~~ 0)))
   }
 

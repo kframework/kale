@@ -138,7 +138,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
       )
     }
 
-    "4" ignore {
+    "4" in {
       assert((foo(Context(XX, Context(X, Y)), Context(YY, Context(Z, ZZ)))
         := foo(Context(XX1, Context(X1, bar(Y1))), Context(YY1, Context(Z1, ZZ1))))
         !== Bottom)
@@ -200,7 +200,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
       assert(a2b(c).label === a2b)
     }
 
-    "simple applied increment function" ignore {
+    "simple applied increment function" in {
       assert(a2b(a) === b)
     }
   }
