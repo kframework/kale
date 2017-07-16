@@ -329,7 +329,17 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
   import env._
 
   @Normalizing
-  override def apply(_1: Term, _2: Term): Term = env.unifier.memo.getOrElseUpdate((_1, _2), {
+  override def apply(_1: Term, _2: Term): Term = {
+    if (env.isSealed) {
+      env.unifier.memo.getOrElseUpdate((_1, _2), innerApply(_1, _2))
+    } else {
+      innerApply(_1, _2)
+    }
+  }
+
+
+  private def innerApply(_1: Term, _2: Term) = {
+
     if (_1 == Bottom || _2 == Bottom) {
       Bottom
     } else if (_1 == Top) {
@@ -340,7 +350,8 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
       val disjunction = cartezianProduct(Or.asSet(_1), Or.asSet(_2))
       Or(disjunction)
     }
-  })
+
+  }
 
   @Normalizing
   def applyOnNonOrs(_1: Term, _2: Term): Term = {
