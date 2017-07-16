@@ -21,10 +21,22 @@ case class BOOLEAN()(implicit env: Environment) {
     */
   val ifThenElse = new Named("BOOLEAN.ifThenElse") with Label3 {
     override val isPredicate: Option[Boolean] = None
+
     override def apply(condition: Term, thenTerm: Term, elseTerm: Term): Term = condition match {
       case True => thenTerm
       case False => elseTerm
       case _ => FreeNode3(this, condition, thenTerm, elseTerm)
+    }
+  }
+
+  val isTrue = new Named("isTrue") with FunctionLabel1 {
+
+    override val isPredicate: Option[Boolean] = Some(true)
+
+    override def f(_1: Term): Option[Term] = _1 match {
+      case Boolean(true) => Some(env.Top)
+      case Boolean(false) => Some(env.Bottom)
+      case _ => None
     }
   }
 
