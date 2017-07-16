@@ -177,6 +177,7 @@ private[standard] case class StandardVariable(name: kale.Name, givenSort: kale.S
 
 private[standard] case class StandardTruthLabel()(implicit val env: Environment) extends NameFromObject with TruthLabel {
   def apply(v: Boolean) = if (v) env.Top else env.Bottom
+
   override val isPredicate: Option[Boolean] = Some(true)
 }
 
@@ -330,6 +331,7 @@ class Compose2(val name: String, functionLabel2: Label2, functionLabel1: Functio
   override def f(_1: Term, _2: Term): Option[Term] = {
     Some(functionLabel1(functionLabel2(_1, _2)))
   }
+
   override val isPredicate: Option[Boolean] = None
 }
 
@@ -372,7 +374,11 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
       val And.SPN(sub1, pred1, nonPred1) = _1
       val And.SPN(sub2, pred2, nonPred2) = _2
 
-      assert(!(nonPred1 != Top && nonPred2 != Top))
+      if (nonPred1 != Top && nonPred2 != Top) {
+        // While it would be easy to do, we do not allow more than one non-preicate terms for now.
+        // We noticed that, in practice, when we encounter this case, it is usually due to a bug in the definition.
+        throw new AssertionError("Conjuncting non-predicate terms is not allowed. The terms are: \n" + nonPred1 + "\nand \n" + nonPred2)
+      }
 
       apply(sub1, sub2) match {
         case `Bottom` => Bottom
