@@ -37,6 +37,13 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
+  /**
+    * Takes a partial function
+    */
+  val td = new Named("td") with Label1 with Strategy {
+    override def apply(f: Term): Term = FreeNode1(this, f)
+  }
+
   val rw = new Named("rewrite") with Label1 with Strategy {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
@@ -96,6 +103,7 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
       case (`unsat`, `unsat`) => LeaveAlone
       case (`unsat`, _) => unsatTerm
       case (`bu`, _) => buTerm
+      case (`td`, _) => tdTerm
       case (`rw`, _) => rewriteTerm
     }), Priority.ultimate)
 
@@ -154,13 +162,25 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
   })
 
   case class buTerm(solver: Binary.Apply) extends Binary.F({ (bu: Node1, obj: Term) =>
-    obj.mapBU(t => {
+    val res = obj.mapBU(t => {
       val res = solver(bu._1, t)
       res match {
         case Bottom => t
         case _ => nextIsNow(onlyNonPredicate(res))
       }
     })
+    res
+  })
+
+  case class tdTerm(solver: Binary.Apply) extends Binary.F({ (td: Node1, obj: Term) =>
+    val res = obj.mapTD(t => {
+      val res = solver(td._1, t)
+      res match {
+        case Bottom => t
+        case _ => nextIsNow(onlyNonPredicate(res))
+      }
+    })
+    res
   })
 
   case class rewriteTerm(solver: Binary.Apply) extends Binary.F({ (rewrite: Node1, obj: Term) =>
