@@ -75,10 +75,10 @@ trait HasMatcher {
   private var _registeredMatchers: Map[Binary.ProcessingFunctions, Int] = collection.immutable.ListMap()
 
   object Priority {
-    val low = 3
-    val medium = 5
-    val high = 8
-    val ultimate = 20
+    val low = 30
+    val medium = 50
+    val high = 80
+    val ultimate = 200
   }
 
   def registeredMatchers = _registeredMatchers
