@@ -69,7 +69,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
   }
 
   /**
-    * Matches/unifies it's argument and returns Next(obj) if unsat. See also doesNotMatch.
+    * Matches/unifies it's argument and returns obj if unsat. See also doesNotMatch.
     */
   val unsat = new Named("unsat") with Label1 {
     override def apply(pattern: Term): Term = FreeNode1(this, pattern)
