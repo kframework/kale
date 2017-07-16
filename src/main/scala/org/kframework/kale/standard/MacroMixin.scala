@@ -13,5 +13,7 @@ trait MacroMixin {
 
   def Macro1(name: String) = new Named(name) with MacroLabel with Label1 {
     override def apply(_1: Term): Term = ???
+    
+    override val isPredicate: Option[Boolean] = None
   }
 }

@@ -98,6 +98,8 @@ trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatc
 }
 
 case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
+  override val isPredicate: Option[Boolean] = Some(false)
+
   def isIndexable(t: Term) =
     !t.label.isInstanceOf[VariableLabel] &&
       !t.label.isInstanceOf[FunctionLabel] &&
@@ -137,6 +139,7 @@ case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(i
 
   // returns the entire object that has been indexed
   object lookupByKey extends {
+    override val isPredicate: Option[Boolean] = Some(false)
     val name = MapLabel.this.name + ".lookupByKey"
   } with HasEnvironment with FunctionLabel2 {
     def f(m: Term, key: Term) = m match {
@@ -149,6 +152,7 @@ case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(i
 
   // the classic map lookup
   object lookup extends {
+    override val isPredicate: Option[Boolean] = Some(false)
     val name = MapLabel.this.name + ".lookup"
   } with HasEnvironment with FunctionLabel2 {
     def f(m: Term, key: Term) = m match {
@@ -162,6 +166,7 @@ case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(i
 }
 
 class KeysFunction(mapLabel: MapLabel, returnedSetLabel: SetLabel)(implicit val env: Environment) extends {
+  override val isPredicate: Option[Boolean] = Some(false)
   val name = mapLabel.name + ".keys"
 } with FunctionLabel1 {
   def f(m: Term) = m match {

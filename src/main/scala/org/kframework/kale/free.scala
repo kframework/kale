@@ -20,7 +20,9 @@ trait FreeMixin extends Mixin {
 
 trait Constructor extends NodeLabel
 
-trait FreeLabel extends Constructor
+trait FreeLabel extends Constructor {
+  val isPredicate = Some(false)
+}
 
 trait FreeLabel0 extends Label0 with FreeLabel {
   private lazy val uniqueInstance = FreeNode0(this)

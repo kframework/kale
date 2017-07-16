@@ -32,6 +32,8 @@ trait MatchingLogicMixin extends Mixin {
 
 trait DomainValueLabel[T] extends LeafLabel[T] {
 
+  override val isPredicate: Option[Boolean] = Some(false)
+
   def apply(v: T): DomainValue[T]
 }
 
@@ -119,22 +121,31 @@ trait AndLabel extends AssocCommWithIdLabel with Z3Builtin {
   def combine(label: Node)(tasks: MightBeSolved*): Term
 
   def combine(label: NodeLabel)(tasks: MightBeSolved*): Term
+
+  override val isPredicate: Option[Boolean] = None
 }
 
 trait OrLabel extends AssocCommWithIdLabel with Z3Builtin {
   override val identity = env.Bottom
   assert(identity != null)
+
+  override val isPredicate: Option[Boolean] = None
 }
 
-trait RewriteLabel extends Label2
+trait RewriteLabel extends Label2 {
+  override val isPredicate: Option[Boolean] = Some(false)
+}
 
 trait EqualityLabel extends Label2 with Z3Builtin {
+  override val isPredicate: Option[Boolean] = Some(true)
   def binding(_1: Variable, _2: Term): Binding
 }
 
 trait NotLabel extends Label1 with Z3Builtin
 
-trait ExistsLabel extends Label2
+trait ExistsLabel extends Label2 {
+  override val isPredicate: Option[Boolean] = None
+}
 
 trait Exists extends kore.Exists {
   val v: Variable
@@ -174,8 +185,6 @@ trait Rewrite extends kore.Rewrite with Node2 with BinaryInfix {
 }
 
 trait Application extends Node with kore.Application {
-
-  override lazy val isPredicate: Boolean = false
 
   // for KORE
   override def symbol: kore.Symbol = label

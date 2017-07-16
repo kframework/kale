@@ -346,6 +346,8 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
         Some(toBoolean(isSubsorts))
       }
     }
+
+    override val isPredicate: Option[Boolean] = Some(true)
   }
 
   def hook(s: kore.SymbolDeclaration): Option[Label] =

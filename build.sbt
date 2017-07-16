@@ -19,11 +19,15 @@ libraryDependencies ++= Seq(
 
   "org.kframework.k" %% "kore" % "0.6-SNAPSHOT",
 
+  "com.lihaoyi" %% "sourcecode" % "0.1.4",
+
   "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
 )
 
 lazy val installZ3 = taskKey[Unit]("Install Z3 theorem prover")
 
-installZ3 := {"./installZ3.sh" !}
+installZ3 := {
+  "./installZ3.sh" !
+}
 
 (test in Test) := (test in Test).dependsOn(installZ3).value

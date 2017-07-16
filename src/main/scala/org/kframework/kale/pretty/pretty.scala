@@ -46,7 +46,7 @@ trait PrettyWrapperMixin extends Mixin with Environment with standard.MatchingLo
       TermPrettyWrapper
   }), Priority.high + 1)
 
-  case class PrettyWrapperHolder(prefix: Term, content: Term, suffix: Term) extends Node3 with IsNotPredicate {
+  case class PrettyWrapperHolder(prefix: Term, content: Term, suffix: Term) extends Node3 {
     override def toString =
       if (_1.toString.nonEmpty || _3.toString.nonEmpty)
         "⦅" + _1.toString + "|" + _2 + "|" + _3 + "⦆"
@@ -72,8 +72,14 @@ class PrettyWrapperLabel(implicit eenv: Environment with StringMixin with Pretty
   override def apply(_1: Term, _2: Term, _3: Term): Term = {
     _2 match {
       case PrettyWrapper(STRING.String(_1inner), _2, STRING.String(_3inner)) =>
-        val STRING.String(_1outer) = _1
-        val STRING.String(_3outer) = _3
+        val _1outer = _1 match {
+          case STRING.String(s) => s
+          case Infer => ""
+        }
+        val _3outer = _3 match {
+          case STRING.String(s) => s
+          case Infer => ""
+        }
         PrettyWrapper(STRING.String(_1outer + _1inner), _2, STRING.String(_3inner + _3outer))
       case o =>
         PrettyWrapperHolder(_1, _2, _3)
@@ -95,4 +101,9 @@ class PrettyWrapperLabel(implicit eenv: Environment with StringMixin with Pretty
     case o =>
       o map0 wrapInInferTD
   }
+
+  /**
+    * None means that it depends on its children
+    */
+  override val isPredicate: Option[Boolean] = Some(false)
 }

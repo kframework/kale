@@ -21,6 +21,8 @@ trait NonAssocWithIdListMixing extends Environment with FreeMixin with HasMatche
       case (a, b) =>
         FreeNode2(this, a, b)
     }
+
+    override val isPredicate: Option[Boolean] = Some(false)
   }
 
   case class NonAssocWithIdTerm(solver: Apply) extends Binary.F({ (a: Node2, b: Term) =>
@@ -114,6 +116,11 @@ case class CollectionSize(collectionLabel: CollectionLabel)(implicit env: Enviro
       Some(env.INT.Int(collectionLabel.asIterable(_1).size))
     else
       None
+
+  /**
+    * None means that it depends on its children
+    */
+  override val isPredicate: Option[Boolean] = Some(false)
 }
 
 private[standard] class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val env: Environment with IntMixin) extends AssocWithIdLabel with Constructor {
@@ -121,6 +128,11 @@ private[standard] class AssocWithIdListLabel(val name: String, val identity: Ter
   val size = CollectionSize(this)
 
   protected override def construct(l: Iterable[Term]): Term = AssocWithIdList(this, l)
+
+  /**
+    * None means that it depends on its children
+    */
+  override val isPredicate: Option[Boolean] = Some(false)
 }
 
 private[standard] case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term]) extends Assoc {

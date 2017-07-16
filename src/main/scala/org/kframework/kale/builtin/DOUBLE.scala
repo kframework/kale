@@ -11,6 +11,7 @@ case class DOUBLE()(implicit protected val env: Environment) {
   }
 
   val div = new Named("_/Double_") with FunctionLabel2 {
+    override val isPredicate: Option[Boolean] = Some(false)
     def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
       case (_, Double(0)) => None
       case (Double(0), b) if b.isGround => Some(Double(0))

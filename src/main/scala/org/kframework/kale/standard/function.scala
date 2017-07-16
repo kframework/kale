@@ -35,6 +35,8 @@ class InvokeLabel(implicit val env: Environment) extends NameFromObject with Lab
   override def apply(obj: Term): Term = env.bottomize(obj) {
     Invoke(this, obj)
   }
+
+  override val isPredicate: Option[Boolean] = Some(false)
 }
 
 case class Invoke(label: InvokeLabel, _1: Term) extends Node1 {
@@ -60,14 +62,18 @@ case class NotLabel()(implicit override val env: Environment) extends Named("¬"
       Some(Or(terms map (Not(_))))
     case _ => None
   }
+
+  override val isPredicate: Option[Boolean] = Some(false)
 }
 
 case class SimpleNot(_1: Term)(implicit val env: Environment) extends Node1 {
   override val label: kale.NotLabel = env.Not
-  override val isPredicate: Boolean = _1.isPredicate
+  override lazy val isPredicate: Boolean = _1.isPredicate
 }
 
 trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel with NodeLabel {
+  override val isPredicate: Option[Boolean] = Some(false)
+
   implicit val env: StandardEnvironment
   private var p_rewriter: Option[Term] = None
 

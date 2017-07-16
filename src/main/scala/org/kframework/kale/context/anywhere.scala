@@ -10,6 +10,7 @@ import org.kframework.kale.util.Named
 
 trait ContextMixin extends Environment with standard.MatchingLogicMixin with HasMatcher {
   val Context = new Named("Context") with Label3 {
+    override val isPredicate: Option[Boolean] = Some(false)
     override def apply(variable: Term, redex: Term, contextPredicate: Term = Or(And(anywhere, Variable.freshVariable()), Variable.freshVariable())): ContextApplication = variable match {
       case v: Variable => ContextApplication(v, redex, contextPredicate)
       case env.ForAll(v: Variable, _) => ContextApplication(v, redex, contextPredicate)
@@ -19,6 +20,7 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
     val hole = Variable("CONTEXT_HOLE")
 
     val anywhere = (new Named("anywhere") with Label0 {
+      override val isPredicate: Option[Boolean] = Some(false)
       override def apply(): Term = new FreeNode0(this) {
         override lazy val isPredicate = true
       }
@@ -28,6 +30,7 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
   }
 
   val SolvingContext = new Named("SolvingContext") with Label1 {
+    override val isPredicate: Option[Boolean] = Some(false)
     override def apply(_1: Term): Term = {
       assert(_1.label == Context)
       FreeNode1(this, _1)

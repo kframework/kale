@@ -36,7 +36,7 @@ trait Environment extends MatchingLogicMixin with Bottomize {
     (a: Term, b: Term) =>
       assert(this.isSealed)
       unifier(a, b)
-  })
+  }, None)
 
   def unifier: Binary.Apply
 

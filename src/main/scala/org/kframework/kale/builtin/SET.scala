@@ -5,6 +5,8 @@ import org.kframework.kale._
 import scala.collection.{Iterable, Set}
 
 case class SetLabel(name: String, identity: Term)(implicit val env: Environment with BooleanMixin) extends AssocWithIdLabel {
+  override val isPredicate: Option[Boolean] = Some(false)
+
   override def construct(l: Iterable[Term]): Term = SET(this, l.toSet)
 
   trait HasEnvironment {
@@ -20,6 +22,7 @@ case class SetLabel(name: String, identity: Term)(implicit val env: Environment 
   }
 
   object in extends {
+    override val isPredicate: Option[Boolean] = Some(false)
     val name = SetLabel.this.name + ".in"
   } with HasEnvironment with FunctionLabel2 {
     def f(s: Term, key: Term) = s match {

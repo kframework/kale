@@ -8,36 +8,40 @@ import org.kframework.kore.Bottom
 
 case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin) {
 
-  val nextIsNow = standard.lift("nextIsNow", env.And.nextIsNow _)
+  val nextIsNow = standard.lift("nextIsNow", env.And.nextIsNow _, None)
 
-  val onlyNonPredicate = standard.lift("onlyNext", env.And.onlyNonPredicate _)
+  val onlyNonPredicate = standard.lift("onlyNext", env.And.onlyNonPredicate _, Some(false))
 
-  val compose = new Named("compose") with Label2 {
+  trait Strategy {
+    val isPredicate = Some(false)
+  }
+
+  val compose = new Named("compose") with Label2 with Strategy {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
   }
 
-  val repeat = new Named("repeat") with Label1 {
+  val repeat = new Named("repeat") with Label1 with Strategy {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
   def orElseLeave(t: Term): Term = orElse(t, env.Variable.freshVariable())
 
-  val fixpoint = new Named("fixpoint") with Label1 {
+  val fixpoint = new Named("fixpoint") with Label1 with Strategy {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
   /**
     * Takes a partial function
     */
-  val bu = new Named("bu") with Label1 {
+  val bu = new Named("bu") with Label1 with Strategy {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
-  val rw = new Named("rewrite") with Label1 {
+  val rw = new Named("rewrite") with Label1 with Strategy {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
-  val orElse = new Named("orElse") with Label2 {
+  val orElse = new Named("orElse") with Label2 with Strategy {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
   }
 
@@ -45,7 +49,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     * ifThenElse(c, t, e) is semantically equivalent to Or(And(c, t), And(Not(c), t)) but evaluated lazily
     * i.e., the t and e are only touched when we know whether the condition is Top or Bottom
     */
-  val ifThenElse = new Named("STRATEGY.ifThenElse") with Label3 {
+  val ifThenElse = new Named("STRATEGY.ifThenElse") with Label3 with Strategy {
     override def apply(condition: Term, thenTerm: Term, elseTerm: Term): Term = condition match {
       case env.Top => thenTerm
       case env.Bottom => elseTerm
@@ -62,16 +66,16 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
         val res = env.unify(pattern, obj)
         env.Truth(res == env.Bottom)
       } else {
-        new FreeNode2(this, pattern, obj) {
-          override lazy val isPredicate = true
-        }
+        new FreeNode2(this, pattern, obj)
       }
+
+    override val isPredicate: Option[Boolean] = Some(true)
   }
 
   /**
     * Matches/unifies it's argument and returns obj if unsat. See also doesNotMatch.
     */
-  val unsat = new Named("unsat") with Label1 {
+  val unsat = new Named("unsat") with Label1 with Strategy {
     override def apply(pattern: Term): Term = FreeNode1(this, pattern)
   }
 }

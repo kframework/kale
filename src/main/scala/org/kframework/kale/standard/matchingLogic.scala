@@ -165,6 +165,8 @@ private[standard] case class StandardVariableLabel()(implicit override val env: 
     counter += 1
     this ((Name("_" + counter), Sort("K")))
   }
+
+  override val isPredicate: Option[Boolean] = Some(false)
 }
 
 private[standard] case class StandardVariable(name: kale.Name, givenSort: kale.Sort)(implicit env: Environment) extends Variable with kore.Variable {
@@ -175,6 +177,7 @@ private[standard] case class StandardVariable(name: kale.Name, givenSort: kale.S
 
 private[standard] case class StandardTruthLabel()(implicit val env: Environment) extends NameFromObject with TruthLabel {
   def apply(v: Boolean) = if (v) env.Top else env.Bottom
+  override val isPredicate: Option[Boolean] = Some(true)
 }
 
 private[standard] abstract class Truth(val data: Boolean)(implicit val env: Environment) extends kale.Truth {
@@ -199,12 +202,13 @@ private[standard] case class BottomInstance()(implicit eenv: Environment) extend
 
 private[standard] case class SimpleNextLabel()(implicit override val env: Environment) extends Named("=>_") with NextLabel {
   def apply(t: Term) = SimpleNext(t)
+
+  override val isPredicate: Option[Boolean] = None
 }
 
 private[standard] case class SimpleNext(_1: Term)(implicit env: Environment) extends Node1 with kore.Next {
   override val label = env.Next
-
-  override val isPredicate = false
+  override lazy val isPredicate: Boolean = _1.isPredicate
 }
 
 private[standard] case class MatchLabel()(implicit override val env: StandardEnvironment) extends Named(":=") with EqualityLabel {
@@ -227,6 +231,8 @@ private[standard] case class MatchLabel()(implicit override val env: StandardEnv
       new Matches(_1, _2)
     }
   }
+
+  override val isPredicate: Option[Boolean] = Some(true)
 
   override def binding(_1: Variable, _2: Term): kale.Binding = Equality.binding(_1, _2)
 }
@@ -302,6 +308,8 @@ private[standard] class GroundApplyRewrite(implicit env: Environment) extends Na
     } else {
       None
     }
+
+  override val isPredicate: Option[Boolean] = Some(false)
 }
 
 private[standard] class OneResult(implicit penv: StandardEnvironment) extends Named("OneResult") with FunctionLabel1 {
@@ -314,12 +322,15 @@ private[standard] class OneResult(implicit penv: StandardEnvironment) extends Na
     } else {
       Or.asSet(_1).headOption
     }
+
+  override val isPredicate: Option[Boolean] = Some(false)
 }
 
 class Compose2(val name: String, functionLabel2: Label2, functionLabel1: FunctionLabel1)(implicit val env: StandardEnvironment) extends FunctionLabel2 {
   override def f(_1: Term, _2: Term): Option[Term] = {
     Some(functionLabel1(functionLabel2(_1, _2)))
   }
+  override val isPredicate: Option[Boolean] = None
 }
 
 private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin) extends {
@@ -813,11 +824,13 @@ private[standard] case class SimpleForAllLabel()(implicit val e: MatchingLogicMi
       case _ => SimpleForAll(v, _2)
     }
   }
+
+  override val isPredicate: Option[Boolean] = None
 }
 
 case class SimpleForAll(v: Variable, p: Term)(implicit val env: Environment) extends Node2 with ForAll {
   val label = env.ForAll
-  override val isPredicate = true
+  override lazy val isPredicate = p.isPredicate
 
   override def _1: Term = v
 
@@ -846,7 +859,8 @@ private[standard] case class SimpleExistsLabel()(implicit val e: MatchingLogicMi
 
 case class SimpleExists(v: Variable, p: Term)(implicit val env: Environment) extends Node2 with Exists {
   val label = env.Exists
-  override val isPredicate = true
+  // TODO: this should be p.isPredicate but we're using it as a marker for contexts now
+  override lazy val isPredicate = true
 
   override def _1: Term = v
 
@@ -857,4 +871,6 @@ case class Name(str: String) extends kale.Name
 
 private[standard] class BindMatchLabel(implicit override val env: Environment) extends Named("BindMatch") with Label2 {
   def apply(v: Term, p: Term) = FreeNode2(this, v.asInstanceOf[Variable], p)
+
+  override val isPredicate: Option[Boolean] = Some(false)
 }

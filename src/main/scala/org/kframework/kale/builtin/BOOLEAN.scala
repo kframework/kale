@@ -20,6 +20,7 @@ case class BOOLEAN()(implicit env: Environment) {
     * see also STRATEGY.ifThenElse
     */
   val ifThenElse = new Named("BOOLEAN.ifThenElse") with Label3 {
+    override val isPredicate: Option[Boolean] = None
     override def apply(condition: Term, thenTerm: Term, elseTerm: Term): Term = condition match {
       case True => thenTerm
       case False => elseTerm

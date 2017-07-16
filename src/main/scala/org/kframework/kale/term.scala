@@ -12,6 +12,11 @@ trait Label extends MemoizedHashCode with kore.Symbol {
 
   val id: Int = env.register(this)
 
+  /**
+    * None means that it depends on its children
+    */
+  val isPredicate: Option[Boolean]
+
   override def equals(other: Any): Boolean = other match {
     case that: Label => this.name == that.name
     case _ => false
@@ -32,7 +37,10 @@ trait Term extends kore.Pattern with HasAtt {
 
   val isGround: Boolean
 
-  val isPredicate: Boolean
+  lazy val isPredicate: Boolean = label.isPredicate match {
+    case Some(isPred) => isPred
+    case None => throw new AssertionError("Could not determine whether term is a predicate based on the label. Override isPredicate with correct specification.")
+  }
 
   lazy val sort: Sort = label.env.sort(label, this.children.toSeq)
 
@@ -62,10 +70,6 @@ trait Term extends kore.Pattern with HasAtt {
 
 trait IsPredicate {
   val isPredicate = true
-}
-
-trait IsNotPredicate {
-  val isPredicate = false
 }
 
 object Term {
@@ -113,6 +117,7 @@ trait LeafLabel[T] extends (T => Leaf[T]) with Label {
     case t: Leaf[T] if t.label == this => Some(t.data)
     case _ => None
   }
+
   // for KORE
   def interpret(str: String): Term = this (internalInterpret(str))
 

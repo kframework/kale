@@ -90,6 +90,7 @@ object IMP {
 
   case class isSort(label: LeafLabel[_])(implicit val env: Environment) extends {
     val name: String = "is" + label.name
+    override val isPredicate: Option[Boolean] = Some(true)
   } with FunctionLabel1 {
     def f(_1: Term): Option[Term] = Some(Truth(_1.label == label))
   }
