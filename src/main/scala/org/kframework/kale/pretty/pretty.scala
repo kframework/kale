@@ -44,7 +44,7 @@ trait PrettyWrapperMixin extends Mixin with Environment with standard.MatchingLo
       PrettyWrapperTerm
     case (term, PrettyWrapper) =>
       TermPrettyWrapper
-  }))
+  }), Priority.high + 1)
 
   case class PrettyWrapperHolder(prefix: Term, content: Term, suffix: Term) extends Node3 with IsNotPredicate {
     override def toString =

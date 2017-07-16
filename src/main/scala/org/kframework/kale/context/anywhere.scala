@@ -170,7 +170,7 @@ trait BundledContextMixin extends HolesMixin with ContextMixin with PatternConte
     case (capp: PatternContextApplicationLabel, _) => pattern.PatternContextMatcher
     case (Context, _) => ContextMatcher
     case (SolvingContext, _) => SolvingContextMatcher
-  }), Priority.medium)
+  }), Priority.high + 1)
 }
 
 object anywhere {

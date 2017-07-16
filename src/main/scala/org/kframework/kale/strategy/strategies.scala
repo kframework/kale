@@ -93,7 +93,7 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
       case (`unsat`, _) => unsatTerm
       case (`bu`, _) => buTerm
       case (`rw`, _) => rewriteTerm
-    }), Priority.high)
+    }), Priority.ultimate)
 
   def unsatTerm(solver: Binary.Apply) = { (pattern: Node1, obj: Term) =>
     solver(pattern._1, obj) match {

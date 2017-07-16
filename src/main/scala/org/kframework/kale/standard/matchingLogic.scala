@@ -98,7 +98,6 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (`Exists`, _) => QuantifierTerm
     case (`Variable`, _) => SortedVarLeft
     case (_, `Variable`) => SortedVarRight
-    case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
     case (`BindMatch`, _) => BindMatchMatcher
     case (`Equality`, `Equality`) => LeaveAlone
     case (`Next`, `Next`) => NextNext
@@ -106,17 +105,9 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (_, `Next`) => NextTerm
   }), Priority.high)
 
-  override def makeUnifier: Binary.ProcessingFunctions = Binary.definePartialFunction({
-    case (_, `Not`) => OneIsFormula
-    case (`Not`, _) => OneIsFormula
-    case (`And`, _) => AndTerm
-    case (_, `And`) => TermAnd
-    case (`Or`, _) => OrTerm
-    case (_, `Or`) => TermOr
-    case (`Variable`, _) => SortedVarLeft
-    case (_, `Variable`) => SortedVarRight
+  register(Binary.definePartialFunction({
     case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
-  }).orElse(super.makeUnifier)
+  }))
 }
 
 trait MatchingLogicPostfixMixin extends Environment with MatchingLogicMixin {

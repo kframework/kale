@@ -60,5 +60,5 @@ trait StringMixin extends kale.StringMixin with Environment with IntMixin with B
 
   register(Binary.definePartialFunction({
     case (Regex, String) => RegexMatch
-  }))
+  }), Priority.low + 1)
 }
