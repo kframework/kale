@@ -166,11 +166,11 @@ trait BundledContextMixin extends HolesMixin with ContextMixin with PatternConte
   }
 
 
-  override protected def makeMatcher: ProcessingFunctions = Binary.definePartialFunction({
+  register(Binary.definePartialFunction({
     case (capp: PatternContextApplicationLabel, _) => pattern.PatternContextMatcher
     case (Context, _) => ContextMatcher
     case (SolvingContext, _) => SolvingContextMatcher
-  }).orElse(super.makeMatcher)
+  }), Priority.medium)
 }
 
 object anywhere {

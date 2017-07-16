@@ -87,7 +87,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     Next(solver(a, b))
   }
 
-  override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
+  register(Binary.definePartialFunction({
     case (_, `Not`) => OneIsFormula
     case (`Not`, _) => OneIsFormula
     case (`And`, _) => AndTerm
@@ -104,7 +104,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (`Next`, `Next`) => NextNext
     case (`Next`, _) => NextTerm
     case (_, `Next`) => NextTerm
-  }).orElse(super.makeMatcher)
+  }), Priority.high)
 
   override def makeUnifier: Binary.ProcessingFunctions = Binary.definePartialFunction({
     case (_, `Not`) => OneIsFormula
@@ -139,11 +139,11 @@ trait MatchingLogicPostfixMixin extends Environment with MatchingLogicMixin {
     case _ => throw new AssertionError("Use only the env.Top and env.Bottom Truth objects.")
   })
 
-  override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
+  register(Binary.definePartialFunction({
     case (`Rewrite`, _) => RewriteMatcher
     case (Truth, _) => TruthMatcher
     case (_, Truth) => TruthMatcher
-  }).orElse(super.makeMatcher)
+  }), Priority.high)
 }
 
 

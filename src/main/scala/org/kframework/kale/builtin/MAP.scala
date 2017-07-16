@@ -8,9 +8,9 @@ import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 import scala.collection.{Iterable, Map, Set}
 
 trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatcher {
-  override protected def makeMatcher: ProcessingFunctions = Binary.definePartialFunction({
+  register(Binary.definePartialFunction({
     case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm
-  }).orElse(super.makeMatcher)
+  }), Priority.medium)
 
   case class MapTerm(solver: Apply) extends Binary.F({ (a: Term, b: Term) =>
     a.label match {

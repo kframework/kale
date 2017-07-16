@@ -42,9 +42,9 @@ trait NonAssocWithIdListMixing extends Environment with FreeMixin with HasMatche
 
   //#KSequence(__(_=_;('n, 10), _=_;('sum, 0)), while(_)_(!_(_<=_('n, 0)), {_}(__(_=_;('sum, _+_('sum, 'n)), _=_;('n, _+_('n, -1))))))
 
-  override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
+  register(Binary.definePartialFunction({
     case (_: NonAssocWithIdLabel, right) if !right.isInstanceOf[Variable] => NonAssocWithIdTerm
-  }).orElse(super.makeMatcher)
+  }), Priority.medium)
 }
 
 trait AssocWithIdLabel extends kale.AssocWithIdLabel {
@@ -99,9 +99,9 @@ trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher
     matchContents(b.label, b.label.identity, l1, l2)(solver)
   })
 
-  override protected def makeMatcher: Binary.ProcessingFunctions = Binary.definePartialFunction({
+  register(Binary.definePartialFunction({
     case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
-  }).orElse(super.makeMatcher)
+  }), Priority.medium)
 
   override def makeUnifier: Binary.ProcessingFunctions = Binary.definePartialFunction({
     case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm

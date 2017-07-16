@@ -19,13 +19,13 @@ trait FunctionByRewritingMixin extends Mixin with Environment with standard.Matc
   }
   })
 
-  override protected def makeMatcher = Binary.definePartialFunction({
+  register(Binary.definePartialFunction({
     case (_: FunctionDefinedByRewritingLabel0, _: FunctionDefinedByRewritingLabel0) => FunctionDefinedByRewritingMatcher
     case (_: FunctionDefinedByRewritingLabel1, _: FunctionDefinedByRewritingLabel1) => FunctionDefinedByRewritingMatcher
     case (_: FunctionDefinedByRewritingLabel2, _: FunctionDefinedByRewritingLabel2) => FunctionDefinedByRewritingMatcher
     case (_: FunctionDefinedByRewritingLabel3, _: FunctionDefinedByRewritingLabel3) => FunctionDefinedByRewritingMatcher
     case (_: FunctionDefinedByRewritingLabel4, _: FunctionDefinedByRewritingLabel4) => FunctionDefinedByRewritingMatcher
-  }).orElse(super.makeMatcher)
+  }))
 }
 
 class InvokeLabel(implicit val env: Environment) extends NameFromObject with Label1 {

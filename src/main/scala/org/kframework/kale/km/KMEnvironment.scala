@@ -73,7 +73,7 @@ trait MultisortedMixing extends Environment with standard.MatchingLogicMixin wit
 
   def sorted(l: Label3, arg1: kale.Sort, arg2: kale.Sort, arg3: kale.Sort, target: kale.Sort): Unit = sorted(l, Signature(Seq(arg1, arg2, arg3), target))
 
-  override protected def makeMatcher = Binary.definePartialFunction({
+  register(Binary.definePartialFunction({
     case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 || env.sort(l1) != env.sort(l2) => NoMatch
-  }).orElse(super.makeMatcher)
+  }), Priority.medium)
 }

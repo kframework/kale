@@ -82,16 +82,18 @@ trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMi
 
   import STRATEGY._
 
-  override protected def makeMatcher: ProcessingFunctions = definePartialFunction({
-    case (`orElse`, _) => orElseTerm
-    case (`compose`, _) => composeTerm
-    case (`repeat`, _) => repeatTerm
-    case (`fixpoint`, _) => fixpointTerm
-    case (`unsat`, `unsat`) => LeaveAlone
-    case (`unsat`, _) => unsatTerm
-    case (`bu`, _) => buTerm
-    case (`rw`, _) => rewriteTerm
-  }).orElse(super.makeMatcher)
+
+  register(
+    definePartialFunction({
+      case (`orElse`, _) => orElseTerm
+      case (`compose`, _) => composeTerm
+      case (`repeat`, _) => repeatTerm
+      case (`fixpoint`, _) => fixpointTerm
+      case (`unsat`, `unsat`) => LeaveAlone
+      case (`unsat`, _) => unsatTerm
+      case (`bu`, _) => buTerm
+      case (`rw`, _) => rewriteTerm
+    }), Priority.high)
 
   def unsatTerm(solver: Binary.Apply) = { (pattern: Node1, obj: Term) =>
     solver(pattern._1, obj) match {

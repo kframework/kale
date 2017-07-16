@@ -68,5 +68,11 @@ class StrategyTest extends TestSetup[StandardEnvironment]() {
         a
       )
     }
+
+    "assoc" in {
+      assertRewrite(STRATEGY.bu(__ ~~ ((1: Term) ==> 2) ~~ __))(el ~~ 1 ~~ 2 ~~ 3, el ~~ 2 ~~ 2 ~~ 3)
+      assertRewrite(STRATEGY.bu(__ ~~ ((1: Term) ==> 2)))(el ~~ 1 ~~ 2 ~~ 3, el ~~ 2 ~~ 2 ~~ 3)
+      assertRewrite(STRATEGY.bu((1: Term) ==> 2))(el ~~ 1 ~~ 2 ~~ 3, el ~~ 2 ~~ 2 ~~ 3)
+    }
   }
 }

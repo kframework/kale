@@ -1,8 +1,10 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard.Bottomize
-import org.kframework.kale.transformer.Binary.Apply
+import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 import org.kframework.kale.transformer.{Binary, Unary}
+
+import scala.collection.immutable
 
 trait Environment extends MatchingLogicMixin with Bottomize {
 
@@ -70,7 +72,29 @@ trait HasMatcher {
 
   case class AssertNotPossible(solver: Apply) extends Binary.F({ (a: Term, b: Term) => throw new AssertionError("Should not try to match " + a + " with " + b) })
 
-  protected def makeMatcher: Binary.ProcessingFunctions = PartialFunction.empty
+  private var registeredMatchers = Map[Binary.ProcessingFunctions, Int]()
+
+  object Priority {
+    val low = 3
+    val medium = 5
+    val high = 8
+    val ultimate = 10
+  }
+
+  def register(matcher: Binary.ProcessingFunctions, priority: Int = Priority.low) = {
+    registeredMatchers = registeredMatchers + (matcher -> priority)
+  }
+
+  final lazy val makeMatcher: Binary.ProcessingFunctions = {
+    registeredMatchers
+      .groupBy(_._2)
+      .mapValues(_.keySet)
+      .toList
+      .sortBy(_._1)
+      .map(_._2)
+      .map(_.reduce(_ orElse _))
+      .reduceLeft(_ orElse _)
+  }
 }
 
 trait HasUnifier {

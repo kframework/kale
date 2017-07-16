@@ -37,14 +37,14 @@ trait PrettyWrapperMixin extends Mixin with Environment with standard.MatchingLo
     }
   })
 
-  override protected def makeMatcher = Binary.definePartialFunction({
+  register(Binary.definePartialFunction({
     case (PrettyWrapper, PrettyWrapper) =>
       PrettyWrapperPrettyWrapper
     case (PrettyWrapper, term) =>
       PrettyWrapperTerm
     case (term, PrettyWrapper) =>
       TermPrettyWrapper
-  }).orElse(super.makeMatcher)
+  }))
 
   case class PrettyWrapperHolder(prefix: Term, content: Term, suffix: Term) extends Node3 with IsNotPredicate {
     override def toString =

@@ -42,13 +42,13 @@ trait FreeMixin extends kale.FreeMixin with HasMatcher with HasUnifier {
 
   case class FreeNode6FreeNode6(solver: Apply) extends Binary.F({ (a: Node6, b: Node6) => And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4), Task(a._5, b._5), Task(a._6, b._6)) })
 
-  override protected def makeMatcher = Binary.definePartialFunction({
+  register(Binary.definePartialFunction({
     case (a: FreeLabel0, b: FreeLabel0) if a == b => FreeNode0FreeNode0
     case (a: FreeLabel1, b: FreeLabel1) if a == b => FreeNode1FreeNode1
     case (a: FreeLabel2, b: FreeLabel2) if a == b => FreeNode2FreeNode2
     case (a: FreeLabel3, b: FreeLabel3) if a == b => FreeNode3FreeNode3
     case (a: FreeLabel4, b: FreeLabel4) if a == b => FreeNode4FreeNode4
-  }).orElse(super.makeMatcher)
+  }))
 }
 
 trait TuplesMixing extends Environment with FreeMixin {

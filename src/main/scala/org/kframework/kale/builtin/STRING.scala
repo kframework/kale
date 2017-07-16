@@ -58,7 +58,7 @@ trait StringMixin extends kale.StringMixin with Environment with IntMixin with B
     }
   })
 
-  override protected def makeMatcher = Binary.definePartialFunction({
+  register(Binary.definePartialFunction({
     case (Regex, String) => RegexMatch
-  }).orElse(super.makeMatcher)
+  }))
 }
