@@ -137,7 +137,9 @@ case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(i
     }
   }
 
-  // returns the entire object that has been indexed
+  /**
+    * returns the entire object that has been indexed
+    */
   object lookupByKey extends {
     override val isPredicate: Option[Boolean] = Some(false)
     val name = MapLabel.this.name + ".lookupByKey"
@@ -150,7 +152,9 @@ case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(i
     }
   }
 
-  // the classic map lookup
+  /**
+    * the classic map lookup
+    */
   object lookup extends {
     override val isPredicate: Option[Boolean] = Some(false)
     val name = MapLabel.this.name + ".lookup"
