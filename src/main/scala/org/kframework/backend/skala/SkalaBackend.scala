@@ -51,6 +51,9 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     "MAP.concat" -> { (labelName, labels, terms) =>
       val indexFunction: Term => Term = { t => t.children.toList(terms.tail.head.asInstanceOf[kale.DomainValue[Int]].data) }
       Some(MapLabel(labelName, indexFunction, terms.head))
+    },
+    "MAP.lookup" -> { (labelName, labels, terms) =>
+      uniqueLabels.get("Map@MAP").map(_.asInstanceOf[MapLabel].lookup)
     }
   )
 
