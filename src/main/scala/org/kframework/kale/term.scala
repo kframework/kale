@@ -39,7 +39,9 @@ trait Term extends kore.Pattern with HasAtt {
 
   lazy val isPredicate: Boolean = label.isPredicate match {
     case Some(isPred) => isPred
-    case None => throw new AssertionError("Could not determine whether term is a predicate based on the label. Override isPredicate with correct specification.")
+    case None =>
+      throw new AssertionError("Could not determine whether term is a predicate based on the label (" +
+        label + ", which is hooked to " + label.getClass + "). Override isPredicate with correct specification.")
   }
 
   lazy val sort: Sort = label.env.sort(label, this.children.toSeq)
