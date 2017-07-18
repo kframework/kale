@@ -85,7 +85,7 @@ class PrettyWrapperLabel(implicit eenv: Environment with StringMixin with Pretty
         })
       case PrettyWrapper(_1inner, _2inner, _3inner) =>
         val _1res = mergeSpacing(_1, _1inner)
-        val _3res = mergeSpacing(_3, _3inner)
+        val _3res = mergeSpacing(_3inner, _3)
         PrettyWrapper(_1res, _2inner, _3res)
       case o =>
         PrettyWrapperHolder(_1, _2, _3)
