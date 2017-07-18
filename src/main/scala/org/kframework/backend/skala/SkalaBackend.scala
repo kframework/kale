@@ -94,39 +94,31 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   //val nonAssocLabels = hookedLabels ++ unhookedLabels
 
   // Initialize Assoc Labels.
-//  val assocLabels: Set[Label] = assocSymbols.flatMap(x => {
-//    val unitLabel: Option[Pattern] = x.att.findSymbol(Encodings.unit)
-//    val unitLabelValue: Option[String] = decodeAttributePattern(unitLabel, Encodings.unit.str)
-//
-//    unitLabel match {
-//      case Some(_) => {
-//        uniqueLabels.get(x.symbol.str) match {
-//          case a@Some(_) => a
-//          case None => {
-//            val index: Option[Pattern] = x.att.findSymbol(Encodings.index)
-//            if (x.att.findSymbol(Encodings.comm).isDefined) {
-//              if (index.isDefined) {
-//                // Both Commutative and Assoc with Index
-//                val indexStr: String = decodeAttributePattern(index, Encodings.index.str).get
-//
-//                def indexFunction(t: Term): Term = t.children.toList(indexStr.toInt)
-//
-//                // Create the AC Label with Identity Term
-//                Some(MapLabel(x.symbol.str, indexFunction, label(unitLabelValue.get).asInstanceOf[Label0]()))
-//              }
-//              else
-//              // AC Without Index
-//                Some(SetLabel(x.symbol.str, label(unitLabelValue.get).asInstanceOf[Label0]()))
-//            } else {
-//              // Create the AssocLabel with Identity Term
-//              Some(AssocWithIdLabel(x.symbol.str, label(unitLabelValue.get).asInstanceOf[Label0]()))
-//            }
-//          }
-//        }
-//      }
-//      case None => None
-//    }
-//  }).toSet
+  //  val assocLabels: Set[Label] = assocSymbols.flatMap(x => {
+  //    val unitLabel: Option[Pattern] = x.att.findSymbol(Encodings.unit)
+  //    val unitLabelValue: Option[String] = decodeAttributePattern(unitLabel, Encodings.unit.str)
+  //
+  //    unitLabel match {
+  //      case Some(_) => {
+  //        uniqueLabels.get(x.symbol.str) match {
+  //          case a@Some(_) => a
+  //          case None => {
+  //            val index: Option[Pattern] = x.att.findSymbol(Encodings.index)
+  //            if (x.att.findSymbol(Encodings.comm).isDefined) {
+
+  //              else
+  //              // AC Without Index
+  //                Some(SetLabel(x.symbol.str, label(unitLabelValue.get).asInstanceOf[Label0]()))
+  //            } else {
+  //              // Create the AssocLabel with Identity Term
+  //              Some(AssocWithIdLabel(x.symbol.str, label(unitLabelValue.get).asInstanceOf[Label0]()))
+  //            }
+  //          }
+  //        }
+  //      }
+  //      case None => None
+  //    }
+  //  }).toSet
 
   //Todo: Better Mechanism To Handle These
 
@@ -352,7 +344,8 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
         case Some(l) => println("SOME--hook: " + hookName); Some(l)
         case None => println("NONE--hook: " + hookName + "\n" + "symbol: " + s.symbol.str)
           val achievement = getLabelFromHook(hookName, s.symbol.str, s.args.toList)
-          if (achievement.isDefined) println("achievement: " + achievement); achievement
+          if (achievement.isDefined) println("achievement: " + achievement);
+          achievement
       }
     }
 
