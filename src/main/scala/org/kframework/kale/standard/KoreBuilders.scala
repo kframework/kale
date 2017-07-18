@@ -114,7 +114,6 @@ object StandardConverter {
     case kore.Bottom() => env.Bottom
     case kore.Equals(p1, p2) => env.Equality(StandardConverter(p1), StandardConverter(p2))
     case kore.SortedVariable(kore.Name(n), kore.Sort(s)) => n match {
-      case "$PGM" => env.Variable(n, Sort("KConfigVar@BASIC-K"))
       case _ => env.Variable(n, Sort(s))
     }
     case kore.Not(p) => env.Not(StandardConverter(p))

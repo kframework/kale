@@ -127,8 +127,6 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   val kSeq = NonAssocWithIdLabel("#KSequence", emptyKSeq)
 
-  val kConfigVar = TOKEN("TOKEN_KConfigVar@BASIC-K", Sort("KConfigVar@BASIC-K"))
-
   private def decodeAttributePattern(p: Option[Pattern], symbol: String): Option[String] = p match {
     case Some(kore.Application(kore.Symbol(`symbol`), Seq(kore.DomainValue(Encodings.`attributeValue`, kore.Value(v))))) => Some(v)
     case _ => None
