@@ -40,17 +40,17 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   val hooks: Map[String, Hook] = Map(
     "INT.Int" -> { (labelName, labels, terms) =>
       assert(labels.isEmpty && terms.isEmpty)
-      new ReferenceLabel[Int](labelName) {
+      Some(new ReferenceLabel[Int](labelName) {
         override protected[this] def internalInterpret(s: String): Int = s.toInt
-      }
+      })
     },
     "INT.add" -> { (labelName, labels, terms) =>
       assert(labels.size == 1 && terms.isEmpty)
-      PrimitiveFunction2[Int](labelName, labels.head.asInstanceOf[LeafLabel[Int]], _ + _)
+      Some(PrimitiveFunction2[Int](labelName, labels.head.asInstanceOf[LeafLabel[Int]], _ + _))
     },
     "MAP.concat" -> { (labelName, labels, terms) =>
       val indexFunction: Term => Term = { t => t.children.toList(terms.tail.head.asInstanceOf[kale.DomainValue[Int]].data) }
-      MapLabel(labelName, indexFunction, terms.head)
+      Some(MapLabel(labelName, indexFunction, terms.head))
     }
   )
 
@@ -363,7 +363,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   import kale._
 
-  type Hook = (String, List[Label], List[Term]) => kale.Label
+  type Hook = (String, List[Label], List[Term]) => Option[kale.Label]
 
 
   def getLabelFromHook(hookContent: String, labelName: String, sorts: List[kore.Sort]): Option[Label] = {
@@ -373,7 +373,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     try {
       val terms = patterns map StandardConverter.apply toList
       val sortLabels = sorts map (_.str) flatMap uniqueLabels.get
-      hook map (_ (labelName, sortLabels, terms))
+      hook flatMap (_ (labelName, sortLabels, terms))
     } catch {
       // TODO: replace exception with an Option return on StandardConverter.apply
       case e: NoSuchElementException => None
