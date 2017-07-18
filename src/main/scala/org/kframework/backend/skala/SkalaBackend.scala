@@ -358,19 +358,8 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   }
 
   def mapHook(labelName: String, labels: List[Label], terms: List[Term]): kale.Label = {
-    /*
-    if (index.isDefined) {
-    // Both Commutative and Assoc with Index
-    val indexStr: String = decodeAttributePattern(index, Encodings.index.str).get
-
-    def indexFunction(t: Term): Term = t.children.toList(indexStr.toInt)
-
-    // Create the AC Label with Identity Term
-    Some(MapLabel(x.symbol.str, indexFunction, label(unitLabelValue.get).asInstanceOf[Label0]()))
-  }
-     */
-
-    ???
+    val indexFunction: Term => Term = { t => t.children.toList(terms.tail.head.asInstanceOf[DomainValue[Int]].data) }
+    MapLabel(labelName, indexFunction, terms.head)
   }
 
   def plusHook(labelName: String, labels: List[Label], terms: List[Term]): kale.Label = {
