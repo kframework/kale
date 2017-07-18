@@ -1,11 +1,13 @@
 package org.kframework.kale
 
-trait FunctionLabel {
+trait FunctionLabel extends NodeLabel {
   val name: String
 }
 
 trait PureFunctionLabel {
   self: FunctionLabel =>
+
+  override lazy val isPredicate = Some(false)
 }
 
 trait FunctionLabel0 extends Label0 with FunctionLabel {
@@ -46,7 +48,7 @@ trait FunctionLabel4 extends Label4 with FunctionLabel {
   }
 }
 
-case class PrimitiveFunction1[A, R](name: String, aLabel: LeafLabel[A], rLabel: LeafLabel[R], primitiveF: A => R, isPredicate: Option[Boolean] = None)(implicit val env: Environment) extends FunctionLabel1 with PureFunctionLabel {
+case class PrimitiveFunction1[A, R](name: String, aLabel: LeafLabel[A], rLabel: LeafLabel[R], primitiveF: A => R)(implicit val env: Environment) extends FunctionLabel1 with PureFunctionLabel {
   def f(_1: Term): Option[Term] = _1 match {
     case aLabel(a) => Some(rLabel(primitiveF(a)))
     case _ => None
@@ -58,7 +60,7 @@ object PrimitiveFunction1 {
     PrimitiveFunction1(name, aLabel, aLabel, f)
 }
 
-case class PrimitiveFunction2[A, B, R](name: String, aLabel: LeafLabel[A], bLabel: LeafLabel[B], rLabel: LeafLabel[R], primitiveF: (A, B) => R, isPredicate: Option[Boolean] = None)(implicit val env: Environment) extends FunctionLabel2 with PureFunctionLabel {
+case class PrimitiveFunction2[A, B, R](name: String, aLabel: LeafLabel[A], bLabel: LeafLabel[B], rLabel: LeafLabel[R], primitiveF: (A, B) => R)(implicit val env: Environment) extends FunctionLabel2 with PureFunctionLabel {
   def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
     case (aLabel(a), bLabel(b)) => Some(rLabel(primitiveF(a, b)))
     case _ => None
@@ -73,7 +75,7 @@ object PrimitiveFunction2 {
     PrimitiveFunction2(name, aLabel, aLabel, aLabel, f)
 }
 
-case class PrimitiveFunction3[A, B, C, R](name: String, aLabel: LeafLabel[A], bLabel: LeafLabel[B], cLabel: LeafLabel[C], rLabel: LeafLabel[R], primitiveF: (A, B, C) => R, isPredicate: Option[Boolean] = None)(implicit val env: Environment) extends FunctionLabel3 with PureFunctionLabel {
+case class PrimitiveFunction3[A, B, C, R](name: String, aLabel: LeafLabel[A], bLabel: LeafLabel[B], cLabel: LeafLabel[C], rLabel: LeafLabel[R], primitiveF: (A, B, C) => R)(implicit val env: Environment) extends FunctionLabel3 with PureFunctionLabel {
   def f(_1: Term, _2: Term, _3: Term): Option[Term] = (_1, _2, _3) match {
     case (aLabel(a), bLabel(b), cLabel(c)) => Some(rLabel(primitiveF(a, b, c)))
     case _ => None

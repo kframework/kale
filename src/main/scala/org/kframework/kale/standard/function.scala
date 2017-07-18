@@ -72,7 +72,6 @@ case class SimpleNot(_1: Term)(implicit val env: Environment) extends Node1 {
 }
 
 trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel with NodeLabel {
-  override val isPredicate: Option[Boolean] = Some(false)
 
   implicit val env: StandardEnvironment
   private var p_rewriter: Option[Term] = None
