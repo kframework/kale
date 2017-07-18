@@ -37,7 +37,7 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
     }
   }
 
-  def ANYWHERE(t: Term) = Context(Variable.freshVariable(), t, And(Variable.freshVariable(), Context.anywhere))
+  def ANYWHERE(t: Term) = Context(Variable.freshVariable(), t)
 
   case class ContextApplication(contextVar: Variable, redex: Term, contextPredicate: Term) extends Node3 with Context {
 
