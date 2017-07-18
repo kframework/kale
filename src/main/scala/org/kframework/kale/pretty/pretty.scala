@@ -69,20 +69,35 @@ class PrettyWrapperLabel(implicit eenv: Environment with StringMixin with Pretty
 
   import env._
 
+  lazy val W = this
+  lazy val I = Infer
+
+  import STRING.String
+
   override def apply(_1: Term, _2: Term, _3: Term): Term = {
     _2 match {
-      case PrettyWrapper(STRING.String(_1inner), _2, STRING.String(_3inner)) =>
-        val _1outer = _1 match {
-          case STRING.String(s) => s
-          case Infer => ""
-        }
-        val _3outer = _3 match {
-          case STRING.String(s) => s
-          case Infer => ""
-        }
-        PrettyWrapper(STRING.String(_1outer + _1inner), _2, STRING.String(_3inner + _3outer))
+      case assoc: Assoc =>
+        val terms = assoc.assocIterable
+        assoc.label(terms map {
+          case t if t == terms.head => W(_1, t, I)
+          case t if t == terms.last => W(I, t, _3)
+          case t => t
+        })
+      case PrettyWrapper(_1inner, _2inner, _3inner) =>
+        val _1res = mergeSpacing(_1, _1inner)
+        val _3res = mergeSpacing(_3, _3inner)
+        PrettyWrapper(_1res, _2inner, _3res)
       case o =>
         PrettyWrapperHolder(_1, _2, _3)
+    }
+  }
+
+  private def mergeSpacing(_1: Term, _1inner: Term) = {
+    (_1, _1inner) match {
+      case (String(s1), String(s2)) => String(s1 + s2)
+      case (Infer, String(s)) => String(s)
+      case (String(s), Infer) => String(s)
+      case (Infer, Infer) => Infer
     }
   }
 
@@ -91,7 +106,7 @@ class PrettyWrapperLabel(implicit eenv: Environment with StringMixin with Pretty
     case _ => t
   }
 
-  val Infer = FreeLabel0("InferWhiteSpace")()
+  val Infer = FreeLabel0("")()
 
   def wrapInInferTD(t: Term): Term = t match {
     case PrettyWrapper(p, c, s) =>

@@ -56,26 +56,26 @@ class PrettyWrapperTest extends TestSetup()(TestEnv) {
     assertRewrite(rw(u, v), W("1", u, "2"), W("1", v, "2"))
     assertRewrite(A(rw(el, v), a), W("1", a, "2"), W("1", A(v, a), "2"))
     assertRewrite(A(a, rw(el, v)), W("1", a, "2"), W("1", A(a, v), "2"))
-    assertRewrite(A(rw(el, v), a, b), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), W("p", A(v, W("1", a, "2"), W("3", b, "4")), "s"))
-    assertRewrite(A(a, rw(el, v), b), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), W("p", A(W("1", a, "2"), v, W("3", b, "4")), "s"))
-    assertRewrite(A(a, b, rw(el, v)), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), W("p", A(W("1", a, "2"), W("3", b, "4"), v), "s"))
+    assertRewrite(A(rw(el, v), a, b), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), A(v, W("p1", a, "2"), W("3", b, "4s")))
+    assertRewrite(A(a, rw(el, v), b), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), A(W("p1", a, "2"), v, W("3", b, "4s")))
+    assertRewrite(A(a, b, rw(el, v)), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), A(W("p1", a, "2"), W("3", b, "4s"), v))
   }
 
   "assoc rewrite with var boundary" in {
     assertRewrite(rw(u, v), W("1", u, "2"), W("1", v, "2"))
     assertRewrite(A(rw(el, v), X), W("1", a, "2"), W("1", A(v, a), "2"))
     assertRewrite(A(X, rw(el, v)), W("1", a, "2"), W("1", A(a, v), "2"))
-    assertRewrite(A(rw(el, v), X), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), W("p", A(v, W("1", a, "2"), W("3", b, "4")), "s"))
+    assertRewrite(A(rw(el, v), X), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), A(v, W("p1", a, "2"), W("3", b, "4s")))
 
     assertRewrite(A(X, rw(el, v), Y), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"),
       Or(
-        W("p", A(v, W("1", a, "2"), W("3", b, "4")), "s"),
-        W("p", A(W("1", a, "2"), v, W("3", b, "4")), "s"),
-        W("p", A(W("1", a, "2"), W("3", b, "4"), v), "s")
+        A(v, W("p1", a, "2"), W("3", b, "4s")),
+        A(W("p1", a, "2"), v, W("3", b, "4s")),
+        A(W("p1", a, "2"), W("3", b, "4s"), v)
       )
     )
 
-    assertRewrite(A(X, rw(el, v)), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), W("p", A(W("1", a, "2"), W("3", b, "4"), v), "s"))
+    assertRewrite(A(X, rw(el, v)), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), A(W("p1", a, "2"), W("3", b, "4s"), v))
   }
 
   "bu not loosing wrappers" in {
