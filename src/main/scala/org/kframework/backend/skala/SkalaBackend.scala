@@ -37,7 +37,11 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   private val subsorts = ModuleWithSubsorting(originalModule)(originalDefintion).subsorts
   private val sortsFor = ModuleWithSubsorting(originalModule)(originalDefintion).sortsFor
 
-  val hooks: Map[String, Hook] = Map("INT.Int" -> intHook, "INT.add" -> plusHook, "MAP.concat" -> mapHook)
+  val hooks: Map[String, Hook] = Map(
+    "INT.Int" -> intHook,
+    "INT.add" -> plusHook,
+    "MAP.concat" -> mapHook
+  )
 
   /**
     * General operations on Maps/Sets
