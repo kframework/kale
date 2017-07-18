@@ -111,6 +111,8 @@ trait Node0 extends Node with Application {
     assert(children.isEmpty)
     copy()
   }
+
+  override def toString: String = label.toString
 }
 
 trait Node1 extends Node with Product1[Term] {
