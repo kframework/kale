@@ -88,10 +88,10 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     }
   }
 
-  def hookToFix(symbols: Set[SymbolDeclaration]): Set[SymbolDeclaration] =
+  def createLabelsForHookedSymbols(symbols: Set[SymbolDeclaration]): Set[SymbolDeclaration] =
     symbols filter (hook(_).isEmpty)
 
-  fixpoint(hookToFix)(uniqueSymbolDecs)
+  fixpoint(createLabelsForHookedSymbols)(uniqueSymbolDecs)
 
   val unhookedLabels: Set[Label] = uniqueSymbolDecs.flatMap(declareNonHookedSymbol)
 
