@@ -91,6 +91,10 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   fixpoint(createLabelsForHookedSymbols)(uniqueSymbolDecs)
 
+  uniqueSymbolDecs
+    .filter((s: SymbolDeclaration) => (s.att is Encodings.hook) && !(env.uniqueLabels contains s.symbol.str))
+    .foreach(s => System.err.println("Could not find hook \"" + s.att.getSymbolValue(Encodings.hook).get.str + "\" for label \"" + s.symbol.str + "\""))
+
   uniqueSymbolDecs.foreach(declareNonHookedSymbol)
 
   //val nonAssocLabels = hookedLabels ++ unhookedLabels
