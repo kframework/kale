@@ -339,11 +339,8 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   def hook(s: kore.SymbolDeclaration): Option[Label] =
     s.att.getSymbolValue(Encodings.hook) flatMap {
       case kore.Value(hookName: String) => uniqueLabels.get(s.symbol.str) match {
-        case Some(l) => println("SOME--hook: " + hookName); Some(l)
-        case None => println("NONE--hook: " + hookName + "\n" + "symbol: " + s.symbol.str)
-          val achievement = getLabelFromHook(hookName, s.symbol.str, s.args.toList)
-          if (achievement.isDefined) println("achievement: " + achievement);
-          achievement
+        case Some(l) => Some(l)
+        case None => getLabelFromHook(hookName, s.symbol.str, s.args.toList)
       }
     }
 
