@@ -38,9 +38,20 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   private val sortsFor = ModuleWithSubsorting(originalModule)(originalDefintion).sortsFor
 
   val hooks: Map[String, Hook] = Map(
-    "INT.Int" -> intHook,
-    "INT.add" -> plusHook,
-    "MAP.concat" -> mapHook
+    "INT.Int" -> { (labelName, labels, terms) =>
+      assert(labels.isEmpty && terms.isEmpty)
+      new ReferenceLabel[Int](labelName) {
+        override protected[this] def internalInterpret(s: String): Int = s.toInt
+      }
+    },
+    "INT.add" -> { (labelName, labels, terms) =>
+      assert(labels.size == 1 && terms.isEmpty)
+      PrimitiveFunction2[Int](labelName, labels.head.asInstanceOf[LeafLabel[Int]], _ + _)
+    },
+    "MAP.concat" -> { (labelName, labels, terms) =>
+      val indexFunction: Term => Term = { t => t.children.toList(terms.tail.head.asInstanceOf[kale.DomainValue[Int]].data) }
+      MapLabel(labelName, indexFunction, terms.head)
+    }
   )
 
   /**
@@ -354,22 +365,6 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   type Hook = (String, List[Label], List[Term]) => kale.Label
 
-  def intHook(labelName: String, labels: List[Label], terms: List[Term]): kale.Label = {
-    assert(labels.isEmpty && terms.isEmpty)
-    new ReferenceLabel[Int](labelName) {
-      override protected[this] def internalInterpret(s: String): Int = s.toInt
-    }
-  }
-
-  def mapHook(labelName: String, labels: List[Label], terms: List[Term]): kale.Label = {
-    val indexFunction: Term => Term = { t => t.children.toList(terms.tail.head.asInstanceOf[DomainValue[Int]].data) }
-    MapLabel(labelName, indexFunction, terms.head)
-  }
-
-  def plusHook(labelName: String, labels: List[Label], terms: List[Term]): kale.Label = {
-    assert(labels.size == 1 && terms.isEmpty)
-    PrimitiveFunction2[Int](labelName, labels.head.asInstanceOf[LeafLabel[Int]], _ + _)
-  }
 
   def getLabelFromHook(hookContent: String, labelName: String, sorts: List[kore.Sort]): Option[Label] = {
     val hookName :: termsStrings = hookContent.split(",").toList
