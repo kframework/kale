@@ -388,6 +388,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
       val sortLabels = sorts map (_.str) flatMap uniqueLabels.get
       hook map (_ (labelName, sortLabels, terms))
     } catch {
+      // TODO: replace exception with an Option return on StandardConverter.apply
       case e: NoSuchElementException => None
     }
   }
