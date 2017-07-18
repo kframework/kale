@@ -2,7 +2,7 @@ package org.kframework.backend.skala
 
 import org.kframework.backend.skala.backendImplicits._
 import org.kframework.kale._
-import org.kframework.kale.builtin.{MapLabel, TOKEN}
+import org.kframework.kale.builtin.{MapLabel, SetLabel, TOKEN}
 import org.kframework.kale.standard._
 import org.kframework.kale.util.Named
 import org.kframework.kore.extended.Backend
@@ -54,6 +54,19 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     },
     "MAP.lookup" -> { (labelName, labels, terms) =>
       uniqueLabels.get("Map@MAP").map(_.asInstanceOf[MapLabel].lookup)
+    },
+    "MAP.keys" -> { (labelName, labels, terms) =>
+      uniqueLabels.get("Map@MAP").flatMap(mapLabel =>
+        uniqueLabels.get("Set@SET").map(setLabel =>
+          new kale.builtin.KeysFunction(mapLabel.asInstanceOf[MapLabel], setLabel.asInstanceOf[SetLabel])
+        )
+      )
+    },
+    "Set@SET" -> { (labelName, labels, terms) =>
+      ???
+    },
+    "SET.in" -> { (labelName, labels, terms) =>
+      uniqueLabels.get("Set@SET").map(_.asInstanceOf[SetLabel].in)
     }
   )
 
