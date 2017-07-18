@@ -99,7 +99,7 @@ object StandardConverter {
 
 
   //Todo: Special Cases Handle Generically
-  val specialSymbolsSet: Set[String] = Set("#", "Map:lookup", "Set:in", "keys", "lookup")
+  val specialSymbolsSet: Set[String] = Set("#")
 
   def apply(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
     case p@kore.Application(kore.Symbol(str), args) if specialSymbolsSet.contains(str) => specialPatternHandler(p)
@@ -148,8 +148,6 @@ object StandardConverter {
   private def specialPatternHandler(p: kore.Pattern)(implicit env: StandardEnvironment): Term = p match {
     case p@kore.Application(kore.Symbol(s), args) => s match {
       case "#" => apply(decodePatternAttribute(p)._1)
-      case "Map:lookup" => env.label("_Map_").asInstanceOf[MapLabel].lookup(args.map(StandardConverter.apply))
-      case "keys" => new KeysFunction(env.label("_Map_").asInstanceOf[MapLabel], env.label("_Set_").asInstanceOf[SetLabel]).apply(args.map(StandardConverter.apply))
     }
   }
 
