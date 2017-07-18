@@ -34,14 +34,10 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     case sd@kore.SymbolDeclaration(_, s, _, _) => sd
   })
 
-  val assocSymbols: Set[kore.SymbolDeclaration] = uniqueSymbolDecs.filter(isAssoc)
-
-  val nonAssocSymbols: Set[kore.SymbolDeclaration] = uniqueSymbolDecs.diff(assocSymbols)
-
   private val subsorts = ModuleWithSubsorting(originalModule)(originalDefintion).subsorts
   private val sortsFor = ModuleWithSubsorting(originalModule)(originalDefintion).sortsFor
 
-  val hooks: Map[String, Hook] = Map("INT.Int" -> intHook, "INT.add" -> plusHook)
+  val hooks: Map[String, Hook] = Map("INT.Int" -> intHook, "INT.add" -> plusHook, "MAP.concat" -> mapHook)
 
   /**
     * General operations on Maps/Sets
@@ -91,9 +87,9 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   def hookToFix(symbols: Set[SymbolDeclaration]): Set[SymbolDeclaration] =
     symbols filter (hook(_).isEmpty)
 
-  fixpoint(hookToFix)(nonAssocSymbols)
+  fixpoint(hookToFix)(uniqueSymbolDecs)
 
-  val unhookedLabels: Set[Label] = nonAssocSymbols.flatMap(declareNonHookedSymbol)
+  val unhookedLabels: Set[Label] = uniqueSymbolDecs.flatMap(declareNonHookedSymbol)
 
   //val nonAssocLabels = hookedLabels ++ unhookedLabels
 
