@@ -46,12 +46,8 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   /**
     * General operations on Maps/Sets
     */
-
-  def declareNonHookedSymbol(x: kore.SymbolDeclaration): Option[Label] = {
-    if (uniqueLabels.contains(x.symbol.str)) {
-      None
-    }
-    else {
+  def declareNonHookedSymbol(x: kore.SymbolDeclaration) = {
+    if (!uniqueLabels.contains(x.symbol.str)) {
       x.att.findSymbol(Encodings.function) match {
         case Some(_) => {
           if (x.symbol.str.startsWith("is")) {
@@ -91,9 +87,11 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   def createLabelsForHookedSymbols(symbols: Set[SymbolDeclaration]): Set[SymbolDeclaration] =
     symbols filter (hook(_).isEmpty)
 
+  uniqueSymbolDecs.filterNot(_.att is Encodings.hook).foreach(declareNonHookedSymbol)
+
   fixpoint(createLabelsForHookedSymbols)(uniqueSymbolDecs)
 
-  val unhookedLabels: Set[Label] = uniqueSymbolDecs.flatMap(declareNonHookedSymbol)
+  uniqueSymbolDecs.foreach(declareNonHookedSymbol)
 
   //val nonAssocLabels = hookedLabels ++ unhookedLabels
 
