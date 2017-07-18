@@ -2,13 +2,13 @@ package org.kframework.backend.skala
 
 import org.kframework.backend.skala.backendImplicits._
 import org.kframework.kale._
-import org.kframework.kale.builtin.{MapLabel, SetLabel, TOKEN}
+import org.kframework.kale.builtin.{MapLabel, TOKEN}
 import org.kframework.kale.standard._
 import org.kframework.kale.util.Named
 import org.kframework.kore.extended.Backend
 import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.DefaultBuilders
-import org.kframework.kore.parser.{KoreToText, TextToKore}
+import org.kframework.kore.parser.TextToKore
 import org.kframework.kore.{Rewrite => _, Variable => _, _}
 import org.kframework.{kale, kore}
 
