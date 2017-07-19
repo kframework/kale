@@ -55,7 +55,7 @@ object Binary {
       }
     }
 
-    def apply(left: Term, right: Term): Term = memo.getOrElseUpdate((left, right), {
+    def apply(left: Term, right: Term): Term = {
 
       //      assert(labels.contains(left.label) && labels.contains(right.label))
       assert(left.label.id <= env.labels.size, "Left label " + left.label + " with id " + left.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
@@ -74,7 +74,7 @@ object Binary {
 
       assert(!(left == right && res == env.Bottom), left.toString)
       res
-    })
+    }
 
     lazy val processingFunctionsByLabelPair: Map[(Label, Label), (Term, Term) => Term] = arr.zipWithIndex.flatMap({
       case (innerArray, i) => innerArray.zipWithIndex.filter(_._1 != null) map {
