@@ -62,8 +62,9 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
         )
       )
     },
-    "Set@SET" -> { (labelName, labels, terms) =>
-      ???
+    "SET.concat" -> { (labelName, labels, terms) =>
+      assert(labelName == "Set@SET")
+      Some(SetLabel(labelName, terms.head))
     },
     "SET.in" -> { (labelName, labels, terms) =>
       uniqueLabels.get("Set@SET").map(_.asInstanceOf[SetLabel].in)
