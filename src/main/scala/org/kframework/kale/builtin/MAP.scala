@@ -33,12 +33,12 @@ trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatc
           val rhs = leftUnindexed.collect({ case Rewrite(mapLabel.identity, r) => r }).head
 
           val nextTerm = if (rightMap.size + rightUnindexed.size == 0) {
-            rhs
+            Next(rhs)
           } else {
             if (mapLabel.isIndexable(rhs)) {
-              MapImplementation(mapLabel, rightMap + (mapLabel.indexFunction(rhs) -> rhs), rightUnindexed)
+              Next(MapImplementation(mapLabel, rightMap + (mapLabel.indexFunction(rhs) -> rhs), rightUnindexed))
             } else {
-              MapImplementation(mapLabel, rightMap, rightUnindexed + rhs)
+              Next(MapImplementation(mapLabel, rightMap, rightUnindexed + rhs))
             }
           }
           And(And.onlyPredicate(solver(leftVar, b)), nextTerm)
