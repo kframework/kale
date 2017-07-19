@@ -138,8 +138,9 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
           val afterSubstitution = env match {
             case env: StandardEnvironment =>
               import env._
-              ands.view.collect({
-                case And.SPN(_, _, Next(next)) => next
+              ands.view.map(STRATEGY.nextIsNow).collect({
+                case And.SPN(_, _, next) =>
+                  next
               }).headOption.getOrElse(Bottom)
           }
           if (afterSubstitution != Bottom) {
