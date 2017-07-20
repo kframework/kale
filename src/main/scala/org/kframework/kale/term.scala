@@ -196,3 +196,10 @@ object Node {
     case _ => None
   }
 }
+
+object Leaf {
+  def unapply(t: Term): Option[(LeafLabel[T], T) forSome {type T}] = t match {
+    case l: Leaf[_] => Some(l.label, l.data)
+    case _ => None
+  }
+}
