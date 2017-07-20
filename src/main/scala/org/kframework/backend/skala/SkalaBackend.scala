@@ -14,11 +14,10 @@ import org.kframework.{kale, kore}
 
 import scala.io.Source
 
-class SkalaBackend(implicit val originalDefintion: kore.Definition, val originalModule: kore.Module) extends StandardEnvironment with KoreBuilders with extended.Backend {
+class SkalaBackend(implicit val originalDefintion: kore.Definition, val originalModule: kore.Module)
+  extends StandardEnvironment with KoreBuilders with extended.Backend {
 
-  private def isAssoc(s: kore.SymbolDeclaration): Boolean = {
-    s.att.is(Encodings.assoc) || s.att.is(Encodings.bag)
-  }
+  private def isAssoc(s: kore.SymbolDeclaration): Boolean =  s.att.is(Encodings.assoc) || s.att.is(Encodings.bag)
 
   import org.kframework.kore.implementation.{DefaultBuilders => db}
 
@@ -148,9 +147,11 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   override def att: kore.Attributes = originalDefintion.att
 
-  override def modules: Seq[kore.Module] = originalModule +: RichModule(originalDefintion.modulesMap.get(originalModule.name).get)(originalDefintion).imports
+  override def modules: Seq[kore.Module] =
+    originalModule +: RichModule(originalDefintion.modulesMap.get(originalModule.name).get)(originalDefintion).imports
 
-  val functionLabels: collection.mutable.Map[String, Label] = uniqueLabels.filter(_._2.isInstanceOf[FunctionDefinedByRewriting])
+  val functionLabels: collection.mutable.Map[String, Label] =
+    uniqueLabels.filter(_._2.isInstanceOf[FunctionDefinedByRewriting])
 
   val functionLabelRulesMap: Map[Label, Set[Rule]] = modules.flatMap(RichModule(_)(originalDefintion).rules).collect({
     case r@kore.Rule(kore.Implies(_, kore.And(kore.Rewrite(kore.Application(kore.Symbol(l), _), _), _)), att) if functionLabels.contains(l) =>
@@ -211,7 +212,6 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     * Now, before sealing the environment, convert all Rules with functional Symbols from Kore Rules to Kale Rules.
     * Since the environment is unsealed, this should go through without a problem
     */
-
   val functionLabelRewriteMap: Map[Label, Set[Term]] = functionLabelRulesMap.map({
     case (k, v) => (k, v.map(StandardConverter.apply))
   })
@@ -226,7 +226,6 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   /**
     * Now Since we're done with all conversions, seal the environment.
     */
-
   seal()
 
   /**
@@ -240,7 +239,6 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     * Following old Translation
     */
   setFunctionRules(functionRulesWithRenamedVariables)
-
 
   /**
     * Perform fixpoint Resolution after sealing the environment
@@ -258,7 +256,6 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   val rewriter = rewriterGenerator(regularRules)
 
-
   def setFunctionRules(functionRules: Map[Label, Set[Term]]): Unit = {
     labels.collect({
       case l: FunctionDefinedByRewriting => l.setRules(Or(functionRules.getOrElse(l, Set[Rewrite]())))
@@ -269,8 +266,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   private def reconstruct(inhibitForLabel: Label)(t: Term): Term = t match {
     case Node(label, children) if label != inhibitForLabel => {
       val changedChildren = children map reconstruct(inhibitForLabel)
-      val returnVal = label(changedChildren)
-      returnVal
+      return label(changedChildren)
     }
     case t => t
   }
@@ -299,24 +295,10 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
       steps += 1
     }
 
-    //    println(unifier)
-    //    println(uniqueLabels.mapValues(_.getClass).mkString("\n"))
-    //    println(regularRules.mkString("\n"))
-
-    //    println("steps: " + steps)
-
-    //    println("rule hits: \n" + rewriter.ruleHits.mkString("\n"))
-
-    //    println(unifier.statsInvocations.toList.sortBy(-_._2).map({
-    //      case (k, v) => k + " -> invocations: " + v
-    //    }).mkString("\n"))
-
-    if (result.isEmpty) {
+    if (result.isEmpty)
       previousResult
-    }
-    else {
+    else
       result.head
-    }
   }
 
   def checkSort(sort: kore.Sort, term: Term): Boolean = (sort.str == "K@SORT-K") || {
