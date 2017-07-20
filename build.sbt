@@ -14,14 +14,8 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
 
   "io.circe" %% "circe-core" % "0.7.0",
-  "io.circe" %% "circe-generic" % "0.7.0",
-  "io.circe" %% "circe-parser" % "0.7.0",
 
-  "org.kframework.k" %% "kore" % "0.6-SNAPSHOT",
-
-  "com.lihaoyi" %% "sourcecode" % "0.1.4",
-
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
+  "org.kframework.k" %% "kore" % "0.6-SNAPSHOT"
 )
 
 lazy val installZ3 = taskKey[Unit]("Install Z3 theorem prover")
