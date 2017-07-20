@@ -125,35 +125,6 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   uniqueSymbolDecs.foreach(declareNonHookedSymbol)
 
-  //val nonAssocLabels = hookedLabels ++ unhookedLabels
-
-  // Initialize Assoc Labels.
-  //  val assocLabels: Set[Label] = assocSymbols.flatMap(x => {
-  //    val unitLabel: Option[Pattern] = x.att.findSymbol(Encodings.unit)
-  //    val unitLabelValue: Option[String] = decodeAttributePattern(unitLabel, Encodings.unit.str)
-  //
-  //    unitLabel match {
-  //      case Some(_) => {
-  //        uniqueLabels.get(x.symbol.str) match {
-  //          case a@Some(_) => a
-  //          case None => {
-  //            val index: Option[Pattern] = x.att.findSymbol(Encodings.index)
-  //            if (x.att.findSymbol(Encodings.comm).isDefined) {
-
-  //              else
-  //              // AC Without Index
-  //                Some(SetLabel(x.symbol.str, label(unitLabelValue.get).asInstanceOf[Label0]()))
-  //            } else {
-  //              // Create the AssocLabel with Identity Term
-  //              Some(AssocWithIdLabel(x.symbol.str, label(unitLabelValue.get).asInstanceOf[Label0]()))
-  //            }
-  //          }
-  //        }
-  //      }
-  //      case None => None
-  //    }
-  //  }).toSet
-
   //Todo: Better Mechanism To Handle These
 
   val emptyKSeqLabel: FreeLabel0 = FreeLabel0("#EmptyK")
