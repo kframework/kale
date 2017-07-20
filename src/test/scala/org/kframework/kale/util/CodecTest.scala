@@ -35,7 +35,7 @@ class CodecTest extends FreeSpec {
 
   "encode" in {
     val actual = pattern.asJson.noSpaces
-    val expected = "{\"label\":\"foo\",\"att\":{},\"children\":[{\"label\":\"Int@INT-SYNTAX\",\"att\":{},\"data\":\"3\"},{\"label\":\"String\",\"att\":{},\"data\":\"bar\"}]}"
+    val expected = "{\"label\":\"foo\",\"children\":[{\"label\":\"Int@INT-SYNTAX\",\"data\":\"3\"},{\"label\":\"String\",\"data\":\"bar\"}]}"
     assert(actual == expected)
   }
 
