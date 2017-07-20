@@ -39,8 +39,6 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
 
   val rules = inputRules map lowerForAll(Set())
 
-  println(rules.mkString("\n"))
-
   val ruleHits = mutable.Map[Term, Int]()
 
   for (r <- rules)
