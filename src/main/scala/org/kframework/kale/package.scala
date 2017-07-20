@@ -83,6 +83,7 @@ package object kale {
         label.name + "(" + (label.asIterable(term) mkString ", ") + ")"
       case Node(label, children) =>
         label.name + "(" + (children map (_.toConstructor) mkString ", ") + ")"
+      case term.label.env.Variable(name) => name._1.str
       case Leaf(label, data) =>
         label.name + "(" + (data match {
           case s: String => "\"" + s + "\""
