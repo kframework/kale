@@ -13,7 +13,8 @@ resolvers += Resolver.mavenLocal
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
 
-  "io.circe" %% "circe-core" % "0.7.0",
+  "io.circe" %% "circe-core" % "0.8.0",
+  "io.circe" %% "circe-parser" % "0.8.0",
 
   "org.kframework.k" %% "kore" % "0.6-SNAPSHOT"
 )
