@@ -30,7 +30,7 @@ case class STRING()(implicit protected val penv: Environment with IntMixin with 
 
   val rfindchar = PrimitiveFunction3[String, String, Int, Int]("rfindChar", String, String, INT.Int, INT.Int, (a, b, c) => a.lastIndexOf(b.charAt(0), c))
 
-  val strconcat = PrimitiveFunction2[String, String]("+String", String, String, (x, y) => x.concat(y))
+  val strconcat = PrimitiveFunction2[String, String]("_+String_", String, String, (x, y) => x.concat(y))
 
   val replaceall = PrimitiveFunction3[String]("replaceAll(_,_,_)", String, (a, b, c) => a.replaceAll(b, c))
 
