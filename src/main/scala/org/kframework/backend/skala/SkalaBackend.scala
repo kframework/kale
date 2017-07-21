@@ -17,7 +17,7 @@ import scala.io.Source
 class SkalaBackend(implicit val originalDefintion: kore.Definition, val originalModule: kore.Module)
   extends StandardEnvironment with KoreBuilders with extended.Backend {
 
-  private def isAssoc(s: kore.SymbolDeclaration): Boolean =  s.att.is(Encodings.assoc) || s.att.is(Encodings.bag)
+  private def isAssoc(s: kore.SymbolDeclaration): Boolean = s.att.is(Encodings.assoc) || s.att.is(Encodings.bag)
 
   import org.kframework.kore.implementation.{DefaultBuilders => db}
 

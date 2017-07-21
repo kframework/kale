@@ -14,8 +14,7 @@ class KoreBackend(d: kore.Definition, mainModule: kore.ModuleName) {
 }
 
 trait KoreBuilders extends kore.Builders with DefaultOuterBuilders {
-
-  implicit protected val env: Environment
+  self: Environment =>
 
   override def Symbol(str: String): kore.Symbol = env.label(str)
 
