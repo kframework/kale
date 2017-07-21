@@ -54,6 +54,19 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     "MAP.lookup" -> { (labelName, labels, terms) =>
       uniqueLabels.get("Map@MAP").map(_.asInstanceOf[MapLabel].lookup)
     },
+    "MAP.update" -> { (labelName, labels, terms) =>
+      uniqueLabels.get("Map@MAP").map(_.asInstanceOf[MapLabel]) map {
+        mapLabel =>
+          new Named(labelName) with FunctionLabel3 {
+            override def f(m: Term, key: Term, value: Term): Option[Term] = m match {
+              case mapLabel.indexedAndUnindexed(indexed, unindexed) =>
+                Some(mapLabel(indexed.updated(key, value), unindexed))
+              case _ => None
+            }
+            override val isPredicate: Option[Boolean] = Some(false)
+          }
+      }
+    },
     "MAP.keys" -> { (labelName, labels, terms) =>
       uniqueLabels.get("Map@MAP").flatMap(mapLabel =>
         uniqueLabels.get("Set@SET").map(setLabel =>
