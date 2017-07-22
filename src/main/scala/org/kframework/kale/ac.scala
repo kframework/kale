@@ -72,6 +72,13 @@ trait Assoc extends Node2 with BinaryInfix {
   override def map0(f: (Term) => Term): Term = label(assocIterable map f)
 }
 
+object Assoc {
+  def unapply(t: Term): Option[(AssocLabel, Iterable[Term])] = t.label match {
+    case l: AssocLabel => Some(l, l.asIterable(t))
+    case _ => None
+  }
+}
+
 trait Comm
 
 trait AssocComm extends Assoc with Comm {
