@@ -26,3 +26,6 @@ installZ3 := {
 }
 
 (test in Test) := (test in Test).dependsOn(installZ3).value
+
+// Your profile name of the sonatype account. The default is the same with the organization value
+// sonatypeProfileName := "org.kframework.kale"
