@@ -7,6 +7,6 @@ class ToConstructorSpec extends TestSetup[StandardEnvironment]() {
   import env._
 
   "simple node" in {
-    assert(bar("1").toConstructor == """bar("1")""")
+    assert(bar("1").toConstructor == """bar(String("1"))""")
   }
 }

@@ -79,22 +79,19 @@ package object kale {
       * Prints out the Scala code that evaluates to this term.
       * Assumees the DSLMixin
       */
-    def toConstructor(implicit env: StandardEnvironment): String = {
-      import env._
+    def toConstructor: String =
       term match {
         case Node(label: AssocLabel, _) =>
           label.name + "(" + (label.asIterable(term) mkString ", ") + ")"
         case Node(label, children) =>
           label.name + "(" + (children map (_.toConstructor) mkString ", ") + ")"
         case term.label.env.Variable(name) => name._1.str
-        case STRING.String(s) => "\"" + s + "\""
         case Leaf(label, data) =>
           label.name + "(" + (data match {
             case s: String => "\"" + s + "\""
             case _ => data.toString
           }) + ")"
       }
-    }
   }
 
   implicit class StaticRichAssocLabel(label: AssocLabel) {
