@@ -188,6 +188,11 @@ trait Node extends Term with Product {
   def copy(children: Seq[Term]): Term
 
   override lazy val variables: Set[Variable] = children.flatMap(_.variables).toSet
+
+  override def equals(obj: Any): Boolean = obj match {
+    case Node(thatLabel, thatChildren) => thatLabel == label &&  thatChildren == children
+    case _ => false
+  }
 }
 
 object Node {
