@@ -101,7 +101,7 @@ trait TruthLabel extends LeafLabel[Boolean] {
 
 trait Truth extends Leaf[Boolean] {
   val isGround = true
-  override lazy val isPredicate: Boolean = true
+  override lazy val isPredicate: Boolean = false
 }
 
 trait Top extends Truth with Substitution with kore.Top {
@@ -171,7 +171,7 @@ trait And extends kore.And with AssocComm {
   val predicate: Term
   val nonPredicate: Term
 
-  override lazy val isPredicate: Boolean = nonPredicate != label.env.Top
+  override lazy val isPredicate: Boolean = nonPredicate == label.env.Top
 }
 
 trait Or extends kore.Or with AssocComm {
