@@ -588,8 +588,9 @@ private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin)
     }
   }
 
-  def nextIsNow(t: Term): Term = {
-    t mapBU (t => if (t.label == Next) t.asInstanceOf[Node1]._1 else t)
+  def nextIsNow(t: Term): Term = t.label match {
+    case Next => t.asInstanceOf[Node1]._1
+    case _ => t map0 nextIsNow
   }
 
   private type TheFold = Set[(Term, List[Term])]
