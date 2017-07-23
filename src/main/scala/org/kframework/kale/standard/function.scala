@@ -47,9 +47,7 @@ case class NotLabel()(implicit override val env: Environment) extends Named("¬"
 
   import env._
 
-  override def apply(_1: Term): Term = env.bottomize(_1) {
-    f(_1) getOrElse SimpleNot(_1)
-  }
+  override def apply(_1: Term): Term = f(_1) getOrElse SimpleNot(_1)
 
   def f(_1: Term): Option[Term] = _1 match {
     case `Top` =>
