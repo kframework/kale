@@ -5,7 +5,7 @@ import org.kframework.kale.{Environment, Term}
 trait Bottomize {
   self: Environment =>
 
-  var bottomizeIsActive = false
+  var bottomizeIsActive = true
 
   def bottomize(_1: Term)(f: => Term): Term = {
     if (Bottom == _1 && bottomizeIsActive)
