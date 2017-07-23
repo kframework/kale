@@ -88,7 +88,7 @@ package object kale {
         case term.label.env.Variable(name) => name._1.str
         case Leaf(label, data) =>
           label.name + "(" + (data match {
-            case s: String => "\"" + s + "\""
+            case s: String => "\"\"\"" + s + "\"\"\""
             case _ => data.toString
           }) + ")"
       }
