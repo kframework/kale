@@ -79,12 +79,17 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     }
   })
 
-  def NextTerm(solver: Apply) = { (a: Term, b: Term) =>
+  def NextTerm(solver: Apply) = { (a: SimpleNext, b: Term) =>
     And(a, b)
   }
 
-  def NextNext(solver: Apply) = { (a: Term, b: Term) =>
-    Next(solver(a, b))
+  def TermNext(solver: Apply) = { (a: Term, b: SimpleNext) =>
+    And(a, b)
+  }
+
+
+  def NextNext(solver: Apply) = { (a: SimpleNext, b: SimpleNext) =>
+    Next(solver(a._1, b._1))
   }
 
   register(Binary.definePartialFunction({
@@ -102,7 +107,7 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (`Equality`, `Equality`) => LeaveAlone
     case (`Next`, `Next`) => NextNext
     case (`Next`, _) => NextTerm
-    case (_, `Next`) => NextTerm
+    case (_, `Next`) => TermNext
   }), Priority.high)
 
   register(Binary.definePartialFunction({
