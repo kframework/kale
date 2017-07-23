@@ -36,6 +36,7 @@ abstract class TestSetup[E <: StandardEnvironment](implicit val env: E = Standar
   val foo = FreeLabel2("foo")
   val bar = FreeLabel1("bar")
   val buz = FreeLabel2("buz")
+  val poc = FreeLabel1("poc")
   val List(a, b, c, d, e) = List("a", "b", "c", "d", "e").map(STRING.String)
   val List(u, v) = List("u", "v").map(STRING.String)
   val matched = FreeLabel1("matched")
