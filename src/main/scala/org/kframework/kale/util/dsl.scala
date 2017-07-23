@@ -35,6 +35,8 @@ trait DSLMixin {
 
     def %(redex: Term): env.ContextApplication = Context(__, redex, Or(And(t, Context.anywhere), __))
 
+    def %%(redex: Term): env.ContextApplication = Context(__, redex, t)
+
     def |(tt: Term) = Or(t, tt)
 
     def &(tt: Term) = And(t, tt)
