@@ -65,7 +65,7 @@ trait PrettyWrapperMixin extends Mixin with Environment with standard.MatchingLo
   def shouldBePretty(term: Term): Boolean
 }
 
-class PrettyWrapperLabel(implicit eenv: Environment with StringMixin with PrettyWrapperMixin) extends Named("PrettyWrapper") with Label3 {
+class PrettyWrapperLabel(implicit eenv: Environment with MatchingLogicMixin with StringMixin with PrettyWrapperMixin) extends Named("PrettyWrapper") with Label3 {
 
   import env._
 
@@ -74,13 +74,15 @@ class PrettyWrapperLabel(implicit eenv: Environment with StringMixin with Pretty
 
   import STRING.String
 
-  override def apply(_1: Term, _2: Term, _3: Term): Term = {
+  override def apply(_1: Term, _2: Term, _3: Term): Term = env.bottomize(_2) {
     _2 match {
       case assoc: Assoc =>
         val terms = assoc.assocIterable
         assoc.label(terms map {
-          case t if t == terms.head => W(_1, t, I)
-          case t if t == terms.last => W(I, t, _3)
+          case t if t == terms.head && !t.isPredicate =>
+            W(_1, t, I)
+          case t if t == terms.last && !t.isPredicate =>
+            W(I, t, _3)
           case t => t
         })
       case PrettyWrapper(_1inner, _2inner, _3inner) =>
