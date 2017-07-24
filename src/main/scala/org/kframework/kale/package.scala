@@ -82,7 +82,7 @@ package object kale {
     def toConstructor: String =
       term match {
         case Node(label: AssocLabel, _) =>
-          label.name + "(" + (label.asIterable(term) mkString ", ") + ")"
+          label.name + "(" + (label.asIterable(term) map (_.toConstructor) mkString ", ") + ")"
         case Node(label, children) =>
           label.name + "(" + (children map (_.toConstructor) mkString ", ") + ")"
         case term.label.env.Variable(name) => name._1.str
