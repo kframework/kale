@@ -17,7 +17,8 @@ import scala.io.Source
 class SkalaBackend(implicit val originalDefintion: kore.Definition, val originalModule: kore.Module)
   extends StandardEnvironment with KoreBuilders with extended.Backend {
 
-  private def isAssoc(s: kore.SymbolDeclaration): Boolean = s.att.is(Encodings.assoc) || s.att.is(Encodings.bag)
+  private def isAssoc(s: kore.SymbolDeclaration): Boolean =
+    s.att.is(Encodings.assoc) || s.att.is(Encodings.bag)
 
   import org.kframework.kore.implementation.{DefaultBuilders => db}
 
@@ -33,9 +34,11 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     case sd@kore.SymbolDeclaration(_, s, _, _) => sd
   })
 
-  private val subsorts = ModuleWithSubsorting(originalModule)(originalDefintion).subsorts
-  private val sortsFor = ModuleWithSubsorting(originalModule)(originalDefintion).sortsFor
+  private val subsorts =
+    ModuleWithSubsorting(originalModule)(originalDefintion).subsorts
 
+  private val sortsFor =
+    ModuleWithSubsorting(originalModule)(originalDefintion).sortsFor
   val hooks: Map[String, Hook] = Map(
     "INT.Int" -> { (labelName, labels, terms) =>
       assert(labels.isEmpty && terms.isEmpty)
@@ -103,7 +106,6 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
             }
           }
         }
-        //
         case None =>
           if (x.att.findSymbol(Encodings.token).isDefined) {
             Some(TOKEN(x.symbol.str, env.Sort(x.sort.str)))
