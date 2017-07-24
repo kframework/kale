@@ -54,12 +54,19 @@ trait FreeMixin extends kale.FreeMixin with HasMatcher with HasUnifier {
     And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4), Task(a._5, b._5), Task(a._6, b._6))
   })
 
+  case class FreeNodeNFreeNodeN(solver: Apply) extends Binary.F({ (a: NodeN, b: NodeN) =>
+    And.combine(b)(a.children.zip(b.children) map { case (ac, bc) => Task(ac, bc) }: _*)
+  })
+
   register(Binary.definePartialFunction({
     case (a: FreeLabel0, b: FreeLabel0) if a == b => FreeNode0FreeNode0
     case (a: FreeLabel1, b: FreeLabel1) if a == b => FreeNode1FreeNode1
     case (a: FreeLabel2, b: FreeLabel2) if a == b => FreeNode2FreeNode2
     case (a: FreeLabel3, b: FreeLabel3) if a == b => FreeNode3FreeNode3
     case (a: FreeLabel4, b: FreeLabel4) if a == b => FreeNode4FreeNode4
+    case (a: FreeLabel5, b: FreeLabel5) if a == b => FreeNode5FreeNode5
+    case (a: FreeLabel6, b: FreeLabel6) if a == b => FreeNode6FreeNode6
+    case (a: FreeLabelN, b: FreeLabelN) if a == b => FreeNodeNFreeNodeN
   }))
 }
 
