@@ -69,6 +69,21 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
           }
       }
     },
+    "SUBSTITUTION.userSingletonSubstitutionKore" -> { (labelName, labels, terms) =>
+      Some(new Named(labelName)(env) with FunctionLabel3 {
+        override def f(body: Term, substitutee: Term, variable: Term): Option[Term] = {
+          if (body.isGround && substitutee.isGround) {
+            Some(body.mapBU({
+              case `variable` => substitutee
+              case t => t
+            }))
+          } else {
+            None
+          }
+        }
+        override val isPredicate: Option[Boolean] = Some(false)
+      })
+    },
     "MAP.keys" -> { (labelName, labels, terms) =>
       uniqueLabels.get("Map@MAP").flatMap(mapLabel =>
         uniqueLabels.get("Set@SET").map(setLabel =>
