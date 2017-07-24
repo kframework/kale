@@ -60,9 +60,11 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
           new Named(labelName) with FunctionLabel3 {
             override def f(m: Term, key: Term, value: Term): Option[Term] = m match {
               case mapLabel.indexedAndUnindexed(indexed, unindexed) =>
-                Some(mapLabel(indexed.updated(key, value), unindexed))
+                val arrow = labels.head.asInstanceOf[Label2]
+                Some(mapLabel(indexed.updated(key, arrow(key, value)), unindexed))
               case _ => None
             }
+
             override val isPredicate: Option[Boolean] = Some(false)
           }
       }
