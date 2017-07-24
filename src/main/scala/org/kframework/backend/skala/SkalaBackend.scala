@@ -350,13 +350,26 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
 
   def getLabelFromHook(hookContent: String, labelName: String, sorts: List[kore.Sort]): Option[Label] = {
-    val hookName :: termsStrings = hookContent.split(",").toList
-    val hook: Option[Hook] = hooks.get(hookName)
-    val patterns: Seq[Pattern] = (termsStrings map Source.fromString) map new TextToKore(DefaultBuilders).parsePattern
+    val hookName :: arguments = hookContent.split(",").toList
     try {
-      val terms = patterns map StandardConverter.apply toList
-      val sortLabels = sorts map (_.str) flatMap uniqueLabels.get
-      hook flatMap (_ (labelName, sortLabels, terms))
+      val hook: Option[Hook] = hooks.get(hookName)
+      val patterns: Seq[Pattern] = (arguments map Source.fromString) map new TextToKore(DefaultBuilders).parsePattern
+
+      val processedArguments = patterns collect {
+        case DomainValue(Symbol("label"), Value(l)) => label(l)
+        case koreTerm => StandardConverter.apply(koreTerm)
+      } toList
+
+      val terms = processedArguments collect {
+        case t: Term => t
+      }
+
+      val labels = processedArguments collect {
+        case l: Label => l
+      }
+
+      val sortLabels: List[Label] = sorts map (_.str) flatMap uniqueLabels.get
+      hook flatMap (_ (labelName, labels ++ sortLabels, terms))
     } catch {
       // TODO: replace exception with an Option return on StandardConverter.apply
       case e: NoSuchElementException => None
