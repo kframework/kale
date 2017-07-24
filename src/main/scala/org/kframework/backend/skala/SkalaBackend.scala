@@ -177,7 +177,8 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     uniqueLabels.filter(_._2.isInstanceOf[FunctionDefinedByRewriting])
 
   val functionLabelRulesMap: Map[Label, Set[Rule]] = modules.flatMap(RichModule(_)(originalDefintion).rules).collect({
-    case r@kore.Rule(kore.Implies(_, kore.And(kore.Rewrite(kore.Application(kore.Symbol(l), _), _), _)), att) if functionLabels.contains(l) =>
+    case r@kore.Rule(kore.Implies(_, kore.And(kore.Rewrite(kore.Application(kore.Symbol(l), _), _), _)), att)
+      if functionLabels.contains(l) =>
       (label(l), r)
   }).groupBy(_._1).mapValues(_.map(_._2).toSet)
 
@@ -202,9 +203,14 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   def localizeIsKResult(t: Term): Term = {
     val theIsKResult = t findTD {
-      case p@BOOLEAN.not(Node(l: IsSort, List(v: Variable))) if v.name == Name("HOLE") => true
-      case p@Node(l: IsSort, List(v: Variable)) if v.name == Name("HOLE") => true
-      case _ => false
+      case p@BOOLEAN.not(Node(l: IsSort, List(v: Variable)))
+      if v.name == Name("HOLE") =>
+        true
+      case p@Node(l: IsSort, List(v: Variable))
+      if v.name == Name("HOLE") =>
+        true
+      case _ =>
+        false
     }
 
     def changeLhs(f: Term => Term) = {
@@ -212,7 +218,6 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
         case Rewrite(l, r) => Rewrite(cff(l), r)
         case o: Term => f(o map0 cff)
       }
-
       cff _
     }
 
@@ -229,7 +234,8 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     }).getOrElse(t)
   }
 
-  val regularRules = regularRulesInitial map (_ mapTD normalizedKSequenceLocalRewrite) map localizeIsKResult
+  val regularRules =
+      regularRulesInitial map (_ mapTD normalizedKSequenceLocalRewrite) map localizeIsKResult
 
   /**
     * Now, before sealing the environment, convert all Rules with functional Symbols from Kore Rules to Kale Rules.
@@ -266,7 +272,8 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   /**
     * Perform fixpoint Resolution after sealing the environment
     */
-  val finalFunctionRules = fixpoint(resolveFunctionRHS)(functionLabelRewriteMap)
+  val finalFunctionRules =
+    fixpoint(resolveFunctionRHS)(functionLabelRewriteMap)
 
   setFunctionRules(finalFunctionRules)
 
