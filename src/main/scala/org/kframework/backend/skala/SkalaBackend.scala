@@ -295,12 +295,13 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
   }
 
 
-  private def reconstruct(inhibitForLabel: Label)(t: Term): Term = t match {
-    case Node(label, children) if label != inhibitForLabel => {
-      val changedChildren = children map reconstruct(inhibitForLabel)
-      return label(changedChildren)
-    }
-    case t => t
+  private def reconstruct(inhibitForLabel: Label)(t: Term): Term =
+    t match {
+      case Node(label, children) if label != inhibitForLabel => {
+        val children_ = children map reconstruct(inhibitForLabel)
+        label(children_)
+      }
+      case t => t
   }
 
   private def resolveFunctionRHS(functionRules: Map[Label, Set[Term]]): Map[Label, Set[Term]] =
