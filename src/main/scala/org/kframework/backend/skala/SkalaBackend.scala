@@ -147,9 +147,14 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   val kSeq = NonAssocWithIdLabel("#KSequence", emptyKSeq)
 
-  private def decodeAttributePattern(p: Option[Pattern], symbol: String): Option[String] = p match {
-    case Some(kore.Application(kore.Symbol(`symbol`), Seq(kore.DomainValue(Encodings.`attributeValue`, kore.Value(v))))) => Some(v)
-    case _ => None
+  private def decodeAttributePattern(p: Option[Pattern], symbol: String): Option[String] =
+    p match {
+      case Some(kore.Application(kore.Symbol(`symbol`),
+                Seq(kore.DomainValue(Encodings.`attributeValue`,
+                                     kore.Value(v)))))
+        => Some(v)
+      case _
+        => None
   }
 
   private def decodePatternAttribute(p: Pattern): (Pattern, Seq[Pattern]) = {
