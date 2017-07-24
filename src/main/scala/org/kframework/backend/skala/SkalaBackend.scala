@@ -159,10 +159,12 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   private def decodePatternAttribute(p: Pattern): (Pattern, Seq[Pattern]) = {
     p match {
-      case kore.Application(Encodings.`att`, Seq(p, p2)) => decodePatternAttribute(p) match {
-        case (p1, a1) => (p1, p2 +: a1)
-      }
-      case p@_ => (p, Seq())
+      case kore.Application(Encodings.`att`, Seq(p, p2)) =>
+        decodePatternAttribute(p) match {
+          case (p1, a1) => (p1, p2 +: a1)
+        }
+      case p@_ =>
+        (p, Seq())
     }
   }
 
