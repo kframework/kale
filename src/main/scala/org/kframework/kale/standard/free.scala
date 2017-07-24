@@ -30,17 +30,29 @@ trait FreeMixin extends kale.FreeMixin with HasMatcher with HasUnifier {
 
   case class FreeNode0FreeNode0(solver: Apply) extends Binary.F({ (a: Node0, b: Node0) => b })
 
-  case class FreeNode1FreeNode1(solver: Apply) extends Binary.F({ (a: Node1, b: Node1) => And.combine(b)(Task(a._1, b._1)) })
+  case class FreeNode1FreeNode1(solver: Apply) extends Binary.F({ (a: Node1, b: Node1) =>
+    And.combine(b)(Task(a._1, b._1))
+  })
 
-  case class FreeNode2FreeNode2(solver: Apply) extends Binary.F({ (a: Node2, b: Node2) => And.combine(b)(Task(a._1, b._1), Task(a._2, b._2)) })
+  case class FreeNode2FreeNode2(solver: Apply) extends Binary.F({ (a: Node2, b: Node2) =>
+    And.combine(b)(Task(a._1, b._1), Task(a._2, b._2))
+  })
 
-  case class FreeNode3FreeNode3(solver: Apply) extends Binary.F({ (a: Node3, b: Node3) => And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3)) })
+  case class FreeNode3FreeNode3(solver: Apply) extends Binary.F({ (a: Node3, b: Node3) =>
+    And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3))
+  })
 
-  case class FreeNode4FreeNode4(solver: Apply) extends Binary.F({ (a: Node4, b: Node4) => And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4)) })
+  case class FreeNode4FreeNode4(solver: Apply) extends Binary.F({ (a: Node4, b: Node4) =>
+    And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4))
+  })
 
-  case class FreeNode5FreeNode5(solver: Apply) extends Binary.F({ (a: Node5, b: Node5) => And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4), Task(a._5, b._5)) })
+  case class FreeNode5FreeNode5(solver: Apply) extends Binary.F({ (a: Node5, b: Node5) =>
+    And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4), Task(a._5, b._5))
+  })
 
-  case class FreeNode6FreeNode6(solver: Apply) extends Binary.F({ (a: Node6, b: Node6) => And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4), Task(a._5, b._5), Task(a._6, b._6)) })
+  case class FreeNode6FreeNode6(solver: Apply) extends Binary.F({ (a: Node6, b: Node6) =>
+    And.combine(b)(Task(a._1, b._1), Task(a._2, b._2), Task(a._3, b._3), Task(a._4, b._4), Task(a._5, b._5), Task(a._6, b._6))
+  })
 
   register(Binary.definePartialFunction({
     case (a: FreeLabel0, b: FreeLabel0) if a == b => FreeNode0FreeNode0
