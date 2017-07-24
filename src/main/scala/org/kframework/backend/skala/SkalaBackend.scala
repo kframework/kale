@@ -126,8 +126,9 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     }
   }
 
-  def createLabelsForHookedSymbols(symbols: Set[SymbolDeclaration]): Set[SymbolDeclaration] =
-    symbols filter (hook(_).isEmpty)
+  def createLabelsForHookedSymbols: Set[SymbolDeclaration]
+                                 => Set[SymbolDeclaration] =
+    ss => ss filter (hook(_).isEmpty)
 
   uniqueSymbolDecs.filterNot(_.att is Encodings.hook).foreach(declareNonHookedSymbol)
 
