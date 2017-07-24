@@ -286,10 +286,12 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   val rewriter = rewriterGenerator(regularRules)
 
-  def setFunctionRules(functionRules: Map[Label, Set[Term]]): Unit = {
-    labels.collect({
-      case l: FunctionDefinedByRewriting => l.setRules(Or(functionRules.getOrElse(l, Set[Rewrite]())))
-    })
+  def setFunctionRules(rules : Map[Label, Set[Term]]): Unit = {
+    val f: PartialFunction[Label, Unit] = {
+      case l: FunctionDefinedByRewriting =>
+        l.setRules(Or(rules.getOrElse(l, Set[Rewrite]())))
+    }
+    labels.collect(f)
   }
 
 
