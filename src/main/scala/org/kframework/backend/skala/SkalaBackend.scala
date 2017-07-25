@@ -14,10 +14,12 @@ import org.kframework.{kale, kore}
 
 import scala.io.Source
 
-class SkalaBackend(implicit val originalDefintion: kore.Definition, val originalModule: kore.Module)
+class SkalaBackend(implicit val originalDefintion: kore.Definition,
+                   val originalModule: kore.Module)
   extends StandardEnvironment with KoreBuilders with extended.Backend {
 
-  private def isAssoc(s: kore.SymbolDeclaration): Boolean = s.att.is(Encodings.assoc) || s.att.is(Encodings.bag)
+  private def isAssoc(s: kore.SymbolDeclaration): Boolean =
+    s.att.is(Encodings.assoc) || s.att.is(Encodings.bag)
 
   import org.kframework.kore.implementation.{DefaultBuilders => db}
 
@@ -33,14 +35,17 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     case sd@kore.SymbolDeclaration(_, s, _, _) => sd
   })
 
-  private val subsorts = ModuleWithSubsorting(originalModule)(originalDefintion).subsorts
-  private val sortsFor = ModuleWithSubsorting(originalModule)(originalDefintion).sortsFor
+  private val subsorts =
+    ModuleWithSubsorting(originalModule)(originalDefintion).subsorts
+  private val sortsFor =
+    ModuleWithSubsorting(originalModule)(originalDefintion).sortsFor
 
   val hooks: Map[String, Hook] = Map(
     "INT.Int" -> { (labelName, labels, terms) =>
       assert(labels.isEmpty && terms.isEmpty)
       Some(new ReferenceLabel[Int](labelName) {
-        override protected[this] def internalInterpret(s: String): Int = s.toInt
+        override protected[this] def internalInterpret(s: String): Int =
+          s.toInt
       })
     },
     "INT.add" -> { (labelName, labels, terms) =>
@@ -64,25 +69,21 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
                 Some(mapLabel(indexed.updated(key, arrow(key, value)), unindexed))
               case _ => None
             }
-
             override val isPredicate: Option[Boolean] = Some(false)
           }
       }
     },
-    "SUBSTITUTION.userSingletonSubstitutionKore" -> { (labelName, labels, terms) =>
-      Some(new Named(labelName)(env) with FunctionLabel3 {
-        override def f(body: Term, substitutee: Term, variable: Term): Option[Term] = {
-          if (body.isGround && substitutee.isGround) {
-            Some(body.mapBU({
-              case `variable` => substitutee
-              case t => t
-            }))
-          } else {
-            None
+    "SUBSTITUTION.userSingletonSubstitutionKore" -> {
+      (labelName, labels, terms) =>
+        Some(new Named(labelName)(env) with FunctionLabel3 {
+          override def f(body: Term, value: Term, vari: Term): Option[Term] = {
+            if (body.isGround && value.isGround)
+              Some(body.mapBU({case `vari` => value case t => t}))
+            else
+              None
           }
-        }
-        override val isPredicate: Option[Boolean] = Some(false)
-      })
+          override val isPredicate: Option[Boolean] = Some(false)
+        })
     },
     "MAP.keys" -> { (labelName, labels, terms) =>
       uniqueLabels.get("Map@MAP").flatMap(mapLabel =>
@@ -370,7 +371,8 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
     val hookName :: arguments = hookContent.split(",").toList
     try {
       val hook: Option[Hook] = hooks.get(hookName)
-      val patterns: Seq[Pattern] = (arguments map Source.fromString) map new TextToKore(DefaultBuilders).parsePattern
+      val patterns: Seq[Pattern] =
+        (arguments map Source.fromString) map new TextToKore(DefaultBuilders).parsePattern
 
       val processedArguments = patterns collect {
         case DomainValue(Symbol("label"), Value(l)) => label(l)
@@ -397,7 +399,8 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition, val original
 
   override def sort(l: Label): kale.Sort = ???
 
-  override def isSort(sort: kore.Sort, term: Term): Boolean = checkSort(DefaultBuilders.Sort(sort.str), term)
+  override def isSort(sort: kore.Sort, term: Term): Boolean =
+    checkSort(DefaultBuilders.Sort(sort.str), term)
 }
 
 //Todo: Move somewhere else
