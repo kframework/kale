@@ -70,6 +70,11 @@ trait Assoc extends Node2 with BinaryInfix {
   val assocIterable: Iterable[Term]
 
   override def map0(f: (Term) => Term): Term = label(assocIterable map f)
+
+  override def equals(obj: Any): Boolean = obj match {
+    case that: Assoc => that.label == this.label && that.assocIterable == this.assocIterable
+    case _ => false
+  }
 }
 
 object Assoc {

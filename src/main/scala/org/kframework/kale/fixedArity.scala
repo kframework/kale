@@ -112,6 +112,11 @@ trait Node0 extends Node with Application {
     copy()
   }
 
+  override def equals(obj: Any): Boolean = obj match {
+    case that: Node0 => that.label == this.label
+    case _ => false
+  }
+
   override def toString: String = label.toString
 }
 
@@ -170,6 +175,11 @@ trait Node2 extends Node with Product2[Term, Term] {
   override def copy(children: Seq[Term]): Term = {
     assert(children.size == 2)
     copy(children.head, children(1))
+  }
+
+  override def equals(obj: Any): Boolean = obj match {
+    case that: Node2 => that.label == label && that._1 == this._1 && that._2 == this._2
+    case _ => false
   }
 }
 
