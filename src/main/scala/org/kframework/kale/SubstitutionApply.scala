@@ -10,7 +10,8 @@ class SubstitutionApply(val substitution: Substitution)(implicit penv: Environme
 
   import penv._
 
-  def ExistsSub(solver: SubstitutionApply)(v: Exists): Term = substitutionMaker(solver.substitution.remove(v.v))(v.p)
+  def ExistsSub(solver: SubstitutionApply)(v: Exists): Term =
+    substitutionMaker(solver.substitution.remove(v.v))(v.p)
 
   override def processingFunctions = definePartialFunction[Term, this.type]({
     case `Variable` => Var.apply _
