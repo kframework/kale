@@ -41,7 +41,7 @@ trait MacroMixin {
             val res = body.mapBU(transform)
             res
         } getOrElse {
-          throw new AssertionError("Macro " + key + "not found.")
+          throw new AssertionError("Macro " + key + " not found.")
         }
     }
 
