@@ -63,15 +63,29 @@ trait MultisortedMixing extends Environment with standard.MatchingLogicMixin wit
   }
 
   // TODO: move the util functions below somewhere else
-  def sorted(l: LeafLabel[_], target: kale.Sort): Unit = sorted(l, Signature(Seq(), target))
+  def sorted(l: LeafLabel[_], target: kale.Sort): Unit =
+    sorted(l, Signature(Seq(), target))
 
-  def sorted(l: Label0, target: kale.Sort): Unit = sorted(l, Signature(Seq(), target))
+  def sorted(l: Label0, target: kale.Sort): Unit =
+    sorted(l, Signature(Seq(), target))
 
-  def sorted(l: Label1, arg1: kale.Sort, target: kale.Sort): Unit = sorted(l, Signature(Seq(arg1), target))
+  def sorted(l: Label1, arg1: kale.Sort, target: kale.Sort): Unit =
+    sorted(l, Signature(Seq(arg1), target))
 
-  def sorted(l: Label2, arg1: kale.Sort, arg2: kale.Sort, target: kale.Sort): Unit = sorted(l, Signature(Seq(arg1, arg2), target))
+  def sorted(l: Label2, arg1: kale.Sort, arg2: kale.Sort, target: kale.Sort): Unit =
+    sorted(l, Signature(Seq(arg1, arg2), target))
 
-  def sorted(l: Label3, arg1: kale.Sort, arg2: kale.Sort, arg3: kale.Sort, target: kale.Sort): Unit = sorted(l, Signature(Seq(arg1, arg2, arg3), target))
+  def sorted(l: Label3, arg1: kale.Sort, arg2: kale.Sort, arg3: kale.Sort, target: kale.Sort): Unit =
+    sorted(l, Signature(Seq(arg1, arg2, arg3), target))
+
+  def sorted(l: Label4, arg1: kale.Sort, arg2: kale.Sort, arg3: kale.Sort, arg4: kale.Sort, target: kale.Sort): Unit =
+    sorted(l, Signature(Seq(arg1, arg2, arg3, arg4), target))
+
+  def sorted(l: Label5, arg1: kale.Sort, arg2: kale.Sort, arg3: kale.Sort, arg4: kale.Sort, arg5: kale.Sort, target: kale.Sort): Unit =
+    sorted(l, Signature(Seq(arg1, arg2, arg3, arg4, arg5), target))
+
+  def sorted(l: Label6, arg1: kale.Sort, arg2: kale.Sort, arg3: kale.Sort, arg4: kale.Sort, arg5: kale.Sort, arg6: kale.Sort, target: kale.Sort): Unit =
+    sorted(l, Signature(Seq(arg1, arg2, arg3, arg4, arg5, arg6), target))
 
   register(Binary.definePartialFunction({
     case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 || env.sort(l1) != env.sort(l2) => NoMatch

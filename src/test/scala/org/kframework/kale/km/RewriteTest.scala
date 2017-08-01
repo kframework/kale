@@ -32,9 +32,13 @@ class RewriteTest extends FreeSpec {
 
   val f = FreeLabel1("f"); sorted(f, Int, Int)
 
+  sorted(Tuple0, Sort.K)
   sorted(Tuple1, Sort.K, Sort.K)
   sorted(Tuple2, Sort.K, Sort.K, Sort.K)
   sorted(Tuple3, Sort.K, Sort.K, Sort.K, Sort.K)
+  sorted(Tuple4, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K)
+  sorted(Tuple5, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K)
+  sorted(Tuple6, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K)
 
   env.seal()
 
