@@ -71,6 +71,7 @@ trait FreeMixin extends kale.FreeMixin with HasMatcher with HasUnifier {
 }
 
 trait TuplesMixing extends Environment with FreeMixin {
+  val Tuple0 = FreeLabel0("Tuple0")
   val Tuple1 = FreeLabel1("Tuple1")
   val Tuple2 = FreeLabel2("Tuple2")
   val Tuple3 = FreeLabel3("Tuple3")
