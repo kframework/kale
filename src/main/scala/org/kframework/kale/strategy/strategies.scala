@@ -8,47 +8,47 @@ import org.kframework.kore.Bottom
 
 case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin) {
 
-  val nextIsNow = standard.lift("nextIsNow", env.And.nextIsNow _, None)
+  val nextIsNow = standard.lift("^nextIsNow", env.And.nextIsNow _, None)
 
-  val onlyNonPredicate = standard.lift("onlyNext", env.And.onlyNonPredicate _, Some(false))
+  val onlyNonPredicate = standard.lift("^onlyNext", env.And.onlyNonPredicate _, Some(false))
 
   trait Strategy {
     val isPredicate = Some(false)
   }
 
-  val compose = new Named("compose") with Label2 with Strategy {
+  val compose = new Named("^compose") with Label2 with Strategy {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
   }
 
-  val repeat = new Named("repeat") with Label1 with Strategy {
+  val repeat = new Named("^repeat") with Label1 with Strategy {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
   def orElseLeave(t: Term): Term = orElse(t, env.Variable.freshVariable())
 
-  val fixpoint = new Named("fixpoint") with Label1 with Strategy {
+  val fixpoint = new Named("^fixpoint") with Label1 with Strategy {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
   /**
     * Takes a partial function
     */
-  val bu = new Named("bu") with Label1 with Strategy {
+  val bu = new Named("^bu") with Label1 with Strategy {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
   /**
     * Takes a partial function
     */
-  val td = new Named("td") with Label1 with Strategy {
+  val td = new Named("^td") with Label1 with Strategy {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
-  val rw = new Named("rewrite") with Label1 with Strategy {
+  val rw = new Named("^rewrite") with Label1 with Strategy {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
-  val orElse = new Named("orElse") with Label2 with Strategy {
+  val orElse = new Named("^orElse") with Label2 with Strategy {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
   }
 
@@ -56,7 +56,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     * ifThenElse(c, t, e) is semantically equivalent to Or(And(c, t), And(Not(c), t)) but evaluated lazily
     * i.e., the t and e are only touched when we know whether the condition is Top or Bottom
     */
-  val ifThenElse = new Named("STRATEGY.ifThenElse") with Label3 with Strategy {
+  val ifThenElse = new Named("^ifThenElse") with Label3 with Strategy {
     override def apply(condition: Term, thenTerm: Term, elseTerm: Term): Term = condition match {
       case env.Top => thenTerm
       case env.Bottom => elseTerm
