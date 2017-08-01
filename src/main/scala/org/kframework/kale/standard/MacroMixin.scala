@@ -24,7 +24,7 @@ trait MacroMixin {
   val macroApply = new Named("macro_apply") with Label2 {
     override def apply(name: Term, args: Term): Term = name match {
       case STRING.String(key) =>
-        macros.get(key) map {
+        val x = macros.get(key) map {
           case (signature, body) =>
             if (signature.children.size != args.children.size) {
               throw new AssertionError("Expected " + signature.children.size + " arguments for macro " + key + " but found " + args.children.size)
@@ -40,9 +40,8 @@ trait MacroMixin {
 
             val res = body.mapBU(transform)
             res
-        } getOrElse {
-          throw new AssertionError("Macro " + key + " not found.")
         }
+        x getOrElse (throw new AssertionError("Macro " + key + " not found."))
     }
 
     override val isPredicate: Option[Boolean] = None
