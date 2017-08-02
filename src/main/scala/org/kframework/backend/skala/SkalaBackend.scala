@@ -29,8 +29,6 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition,
 
   private val allSentences = module.allSentences.toSet
 
-  println(allSentences.filter(_.toString.contains("Name@PLUTUS-CORE-SYNTAX")).mkString("\n"))
-
   val uniqueSymbolDecs: Set[kore.SymbolDeclaration] = allSentences.collect({
     case sd@kore.SymbolDeclaration(_, s, _, _) => sd
   })
