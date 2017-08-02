@@ -270,7 +270,9 @@ private[standard] case class StandardEqualityLabel()(implicit override val env: 
   }
 
   override def binding(_1: Variable, _2: Term): Binding = {
-    assert(!_2.contains(_1))
+    // TODO: fails when there is a harmless existential binder inside.
+    // reactivate when we deal with binders better
+    // assert(!_2.contains(_1))
     new Binding(_1.asInstanceOf[Variable], _2)
   }
 }

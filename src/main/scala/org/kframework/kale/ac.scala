@@ -65,7 +65,7 @@ trait AssocWithoutIdLabel extends AssocLabel {
   // todo
 }
 
-trait Assoc extends Node2 with BinaryInfix {
+trait Assoc extends Node2 {
   override val label: AssocLabel
   val assocIterable: Iterable[Term]
 
@@ -75,6 +75,8 @@ trait Assoc extends Node2 with BinaryInfix {
     case that: Assoc => that.label == this.label && that.assocIterable == this.assocIterable
     case _ => false
   }
+
+  override def toString: String = label.name + "(" + assocIterable.toList.map(_.toString).sorted.mkString(", ") + ")"
 }
 
 object Assoc {
