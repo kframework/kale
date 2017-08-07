@@ -21,6 +21,8 @@ trait MacroMixin {
     override val isPredicate: Option[Boolean] = None
   }
 
+  def macroIsDefined(name: String): Boolean = macros.contains(name)
+
   val macroApply = new Named("macro_apply") with Label2 {
     override def apply(name: Term, args: Term): Term = name match {
       case STRING.String(key) =>
