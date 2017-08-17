@@ -10,13 +10,14 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 
 resolvers += Resolver.mavenLocal
 
+lazy val root = project.in(file(".")).dependsOn(kore)
+lazy val kore = RootProject(file("kore"))
+
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
 
   "io.circe" %% "circe-core" % "0.8.0",
-  "io.circe" %% "circe-parser" % "0.8.0",
-
-  "org.kframework.k" %% "kore" % "0.6-SNAPSHOT"
+  "io.circe" %% "circe-parser" % "0.8.0"
 )
 
 lazy val installZ3 = taskKey[Unit]("Install Z3 theorem prover")

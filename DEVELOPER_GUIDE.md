@@ -1,8 +1,29 @@
-# Build it yourself
+## Building
+
+Clone the repository (recursively to include submodules) and then build using
+`sbt`. Use the `develop` branch if you intend to create pull requests: 
 
 ```
+git clone --recurse-submodules https://github.com/kframework/kale --branch develop
 sbt compile
 ```
+
+These git configuration settings smoothen out working with submodules:
+
+```
+git config --global push.recurseSubmodules check
+git config --global fetch.recurseSubmodules true
+```
+
+If you intend to push to the `kore` repository too, using you SSH adding:
+
+```
+[url "git@github.com.:"]
+    pushInsteadOf = https://github.com/
+```
+
+to your `~/.gitconfig` will let you do that.
+
 
 ## Guide on adding a new feature to terms/labels
 
