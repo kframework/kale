@@ -5,13 +5,13 @@ name := "kale"
 
 scalaVersion := "2.12.2"
 
-
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 resolvers += Resolver.mavenLocal
 
-lazy val root = project.in(file(".")).dependsOn(kore)
-lazy val kore = RootProject(file("kore"))
+lazy val kale = project.in(file(".")).dependsOn(kore)
+
+lazy val kore = project in file("kore")
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
