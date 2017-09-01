@@ -108,7 +108,7 @@ class PrettyWrapperLabel(implicit eenv: Environment with MatchingLogicMixin with
     case _ => t
   }
 
-  val Infer = FreeLabel0("")()
+  val Infer = FreeLabel0("I")()
 
   def wrapInInferTD(t: Term): Term = t match {
     case PrettyWrapper(p, c, s) =>

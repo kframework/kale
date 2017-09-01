@@ -4,7 +4,7 @@ import org.kframework.kale._
 import org.kframework.kale.util.Named
 
 trait MacroMixin {
-  self: Environment with MatchingLogicMixin with TuplesMixing with StringMixin =>
+  self: Environment with MatchingLogicMixin with TuplesMixin with StringMixin =>
 
   private val macros = collection.mutable.Map[String, (Term, Term)]()
 
