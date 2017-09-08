@@ -65,7 +65,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
   }
 
   /**
-    * "Waits" for the object (second argument) to be ground, tries to match, returns Top if unsat.
+    * "Waits" for all non-anonymous variables to be instantiated, tries to match, and returns Top if unsat.
     */
   val doesNotMatch = new Named("!=") with Label2 {
     override def apply(pattern: Term, obj: Term): Term =
