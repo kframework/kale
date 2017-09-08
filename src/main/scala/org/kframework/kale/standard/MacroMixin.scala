@@ -31,17 +31,21 @@ trait MacroMixin {
             if (signature.children.size != args.children.size) {
               throw new AssertionError("Expected " + signature.children.size + " arguments for macro " + key + " but found " + args.children.size)
             }
-            val transform = signature.children
-              .zip(args.children)
-              .toMap
-              .withDefault({
-                case v: Variable if v.name.str.startsWith("_") =>
-                  Variable.freshVariable()
-                case t => t
-              })
+            if (signature.children.isEmpty) {
+              body
+            } else {
+              val transform = signature.children
+                .zip(args.children)
+                .toMap
+                .withDefault({
+                  case v: Variable if v.name.str.startsWith("_") =>
+                    Variable.freshVariable()
+                  case t => t
+                })
 
-            val res = body.mapBU(transform)
-            res
+              val res = body.mapBU(transform)
+              res
+            }
         }
         x getOrElse (throw new AssertionError("Macro " + key + " not found."))
     }
