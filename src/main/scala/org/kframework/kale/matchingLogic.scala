@@ -83,7 +83,12 @@ trait Variable extends Leaf[(Name, Sort)] with kore.SortedVariable {
   val isGround = false
   override lazy val isPredicate: Boolean = false
 
-  override def toString: String = name.str
+  override def toString: String = name.str + (
+    if (sort.name == "K")
+      ""
+    else
+      ":" + sort.name
+    )
 
   override def canEqual(o: Any): Boolean = o.isInstanceOf[Variable]
 
@@ -138,6 +143,7 @@ trait RewriteLabel extends Label2 {
 
 trait EqualityLabel extends Label2 with Z3Builtin {
   override val isPredicate: Option[Boolean] = Some(true)
+
   def binding(_1: Variable, _2: Term): Binding
 }
 

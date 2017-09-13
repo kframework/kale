@@ -68,7 +68,7 @@ class Codec(attCodecs: Set[AttCodec[E] forSome {type E}])(implicit val env: Envi
       t.label match {
         case label: LeafLabel[_] =>
           val label(data) = t
-          (labelAndAtts + ("data" -> data.toString.asJson)).asJson
+          (labelAndAtts + ("data" -> t.toString.asJson)).asJson
         case label: NodeLabel =>
           val node = t.asInstanceOf[Node]
           (labelAndAtts + ("children" -> node.children.asJson)).asJson

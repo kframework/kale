@@ -161,6 +161,7 @@ private[standard] case class StandardVariableLabel()(implicit override val env: 
   def apply(nameAndSort: (kale.Name, kale.Sort)): Variable = StandardVariable(nameAndSort._1, nameAndSort._2)
 
   override protected[this] def internalInterpret(s: String): (kale.Name, kale.Sort) = s.split(":") match {
+    case Array(name) => (Name(name), Sort("K"))
     case Array(name, sort) => (Name(name), Sort(sort))
   }
 
