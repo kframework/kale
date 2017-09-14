@@ -11,14 +11,18 @@ trait MacroMixin {
   val macroDef = new Named("macro_def") with Label3 {
     override def apply(name: Term, signature: Term, body: Term): Term = name match {
       case STRING.String(name) =>
-        if (macros.contains(name)) {
-          throw new AssertionError("Macro " + name + " already defined.")
-        }
-        macros.put(name, (signature, body))
+        defineMacro(name, signature, body)
         Top
     }
 
     override val isPredicate: Option[Boolean] = None
+  }
+
+  def defineMacro(name: String, signature: Term, body: Term, allowRedeclare: Boolean = false) {
+    if (!allowRedeclare && macros.contains(name)) {
+      throw new AssertionError("Macro " + name + " already defined.")
+    }
+    macros.put(name, (signature, body))
   }
 
   def macroIsDefined(name: String): Boolean = macros.contains(name)
