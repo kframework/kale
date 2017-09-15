@@ -250,6 +250,17 @@ private[kale] class Matches(val _1: Term, val _2: Term)(implicit env: StandardEn
 
 private[standard] case class StandardEqualityLabel()(implicit override val env: MatchingLogicMixin) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = {
+    val lhsOrElements = env.Or.asSet(_1)
+    val rhsOrElements = env.Or.asSet(_2)
+
+    env.Or(for (
+      e1 <- lhsOrElements;
+      e2 <- rhsOrElements) yield {
+      inner(e1, e2)
+    })
+  }
+
+  private def inner(_1: Term, _2: Term) = {
     if (_1 == _2)
       env.Top
     else if (_1.isGround && _2.isGround) {
