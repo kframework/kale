@@ -52,6 +52,10 @@ class RewriteTest extends TestSetup[StandardEnvironment]() {
       Or(List(el ~~ 4 ~~ 0 ~~ 5, el ~~ 0 ~~ 4 ~~ 5, el ~~ 4 ~~ 5 ~~ 0)))
   }
 
+  "nested disjunction" in {
+    assertRewrite(And(Rewrite(A, A), Equality(A, Or(a, b))))(a, a)
+  }
+
   "contexts" - {
 
     "zero-level" in {

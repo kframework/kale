@@ -27,6 +27,11 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
     assert((STRING.Regex("a.*c".r) =:= STRING.String("abbbc")) === STRING.String("abbbc"))
   }
 
+  "conjunction with nested disjunction" in {
+    println(unify(And(A, Equality(A, Or(B, C)), Equality(B, b), Equality(C, c)), b))
+  }
+
+
   "Top matches anything" in {
     assert((Top =:= a) === a)
   }
