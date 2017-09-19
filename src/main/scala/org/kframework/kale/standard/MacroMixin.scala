@@ -8,6 +8,8 @@ trait MacroMixin {
 
   private val macros = collection.mutable.Map[String, (Term, Term)]()
 
+  case class MacroException(msg: String) extends Exception(msg)
+
   val macroDef = new Named("macro_def") with Label3 {
     override def apply(name: Term, signature: Term, body: Term): Term = name match {
       case STRING.String(name) =>
@@ -20,7 +22,7 @@ trait MacroMixin {
 
   def defineMacro(name: String, signature: Term, body: Term, allowRedeclare: Boolean = false) {
     if (!allowRedeclare && macros.contains(name)) {
-      throw new AssertionError("Macro " + name + " already defined.")
+      throw MacroException("Macro " + name + " already defined.")
     }
     macros.put(name, (signature, body))
   }
@@ -33,7 +35,7 @@ trait MacroMixin {
         val x = macros.get(key) map {
           case (signature, body) =>
             if (signature.children.size != args.children.size) {
-              throw new AssertionError("Expected " + signature.children.size + " arguments for macro " + key + " but found " + args.children.size)
+              throw MacroException("Expected " + signature.children.size + " arguments for macro " + key + " but found " + args.children.size)
             }
             if (signature.children.isEmpty) {
               body
@@ -51,7 +53,7 @@ trait MacroMixin {
               res
             }
         }
-        x getOrElse (throw new AssertionError("Macro " + key + " not found."))
+        x getOrElse (throw MacroException("Macro " + key + " not found."))
     }
 
     override val isPredicate: Option[Boolean] = None
