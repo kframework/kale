@@ -76,7 +76,7 @@ trait Assoc extends Node2 {
     case _ => false
   }
 
-  override def toString: String = label.name + "(" + assocIterable.toList.map(_.toString).sorted.mkString(", ") + ")"
+  override def toString: String = label.name + "(" + assocIterable.map(_.toString).mkString(", ") + ")"
 }
 
 object Assoc {
@@ -94,6 +94,8 @@ trait AssocComm extends Assoc with Comm {
   def asSet: Set[Term]
 
   override val assocIterable: Set[Term] = asSet
+
+  override def toString: String = label.name + "(" + assocIterable.toList.map(_.toString).sorted.mkString(", ") + ")"
 }
 
 trait CommLabel
