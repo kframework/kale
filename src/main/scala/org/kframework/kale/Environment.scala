@@ -21,6 +21,8 @@ trait Environment extends MatchingLogicMixin with Bottomize {
   private lazy val labelSet = uniqueLabels.values.toSet
   private var pisSealed = false
 
+  var _matcher: Binary.Apply = _
+
   def seal(): Unit = {
     pisSealed = true
   }
@@ -30,7 +32,6 @@ trait Environment extends MatchingLogicMixin with Bottomize {
   def unaryProcessingFunctions: Unary.ProcessingFunctions = Unary.processingFunctions
 
   val substitutionMaker: Substitution => SubstitutionApply
-
 
   final val unify: Label2 = standard.lift("unify", {
     (a: Term, b: Term) =>

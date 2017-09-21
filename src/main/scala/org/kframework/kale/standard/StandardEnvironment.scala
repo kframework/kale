@@ -40,10 +40,18 @@ trait StandardEnvironment
 
   override lazy val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)
 
-  override lazy val unifier = matcher
+  def unifier = matcher
 
-  lazy val matcher = Binary.Apply(this.makeMatcher)
+  def matcher = {
+    if (_matcher == null)
+      throw new AssertionError("Seal environment to have access to the matcher")
+    _matcher
+  }
 
+  override def seal(): Unit = {
+    super.seal()
+    _matcher = Binary.Apply(this.makeMatcher)
+  }
 
   // HELPERS:
 
