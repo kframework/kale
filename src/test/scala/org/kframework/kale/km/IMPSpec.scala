@@ -2,13 +2,16 @@ package org.kframework.kale.km
 
 import org.kframework.kale._
 import org.kframework.kale.standard.{Sort, StandardEnvironment}
+import org.kframework.kale.transformer.Binary
 import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
 
 class IMPSpec extends FreeSpec {
 
   implicit val env = new StandardEnvironment with MultisortedMixing {
-
+    register(Binary.definePartialFunction({
+      case (_, `Variable`) => SortedVarRight
+    }), Priority.high)
   }
 
   import env._

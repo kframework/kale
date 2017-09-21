@@ -56,6 +56,10 @@ class RewriteTest extends TestSetup[StandardEnvironment]() {
     assertRewrite(And(Rewrite(A, A), Equality(A, Or(a, b))))(a, a)
   }
 
+  "empty to empty bug" in {
+    assert(unify(env.STRATEGY.td(foo(A, B) ==> el), X) === X)
+  }
+
   "contexts" - {
 
     "zero-level" in {

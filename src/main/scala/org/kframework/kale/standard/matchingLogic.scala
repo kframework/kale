@@ -102,7 +102,6 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
     case (`ForAll`, _) => QuantifierTerm
     case (`Exists`, _) => QuantifierTerm
     case (`Variable`, _) => SortedVarLeft
-    case (_, `Variable`) => SortedVarRight
     case (`BindMatch`, _) => BindMatchMatcher
     case (`Equality`, `Equality`) => LeaveAlone
     case (`Next`, `Next`) => NextNext
@@ -140,6 +139,10 @@ trait MatchingLogicPostfixMixin extends Environment with MatchingLogicMixin {
     case (Truth, _) => TruthMatcher
     case (_, Truth) => TruthMatcher
   }), Priority.high)
+
+  register(Binary.definePartialFunction({
+    case (_, `Rewrite`) => AssertNotPossible
+  }), Priority.ultimate)
 }
 
 
