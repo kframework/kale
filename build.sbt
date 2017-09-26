@@ -17,8 +17,8 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
 
   "org.typelevel" %% "cats-core" % "1.0.0-MF",
+  "org.typelevel" %% "kittens" % "1.0.0-RC0",
 
-  libraryDependencies += "org.typelevel" %% "kittens" % "1.0.0-RC0",
 
   "io.circe" %% "circe-core" % "0.8.0",
   "io.circe" %% "circe-parser" % "0.8.0"
