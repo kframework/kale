@@ -14,10 +14,13 @@ lazy val kale = project.in(file(".")).dependsOn(kore)
 lazy val kore = project in file("kore")
 
 libraryDependencies ++= Seq(
+  "org.typelevel" %% "discipline" % "0.7.3" % "test",
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
 
   "org.typelevel" %% "cats-core" % "1.0.0-MF",
+  "org.typelevel" %% "cats-laws" % "1.0.0-MF" % "test",
   "org.typelevel" %% "kittens" % "1.0.0-RC0",
+
 
   "io.circe" %% "circe-core" % "0.9.0-M1",
   "io.circe" %% "circe-parser" % "0.9.0-M1"
