@@ -1,5 +1,6 @@
 package org.kframework.kale
 
+import cats.Eq
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor}
 import org.kframework.kale.util.HasAtt
@@ -112,6 +113,7 @@ object Term {
     def moveRewriteToTop: Rewrite = moveRewriteSymbolToTop(t)
   }
 
+  implicit val eq: Eq[Term] = (x: Term, y: Term) => x.equals(y)
 }
 
 trait LeafLabel[T] extends (T => Leaf[T]) with Label {
