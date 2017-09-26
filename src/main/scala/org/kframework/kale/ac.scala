@@ -6,6 +6,7 @@ trait ACMixin extends Mixin {
 
 trait HasId {
   val identity: Term
+  lazy val empty = identity
 }
 
 trait CollectionLabel extends Label2 {
@@ -22,10 +23,12 @@ trait CollectionLabel extends Label2 {
   }
 }
 
-trait AssocLabel extends CollectionLabel {
+trait AssocLabel extends CollectionLabel with cats.Semigroup[Term] {
   override def apply(l: Iterable[Term]): Term
 
   private val thisthis = this
+
+  def combine(a: Term, b: Term) = apply(a, b)
 
   def asIterable(t: Term): Iterable[Term] = t.label match {
     case `thisthis` => t.asInstanceOf[Assoc].assocIterable
@@ -33,7 +36,7 @@ trait AssocLabel extends CollectionLabel {
   }
 }
 
-trait AssocWithIdLabel extends AssocLabel with HasId {
+trait AssocWithIdLabel extends AssocLabel with HasId with cats.Monoid[Term] {
 
   @Normalizing
   def apply(_1: Term, _2: Term): Term = {
