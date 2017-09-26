@@ -19,6 +19,9 @@ case class Path(positions: Seq[Int]) {
     case Nil => t
   }
 
+  /**
+    * Displays the sequence of instructions encountered when traversing term t with this path.
+    */
   def explicitate(t: Term): Seq[Label] = positions match {
     case head :: tail =>
       val elements = t.label match {
