@@ -28,6 +28,7 @@ trait StandardEnvironment
     with BundledContextMixin
     with MacroMixin
     with strategy.StrategyMixin
+    with ScalaLibraryMixin
     with MatchingLogicPostfixMixin {
 
   val Match = new MatchLabel()
