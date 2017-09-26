@@ -97,7 +97,7 @@ trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatc
 
 }
 
-case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(implicit val env: Environment) extends AssocWithIdLabel {
+case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(implicit val env: Environment) extends MonoidLabel {
   override val isPredicate: Option[Boolean] = Some(false)
 
   def isIndexable(t: Term) =

@@ -49,13 +49,13 @@ trait NonAssocWithIdListMixing extends Environment with FreeMixin with HasMatche
   }), Priority.medium)
 }
 
-trait AssocWithIdLabel extends kale.AssocWithIdLabel {
+trait MonoidLabel extends kale.MonoidLabel {
   def size: Label1
 }
 
 trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher with HasUnifier with IntMixin with MatchingLogicMixin {
 
-  override def AssocWithIdLabel(name: String, id: Term): AssocWithIdLabel = new AssocWithIdListLabel(name, id)
+  override def AssocWithIdLabel(name: String, id: Term): MonoidLabel = new MonoidListLabel(name, id)
 
   private def matchContents(l: AssocLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = strongBottomize(soFar) {
     val res = (ksLeft.toSeq, ksRight.toSeq) match {
@@ -102,11 +102,11 @@ trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher
   })
 
   register(Binary.definePartialFunction({
-    case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
+    case (_: MonoidLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
   }), Priority.medium)
 
   override def makeUnifier: Binary.ProcessingFunctions = Binary.definePartialFunction({
-    case (_: AssocWithIdLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
+    case (_: MonoidLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
   }).orElse(super.makeUnifier)
 }
 
@@ -123,7 +123,7 @@ case class CollectionSize(collectionLabel: CollectionLabel)(implicit env: Enviro
   override val isPredicate: Option[Boolean] = Some(false)
 }
 
-private[standard] class AssocWithIdListLabel(val name: String, val identity: Term)(implicit val env: Environment with IntMixin) extends AssocWithIdLabel with Constructor {
+private[standard] class MonoidListLabel(val name: String, val identity: Term)(implicit val env: Environment with IntMixin) extends MonoidLabel with Constructor {
 
   val size = CollectionSize(this)
 
@@ -135,7 +135,7 @@ private[standard] class AssocWithIdListLabel(val name: String, val identity: Ter
   override val isPredicate: Option[Boolean] = Some(false)
 }
 
-private[standard] case class AssocWithIdList(label: AssocWithIdLabel, assocIterable: Iterable[Term]) extends Assoc {
+private[standard] case class AssocWithIdList(label: MonoidLabel, assocIterable: Iterable[Term]) extends Assoc {
   assert(assocIterable.size > 1)
 
   assert(assocIterable.forall(_ != label.identity))

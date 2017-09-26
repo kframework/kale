@@ -1,7 +1,7 @@
 package org.kframework.kale
 
 trait ACMixin extends Mixin {
-  def AssocWithIdLabel(name: String, id: Term): AssocWithIdLabel
+  def AssocWithIdLabel(name: String, id: Term): MonoidLabel
 }
 
 trait HasId {
@@ -36,7 +36,7 @@ trait AssocLabel extends CollectionLabel with cats.Semigroup[Term] {
   }
 }
 
-trait AssocWithIdLabel extends AssocLabel with HasId with cats.Monoid[Term] {
+trait MonoidLabel extends AssocLabel with HasId with cats.Monoid[Term] {
 
   @Normalizing
   def apply(_1: Term, _2: Term): Term = {
