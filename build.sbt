@@ -19,9 +19,8 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "1.0.0-MF",
   "org.typelevel" %% "kittens" % "1.0.0-RC0",
 
-
-  "io.circe" %% "circe-core" % "0.8.0",
-  "io.circe" %% "circe-parser" % "0.8.0"
+  "io.circe" %% "circe-core" % "0.9.0-M1",
+  "io.circe" %% "circe-parser" % "0.9.0-M1"
 )
 
 lazy val installZ3 = taskKey[Unit]("Install Z3 theorem prover")
