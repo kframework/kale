@@ -27,7 +27,7 @@ trait FreeLabel extends Constructor {
 trait FreeLabel0 extends Label0 with FreeLabel {
   private lazy val uniqueInstance = FreeNode0(this)
 
-  def apply(): Term = uniqueInstance
+  def apply(): Node0 = uniqueInstance
 }
 
 trait FreeLabel1 extends Label1 with FreeLabel {
