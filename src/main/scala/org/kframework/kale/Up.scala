@@ -1,8 +1,13 @@
 package org.kframework.kale
 
+import cats.Foldable
 import org.kframework.kale.standard.ScalaLibraryMixin
 
 trait Up[O] extends (O => Term)
+
+trait MonoidLabeled[O[_]] {
+  def monoidLabel: MonoidLabel
+}
 
 class IntUp(implicit env: Environment with IntMixin) extends Up[Int] {
   override def apply(i: Int) = env.INT.Int(i)
@@ -17,5 +22,11 @@ object Up {
 
   final def apply[O](f: O => Term): Up[O] = new Up[O] {
     override def apply(o: O): Term = f(o)
+  }
+
+  implicit def upMonoidLabeled[O[_] : MonoidLabeled : Foldable, E: Up]: Up[O[E]] = new Up[O[E]] {
+    override def apply(o: O[E]) = {
+      implicitly[Foldable[O]].foldMap(o)(implicitly[Up[E]])(implicitly[MonoidLabeled[O]].monoidLabel)
+    }
   }
 }

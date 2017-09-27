@@ -17,4 +17,17 @@ class PlayingWithCatsSpec extends FunSuite with Discipline {
     assert(implicitly[Eq[Term]].eqv(x, x))
     assert(implicitly[Eq[Term]].neqv(x, y))
   }
+
+
+  test("up scala objects") {
+    implicit val upInt = Up(INT.Int)
+
+    assert(implicitly[Up[Int]].apply(3) === INT.Int(3))
+
+    implicitly[MonoidLabeled[List]]
+
+    import cats.implicits._
+
+    assert(implicitly[Up[List[Int]]].apply(List(1, 2, 3)) == scalaList(List(1, 2, 3)))
+  }
 }

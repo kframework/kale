@@ -32,5 +32,5 @@ trait IntMixin extends kale.IntMixin {
 
   val INT = builtin.INT()(env)
 
-  implicit def toINT(i: Int): DomainValue[Int] = INT.Int(i)
+  implicit val upInt = Up(INT.Int)
 }

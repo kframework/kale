@@ -25,8 +25,8 @@ class KaleSpec extends FreeSpec {
 
 
   "INT" - {
-    val x: DomainValue[Int] = 2
-    val y: DomainValue[Int] = 3
+    val x: DomainValue[Int] = INT.Int(2)
+    val y: DomainValue[Int] = INT.Int(3)
 
     "Int" in {
       assert(x == INT.Int(2))

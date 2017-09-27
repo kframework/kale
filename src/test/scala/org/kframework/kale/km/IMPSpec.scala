@@ -67,6 +67,7 @@ class IMPSpec extends FreeSpec {
   sorted(emptyIntList, IntList)
   sorted(emptyStates, StateMap)
   sorted(statesMap, StateMap, StateMap, StateMap)
+  sorted(emptyScalaList.label, Sort.K)
   sorted(emptyk, Sort.K)
   sorted(Tuple0, Sort.K)
   sorted(Tuple1, Sort.K, Sort.K)
