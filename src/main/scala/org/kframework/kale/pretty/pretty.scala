@@ -75,6 +75,9 @@ class PrettyWrapperLabel(implicit eenv: Environment with MatchingLogicMixin with
   import STRING.String
 
   override def apply(_1: Term, _2: Term, _3: Term): Term = env.bottomize(_2) {
+    assertValidWrapper(_1)
+    assertValidWrapper(_3)
+
     _2 match {
       case assoc: Assoc =>
         val terms = assoc.assocIterable
@@ -92,6 +95,13 @@ class PrettyWrapperLabel(implicit eenv: Environment with MatchingLogicMixin with
       case o =>
         PrettyWrapperHolder(_1, _2, _3)
     }
+  }
+
+  private def assertValidWrapper(_1: Term) {
+    assert(_1 match {
+      case STRING.String(s) => s.trim == ""
+      case _ => true
+    }, "Invalid: " + _1)
   }
 
   private def mergeSpacing(_1: Term, _1inner: Term) = {
