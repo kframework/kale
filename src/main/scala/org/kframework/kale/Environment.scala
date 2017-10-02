@@ -100,9 +100,3 @@ trait HasMatcher extends Mixin {
       .reduceLeft(_ orElse _)
   }
 }
-
-trait HasUnifier extends Mixin {
-  env: Environment =>
-
-  protected def makeUnifier: Binary.ProcessingFunctions = PartialFunction.empty
-}

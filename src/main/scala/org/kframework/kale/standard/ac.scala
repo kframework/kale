@@ -53,7 +53,8 @@ trait MonoidLabel extends kale.MonoidLabel {
   def size: Label1
 }
 
-trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher with HasUnifier with IntMixin with MatchingLogicMixin {
+trait AssocWithIdListMixin extends Mixin {
+  _: Environment with kale.ACMixin with IntMixin with MatchingLogicMixin =>
 
   override def AssocWithIdLabel(name: String, id: Term): MonoidLabel = new MonoidListLabel(name, id)
 
@@ -104,10 +105,6 @@ trait AssocWithIdListMixin extends kale.ACMixin with Environment with HasMatcher
   register(Binary.definePartialFunction({
     case (_: MonoidLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
   }), Priority.medium)
-
-  override def makeUnifier: Binary.ProcessingFunctions = Binary.definePartialFunction({
-    case (_: MonoidLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
-  }).orElse(super.makeUnifier)
 }
 
 case class CollectionSize(collectionLabel: CollectionLabel)(implicit env: Environment with IntMixin) extends Named(collectionLabel.name + ".size") with FunctionLabel1 {

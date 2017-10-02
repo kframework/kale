@@ -22,6 +22,7 @@ trait StandardEnvironment
     with builtin.DoubleMixin
     with builtin.StringMixin
     with builtin.IdMixin
+    with ACMixin
     with AssocWithIdListMixin
     with NonAssocWithIdListMixing
     with standard.FunctionByRewritingMixin

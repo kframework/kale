@@ -8,7 +8,7 @@ import org.kframework.kale.util.Named
 
 import scala.language.implicitConversions
 
-trait FreeMixin extends kale.FreeMixin with HasMatcher with HasUnifier {
+trait FreeMixin extends kale.FreeMixin with HasMatcher {
   self: Environment =>
   override def FreeLabel0(name: String): FreeLabel0 = new Named(name) with FreeLabel0
 

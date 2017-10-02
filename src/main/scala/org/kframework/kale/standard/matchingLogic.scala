@@ -7,7 +7,7 @@ import org.kframework.kale.{Environment, Substitution, _}
 import org.kframework.{kale, kore}
 
 trait MatchingLogicMixin extends Mixin {
-  _: Environment with HasMatcher with HasUnifier =>
+  _: Environment with HasMatcher =>
 
   override val Truth: TruthLabel = standard.StandardTruthLabel()
 
