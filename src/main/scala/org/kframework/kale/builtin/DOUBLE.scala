@@ -9,9 +9,7 @@ trait DoubleMixin extends kale.DoubleMixin {
   _: Environment =>
 
   override val DOUBLE = new {
-    val Double = new ReferenceLabel[Double]("Double") {
-      override protected[this] def internalInterpret(s: String): Double = s.toDouble
-    }
+    val Double = define[Double]("Double")(_.toDouble)
 
     val div = new Named("_/Double_") with FunctionLabel2 {
       override val isPredicate: Option[Boolean] = Some(false)

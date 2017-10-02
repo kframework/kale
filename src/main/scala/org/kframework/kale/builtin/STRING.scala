@@ -12,35 +12,30 @@ trait StringMixin extends kale.StringMixin {
 
   override val STRING = new STRING {
 
-    val String = new ReferenceLabel[String]("String") {
-      override protected[this] def internalInterpret(s: String): String = s
-    }
+    implicit val String = define[String]("String")(x => x)
 
-    val Regex = new ReferenceLabel[scala.util.matching.Regex]("Regex") {
-      override protected[this] def internalInterpret(s: String): scala.util.matching.Regex = s.r
-    }
+    val Regex = define[scala.util.matching.Regex]("Regex")(_.r)
 
-    val substr = PrimitiveFunction3[String, Int, Int, String]("substrString", String, INT.Int, INT.Int, String, (a, b, c) => a.substring(b, c))
+    val substr = define("substrString", (_: String).substring(_: Int, _: Int))
 
     //Todo: From what I understand the hooks do.
-    val findstr = PrimitiveFunction3[String, String, Int, Int]("findString", String, String, INT.Int, INT.Int, (a, b, c) => a.indexOf(b, c))
+    val findstr = define("findString", (_: String).indexOf(_: String, _: Int))
 
-    val rfindstr = PrimitiveFunction3[String, String, Int, Int]("rfindString", String, String, INT.Int, INT.Int, (a, b, c) => a.lastIndexOf(b, c))
+    val rfindstr = define("rfindString", (_: String).lastIndexOf(_: String, _: Int))
 
-    val findchar = PrimitiveFunction3[String, String, Int, Int]("findChar", String, String, INT.Int, INT.Int, (a, b, c) => a.indexOf(b.charAt(0), c))
+    val findchar = define("findChar", (_: String).indexOf((_: String).charAt(0), _: Int))
 
-    val rfindchar = PrimitiveFunction3[String, String, Int, Int]("rfindChar", String, String, INT.Int, INT.Int, (a, b, c) => a.lastIndexOf(b.charAt(0), c))
+    val rfindchar = define("rfindChar", (_: String).lastIndexOf((_: String).charAt(0), _: Int))
 
-    val strconcat = PrimitiveFunction2[String, String]("_+String_", String, String, (x, y) => x.concat(y))
+    val strconcat = define("_+String_", (_: String) concat (_: String))
 
-    val replaceall = PrimitiveFunction3[String]("replaceAll(_,_,_)", String, (a, b, c) => a.replaceAll(b, c))
+    val replaceall = define("replaceAll(_,_,_)", (_: String).replaceAll(_: String, _: String))
 
-    val replacefirst = PrimitiveFunction3[String]("replaceFirst(_,_,_)", String, (a, b, c) => a.replaceFirst(b, c))
+    val replacefirst = define("replaceFirst(_,_,_)", (_: String).replaceFirst(_: String, _: String))
 
-    val stringne = PrimitiveFunction2[String, String, Boolean]("_=/=String_", String, String, BOOLEAN.Boolean, (x, y) => x != y)
+    val stringne = define("_=/=String_", (_: String) != (_: String))
 
-    val stringe = PrimitiveFunction2[String, String, Boolean]("_==String_", String, String, BOOLEAN.Boolean, (x, y) => x == y)
-
+    val stringe = define("_==String_", (_: String) == (_: String))
   }
 
   import STRING._

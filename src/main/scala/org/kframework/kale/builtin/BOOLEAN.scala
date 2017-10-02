@@ -10,13 +10,11 @@ trait BooleanMixin extends kale.BooleanMixin {
   _: Environment =>
 
   override val BOOLEAN = new BOOLEAN {
-    val Boolean = new ReferenceLabel[Boolean]("Bool@BOOL-SYNTAX") {
-      override protected[this] def internalInterpret(s: String): Boolean = s.toBoolean
-    }
+    implicit val Boolean: ReferenceLabel[Boolean] = define[Boolean]("Bool@BOOL-SYNTAX")(_.toBoolean)
 
-    val not = PrimitiveFunction1[Boolean]("notBool_", Boolean, x => !x)
-    val and = PrimitiveFunction2[Boolean]("_andBool_", Boolean, (x, y) => x && y)
-    val or = PrimitiveFunction2[Boolean]("_orBool_", Boolean, (x, y) => x || y)
+    val not = define("notBool_", !(_: Boolean))
+    val and = define("_andBool_", (_: Boolean) && (_: Boolean))
+    val or = define("_orBool_", (_: Boolean) || (_: Boolean))
 
     /**
       * ifThenElse(c, t, e) is semantically equivalent to Or(And(c = True, t), And(c = False, t)) but evaluated lazily

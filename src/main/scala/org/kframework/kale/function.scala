@@ -48,7 +48,7 @@ trait FunctionLabel4 extends Label4 with FunctionLabel {
   }
 }
 
-case class PrimitiveFunction1[A, R](name: String, aLabel: LeafLabel[A], rLabel: LeafLabel[R], primitiveF: A => R)(implicit val env: Environment) extends FunctionLabel1 with PureFunctionLabel {
+case class PrimitiveFunction1[A, R](name: String, aLabel: UpDown[A], rLabel: UpDown[R], primitiveF: A => R)(implicit val env: Environment) extends FunctionLabel1 with PureFunctionLabel {
   def f(_1: Term): Option[Term] = _1 match {
     case aLabel(a) => Some(rLabel(primitiveF(a)))
     case _ => None
@@ -56,11 +56,13 @@ case class PrimitiveFunction1[A, R](name: String, aLabel: LeafLabel[A], rLabel: 
 }
 
 object PrimitiveFunction1 {
-  def apply[A](name: String, aLabel: LeafLabel[A], f: A => A)(implicit env: Environment): PrimitiveFunction1[A, A] =
+  def apply[A](name: String, aLabel: UpDown[A], f: A => A)(implicit env: Environment): PrimitiveFunction1[A, A] =
     PrimitiveFunction1(name, aLabel, aLabel, f)
 }
 
-case class PrimitiveFunction2[A, B, R](name: String, aLabel: LeafLabel[A], bLabel: LeafLabel[B], rLabel: LeafLabel[R], primitiveF: (A, B) => R)(implicit val env: Environment) extends FunctionLabel2 with PureFunctionLabel {
+case class PrimitiveFunction2[A, B, R](name: String, aLabel: UpDown[A], bLabel: UpDown[B], rLabel: UpDown[R], primitiveF: (A, B) => R)(implicit val env: Environment)
+  extends FunctionLabel2 with PureFunctionLabel {
+
   def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
     case (aLabel(a), bLabel(b)) => Some(rLabel(primitiveF(a, b)))
     case _ => None
@@ -68,14 +70,16 @@ case class PrimitiveFunction2[A, B, R](name: String, aLabel: LeafLabel[A], bLabe
 }
 
 object PrimitiveFunction2 {
-  def apply[A, R](name: String, aLabel: LeafLabel[A], rLabel: LeafLabel[R], f: (A, A) => R)(implicit env: Environment): PrimitiveFunction2[A, A, R] =
+  def apply[A, R](name: String, aLabel: UpDown[A], rLabel: UpDown[R], f: (A, A) => R)(implicit env: Environment): PrimitiveFunction2[A, A, R] =
     PrimitiveFunction2(name, aLabel, aLabel, rLabel, f)
 
-  def apply[A](name: String, aLabel: LeafLabel[A], f: (A, A) => A)(implicit env: Environment): PrimitiveFunction2[A, A, A] =
+  def apply[A](name: String, aLabel: UpDown[A], f: (A, A) => A)(implicit env: Environment): PrimitiveFunction2[A, A, A] =
     PrimitiveFunction2(name, aLabel, aLabel, aLabel, f)
+
+
 }
 
-case class PrimitiveFunction3[A, B, C, R](name: String, aLabel: LeafLabel[A], bLabel: LeafLabel[B], cLabel: LeafLabel[C], rLabel: LeafLabel[R], primitiveF: (A, B, C) => R)(implicit val env: Environment) extends FunctionLabel3 with PureFunctionLabel {
+case class PrimitiveFunction3[A, B, C, R](name: String, aLabel: UpDown[A], bLabel: UpDown[B], cLabel: UpDown[C], rLabel: UpDown[R], primitiveF: (A, B, C) => R)(implicit val env: Environment) extends FunctionLabel3 with PureFunctionLabel {
   def f(_1: Term, _2: Term, _3: Term): Option[Term] = (_1, _2, _3) match {
     case (aLabel(a), bLabel(b), cLabel(c)) => Some(rLabel(primitiveF(a, b, c)))
     case _ => None

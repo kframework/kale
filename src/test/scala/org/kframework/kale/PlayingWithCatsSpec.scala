@@ -20,7 +20,7 @@ class PlayingWithCatsSpec extends FunSuite with Discipline {
 
 
   test("up scala objects") {
-    implicit val upInt = Up(INT.Int)
+    implicit val upInt =INT.Int
 
     assert(implicitly[Up[Int]].apply(3) === INT.Int(3))
 

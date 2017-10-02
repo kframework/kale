@@ -36,7 +36,7 @@ trait BooleanMixin extends Mixin {
   env: Environment =>
 
   trait BOOLEAN {
-    val Boolean: DomainValueLabel[scala.Boolean]
+    implicit val Boolean: DomainValueLabel[scala.Boolean]
     val not: PrimitiveFunction1[scala.Boolean, scala.Boolean]
     val True: DomainValue[Boolean]
     val False: DomainValue[Boolean]

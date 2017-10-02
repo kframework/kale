@@ -116,7 +116,7 @@ object Term {
   implicit val eq: Eq[Term] = (x: Term, y: Term) => x.equals(y)
 }
 
-trait LeafLabel[T] extends (T => Leaf[T]) with Label {
+trait LeafLabel[T] extends (T => Leaf[T]) with Label with UpDown[T] {
   def unapply(t: Term): Option[T] = t match {
     case t: Leaf[T] if t.label == this => Some(t.data)
     case _ => None

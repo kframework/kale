@@ -8,21 +8,21 @@ trait IntMixin extends kale.IntMixin {
   _: Environment with kale.BooleanMixin =>
 
   override val INT = new INT {
-    implicit val Int = new ReferenceLabel[scala.Int]("Int@INT-SYNTAX") {
-      override protected[this] def internalInterpret(s: String): Int = s.toInt
-    }
+    implicit val Int = define[Int]("Int@INT-SYNTAX")(_.toInt)
 
-    val plus = PrimitiveFunction2[scala.Int]("_+Int_", Int, _ + _)
-    val minus = PrimitiveFunction2[scala.Int]("_-Int_", Int, _ - _)
-    val mult = PrimitiveFunction2[scala.Int]("_*Int_", Int, _ * _)
-    val div = PrimitiveFunction2[scala.Int]("_/Int_", Int, _ / _)
-    val mod = PrimitiveFunction2[scala.Int]("_%Int_", Int, _ % _)
-    val lt = PrimitiveFunction2[scala.Int, scala.Boolean]("_<Int_", Int, BOOLEAN.Boolean, _ < _)
-    val le = PrimitiveFunction2[scala.Int, scala.Boolean]("_<=Int_", Int, BOOLEAN.Boolean, _ <= _)
-    val gt = PrimitiveFunction2[scala.Int, scala.Boolean]("_>Int_", Int, BOOLEAN.Boolean, _ > _)
-    val ge = PrimitiveFunction2[scala.Int, scala.Boolean]("_>=Int_", Int, BOOLEAN.Boolean, _ >= _)
-    val neq = PrimitiveFunction2[scala.Int, scala.Boolean]("_=/=Int_", Int, BOOLEAN.Boolean, _ != _)
-    val eq = PrimitiveFunction2[scala.Int, Boolean]("_==Int_", Int, BOOLEAN.Boolean, _ == _)
+    import BOOLEAN.Boolean
+
+    val plus = define("_+Int_", (_: Int) + (_: Int))
+    val minus = define("_-Int_", (_: Int) - (_: Int))
+    val mult = define("_*Int_", (_: Int) * (_: Int))
+    val div = define("_/Int_", (_: Int) / (_: Int))
+    val mod = define("_%Int_", (_: Int) % (_: Int))
+    val lt = define("_<Int_", (_: Int) < (_: Int))
+    val le = define("_<=Int_", (_: Int) <= (_: Int))
+    val gt = define("_>Int_", (_: Int) > (_: Int))
+    val ge = define("_>=Int_", (_: Int) >= (_: Int))
+    val neq = define("_=/=Int_", (_: Int) != (_: Int))
+    val eq = define("_==Int_", (_: Int) == (_: Int))
 
     lazy val all = Set(Int, plus, minus, mult, div, mod, lt, le, gt, ge, neq, eq)
   }
