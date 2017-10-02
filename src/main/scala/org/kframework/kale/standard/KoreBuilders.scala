@@ -129,7 +129,8 @@ object StandardConverter {
       val convertedRight = apply(right)
       val convetedRequires = apply(requires)
       val convertedEnsures = apply(ensures)
-      env.Rewrite(env.And(convertedLeft, env.Equality(convetedRequires, env.toBoolean(true))), convertedRight)
+      import env._
+      env.Rewrite(env.And(convertedLeft, env.Equality(convetedRequires, true)), convertedRight)
     }
     case kore.Rule(kore.Implies(requires, kore.And(body, kore.Next(ensures))), att)
       if att.findSymbol(Encodings.macroEnc).isEmpty => {
@@ -137,7 +138,7 @@ object StandardConverter {
       val convetedRequires = apply(requires)
       val convertedEnsures = apply(ensures)
       import env._
-      And(convertedLeft, env.Equality(convetedRequires, env.toBoolean(true)))
+      And(convertedLeft, env.Equality(convetedRequires, true))
     }
     case _ => throw ConversionException("Encountered Non Uniform Rule")
   }

@@ -9,10 +9,6 @@ trait MonoidLabeled[O[_]] {
   def monoidLabel: MonoidLabel
 }
 
-class IntUp(implicit env: Environment with IntMixin) extends Up[Int] {
-  override def apply(i: Int) = env.INT.Int(i)
-}
-
 class ScalaListUp[O: Up](implicit env: Environment with ScalaLibraryMixin) extends Up[List[O]] {
   override def apply(l: List[O]) = env.scalaList(l map implicitly[Up[O]])
 }

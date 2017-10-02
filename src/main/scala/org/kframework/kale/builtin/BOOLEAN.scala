@@ -48,5 +48,5 @@ trait BooleanMixin extends kale.BooleanMixin {
     val False = Boolean(false)
   }
 
-  implicit def toBoolean(b: Boolean): DomainValue[Boolean] = BOOLEAN.Boolean(b)
+  implicit val upBoolean = BOOLEAN.Boolean
 }

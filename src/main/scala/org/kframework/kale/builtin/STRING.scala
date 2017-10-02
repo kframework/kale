@@ -43,9 +43,9 @@ trait StringMixin extends kale.StringMixin {
 
   }
 
-  implicit def toSTRING(s: String): DomainValue[String] = STRING.String(s)
-
   import STRING._
+
+  implicit val upString = String
 
   case class RegexMatch(solver: Apply) extends Binary.F({ (r: DomainValue[scala.util.matching.Regex], s: Term) =>
     val reg = r.data

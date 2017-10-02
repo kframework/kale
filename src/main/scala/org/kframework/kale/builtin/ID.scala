@@ -14,5 +14,5 @@ trait IdMixin extends kale.IdMixin {
     }
   }
 
-  implicit def toID(s: Symbol): DomainValue[Symbol] = ID.Id(s)
+  implicit val upSymbol = ID.Id
 }

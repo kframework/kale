@@ -345,7 +345,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition,
         None
       else {
         val isSubsorts: Boolean = checkSort(s, _1)
-        Some(toBoolean(isSubsorts))
+        Some(isSubsorts)
       }
     }
 

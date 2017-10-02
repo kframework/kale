@@ -8,7 +8,7 @@ trait IntMixin extends kale.IntMixin {
   _: Environment with kale.BooleanMixin =>
 
   override val INT = new INT {
-    val Int = new ReferenceLabel[scala.Int]("Int@INT-SYNTAX") {
+    implicit val Int = new ReferenceLabel[scala.Int]("Int@INT-SYNTAX") {
       override protected[this] def internalInterpret(s: String): Int = s.toInt
     }
 
@@ -22,10 +22,10 @@ trait IntMixin extends kale.IntMixin {
     val gt = PrimitiveFunction2[scala.Int, scala.Boolean]("_>Int_", Int, BOOLEAN.Boolean, _ > _)
     val ge = PrimitiveFunction2[scala.Int, scala.Boolean]("_>=Int_", Int, BOOLEAN.Boolean, _ >= _)
     val neq = PrimitiveFunction2[scala.Int, scala.Boolean]("_=/=Int_", Int, BOOLEAN.Boolean, _ != _)
-    val eq = PrimitiveFunction2[scala.Int, scala.Boolean]("_==Int_", Int, BOOLEAN.Boolean, _ == _)
+    val eq = PrimitiveFunction2[scala.Int, Boolean]("_==Int_", Int, BOOLEAN.Boolean, _ == _)
 
     lazy val all = Set(Int, plus, minus, mult, div, mod, lt, le, gt, ge, neq, eq)
   }
 
-  implicit val upInt = Up(INT.Int)
+  implicit val upInt = INT.Int
 }
