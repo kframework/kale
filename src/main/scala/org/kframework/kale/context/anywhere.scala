@@ -1,14 +1,15 @@
 package org.kframework.kale.context
 
-import org.kframework.kale._
+import org.kframework.kale.{Environment, HasMatcher, _}
 import org.kframework.kale.context.anywhere.ContextContentVariable
-import org.kframework.kale.context.pattern.{PatternContextApplication, PatternContextApplicationLabel}
 import org.kframework.kale.standard.{HolesMixin, Name}
 import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 import org.kframework.kale.transformer.{Binary, Unary}
 import org.kframework.kale.util.Named
 
-trait ContextMixin extends Environment with standard.MatchingLogicMixin with HasMatcher {
+trait ContextMixin extends Mixin {
+  _: Environment with standard.MatchingLogicMixin with HasMatcher =>
+
   val Context = new Named("Context") with Label3 {
     override val isPredicate: Option[Boolean] = Some(false)
 
@@ -110,10 +111,10 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
         val res = matchPredicate.asOr map {
           case And.SPN(_, p, _) if p.contains(Context.anywhere) =>
             val theAnywhereMatch = other match {
-//              case l: AssocLabel =>
-//                val subresults = l.asIterable(term).toList
-//                val recursive = solutionFor(subresults, (pos: Int, tt: Term) => l(subresults.updated(pos, tt)))
-//                recursive
+              //              case l: AssocLabel =>
+              //                val subresults = l.asIterable(term).toList
+              //                val recursive = solutionFor(subresults, (pos: Int, tt: Term) => l(subresults.updated(pos, tt)))
+              //                recursive
               case l =>
                 // C[bar(X)] := foo(bar(1))
                 val subterms = term.children
@@ -135,7 +136,8 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
 }
 
 // TODO: un-bundle after we have decoupled the unary functions (substitution)
-trait BundledContextMixin extends HolesMixin with ContextMixin with PatternContextMixin {
+trait BundledContextMixin extends ContextMixin with PatternContextMixin {
+  _: Environment with HolesMixin with standard.MatchingLogicMixin with HasMatcher =>
 
   object AnywhereContextProcessingFunction extends Unary.ProcessingFunction[SubstitutionApply] {
     type Element = ContextApplication
@@ -183,7 +185,7 @@ trait BundledContextMixin extends HolesMixin with ContextMixin with PatternConte
 
 
   register(Binary.definePartialFunction({
-    case (capp: PatternContextApplicationLabel, _) => pattern.PatternContextMatcher
+    case (capp: PatternContextApplicationLabel, _) => PatternContextMatcher
     case (Context, _) => ContextMatcher
     case (SolvingContext, _) => SolvingContextMatcher
   }), Priority.high + 1)

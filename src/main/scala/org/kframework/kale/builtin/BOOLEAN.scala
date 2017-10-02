@@ -44,8 +44,8 @@ case class BOOLEAN()(implicit env: Environment) {
   val False = Boolean(false)
 }
 
-trait BooleanMixin extends kale.BooleanMixin with Environment {
-
+trait BooleanMixin extends kale.BooleanMixin {
+  env: Environment =>
   val BOOLEAN = builtin.BOOLEAN()
 
   implicit def toBoolean(b: Boolean): DomainValue[Boolean] = BOOLEAN.Boolean(b)

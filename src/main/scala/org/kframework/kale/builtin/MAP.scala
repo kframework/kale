@@ -7,7 +7,9 @@ import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 
 import scala.collection.{Iterable, Map, Set}
 
-trait MapMixin extends Environment with standard.MatchingLogicMixin with HasMatcher {
+trait MapMixin extends Mixin {
+  _: Environment with standard.MatchingLogicMixin with HasMatcher =>
+
   register(Binary.definePartialFunction({
     case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm
   }), Priority.medium)

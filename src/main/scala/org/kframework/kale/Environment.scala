@@ -1,12 +1,13 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard.Bottomize
-import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
+import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.transformer.{Binary, Unary}
 
-import scala.collection.immutable
+trait Environment extends Foundation with HasMatcher with MatchingLogicMixin with Bottomize
 
-trait Environment extends MatchingLogicMixin with Bottomize {
+trait Foundation {
+  _: Environment =>
 
   implicit protected val env: this.type = this
 
@@ -64,8 +65,8 @@ trait Environment extends MatchingLogicMixin with Bottomize {
 
 }
 
-trait HasMatcher {
-  self: Environment =>
+trait HasMatcher extends Mixin {
+  env: Environment with MatchingLogicMixin =>
 
   case class NoMatch(solver: Apply) extends Binary.F({ (a: Term, b: Term) => Bottom })
 
@@ -100,8 +101,8 @@ trait HasMatcher {
   }
 }
 
-trait HasUnifier {
-  self: Environment =>
+trait HasUnifier extends Mixin {
+  env: Environment =>
 
   protected def makeUnifier: Binary.ProcessingFunctions = PartialFunction.empty
 }

@@ -22,7 +22,7 @@ case class DOUBLE()(implicit protected val env: Environment) {
 }
 
 trait DoubleMixin extends kale.DoubleMixin {
-  protected val env: Environment
+  env: Environment =>
 
   val DOUBLE = builtin.DOUBLE()(env)
 }

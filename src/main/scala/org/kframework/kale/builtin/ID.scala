@@ -11,7 +11,7 @@ case class ID()(implicit protected val penv: Environment) {
 }
 
 trait IdMixin extends kale.IdMixin {
-  protected val env: Environment
+  env: Environment =>
 
   val ID = builtin.ID()(env)
 

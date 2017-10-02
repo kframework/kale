@@ -3,10 +3,12 @@ package org.kframework.kale.standard
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.{NameFromObject, Named, unreachable}
-import org.kframework.kale.{Substitution, _}
+import org.kframework.kale.{Environment, Substitution, _}
 import org.kframework.{kale, kore}
 
-trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
+trait MatchingLogicMixin extends Mixin {
+  _: Environment with HasMatcher with HasUnifier =>
+
   override val Truth: TruthLabel = standard.StandardTruthLabel()
 
   override val Top: Top = standard.TopInstance()
@@ -114,7 +116,8 @@ trait MatchingLogicMixin extends Environment with HasMatcher with HasUnifier {
   }))
 }
 
-trait MatchingLogicPostfixMixin extends Environment with MatchingLogicMixin {
+trait MatchingLogicPostfixMixin extends Mixin {
+  env: Environment with MatchingLogicMixin with HasMatcher =>
 
   case class RewriteMatcher(solver: Binary.Apply) extends Binary.F({ (a: SimpleRewrite, b: Term) =>
     val m = solver(a._1, b)
@@ -251,7 +254,7 @@ private[kale] class Matches(val _1: Term, val _2: Term)(implicit env: StandardEn
   val label = env.Match
 }
 
-private[standard] case class StandardEqualityLabel()(implicit override val env: MatchingLogicMixin) extends Named("=") with EqualityLabel {
+private[standard] case class StandardEqualityLabel()(implicit override val env: Environment with MatchingLogicMixin) extends Named("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = {
     val lhsOrElements = env.Or.asSet(_1)
     val rhsOrElements = env.Or.asSet(_2)
@@ -302,7 +305,7 @@ private[kale] class Equals(val _1: Term, val _2: Term)(implicit env: Environment
 }
 
 
-class Binding(val variable: Variable, val term: Term)(implicit val env: MatchingLogicMixin) extends Equals(variable, term) with kale.Binding {
+class Binding(val variable: Variable, val term: Term)(implicit val env: Environment with MatchingLogicMixin) extends Equals(variable, term) with kale.Binding {
   // TODO(Daejun): Cosmin: occur check failed due to the context variables
   // assert(!util.Util.contains(term, variable))
   assert(_1.isInstanceOf[Variable])
@@ -357,7 +360,7 @@ class Compose2(val name: String, functionLabel2: Label2, functionLabel1: Functio
   override val isPredicate: Option[Boolean] = None
 }
 
-private[standard] case class DNFAndLabel()(implicit val env: MatchingLogicMixin) extends {
+private[standard] case class DNFAndLabel()(implicit val env: Environment with MatchingLogicMixin) extends {
   val name = "∧"
 } with AndLabel {
 
@@ -760,7 +763,7 @@ private[kale] final class AndOfSubstitutionAndPredicates(val s: Substitution, va
   override def asSet: Set[Term] = And.asSet(preds) | And.asSet(s)
 }
 
-private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit val env: MatchingLogicMixin) extends And with Substitution with BinaryInfix {
+private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit val env: Environment with MatchingLogicMixin) extends And with Substitution with BinaryInfix {
   assert(m.size >= 2)
   assert(m.forall({ case (a, b) => a != b }))
 
@@ -842,7 +845,7 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
   override def asSet: Set[Term] = terms
 }
 
-private[standard] case class SimpleForAllLabel()(implicit val e: MatchingLogicMixin) extends Named("∀") with ForAllLabel {
+private[standard] case class SimpleForAllLabel()(implicit val e: Environment with MatchingLogicMixin) extends Named("∀") with ForAllLabel {
 
   import env._
 
@@ -866,7 +869,7 @@ case class SimpleForAll(v: Variable, p: Term)(implicit val env: Environment) ext
   override def _2: Term = p
 }
 
-private[standard] case class SimpleExistsLabel()(implicit val e: MatchingLogicMixin) extends Named("∃") with ExistsLabel {
+private[standard] case class SimpleExistsLabel()(implicit val e: Environment with MatchingLogicMixin) extends Named("∃") with ExistsLabel {
 
   import env._
 

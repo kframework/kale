@@ -7,6 +7,8 @@ import org.kframework.{kale, kore}
 import scala.collection.Seq
 
 trait MatchingLogicMixin extends Mixin {
+  env: Environment =>
+
   // Constants
   val Bottom: Truth with kore.Bottom
   val Top: Truth with Substitution with kore.Top

@@ -6,7 +6,8 @@ import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.{NameFromObject, Named}
 
-trait FunctionByRewritingMixin extends Mixin with Environment with standard.MatchingLogicMixin with HasMatcher {
+trait FunctionByRewritingMixin extends Mixin {
+  _: Environment with standard.MatchingLogicMixin with HasMatcher =>
 
   case class FunctionDefinedByRewritingMatcher(solver: Apply) extends Binary.F({ (a: Term, b: Term) => {
     val l = a.label.asInstanceOf[FunctionDefinedByRewriting]

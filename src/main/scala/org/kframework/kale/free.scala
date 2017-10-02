@@ -1,6 +1,8 @@
 package org.kframework.kale
 
 trait FreeMixin extends Mixin {
+  env: Environment =>
+
   def FreeLabel0(name: String): FreeLabel0
 
   def FreeLabel1(name: String): FreeLabel1

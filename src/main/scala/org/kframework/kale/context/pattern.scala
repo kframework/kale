@@ -1,6 +1,6 @@
 package org.kframework.kale.context
 
-import org.kframework.kale._
+import org.kframework.kale.{Environment, HasMatcher, _}
 import org.kframework.kale.context.anywhere.ContextContentVariable
 import org.kframework.kale.standard.{AssocWithIdList, HolesMixin, StandardEnvironment}
 import org.kframework.kale.transformer.Binary.Apply
@@ -8,13 +8,10 @@ import org.kframework.kale.transformer.{Binary, Unary}
 
 import scala.collection.Set
 
-trait PatternContextMixin extends Environment with standard.MatchingLogicMixin with HasMatcher {
+trait PatternContextMixin extends Mixin {
+  _: Environment with standard.MatchingLogicMixin with HasMatcher with HolesMixin =>
 
-}
-
-object pattern {
-
-  case class PatternContextApplicationLabel(name: String)(implicit val env: StandardEnvironment) extends Context1ApplicationLabel {
+  case class PatternContextApplicationLabel(name: String)(implicit val env: Environment with standard.MatchingLogicMixin) extends Context1ApplicationLabel {
 
     //  val C = env.Variable("GENERIC_CONTEXT_VAR")
 
@@ -43,8 +40,6 @@ object pattern {
 
     override def _2: Term = redex
 
-    import label.env._
-
     private val sub = And.substitution(Map(Hole -> redex))
 
     def contextVariables(t: Term): Set[Variable] = t match {
@@ -59,9 +54,7 @@ object pattern {
     }
   }
 
-  def PatternContextMatcher(solver: Apply)(implicit env: Environment with BundledContextMixin): (PatternContextApplication, Term) => Term = { (contextApplication: PatternContextApplication, term: Term) =>
-    import env._
-
+  def PatternContextMatcher(solver: Apply): (PatternContextApplication, Term) => Term = { (contextApplication: PatternContextApplication, term: Term) =>
     val leftContextLabel = contextApplication.label
     val contextVar = contextApplication.contextVar
     val redex = contextApplication.redex

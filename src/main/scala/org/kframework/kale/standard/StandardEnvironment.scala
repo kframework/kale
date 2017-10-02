@@ -12,7 +12,8 @@ object StandardEnvironment {
 }
 
 trait StandardEnvironment
-  extends MatchingLogicMixin
+  extends Environment
+    with MatchingLogicMixin
     with HolesMixin
     with FreeMixin
     with TuplesMixin
@@ -69,7 +70,8 @@ trait NoSortingMixin extends Environment {
   override def isSort(left: org.kframework.kore.Sort, term: Term): Boolean = true
 }
 
-trait HolesMixin extends MatchingLogicMixin {
+trait HolesMixin extends Mixin {
+  _: Environment with MatchingLogicMixin =>
   val Hole = Variable("☐", Sort.K)
   val Hole1 = Variable("☐1", Sort.K)
   val Hole2 = Variable("☐2", Sort.K)

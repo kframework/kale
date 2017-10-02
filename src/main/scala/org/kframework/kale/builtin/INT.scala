@@ -28,7 +28,7 @@ case class INT(implicit protected val penv: Environment with BooleanMixin) {
 }
 
 trait IntMixin extends kale.IntMixin {
-  protected val env: Environment with BooleanMixin
+  env: Environment with BooleanMixin =>
 
   val INT = builtin.INT()(env)
 

@@ -87,7 +87,8 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
   }
 }
 
-trait StrategyMixin extends Mixin with Environment with standard.MatchingLogicMixin with HasMatcher {
+trait StrategyMixin extends Mixin {
+  _: Environment with standard.MatchingLogicMixin with HasMatcher =>
 
   val STRATEGY = org.kframework.kale.strategy.STRATEGY()
 

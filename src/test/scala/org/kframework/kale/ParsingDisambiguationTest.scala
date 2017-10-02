@@ -1,6 +1,5 @@
 package org.kframework.kale
 
-import org.kframework.kale.context.pattern.PatternContextApplicationLabel
 import org.kframework.kale.standard._
 import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
