@@ -24,7 +24,7 @@ trait StandardEnvironment
     with builtin.IdMixin
     with ACMixin
     with AssocWithIdListMixin
-    with NonAssocWithIdListMixing
+    with NonAssocWithIdListMixin
     with standard.FunctionByRewritingMixin
     with builtin.MapMixin
     with BundledContextMixin

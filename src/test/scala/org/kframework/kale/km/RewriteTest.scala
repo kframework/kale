@@ -6,7 +6,7 @@ import org.scalatest.FreeSpec
 
 class RewriteTest extends FreeSpec {
 
-  implicit val env = new StandardEnvironment with MultisortedMixing
+  implicit val env = new StandardEnvironment with MultisortedMixin
   import env._
 
   // sort delcarations

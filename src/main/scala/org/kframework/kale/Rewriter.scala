@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.km.{MultisortedMixing, Z3Mixin}
+import org.kframework.kale.km.{MultisortedMixin, Z3Mixin}
 import org.kframework.kale.standard.StandardEnvironment
 
 import scala.collection.immutable.TreeSet
@@ -69,7 +69,7 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
 
   // TODO: clean this
   val z3 = env match {
-    case e: Environment with MultisortedMixing with Z3Mixin => new z3(e, Seq(Seq()))
+    case e: Environment with MultisortedMixin with Z3Mixin => new z3(e, Seq(Seq()))
     case _ => null
   }
 

@@ -8,7 +8,7 @@ import org.kframework.kale.util.Named
 
 import scala.collection.{+:, Iterable, Seq}
 
-trait NonAssocWithIdListMixing extends Mixin {
+trait NonAssocWithIdListMixin extends Mixin {
   _: Environment with FreeMixin =>
 
   case class NonAssocWithIdLabel(override val name: String, identity: Term) extends Named(name) with Label2 with HasId {

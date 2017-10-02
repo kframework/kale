@@ -35,7 +35,7 @@ trait Z3Mixin extends importBuiltin {
 
 }
 
-trait MultisortedMixing extends Environment with standard.MatchingLogicMixin with standard.FreeMixin with Z3Mixin {
+trait MultisortedMixin extends Environment with standard.MatchingLogicMixin with standard.FreeMixin with Z3Mixin {
 
   private val sorts = mutable.Map[Label, Signature]()
 
