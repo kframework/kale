@@ -1,4 +1,4 @@
-package org.kframework.kale.util
+package org.kframework.kale.standard
 
 import org.kframework.kale.{AssocLabel, Label, Term}
 
