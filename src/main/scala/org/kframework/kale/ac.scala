@@ -1,7 +1,7 @@
 package org.kframework.kale
 
 trait ACMixin extends Mixin {
-  env: Environment =>
+  _: Environment =>
   def AssocWithIdLabel(name: String, id: Term): MonoidLabel
 }
 

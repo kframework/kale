@@ -9,7 +9,7 @@ import org.kframework.kale.util.Named
 import scala.language.implicitConversions
 
 trait FreeMixin extends kale.FreeMixin {
-  self: Environment =>
+  _: Environment =>
   override def FreeLabel0(name: String): FreeLabel0 = new Named(name) with FreeLabel0
 
   override def FreeLabel1(name: String): FreeLabel1 = new Named(name) with FreeLabel1

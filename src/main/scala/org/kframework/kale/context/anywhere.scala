@@ -137,7 +137,7 @@ trait ContextMixin extends Mixin {
 
 // TODO: un-bundle after we have decoupled the unary functions (substitution)
 trait BundledContextMixin extends ContextMixin with PatternContextMixin {
-  _: Environment with HolesMixin with standard.MatchingLogicMixin with HasMatcher =>
+  _: Environment with HolesMixin with standard.MatchingLogicMixin =>
 
   object AnywhereContextProcessingFunction extends Unary.ProcessingFunction[SubstitutionApply] {
     type Element = ContextApplication

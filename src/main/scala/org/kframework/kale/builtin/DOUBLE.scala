@@ -6,7 +6,7 @@ import org.kframework.kale.util.Named
 import org.kframework.kale.{FunctionLabel2, _}
 
 trait DoubleMixin extends kale.DoubleMixin {
-  env: Environment =>
+  _: Environment =>
 
   override val DOUBLE = new {
     val Double = new ReferenceLabel[Double]("Double") {

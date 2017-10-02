@@ -117,7 +117,7 @@ trait MatchingLogicMixin extends Mixin {
 }
 
 trait MatchingLogicPostfixMixin extends Mixin {
-  env: Environment with MatchingLogicMixin with HasMatcher =>
+  _: Environment with MatchingLogicMixin with HasMatcher =>
 
   case class RewriteMatcher(solver: Binary.Apply) extends Binary.F({ (a: SimpleRewrite, b: Term) =>
     val m = solver(a._1, b)

@@ -4,7 +4,7 @@ import org.kframework.kale
 import org.kframework.kale.{Environment, Mixin, MonoidLabeled, Term, Up}
 
 trait ScalaLibraryMixin extends Mixin {
-  env: Environment with AssocWithIdListMixin with FreeMixin =>
+  _: Environment with AssocWithIdListMixin with FreeMixin =>
 
   val emptyScalaList = FreeLabel0("emptyScalaList")()
   val scalaList = AssocWithIdLabel("scalaList", emptyScalaList)
