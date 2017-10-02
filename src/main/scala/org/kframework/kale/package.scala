@@ -11,7 +11,9 @@ package object kale {
     * For marking traits that are meant to be mixed into an Environment
     * By convention, postfix all extending traits with "Mixin"
     */
-  trait Mixin
+  trait Mixin {
+    env: Environment =>
+  }
 
   def definePartialFunction[T, Solver <: Apply[T]](f: GenUnary.ProcessingFunctions[T, Solver]): GenUnary.ProcessingFunctions[T, Solver] = f
 
