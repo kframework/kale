@@ -72,7 +72,7 @@ trait NoSortingMixin extends Environment {
 }
 
 trait HolesMixin extends Mixin {
-  _: Environment with MatchingLogicMixin =>
+  _: Environment =>
   val Hole = Variable("☐", Sort.K)
   val Hole1 = Variable("☐1", Sort.K)
   val Hole2 = Variable("☐2", Sort.K)

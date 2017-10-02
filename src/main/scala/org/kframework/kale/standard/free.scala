@@ -8,7 +8,7 @@ import org.kframework.kale.util.Named
 
 import scala.language.implicitConversions
 
-trait FreeMixin extends kale.FreeMixin with HasMatcher {
+trait FreeMixin extends kale.FreeMixin {
   self: Environment =>
   override def FreeLabel0(name: String): FreeLabel0 = new Named(name) with FreeLabel0
 
@@ -70,7 +70,8 @@ trait FreeMixin extends kale.FreeMixin with HasMatcher {
   }))
 }
 
-trait TuplesMixin extends Environment with FreeMixin {
+trait TuplesMixin extends Mixin {
+  _: Environment with FreeMixin =>
   val Tuple0 = FreeLabel0("Tuple0")
   val Tuple1 = FreeLabel1("Tuple1")
   val Tuple2 = FreeLabel2("Tuple2")

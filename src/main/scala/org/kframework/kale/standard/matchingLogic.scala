@@ -7,7 +7,7 @@ import org.kframework.kale.{Environment, Substitution, _}
 import org.kframework.{kale, kore}
 
 trait MatchingLogicMixin extends Mixin {
-  _: Environment with HasMatcher =>
+  _: Environment =>
 
   override val Truth: TruthLabel = standard.StandardTruthLabel()
 
@@ -30,7 +30,7 @@ trait MatchingLogicMixin extends Mixin {
   val BindMatch = new BindMatchLabel()
 
   def renameVariables[T <: Term](t: T): T = {
-    val rename = And.substitution((t.variables map (v => (v, v.label(Name(v.name + "!" + Math.random().toInt), v.sort)))).toMap)
+    val rename = And.substitution((t.variables map (v => (v, v.label(v.name + "!" + Math.random().toInt, v.sort)))).toMap)
     rename(t).asInstanceOf[T]
   }
 
@@ -158,12 +158,6 @@ trait PrimordialDomainValueLabel[T] extends DomainValueLabel[T] {
 private[standard] case class StandardDomainValue[T](label: DomainValueLabel[T], data: T) extends DomainValue[T]
 
 private[standard] case class StandardVariableLabel()(implicit override val env: Environment) extends Named("#Variable") with VariableLabel {
-  def apply(name: String): Variable = apply((Name(name), Sort.K))
-
-  def apply(name: String, sort: kale.Sort): Variable = apply((Name(name), sort))
-
-  def apply(name: kale.Name): Variable = apply((name, Sort.K))
-
   def apply(nameAndSort: (kale.Name, kale.Sort)): Variable = StandardVariable(nameAndSort._1, nameAndSort._2)
 
   override protected[this] def internalInterpret(s: String): (kale.Name, kale.Sort) = s.split(":") match {

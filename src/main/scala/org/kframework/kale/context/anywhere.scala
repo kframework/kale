@@ -8,7 +8,7 @@ import org.kframework.kale.transformer.{Binary, Unary}
 import org.kframework.kale.util.Named
 
 trait ContextMixin extends Mixin {
-  _: Environment with standard.MatchingLogicMixin with HasMatcher =>
+  _: Environment with standard.MatchingLogicMixin =>
 
   val Context = new Named("Context") with Label3 {
     override val isPredicate: Option[Boolean] = Some(false)

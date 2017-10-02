@@ -5,14 +5,72 @@ import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.Named
 
-trait PrettyWrapperMixin extends Mixin with Environment with standard.MatchingLogicMixin with standard.FreeMixin with builtin.StringMixin {
+trait PrettyWrapperMixin extends Mixin {
+  _: Environment with standard.MatchingLogicMixin with standard.FreeMixin with builtin.StringMixin =>
 
   def pretty(t: Term): String = t match {
     case PrettyWrapper(p, c, s) => p + pretty(c) + s
     case _ => t.toString
   }
 
-  val PrettyWrapper = new PrettyWrapperLabel()
+  val PrettyWrapper: Label3 = new Named("PrettyWrapper") with Label3 {
+    lazy private val W = this
+    lazy val I = Infer
+
+    override def apply(_1: Term, _2: Term, _3: Term): Term = bottomize(_2) {
+      assert(isValidWrapper(_1), "Invalid wrapper left: " + _1)
+      assert(isValidWrapper(_1), "Invalid: wrapper right" + _1)
+
+      _2 match {
+        case assoc: Assoc =>
+          val terms = assoc.assocIterable
+          assoc.label(terms map {
+            case t if t == terms.head && !t.isPredicate =>
+              W(_1, t, I)
+            case t if t == terms.last && !t.isPredicate =>
+              W(I, t, _3)
+            case t => t
+          })
+        case PrettyWrapper(_1inner, _2inner, _3inner) =>
+          val _1res = mergeSpacing(_1, _1inner)
+          val _3res = mergeSpacing(_3inner, _3)
+          PrettyWrapper(_1res, _2inner, _3res)
+        case o =>
+          PrettyWrapperHolder(_1, _2, _3)
+      }
+    }
+
+
+    private def mergeSpacing(_1: Term, _1inner: Term) = {
+      (_1, _1inner) match {
+        case (STRING.String(s1), STRING.String(s2)) => STRING.String(s1 + s2)
+        case (Infer, STRING.String(s)) => STRING.String(s)
+        case (STRING.String(s), Infer) => STRING.String(s)
+        case (Infer, Infer) => Infer
+      }
+    }
+
+    /**
+      * None means that it depends on its children
+      */
+    override val isPredicate: Option[Boolean] = Some(false)
+  }
+
+  val Infer = FreeLabel0("I")()
+
+  def wrapInInferTD(t: Term): Term = t match {
+    case PrettyWrapper(p, c, s) =>
+      PrettyWrapper(p, c map0 wrapInInferTD, s)
+    case o if shouldBePretty(t) =>
+      PrettyWrapper(Infer, o map0 wrapInInferTD, Infer)
+    case o =>
+      o map0 wrapInInferTD
+  }
+
+  def unwrapFromPrettyWrapper(t: Term) = t match {
+    case PrettyWrapper(_, c, _) => c
+    case _ => t
+  }
 
   implicit class PrettyTerm(t: Term) {
     def pretty: String = PrettyWrapperMixin.this.pretty(t)
@@ -70,68 +128,5 @@ trait PrettyWrapperMixin extends Mixin with Environment with standard.MatchingLo
   }
 
   def shouldBePretty(term: Term): Boolean
-}
 
-class PrettyWrapperLabel(implicit eenv: Environment with MatchingLogicMixin with StringMixin with PrettyWrapperMixin) extends Named("PrettyWrapper") with Label3 {
-
-  import env._
-
-  lazy val W = this
-  lazy val I = Infer
-
-  import STRING.String
-
-  override def apply(_1: Term, _2: Term, _3: Term): Term = env.bottomize(_2) {
-    assert(isValidWrapper(_1), "Invalid wrapper left: " + _1)
-    assert(isValidWrapper(_1), "Invalid: wrapper right" + _1)
-
-    _2 match {
-      case assoc: Assoc =>
-        val terms = assoc.assocIterable
-        assoc.label(terms map {
-          case t if t == terms.head && !t.isPredicate =>
-            W(_1, t, I)
-          case t if t == terms.last && !t.isPredicate =>
-            W(I, t, _3)
-          case t => t
-        })
-      case PrettyWrapper(_1inner, _2inner, _3inner) =>
-        val _1res = mergeSpacing(_1, _1inner)
-        val _3res = mergeSpacing(_3inner, _3)
-        PrettyWrapper(_1res, _2inner, _3res)
-      case o =>
-        PrettyWrapperHolder(_1, _2, _3)
-    }
-  }
-
-
-  private def mergeSpacing(_1: Term, _1inner: Term) = {
-    (_1, _1inner) match {
-      case (String(s1), String(s2)) => String(s1 + s2)
-      case (Infer, String(s)) => String(s)
-      case (String(s), Infer) => String(s)
-      case (Infer, Infer) => Infer
-    }
-  }
-
-  def unwrap(t: Term) = t match {
-    case PrettyWrapper(_, c, _) => c
-    case _ => t
-  }
-
-  val Infer = FreeLabel0("I")()
-
-  def wrapInInferTD(t: Term): Term = t match {
-    case PrettyWrapper(p, c, s) =>
-      PrettyWrapper(p, c map0 wrapInInferTD, s)
-    case o if shouldBePretty(t) =>
-      PrettyWrapper(Infer, o map0 wrapInInferTD, Infer)
-    case o =>
-      o map0 wrapInInferTD
-  }
-
-  /**
-    * None means that it depends on its children
-    */
-  override val isPredicate: Option[Boolean] = Some(false)
 }

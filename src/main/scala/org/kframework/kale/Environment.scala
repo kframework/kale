@@ -66,7 +66,7 @@ trait Foundation {
 }
 
 trait HasMatcher extends Mixin {
-  env: Environment with MatchingLogicMixin =>
+  env: Environment =>
 
   case class NoMatch(solver: Apply) extends Binary.F({ (a: Term, b: Term) => Bottom })
 

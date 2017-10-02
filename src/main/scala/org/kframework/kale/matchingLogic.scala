@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.standard.MightBeSolved
+import org.kframework.kale.standard.{MightBeSolved, Name, Sort}
 import org.kframework.kore.implementation.DefaultBuilders
 import org.kframework.{kale, kore}
 
@@ -70,7 +70,13 @@ trait Sort extends kore.Sort {
 }
 
 trait VariableLabel extends LeafLabel[(Name, Sort)] {
+  def apply(name: String): Variable = apply((Name(name), Sort.K))
+
+  def apply(name: String, sort: kale.Sort): Variable = apply((Name(name), sort))
+
   def apply(v: (Name, Sort)): Variable
+
+  def apply(name: kale.Name): Variable = apply((name, Sort.K))
 }
 
 trait Name extends kore.Name {
