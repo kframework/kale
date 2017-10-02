@@ -1,9 +1,7 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale.Term
-import org.kframework.kale.standard.StandardEnvironment
-import org.kframework.kale.util.Path
-import org.scalatest.FreeSpec
+import org.kframework.kale.standard.{Path, StandardEnvironment}
 
 class PathTest extends TestSetup[StandardEnvironment]() {
 
