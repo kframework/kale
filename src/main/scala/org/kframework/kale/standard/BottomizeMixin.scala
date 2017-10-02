@@ -2,7 +2,7 @@ package org.kframework.kale.standard
 
 import org.kframework.kale.{Environment, Term}
 
-trait Bottomize {
+trait BottomizeMixin {
   self: Environment =>
 
   var bottomizeIsActive = true
