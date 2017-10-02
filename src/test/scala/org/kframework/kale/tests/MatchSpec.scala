@@ -242,6 +242,22 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
       === Bottom)
   }
 
+  "context matching assoc" - {
+    // This tests that, when matching an anywhere with assoc, we treat assoc as if it is right associative
+
+    "matching" in {
+      val pattern = Y % (el ~~ X ~~ "c")
+      val obj = el ~~ "a" ~~ "b" ~~ "c"
+      assert(Or.asSet(pattern := obj).size == 3)
+    }
+
+    "not quite matching" in {
+      val pattern = Y % (el ~~ X ~~ "c")
+      val obj = el ~~ "a" ~~ "b" ~~ "c" ~~ d
+      assert(Or.asSet(pattern := obj).size == 1)
+    }
+  }
+
   "mix contexts and logical operators" in {
     assert((buz(And(CAPP(C, bar(X)), Equality(X, 2)), bar(X)) := buz(foo(1, bar(2)), bar(2)))
       === And.substitution(Map(C -> foo(1, Hole), X -> 2)))

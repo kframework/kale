@@ -110,10 +110,10 @@ trait ContextMixin extends Environment with standard.MatchingLogicMixin with Has
         val res = matchPredicate.asOr map {
           case And.SPN(_, p, _) if p.contains(Context.anywhere) =>
             val theAnywhereMatch = other match {
-              case l: AssocLabel =>
-                val subresults = l.asIterable(term).toList
-                val recursive = solutionFor(subresults, (pos: Int, tt: Term) => l(subresults.updated(pos, tt)))
-                recursive
+//              case l: AssocLabel =>
+//                val subresults = l.asIterable(term).toList
+//                val recursive = solutionFor(subresults, (pos: Int, tt: Term) => l(subresults.updated(pos, tt)))
+//                recursive
               case l =>
                 // C[bar(X)] := foo(bar(1))
                 val subterms = term.children
