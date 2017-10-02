@@ -26,6 +26,13 @@ trait PrettyWrapperMixin extends Mixin with Environment with standard.MatchingLo
         And(Equality(a, t), a)
   })
 
+  def isValidWrapper(_1: Term) = {
+    _1 match {
+      case STRING.String(s) => s.trim == ""
+      case _ => true
+    }
+  }
+
   case class PrettyWrapperPrettyWrapper(solver: Apply) extends Binary.F({
     (a: PrettyWrapperHolder, b: PrettyWrapperHolder) => FreeNode3FreeNode3(solver)(a, b)
   })
@@ -75,8 +82,8 @@ class PrettyWrapperLabel(implicit eenv: Environment with MatchingLogicMixin with
   import STRING.String
 
   override def apply(_1: Term, _2: Term, _3: Term): Term = env.bottomize(_2) {
-    assertValidWrapper(_1)
-    assertValidWrapper(_3)
+    assert(isValidWrapper(_1), "Invalid wrapper left: " + _1)
+    assert(isValidWrapper(_1), "Invalid: wrapper right" + _1)
 
     _2 match {
       case assoc: Assoc =>
@@ -97,12 +104,6 @@ class PrettyWrapperLabel(implicit eenv: Environment with MatchingLogicMixin with
     }
   }
 
-  private def assertValidWrapper(_1: Term) {
-    assert(_1 match {
-      case STRING.String(s) => s.trim == ""
-      case _ => true
-    }, "Invalid: " + _1)
-  }
 
   private def mergeSpacing(_1: Term, _1inner: Term) = {
     (_1, _1inner) match {

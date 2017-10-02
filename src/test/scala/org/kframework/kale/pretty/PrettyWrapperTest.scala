@@ -7,6 +7,7 @@ import org.scalatest.FreeSpec
 
 object TestEnv extends StandardEnvironment with PrettyWrapperMixin with NoSortingMixin {
   def shouldBePretty(term: Term) = true
+  override def isValidWrapper(_1: Term): Boolean = true
 }
 
 class PrettyWrapperTest extends TestSetup()(TestEnv) {
