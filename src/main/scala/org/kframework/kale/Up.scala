@@ -23,13 +23,13 @@ trait DefineMixin extends Mixin {
   _: Environment =>
 
   def define[A: UpDown, B: UpDown, R: UpDown](name: String, f: (A, B) => R): PrimitiveFunction2[A, B, R] =
-    PrimitiveFunction2(name, implicitly[UpDown[A]], implicitly[UpDown[B]], implicitly[UpDown[R]], f)
+    PrimitiveFunction2(name, implicitly[UpDown[A]], implicitly[UpDown[B]], implicitly[Up[R]], f)
 
   def define[A: UpDown, B: UpDown, C: UpDown, R: UpDown](name: String, f: (A, B, C) => R): PrimitiveFunction3[A, B, C, R] =
-    PrimitiveFunction3(name, implicitly[UpDown[A]], implicitly[UpDown[B]], implicitly[UpDown[C]], implicitly[UpDown[R]], f)
+    PrimitiveFunction3(name, implicitly[UpDown[A]], implicitly[UpDown[B]], implicitly[UpDown[C]], implicitly[Up[R]], f)
 
   def define[A: UpDown, R: UpDown](name: String, f: A => R): PrimitiveFunction1[A, R] =
-    PrimitiveFunction1(name, implicitly[UpDown[A]], implicitly[UpDown[R]], f)
+    PrimitiveFunction1(name, implicitly[UpDown[A]], implicitly[Up[R]], f)
 
   def define[T](name: String)(implicit ConvertFromString: Convert[String, T]): ReferenceLabel[T] = new ReferenceLabel[T](name) {
     override protected[this] def internalInterpret(s: String): T = ConvertFromString.convert(s)
