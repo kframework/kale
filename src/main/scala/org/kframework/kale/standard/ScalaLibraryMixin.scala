@@ -9,10 +9,6 @@ trait ScalaLibraryMixin extends Mixin {
   val emptyScalaList = FreeLabel0("emptyScalaList")()
   val scalaList = AssocWithIdLabel("scalaList", emptyScalaList)
 
-  final def upScalaList[T: Up] = new Up[Iterable[T]] {
-    override def apply(l: Iterable[T]): Term = scalaList(l map implicitly[Up[T]])
-  }
-
   implicit val monoidLabeled: MonoidLabeled[List] = new MonoidLabeled[List] {
     override def monoidLabel: kale.MonoidLabel = scalaList
   }
