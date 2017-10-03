@@ -31,6 +31,7 @@ trait StandardEnvironment
     with MacroMixin
     with strategy.StrategyMixin
     with ScalaLibraryMixin
+    with PathMixin
     with MatchingLogicPostfixMixin {
 
   val Match = new MatchLabel()
