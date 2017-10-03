@@ -87,7 +87,7 @@ trait PrettyWrapperMixin extends Mixin {
   def isValidWrapper(_1: Term) = {
     _1 match {
       case STRING.String(s) => s.trim == ""
-      case _ => true
+      case o => !o.isGround || o.exists(t => t.label == Rewrite || t == Infer || t.label == Next)
     }
   }
 
