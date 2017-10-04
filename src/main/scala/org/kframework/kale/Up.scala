@@ -56,8 +56,6 @@ trait DefineMixin extends Mixin {
 
   implicit def autoDown[O](t: Term)(implicit down: UpDown[O]): O = down.unapply(t).get
 
-  val traversableTerm = new Traversable[Term]
-
   implicit def upMonoidLabeled[O[_] : MonoidLabeled : Traverse : Applicative : MonoidK, E: UpDown]: UpDown[O[E]] = new UpDown[O[E]] {
     val eUpDown = implicitly[UpDown[E]]
     val fTraverse = implicitly[Traverse[O]]
