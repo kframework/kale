@@ -77,6 +77,8 @@ trait ContextMixin extends Mixin {
     }
   }
 
+  def indicesToAvoidTraversingForTerm(t: Term): Set[Int] = Set()
+
   def SolvingContextMatcher(solver: Apply): (Node1, Term) => Term = { (solvingContext: Node1, term: Term) =>
     val contextApp = solvingContext._1.asInstanceOf[ContextApplication]
 
@@ -118,7 +120,7 @@ trait ContextMixin extends Mixin {
               case l =>
                 // C[bar(X)] := foo(bar(1))
                 val subterms = term.children
-                val recursive = solutionFor(subterms.toSeq, (pos: Int, tt: Term) => term.updateAt(pos)(tt))
+                val recursive = solutionFor(subterms.toSeq, (pos: Int, tt: Term) => term.updateAt(pos)(tt), indicesToAvoidTraversingForTerm(term))
                 recursive
             }
             theAnywhereMatch
