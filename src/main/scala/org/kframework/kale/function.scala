@@ -85,9 +85,9 @@ case class PrimitiveFunction3[A, B, C, R](name: String, aLabel: UpDown[A], bLabe
 }
 
 object PrimitiveFunction3 {
-  def apply[A, R](name: String, aLabel: LeafLabel[A], rLabel: LeafLabel[R], f: (A, A, A) => R)(implicit env: Environment): PrimitiveFunction3[A, A, A, R] =
+  def apply[A, R](name: String, aLabel: UpDown[A], rLabel: UpDown[R], f: (A, A, A) => R)(implicit env: Environment): PrimitiveFunction3[A, A, A, R] =
     PrimitiveFunction3(name, aLabel, aLabel, aLabel, rLabel, f)
 
-  def apply[A](name: String, aLabel: LeafLabel[A], f: (A, A, A) => A)(implicit env: Environment): PrimitiveFunction3[A, A, A, A] =
+  def apply[A](name: String, aLabel: UpDown[A], f: (A, A, A) => A)(implicit env: Environment): PrimitiveFunction3[A, A, A, A] =
     PrimitiveFunction3(name, aLabel, aLabel, aLabel, aLabel, f)
 }

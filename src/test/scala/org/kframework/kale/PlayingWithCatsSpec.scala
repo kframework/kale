@@ -19,15 +19,13 @@ class PlayingWithCatsSpec extends FunSuite with Discipline {
   }
 
 
-  test("up scala objects") {
-    implicit val upInt =INT.Int
+  test("up-down scala objects") {
+    implicit val upInt = INT.Int
 
-    assert(implicitly[Up[Int]].apply(3) === INT.Int(3))
+    assert(implicitly[UpDown[Int]].apply(3) === INT.Int(3))
 
-    implicitly[MonoidLabeled[List]]
+    assert(implicitly[UpDown[List[Int]]].apply(List(1, 2, 3)) == scalaList(List(1, 2, 3)))
 
-    import cats.implicits._
-
-    assert(implicitly[Up[List[Int]]].apply(List(1, 2, 3)) == scalaList(List(1, 2, 3)))
+    assert(implicitly[UpDown[List[Int]]].unapply(scalaList(List(1, 2, 3))) == Some(List(1, 2, 3)))
   }
 }

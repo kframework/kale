@@ -40,6 +40,7 @@ class RewriteTest extends FreeSpec {
   sorted(Tuple5, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K)
   sorted(Tuple6, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K)
   sorted(emptyScalaList.label, Sort.K)
+  sorted(PathLabel, Sort.K, Sort.K)
 
   env.seal()
 

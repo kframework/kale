@@ -48,7 +48,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition,
     },
     "INT.add" -> { (labelName, labels, terms) =>
       assert(labels.size == 1 && terms.isEmpty)
-      Some(PrimitiveFunction2[Int](labelName, labels.head.asInstanceOf[LeafLabel[Int]], _ + _))
+      Some(PrimitiveFunction2[Int](labelName, UpDown.updownFromLeafLabel(labels.head.asInstanceOf[LeafLabel[Int]]), _ + _))
     },
     "MAP.concat" -> { (labelName, labels, terms) =>
       val indexFunction: Term => Term = { t => t.children.toList(terms.tail.head.asInstanceOf[kale.DomainValue[Int]].data) }

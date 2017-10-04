@@ -76,6 +76,7 @@ class IMPSpec extends FreeSpec {
   sorted(Tuple4, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K)
   sorted(Tuple5, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K)
   sorted(Tuple6, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K, Sort.K)
+  sorted(PathLabel, Sort.K, Sort.K)
 
   // symbol declarations
   val ints = FreeLabel2("_,_");

@@ -1,14 +1,18 @@
 package org.kframework.kale.standard
 
-import org.kframework.kale.{AssocLabel, Environment, Label, Mixin, Term}
+import org.kframework.kale.util.Named
+import org.kframework.kale.{AssocLabel, Environment, FreeLabel1, Label, Mixin, Term, UpDown}
 
 trait PathMixin extends Mixin {
   _: Environment =>
 
+
+  val PathLabel = new Named("PathLabel") with FreeLabel1
+
   /**
     * works only for non-comm
     */
-  case class Path(positions: Seq[Int]) {
+  case class Path(positions: List[Int]) {
     /**
       * Returns the subterm of t at the current Path position
       */
