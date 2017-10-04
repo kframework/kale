@@ -27,5 +27,5 @@ trait IntMixin extends kale.IntMixin {
     lazy val all = Set(Int, plus, minus, mult, div, mod, lt, le, gt, ge, neq, eq)
   }
 
-  implicit val upInt = INT.Int
+  implicit val updownInt = INT.Int
 }

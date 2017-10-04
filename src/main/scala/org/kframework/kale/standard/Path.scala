@@ -1,13 +1,30 @@
 package org.kframework.kale.standard
 
+import org.kframework.kale.builtin.IntMixin
 import org.kframework.kale.util.Named
-import org.kframework.kale.{AssocLabel, Environment, FreeLabel1, Label, Mixin, Term, UpDown}
+import org.kframework.kale.{AssocLabel, DefineMixin, Environment, FreeLabel1, Label, Mixin, Term, UpDown}
 
 trait PathMixin extends Mixin {
-  _: Environment =>
+  _: Environment with DefineMixin with IntMixin with ScalaLibraryMixin =>
 
 
   val PathLabel = new Named("PathLabel") with FreeLabel1
+
+  implicit val updownPath = new UpDown[Path] {
+    val updownList = implicitly[UpDown[List[Int]]]
+
+    override def unapply(t: Term) =
+      updownList.unapply(t.children.head) map Path
+
+    override def apply(o: Path) =
+      PathLabel(updownList(o.positions))
+  }
+
+  case class map0WithPath(f: (Term, Path) => Term) {
+    def apply(t: Term, path: Path): Term = t.copy(t.flattenedChildren.zipWithIndex map {
+      case (t: Term, i: Int) => f(t, Path(path.positions :+ i))
+    })
+  }
 
   /**
     * works only for non-comm
@@ -18,10 +35,7 @@ trait PathMixin extends Mixin {
       */
     def apply(t: Term): Term = positions match {
       case head :: tail =>
-        val elements = t.label match {
-          case label: AssocLabel => label.asIterable(t).toSeq
-          case _ => t.children.toSeq
-        }
+        val elements = t.flattenedChildren
         Path(tail)(elements(positions.head))
       case Nil => t
     }

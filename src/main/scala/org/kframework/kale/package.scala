@@ -72,6 +72,10 @@ package object kale {
 
     def unify(obj: Term): Term = term.label.env.unify(term, obj)
 
+    def flattenedChildren: List[Term] = term.label match {
+      case label: AssocLabel => label.asIterable(term).toList
+      case _ => term.children.toList
+    }
 
     def asOr = new ExplicitOr(term)
 

@@ -26,4 +26,9 @@ class PathTest extends TestSetup[StandardEnvironment]() {
   "explicitate" in {
     assert(Path(List(0, 0, 1)).explicitate(foo(bar(el ~~ 1 ~~ 2), 2)) === List(foo, bar, listLabel, INT.Int))
   }
+
+  "updown" in {
+    val p = Path(List(0, 1, 2))
+    assert((p: Term) === PathLabel(scalaList(0: Term, 1: Term, 2: Term)))
+  }
 }
