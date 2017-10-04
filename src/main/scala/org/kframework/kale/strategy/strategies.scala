@@ -113,7 +113,7 @@ trait StrategyMixin extends Mixin {
       case Bottom =>
         Next(obj)
       case _ =>
-        Bottom
+        And(Next(obj), doesNotMatch(pattern._1, obj))
     }
   }
 
