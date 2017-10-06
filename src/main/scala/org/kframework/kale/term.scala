@@ -71,8 +71,8 @@ trait Term extends kore.Pattern with HasAtt {
   def copy(children: Seq[Term]): Term
 }
 
-trait IsPredicate {
-  val isPredicate = true
+trait Predicate {
+  val isPredicate = Some(true)
 }
 
 object Term {

@@ -52,7 +52,7 @@ trait StringMixin extends Mixin {
   trait STRING {
     val String: DomainValueLabel[java.lang.String]
     val Regex: DomainValueLabel[scala.util.matching.Regex]
-    val strconcat: FunctionLabel2
+    val strconcat: PrimitiveMonoid[String]
   }
 
   val STRING: STRING

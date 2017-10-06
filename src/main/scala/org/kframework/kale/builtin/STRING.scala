@@ -1,5 +1,6 @@
 package org.kframework.kale.builtin
 
+import cats.Monoid
 import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.standard.ReferenceLabel
@@ -27,7 +28,13 @@ trait StringMixin extends kale.StringMixin {
 
     val rfindchar = define("rfindChar", (_: String).lastIndexOf((_: String).charAt(0), _: Int))
 
-    val strconcat = define("_+String_", (_: String) concat (_: String))
+    implicit val concatMonoid = new Monoid[String] {
+      override def empty = ""
+
+      override def combine(x: String, y: String) = x concat y
+    }
+
+    val strconcat = monoid[String]("_+String_")
 
     val replaceall = define("replaceAll(_,_,_)", (_: String).replaceAll(_: String, _: String))
 

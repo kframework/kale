@@ -26,9 +26,15 @@ trait PrettyWrapperMixin extends Mixin {
           val terms = assoc.assocIterable
           assoc.label(terms map {
             case t if t == terms.head && !t.isPredicate =>
-              W(_1, t, I)
+              t match {
+                case PrettyWrapper(a, t, b) => PrettyWrapper(STRING.strconcat(_1, a), t, b)
+                case _ => PrettyWrapper(_1, t, I)
+              }
             case t if t == terms.last && !t.isPredicate =>
-              W(I, t, _3)
+              t match {
+                case PrettyWrapper(a, t, b) => PrettyWrapper(a, t, STRING.strconcat(b, _3))
+                case _ => PrettyWrapper(I, t, _3)
+              }
             case t => t
           })
         case PrettyWrapper(_1inner, _2inner, _3inner) =>

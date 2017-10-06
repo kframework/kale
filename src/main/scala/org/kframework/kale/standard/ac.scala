@@ -50,14 +50,10 @@ trait NonAssocWithIdListMixin extends Mixin {
   }), Priority.medium)
 }
 
-trait MonoidLabel extends kale.MonoidLabel {
-  def size: Label1
-}
-
 trait AssocWithIdListMixin extends Mixin {
   _: Environment with kale.ACMixin with IntMixin with MatchingLogicMixin =>
 
-  override def AssocWithIdLabel(name: String, id: Term): MonoidLabel = new MonoidListLabel(name, id)
+  override def AssocWithIdLabel(name: String, id: Term): NonPrimitiveMonoidLabel = new MonoidListLabel(name, id)
 
   private def matchContents(l: AssocLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = strongBottomize(soFar) {
     val res = (ksLeft.toSeq, ksRight.toSeq) match {
@@ -121,7 +117,7 @@ case class CollectionSize(collectionLabel: CollectionLabel)(implicit env: Enviro
   override val isPredicate: Option[Boolean] = Some(false)
 }
 
-private[standard] class MonoidListLabel(val name: String, val identity: Term)(implicit val env: Environment with IntMixin) extends MonoidLabel with Constructor {
+private[standard] class MonoidListLabel(val name: String, val identity: Term)(implicit val env: Environment with IntMixin) extends NonPrimitiveMonoidLabel with Constructor {
 
   val size = CollectionSize(this)
 
@@ -133,7 +129,7 @@ private[standard] class MonoidListLabel(val name: String, val identity: Term)(im
   override val isPredicate: Option[Boolean] = Some(false)
 }
 
-private[standard] case class AssocWithIdList(label: MonoidLabel, assocIterable: Iterable[Term]) extends Assoc {
+case class AssocWithIdList(label: MonoidLabel, assocIterable: Iterable[Term]) extends Assoc {
   assert(assocIterable.size > 1)
 
   assert(assocIterable.forall(_ != label.identity))

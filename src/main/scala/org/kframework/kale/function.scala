@@ -1,5 +1,10 @@
 package org.kframework.kale
 
+import cats.Monoid
+import org.kframework.kale.standard.AssocWithIdList
+
+import scala.annotation.switch
+
 trait FunctionLabel extends NodeLabel {
   val name: String
 }
@@ -68,6 +73,78 @@ case class PrimitiveFunction2[A, B, R](name: String, aLabel: UpDown[A], bLabel: 
     case _ => None
   }
 }
+
+case class PrimitiveMonoid[O: Monoid : UpDown](name: String)(implicit val env: Environment)
+  extends FunctionLabel with PureFunctionLabel with MonoidLabel {
+
+  val primitiveMonoid: Monoid[O] = implicitly[Monoid[O]]
+  val updown: UpDown[O] = implicitly[UpDown[O]]
+
+  private val Self = this
+
+  def combineExtendedWithABitOfSymbolic(a: Term, b: Term): Option[Term] = ((a, b): @switch) match {
+    case (`identity`, b) => Some(b)
+    case (a, `identity`) => Some(a)
+    case (updown(aPrimitive), updown(bPrimitive)) => Some(updown(primitiveMonoid.combine(aPrimitive, bPrimitive)))
+    case _ => None
+  }
+
+  /**
+    * take the last of la and use it to eat away at lb
+    */
+  def processB(el: Term, oldList: Vector[Term]): Vector[Term] = {
+    combineExtendedWithABitOfSymbolic(el, oldList.head) match {
+      case Some(newEl) => processB(newEl, oldList.tail)
+      case None => el +: oldList
+    }
+  }
+
+  /**
+    * now take the first of the newBList and use it to eat away at la
+    */
+  def processA(oldList: Vector[Term], el: Term): Vector[Term] = {
+    combineExtendedWithABitOfSymbolic(oldList.last, el) match {
+      case Some(newEl) => processA(oldList.dropRight(1), newEl)
+      case None => oldList :+ el
+    }
+  }
+
+  def apply(a: Term, b: Term) = (a, b) match {
+    case (AssocWithIdList(Self, la: Vector[Term]), AssocWithIdList(Self, lb: Vector[Term])) => {
+      val newBList = processB(la.last, lb)
+      val newAList = processA(la, newBList.head)
+      // the solution is the concatenation of the two, minding the gap
+      AssocWithIdList(this, newAList ++ newBList.tail)
+    }
+    case (a, AssocWithIdList(Self, lb: Vector[Term])) => {
+      val newBList = processB(a, lb)
+      AssocWithIdList(this, newBList)
+    }
+    case (AssocWithIdList(Self, la: Vector[Term]), b) => {
+      val newAList = processA(la, b)
+      AssocWithIdList(this, newAList)
+    }
+    case (a, b) => combineExtendedWithABitOfSymbolic(a, b) getOrElse AssocWithIdList(this, List(a, b))
+  }
+
+  override val identity =
+    updown.apply(primitiveMonoid.empty)
+}
+
+//case class PrimitiveMonoid[O](label: PrimitiveMonoidLabel[O], list: List[O]) extends Node2 {
+//  override def _1 = label.updown(list.head)
+//
+//  override def _2 = {
+//    val tail = list.tail
+//    if (tail.size == 1) {
+//      label.updown(tail.head)
+//    } else {
+//      assert(tail.size > 1)
+//      PrimitiveMonoid(label, tail)
+//    }
+//  }
+//}
+
 
 object PrimitiveFunction2 {
   def apply[A, R](name: String, aLabel: UpDown[A], rLabel: Up[R], f: (A, A) => R)(implicit env: Environment): PrimitiveFunction2[A, A, R] =

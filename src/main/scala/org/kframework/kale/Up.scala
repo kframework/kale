@@ -1,6 +1,8 @@
 package org.kframework.kale
 
+import cats.Monoid
 import org.kframework.kale.standard.{ReferenceLabel, ScalaLibraryMixin}
+import org.kframework.kale.util.Named
 
 trait Convert[A, B] {
   def convert(a: A): B
@@ -36,6 +38,8 @@ trait MonoidLabeled[O[_]] {
 
 trait DefineMixin extends Mixin {
   _: Environment =>
+
+  def monoid[O: Monoid : UpDown](name: String) = PrimitiveMonoid(name)
 
   def define[A: UpDown, B: UpDown, R: UpDown](name: String, f: (A, B) => R): PrimitiveFunction2[A, B, R] =
     PrimitiveFunction2(name, implicitly[UpDown[A]], implicitly[UpDown[B]], implicitly[Up[R]], f)

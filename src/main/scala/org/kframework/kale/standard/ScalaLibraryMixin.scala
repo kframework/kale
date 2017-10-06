@@ -10,7 +10,7 @@ trait ScalaLibraryMixin extends Mixin {
   val scalaList = AssocWithIdLabel("scalaList", emptyScalaList)
 
   implicit val monoidLabeledList: MonoidLabeled[List] = new MonoidLabeled[List] {
-    override def monoidLabel: kale.MonoidLabel = scalaList
+    override def monoidLabel: kale.NonPrimitiveMonoidLabel = scalaList
   }
 
   import cats.implicits._

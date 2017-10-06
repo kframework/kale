@@ -7,6 +7,7 @@ import org.scalatest.FreeSpec
 
 object TestEnv extends StandardEnvironment with PrettyWrapperMixin with NoSortingMixin {
   def shouldBePretty(term: Term) = true
+
   override def isValidWrapper(_1: Term): Boolean = true
 }
 
@@ -57,7 +58,11 @@ class PrettyWrapperTest extends TestSetup()(TestEnv) {
     assertRewrite(rw(u, v), W("1", u, "2"), W("1", v, "2"))
     assertRewrite(A(rw(el, v), a), W("1", a, "2"), W("1", A(v, a), "2"))
     assertRewrite(A(a, rw(el, v)), W("1", a, "2"), W("1", A(a, v), "2"))
-    assertRewrite(A(rw(el, v), a, b), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), A(v, W("p1", a, "2"), W("3", b, "4s")))
+    assertRewrite(
+      A(rw(el, v), a, b),
+      W("p", A(W("1", a, "2"), W("3", b, "4")), "s"),
+      A(v, W("p1", a, "2"), W("3", b, "4s"))
+    )
     assertRewrite(A(a, rw(el, v), b), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), A(W("p1", a, "2"), v, W("3", b, "4s")))
     assertRewrite(A(a, b, rw(el, v)), W("p", A(W("1", a, "2"), W("3", b, "4")), "s"), A(W("p1", a, "2"), W("3", b, "4s"), v))
   }
