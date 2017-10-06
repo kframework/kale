@@ -32,21 +32,11 @@ trait PrettyWrapperMixin extends Mixin {
             case t => t
           })
         case PrettyWrapper(_1inner, _2inner, _3inner) =>
-          val _1res = mergeSpacing(_1, _1inner)
-          val _3res = mergeSpacing(_3inner, _3)
+          val _1res = STRING.strconcat(_1, _1inner)
+          val _3res = STRING.strconcat(_3inner, _3)
           PrettyWrapper(_1res, _2inner, _3res)
         case o =>
           PrettyWrapperHolder(_1, _2, _3)
-      }
-    }
-
-
-    private def mergeSpacing(_1: Term, _1inner: Term) = {
-      (_1, _1inner) match {
-        case (STRING.String(s1), STRING.String(s2)) => STRING.String(s1 + s2)
-        case (Infer, STRING.String(s)) => STRING.String(s)
-        case (STRING.String(s), Infer) => STRING.String(s)
-        case (Infer, Infer) => Infer
       }
     }
 
