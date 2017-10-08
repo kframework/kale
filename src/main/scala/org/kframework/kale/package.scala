@@ -74,7 +74,7 @@ package object kale {
     def unify(obj: Term): Term = term.label.env.unify(term, obj)
 
     def flattenedChildren: List[Term] = term.label match {
-      case label: AssocLabel => label.asIterable(term).toList
+      case label: SemigroupLabel => label.asIterable(term).toList
       case _ => term.children.toList
     }
 
@@ -88,7 +88,7 @@ package object kale {
       */
     def toConstructor: String =
       term match {
-        case Node(label: AssocLabel, _) =>
+        case Node(label: SemigroupLabel, _) =>
           label.name + "(" + (label.asIterable(term) map (_.toConstructor) mkString ", ") + ")"
         case Node(label, children) =>
           label.name + "(" + (children map (_.toConstructor) mkString ", ") + ")"
@@ -101,7 +101,7 @@ package object kale {
       }
   }
 
-  implicit class StaticRichAssocLabel(label: AssocLabel) {
+  implicit class StaticRichAssocLabel(label: SemigroupLabel) {
     def apply(args: Term*): Term = label.apply(args.toSeq)
   }
 

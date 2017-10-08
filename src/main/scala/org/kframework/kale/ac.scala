@@ -30,7 +30,7 @@ trait CollectionLabel extends Label2 {
   }
 }
 
-trait AssocLabel extends CollectionLabel with cats.Semigroup[Term] {
+trait SemigroupLabel extends CollectionLabel with cats.Semigroup[Term] {
   override def apply(l: Iterable[Term]): Term
 
   private val thisthis = this
@@ -43,7 +43,7 @@ trait AssocLabel extends CollectionLabel with cats.Semigroup[Term] {
   }
 }
 
-trait MonoidLabel extends AssocLabel with HasId with cats.Monoid[Term] {
+trait MonoidLabel extends SemigroupLabel with HasId with cats.Monoid[Term] {
   override def asIterable(t: Term): Iterable[Term] = t match {
     case `identity` => List[Term]()
     case x if x.label == this => x.asInstanceOf[Assoc].assocIterable
@@ -73,12 +73,12 @@ trait NonPrimitiveMonoidLabel extends MonoidLabel {
   protected def construct(l: Iterable[Term]): Term
 }
 
-trait AssocWithoutIdLabel extends AssocLabel {
+trait AssocWithoutIdLabel extends SemigroupLabel {
   // todo
 }
 
 trait Assoc extends Node2 {
-  override val label: AssocLabel
+  override val label: SemigroupLabel
   val assocIterable: Iterable[Term]
 
   override def map0(f: (Term) => Term): Term = label(assocIterable map f)
@@ -92,8 +92,8 @@ trait Assoc extends Node2 {
 }
 
 object Assoc {
-  def unapply(t: Term): Option[(AssocLabel, Iterable[Term])] = t.label match {
-    case l: AssocLabel => Some(l, l.asIterable(t))
+  def unapply(t: Term): Option[(SemigroupLabel, Iterable[Term])] = t.label match {
+    case l: SemigroupLabel => Some(l, l.asIterable(t))
     case _ => None
   }
 }
@@ -112,7 +112,7 @@ trait AssocComm extends Assoc with Comm {
 
 trait CommLabel
 
-trait AssocCommLabel extends AssocLabel with CommLabel {
+trait AssocCommLabel extends SemigroupLabel with CommLabel {
   def asSet(t: Term): Set[Term] = t match {
     case t: AssocComm if t.label == this => t.asSet
     case _ => Set(t)
@@ -124,7 +124,7 @@ trait AssocCommLabel extends AssocLabel with CommLabel {
 
 }
 
-trait AssocCommWithIdLabel extends AssocCommLabel with MonoidLabel {
+trait CommutativeMonoid extends AssocCommLabel with MonoidLabel {
   override def asSet(t: Term): Set[Term] =
     if (t == identity) {
       Set()

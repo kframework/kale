@@ -55,7 +55,7 @@ trait AssocWithIdListMixin extends Mixin {
 
   override def AssocWithIdLabel(name: String, id: Term): NonPrimitiveMonoidLabel = new MonoidListLabel(name, id)
 
-  private def matchContents(l: AssocLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = strongBottomize(soFar) {
+  private def matchContents(l: SemigroupLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = strongBottomize(soFar) {
     val res = (ksLeft.toSeq, ksRight.toSeq) match {
       case (Seq(), Seq()) =>
         soFar

@@ -124,7 +124,7 @@ trait Top extends Truth with Substitution with kore.Top {
 trait Bottom extends Truth with kore.Bottom
 
 
-trait AndLabel extends AssocCommWithIdLabel with Z3Builtin {
+trait AndLabel extends CommutativeMonoid with Z3Builtin {
 
   import env._
 
@@ -138,7 +138,7 @@ trait AndLabel extends AssocCommWithIdLabel with Z3Builtin {
   override val isPredicate: Option[Boolean] = None
 }
 
-trait OrLabel extends AssocCommWithIdLabel with Z3Builtin {
+trait OrLabel extends CommutativeMonoid with Z3Builtin {
   override val identity = env.Bottom
   assert(identity != null)
 

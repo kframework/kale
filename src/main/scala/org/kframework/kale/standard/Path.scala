@@ -2,7 +2,7 @@ package org.kframework.kale.standard
 
 import org.kframework.kale.builtin.IntMixin
 import org.kframework.kale.util.Named
-import org.kframework.kale.{AssocLabel, DefineMixin, Environment, FreeLabel1, Label, Mixin, Term, UpDown}
+import org.kframework.kale.{SemigroupLabel, DefineMixin, Environment, FreeLabel1, Label, Mixin, Term, UpDown}
 
 trait PathMixin extends Mixin {
   _: Environment with DefineMixin with IntMixin with ScalaLibraryMixin =>
@@ -46,7 +46,7 @@ trait PathMixin extends Mixin {
     def explicitate(t: Term): Seq[Label] = positions match {
       case head :: tail =>
         val elements = t.label match {
-          case label: AssocLabel => label.asIterable(t).toSeq
+          case label: SemigroupLabel => label.asIterable(t).toSeq
           case _ => t.children.toSeq
         }
         t.label +: Path(tail).explicitate(elements(positions.head))
