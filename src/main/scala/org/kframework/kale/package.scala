@@ -48,6 +48,7 @@ package object kale {
 
   class ExplicitAnd(private val t: Term) extends AnyVal {
     def map(f: Term => Term): Term = (t.label.env.And map f) (t)
+    def filter(f: Term => Boolean): Term = (t.label.env.And filter f) (t)
   }
 
   implicit class RichTerm(private val term: Term) extends AnyVal {
