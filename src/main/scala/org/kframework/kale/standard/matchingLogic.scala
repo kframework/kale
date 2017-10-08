@@ -143,8 +143,13 @@ trait MatchingLogicPostfixMixin extends Mixin {
     }
   })
 
-  case class RightRewriteMatcher(solver: Binary.Apply) extends Binary.F({ (a: SimpleRewrite, b: Term) =>
-    ???
+  case class RightRewriteMatcher(solver: Binary.Apply) extends Binary.F({ (a: Term, b: SimpleRewrite) =>
+    val m = solver(a, b._1)
+    m.asOr map {
+      case And.SPN(subs, predicates, _) =>
+        val s = substitutionMaker(subs)
+        And.SPN(subs, predicates, Next(s(b._2)))
+    }
   })
 
   case class TruthMatcher(solver: Binary.Apply) extends Binary.F[Term, Term]({
