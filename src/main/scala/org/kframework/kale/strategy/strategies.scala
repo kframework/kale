@@ -64,12 +64,15 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     }
   }
 
+
+  def noRewrite(t: Term) = !t.exists(_.label == env.Rewrite)
+
   /**
     * "Waits" for all non-anonymous variables to be instantiated, tries to match, and returns Top if unsat.
     */
   val doesNotMatch = new Named("!=") with Label2 {
     override def apply(pattern: Term, obj: Term): Term =
-      if ((obj.variables | pattern.variables).forall(_.name.str.startsWith("_"))) {
+      if ((obj.variables | pattern.variables).forall(_.name.str.startsWith("_")) && noRewrite(obj) && noRewrite(pattern)) {
         val res = env.unify(pattern, obj)
         env.Truth(res == env.Bottom)
       } else {
