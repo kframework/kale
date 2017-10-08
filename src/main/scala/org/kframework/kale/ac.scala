@@ -124,7 +124,7 @@ trait AssocCommLabel extends AssocLabel with CommLabel {
 
 }
 
-trait AssocCommWithIdLabel extends AssocCommLabel with HasId {
+trait AssocCommWithIdLabel extends AssocCommLabel with MonoidLabel {
   override def asSet(t: Term): Set[Term] =
     if (t == identity) {
       Set()
