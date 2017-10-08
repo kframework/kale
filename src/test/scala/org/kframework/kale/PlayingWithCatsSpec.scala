@@ -13,6 +13,11 @@ class PlayingWithCatsSpec extends FunSuite with Discipline {
   val x = Variable("x")
   val y = Variable("y")
 
+  import equiv._
+  implicit val canEquiv = new CanBeEquivalent {
+    override def apply(v1: Term, v2: Term) = false
+  }
+
   test("play") {
     assert(implicitly[Eq[Term]].eqv(x, x))
     assert(implicitly[Eq[Term]].neqv(x, y))

@@ -112,8 +112,6 @@ object Term {
   implicit class RichTerm(t: Term)(implicit env: Environment) {
     def moveRewriteToTop: Rewrite = moveRewriteSymbolToTop(t)
   }
-
-  implicit val eq: Eq[Term] = (x: Term, y: Term) => x.equals(y)
 }
 
 trait LeafLabel[T] extends (T => Leaf[T]) with Label {

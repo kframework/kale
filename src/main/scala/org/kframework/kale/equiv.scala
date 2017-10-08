@@ -56,11 +56,16 @@ object equiv {
         if (x.label != y.label)
           None
         else {
-          x.flattenedChildren.zip(y.flattenedChildren)
-            .foldLeft(Some(knownEq): Option[EqMemo]) {
-              case (None, _) => None
-              case (Some(eqM), (a, b)) => innerEqv(eqM)(a, b)
-            }
+          x.label match {
+            case _: NodeLabel =>
+              x.flattenedChildren.zip(y.flattenedChildren)
+                .foldLeft(Some(knownEq): Option[EqMemo]) {
+                  case (None, _) => None
+                  case (Some(eqM), (a, b)) => innerEqv(eqM)(a, b)
+                }
+            case _: LeafLabel[_] =>
+              if (x == y) Some(knownEq) else None
+          }
         }
       }
     }
@@ -74,9 +79,13 @@ object equiv {
       } else {
         val labelEq = x.label.name compareTo y.label.name
         if (labelEq == 0) {
-          x.children.zip(y.children).collectFirst({
-            case (a, b) if compare(a, b) != 0 => compare(a, b)
-          }).getOrElse(0)
+          x.label match {
+            case _: NodeLabel => x.children.zip(y.children).collectFirst({
+              case (a, b) if compare(a, b) != 0 => compare(a, b)
+            }).get
+            case l: LeafLabel[_] =>
+              implicitly[Order[String]].compare(x.toString, y.toString)
+          }
         } else {
           labelEq
         }
