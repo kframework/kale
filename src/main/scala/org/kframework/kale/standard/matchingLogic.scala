@@ -642,6 +642,7 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
   }
 
   def nextIsNow(t: Term): Term = t.label match {
+    case And.SPN(s, p, And.nowAndNext(_, b)) => And.SPN(s, p, b)
     case Next => t.asInstanceOf[Node1]._1
     case _ => t map0 nextIsNow
   }
