@@ -200,7 +200,7 @@ private[standard] case class TopInstance()(implicit eenv: Environment) extends T
 
   override def apply(t: Term): Term = t
 
-  override def remove(v: Variable): Substitution = this
+  override def filter(f: Variable => Boolean): Substitution = this
 }
 
 private[standard] case class BottomInstance()(implicit eenv: Environment) extends Truth(false) with kale.Bottom {
@@ -447,14 +447,14 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
         // TODO: optimize to use the larger substitution as the first one
         val And.SPN(newSubs2, pred2: Term, nonPred2) = _1(_2)
 
-        val applyingTheSubsOutOf2To1 = newSubs2(_1).asInstanceOf[Substitution]
+        val And.SPN(applyingTheSubsOutOf2To1, pred3, Top) = newSubs2(_1)
 
         val m1 = asMap(applyingTheSubsOutOf2To1)
         val m2 = asMap(newSubs2)
 
         val newSub: Substitution = substitution(m1 ++ m2)
 
-        And.SPN(newSub, pred2, nonPred2)
+        And.SPN(newSub, And(pred2, pred3), nonPred2)
       }
     }
 
@@ -787,15 +787,14 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
 
   override val boundVariables: Set[Variable] = m.keySet
 
-  override def remove(v: Variable): Substitution = {
-    val newBindings = m.filterKeys(_ != v)
+  override def filter(f: Variable => Boolean): Substitution = {
+    val newBindings = m.filterKeys(f)
 
     val res = if (newBindings.size == 1)
       Equality.binding(newBindings.head._1, newBindings.head._2)
     else
       new MultipleBindings(newBindings)
 
-    assert(!res.contains(v))
     res
   }
 }

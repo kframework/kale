@@ -7,7 +7,9 @@ trait Substitution extends (Term => Term) with Term {
 
   def get(v: Variable): Option[Term]
 
-  def remove(v: Variable): Substitution
+  def filter(f: Variable => Boolean): Substitution
+
+  def remove(v: Variable): Substitution = filter(_ != v)
 
   def asMap: Map[Variable, Term]
 

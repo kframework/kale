@@ -177,7 +177,7 @@ trait Equals extends kore.Equals with Node2 with BinaryInfix {
 trait Binding extends Equals with Substitution {
   override val boundVariables: Set[Variable] = Set(_1.asInstanceOf[Variable])
 
-  override def remove(v: Variable): Substitution = if (_1 == v) env.Top else this
+  override def filter(f: Variable => Boolean): Substitution = if (f(_1.asInstanceOf[Variable])) this else env.Top
 }
 
 trait And extends kore.And with AssocComm {
