@@ -44,7 +44,7 @@ trait MatchingLogicMixin extends Mixin {
 
   case class AndTerm(solver: Apply) extends Binary.F({ (a: And, b: Term) =>
     if (a.nonPredicate == a) {
-      val aNext = And.extIsNow(a)
+      val aNext = And.nextIsNow(a)
       val aNow = And.nowOnly(a)
       val solutionNow = solver(aNow, b)
       val solutionNext = solver(Next(aNext), b)
@@ -57,7 +57,7 @@ trait MatchingLogicMixin extends Mixin {
 
   case class TermAnd(solver: Apply) extends Binary.F({ (a: Term, b: And) =>
     if (b.nonPredicate == b) {
-      val bNext = And.extIsNow(b)
+      val bNext = And.nextIsNow(b)
       val bNow = And.nowOnly(b)
       val solutionNow = solver(a, bNow)
       val solutionNext = solver(a, Next(bNext))
@@ -627,7 +627,7 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
   }
 
   // TODO: generalize to traversal?
-  def extIsNow(t: Term): Term = {
+  def nextIsNow(t: Term): Term = {
     t.asOr map {
       case And.SPN(s, p, n) =>
         And.SPN(s, p, innerNextIsNow(n))
