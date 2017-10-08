@@ -43,7 +43,13 @@ trait AssocLabel extends CollectionLabel with cats.Semigroup[Term] {
   }
 }
 
-trait MonoidLabel extends AssocLabel with HasId with cats.Monoid[Term]
+trait MonoidLabel extends AssocLabel with HasId with cats.Monoid[Term] {
+  override def asIterable(t: Term): Iterable[Term] = t match {
+    case `identity` => List[Term]()
+    case x if x.label == this => x.asInstanceOf[Assoc].assocIterable
+    case y => List(y)
+  }
+}
 
 trait NonPrimitiveMonoidLabel extends MonoidLabel {
 
@@ -59,12 +65,6 @@ trait NonPrimitiveMonoidLabel extends MonoidLabel {
   }
 
   val self = this
-
-  override def asIterable(t: Term): Iterable[Term] = t match {
-    case `identity` => List[Term]()
-    case x if x.label == this => x.asInstanceOf[Assoc].assocIterable
-    case y => List(y)
-  }
 
   @Normalizing
   override def apply(list: Iterable[Term]): Term = (list fold identity) ((a, b) => apply(a, b))
