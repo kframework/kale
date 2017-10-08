@@ -22,6 +22,12 @@ trait CollectionLabel extends Label2 {
       this (asIterable(t) map f)
     }
   }
+
+  def filter(f: Term => Boolean): Term => Term = { t: Term =>
+    env.strongBottomize(t) {
+      this (asIterable(t) filter f)
+    }
+  }
 }
 
 trait AssocLabel extends CollectionLabel with cats.Semigroup[Term] {
