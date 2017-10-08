@@ -3,7 +3,8 @@ package org.kframework.kale.strategy
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.{ProcessingFunctions, definePartialFunction}
 import org.kframework.kale.util.Named
-import org.kframework.kale.{Environment, FreeNode1, FreeNode2, FreeNode3, HasMatcher, Label1, Label2, Label3, Mixin, Node1, Term, standard}
+import org.kframework.kale.{Environment, FreeNode1, FreeNode2, FreeNode3, FunctionLabel1, HasMatcher, Label1, Label2, Label3, Mixin, Node1, Term, standard}
+import org.kframework.km.term.Variable
 import org.kframework.kore.Bottom
 
 case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin) {
@@ -72,7 +73,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     */
   val doesNotMatch = new Named("!=") with Label2 {
     override def apply(pattern: Term, obj: Term): Term =
-      if ((obj.variables | pattern.variables).forall(_.name.str.startsWith("_")) && noRewrite(obj) && noRewrite(pattern)) {
+      if (obj.variables.forall(v => v.name.str.startsWith("_"))) {
         val res = env.unify(pattern, obj)
         env.Truth(res == env.Bottom)
       } else {

@@ -23,6 +23,16 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
     //    assert((2: Term).unify(2: Term) == Top)
   }
 
+  "next" in {
+    assert(unify(a, Next(a)) === And(a, Next(a)))
+    assert(unify(Next(a), Next(a)) === Next(a))
+    assert(unify(a, And(b, Next(a))) === Bottom)
+  }
+
+  "focus" in {
+    assert(unify(a, And(a, Next(a))) === And(a, Next(a)))
+  }
+
   "Regex" in {
     assert((STRING.Regex("a.*c".r) =:= STRING.String("abbbc")) === STRING.String("abbbc"))
   }

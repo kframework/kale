@@ -43,14 +43,29 @@ trait MatchingLogicMixin extends Mixin {
   case class SortedVarRight(solver: Apply) extends Binary.F({ (a: Term, b: Variable) => SortedVarLeft(solver)(b, a) })
 
   case class AndTerm(solver: Apply) extends Binary.F({ (a: And, b: Term) =>
-    val solution = solver(a.nonPredicate, b)
-    val fTerm = And(a.predicate, solution)
-    fTerm
+    if (a.nonPredicate == a) {
+      val aNext = And.nextOnly(a)
+      val aNow = And.nowOnly(a)
+      val solutionNow = solver(aNow, b)
+      val solutionNext = solver(Next(aNext), b)
+      And(solutionNow, solutionNext, a.predicate)
+    } else {
+      val solution = solver(a.nonPredicate, b)
+      And(solution, a.predicate)
+    }
   })
 
   case class TermAnd(solver: Apply) extends Binary.F({ (a: Term, b: And) =>
-    val solution = solver(a, b.nonPredicate)
-    And(solution, b.predicate)
+    if (b.nonPredicate == b) {
+      val bNext = And.nextOnly(b)
+      val bNow = And.nowOnly(b)
+      val solutionNow = solver(a, bNow)
+      val solutionNext = solver(a, Next(bNext))
+      And(solutionNow, solutionNext, b.predicate)
+    } else {
+      val solution = solver(a, b.nonPredicate)
+      And(solution, b.predicate)
+    }
   })
 
   // TODO: something is not quite right with FormulaLabel -- make sure it is correct
@@ -119,7 +134,7 @@ trait MatchingLogicMixin extends Mixin {
 trait MatchingLogicPostfixMixin extends Mixin {
   _: Environment with MatchingLogicMixin with HasMatcher =>
 
-  case class RewriteMatcher(solver: Binary.Apply) extends Binary.F({ (a: SimpleRewrite, b: Term) =>
+  case class LeftRewriteMatcher(solver: Binary.Apply) extends Binary.F({ (a: SimpleRewrite, b: Term) =>
     val m = solver(a._1, b)
     m.asOr map {
       case And.SPN(subs, predicates, _) =>
@@ -138,7 +153,7 @@ trait MatchingLogicPostfixMixin extends Mixin {
   })
 
   register(Binary.definePartialFunction({
-    case (`Rewrite`, _) => RewriteMatcher
+    case (`Rewrite`, _) => LeftRewriteMatcher
     case (Truth, _) => TruthMatcher
     case (_, Truth) => TruthMatcher
   }), Priority.high)
@@ -393,14 +408,11 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
     if (_1 == Bottom || _2 == Bottom)
       Bottom
     else {
-      val And.SPN(sub1, pred1, nonPred1) = _1
-      val And.SPN(sub2, pred2, nonPred2) = _2
+      val And.SPN(sub1, pred1, And.nowAndNext(now1, next1)) = _1
+      val And.SPN(sub2, pred2, And.nowAndNext(now2, next2)) = _2
 
-      if (nonPred1 != Top && nonPred2 != Top) {
-        // While it would be easy to do, we do not allow more than one non-preicate terms for now.
-        // We noticed that, in practice, when we encounter this case, it is usually due to a bug in the definition.
-        throw new AssertionError("Conjuncting non-predicate terms is not allowed. The terms are: \n" + nonPred1 + "\nand \n" + nonPred2)
-      }
+      assertAtMostOneNonPred(now1, now2)
+      assertAtMostOneNonPred(next1, next2)
 
       apply(sub1, sub2) match {
         case `Bottom` => Bottom
@@ -415,9 +427,15 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
             And.SPN(
               finalSub,
               Predicates(other | And.asSet(finalSub(pred))),
-              nonPredicates(Set(finalSub(nonPred1), finalSub(nonPred2))))
+              nonPredicates(Set(now1, now2, Next(next1), Next(next2)).map(finalSub)))
           }
       }
+    }
+  }
+
+  private def assertAtMostOneNonPred(nonPred1: Term, nonPred2: Term) = {
+    if (nonPred1 != Top && nonPred2 != Top && nonPred1 != nonPred2) {
+      throw new AssertionError("Conjuncting non-predicate terms is not allowed. The terms are: \n" + nonPred1 + "\nand \n" + nonPred2)
     }
   }
 
