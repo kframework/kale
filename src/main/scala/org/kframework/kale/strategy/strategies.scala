@@ -85,8 +85,11 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
   /**
     * Matches/unifies it's argument and returns obj if unsat. See also doesNotMatch.
     */
-  val unsat = new Named("unsat") with Label1 with Strategy {
-    override def apply(pattern: Term): Term = FreeNode1(this, pattern)
+  val unsat = new Named("unsat") with FunctionLabel1 with Strategy {
+    override def f(_1: Term) = {
+      val x = env.Variable("unsatVar" + env.Variable.counter)
+      Some(env.And(x, doesNotMatch(_1, x)))
+    }
   }
 }
 
@@ -104,21 +107,10 @@ trait StrategyMixin extends Mixin {
       case (`compose`, _) => composeTerm
       case (`repeat`, _) => repeatTerm
       case (`fixpoint`, _) => fixpointTerm
-      case (`unsat`, `unsat`) => LeaveAlone
-      case (`unsat`, _) => unsatTerm
       case (`bu`, _) => buTerm
       case (`td`, _) => tdTerm
       case (`rw`, _) => rewriteTerm
     }), Priority.ultimate)
-
-  def unsatTerm(solver: Binary.Apply) = { (pattern: Node1, obj: Term) =>
-    solver(pattern._1, obj) match {
-      case Bottom =>
-        Next(obj)
-      case _ =>
-        And(Next(obj), doesNotMatch(pattern._1, obj))
-    }
-  }
 
   // only works for ground obj
   case class orElseTerm(solver: Binary.Apply) extends Binary.F({ (orElse: Term, obj: Term) =>
