@@ -144,13 +144,6 @@ package object kale {
     }
   }
 
-  case class foldLeftTD[D](d: D)(f: (D, Term) => D) extends (Term => D) {
-    override def apply(t: Term): D = {
-      val startD = f(d, t)
-      t.flattenedChildren.foldLeft(startD)((d, t) => foldLeftTD(d)(f)(t))
-    }
-  }
-
   trait Unapply[A, B] {
     def unapply(a: A): Option[B]
   }
