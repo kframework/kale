@@ -142,9 +142,9 @@ trait StrategyMixin extends Mixin {
     sol.asOr map {
       case And.SPN(s, p, t) =>
         if (s.boundVariables.contains(someVar)) {
-          And(p, And.nextOnly(t))
+          And(p, Next(anytimeIsNow(t)))
         } else {
-          solver(fp,  And.anytimeIsNow(And.nextOnly(t))) // TODO: pass in the remaining predicates
+          solver(fp,  anytimeIsNow(t)) // TODO: pass in the remaining predicates
         }
     }
   })
