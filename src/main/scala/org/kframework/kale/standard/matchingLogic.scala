@@ -599,6 +599,42 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
     }
   }
 
+  // TODO: generalize to traversal?
+  def nextOnly(t: Term): Term = {
+    t.asOr map {
+      case And.SPN(s, p, n) =>
+        And.SPN(s, p, innerNextOnly(n))
+    }
+  }
+
+  private def innerNextOnly(n: Term) = {
+    n.asAnd
+      .filter(_.label == Next).asAnd
+      .map {
+        case Next(x) => x
+      }
+  }
+
+  // TODO: generalize to traversal?
+  def nowOnly(t: Term): Term = {
+    t.asOr map {
+      case And.SPN(s, p, n) =>
+        And.SPN(s, p, innerNowOnly(n))
+    }
+  }
+
+  private def innerNowOnly(n: Term) = {
+    n.asAnd.filter(_.label != Next)
+  }
+
+  // TODO: generalize to traversal?
+  object nowAndNext {
+    def unapply(t: Term): Option[(Term, Term)] = t match {
+      case And.SPN(s, p, n) =>
+        Some((And.SPN(s, p, innerNowOnly(n)), And.SPN(s, p, innerNextOnly(n))))
+    }
+  }
+
   def onlyNonPredicate(t: Term): Term = {
     t.asOr map {
       case And.SPN(_, _, n) => n
