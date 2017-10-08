@@ -23,7 +23,7 @@ class StrategyTest extends TestSetup[StandardEnvironment]() {
   }
 
   "nextIsNow" in {
-    assert(nextIsNow(And(Next(a), Equality(X, a))) === And(Equality(X, a), a))
+    assert(anytimeIsNow(And(Next(a), Equality(X, a))) === And(Equality(X, a), a))
   }
 
   "compose" in {

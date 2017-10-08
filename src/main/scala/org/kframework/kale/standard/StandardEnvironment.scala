@@ -60,7 +60,7 @@ trait StandardEnvironment
   // HELPERS:
 
   def rewrite(rule: Term, obj: Term): Term = {
-    And.nextIsNow(And.onlyNonPredicate(unify(rule, obj)))
+    And.anytimeIsNow(And.onlyNonPredicate(unify(rule, obj)))
   }
 }
 

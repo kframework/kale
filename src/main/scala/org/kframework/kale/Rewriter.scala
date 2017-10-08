@@ -136,7 +136,7 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
           val afterSubstitution = env match {
             case env: StandardEnvironment =>
               import env._
-              ands.view.map(STRATEGY.nextIsNow).collect({
+              ands.view.map(STRATEGY.anytimeIsNow).collect({
                 case And.SPN(_, _, next) =>
                   next
               }).headOption.getOrElse(Bottom)
@@ -163,7 +163,7 @@ class Rewriter(val env: StandardEnvironment)(val inputRules: Set[_ <: Term]) ext
       case Bottom => Set[Term]()
       case or =>
         val res = Or.asSet(or).flatMap(u => {
-          val And.SPN(sub, pred@And.set(unresolvedConstraints), Next(next)) = u
+          val And.SPN(sub, pred@And.set(unresolvedConstraints), Next(next)) = And.nextOnly(u)
 
           val allConstraints = And(sub, pred)
 

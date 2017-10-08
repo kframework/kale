@@ -29,7 +29,7 @@ trait DSLMixin {
 
     def ?=>(tt: Term): Term = STRATEGY.orElseLeave(Rewrite(t, tt))
 
-    def ==:=(tt: Term): Term = env.And.onlyNonPredicate(env.unify(t, tt))
+    def ==:=(tt: Term): Term = And.nextOnly(env.And.onlyNonPredicate(env.unify(t, tt)))
 
     def :::(tt: Term): Term = STRATEGY.compose(t, tt)
 

@@ -9,7 +9,7 @@ import org.kframework.kore.Bottom
 
 case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin) {
 
-  val nextIsNow = standard.lift("^nextIsNow", env.And.nextIsNow _, None)
+  val anytimeIsNow = standard.lift("^nextIsNow", env.And.anytimeIsNow _, None)
 
   val onlyNonPredicate = standard.lift("^onlyNext", env.And.onlyNonPredicate _, Some(false))
 
@@ -129,7 +129,7 @@ trait StrategyMixin extends Mixin {
   case class composeTerm(solver: Binary.Apply) extends Binary.F({ (composed: Term, obj: Term) =>
     val compose(f, g) = composed
     val matchG = unify(g, obj)
-    val takeRelevantFromGMatch = nextIsNow(onlyNonPredicate(matchG))
+    val takeRelevantFromGMatch = anytimeIsNow(onlyNonPredicate(matchG))
     val matchF = unify(f, takeRelevantFromGMatch)
 
     matchF
@@ -142,9 +142,9 @@ trait StrategyMixin extends Mixin {
     sol.asOr map {
       case And.SPN(s, p, t) =>
         if (s.boundVariables.contains(someVar)) {
-          And(p, Next(nextIsNow(t)))
+          And(p, And.nextOnly(t))
         } else {
-          solver(fp, nextIsNow(t)) // TODO: pass in the remaining predicates
+          solver(fp,  And.anytimeIsNow(And.nextOnly(t))) // TODO: pass in the remaining predicates
         }
     }
   })
@@ -154,7 +154,7 @@ trait StrategyMixin extends Mixin {
     solver(f, obj) match {
       case Bottom => Bottom
       case Next(`obj`) => Next(obj)
-      case res => solver(fp, And.nextIsNow(res))
+      case res => solver(fp, And.anytimeIsNow(res))
     }
   })
 
@@ -163,7 +163,7 @@ trait StrategyMixin extends Mixin {
       val res = solver(bu._1, t)
       res match {
         case Bottom => t
-        case _ => nextIsNow(onlyNonPredicate(res))
+        case _ => anytimeIsNow(onlyNonPredicate(res))
       }
     })
     res
@@ -174,7 +174,7 @@ trait StrategyMixin extends Mixin {
       val res = solver(td._1, t)
       res match {
         case Bottom => t
-        case _ => nextIsNow(onlyNonPredicate(res))
+        case _ => anytimeIsNow(onlyNonPredicate(res))
       }
     })
     res

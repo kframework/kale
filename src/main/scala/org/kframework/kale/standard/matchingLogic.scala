@@ -44,7 +44,7 @@ trait MatchingLogicMixin extends Mixin {
 
   case class AndTerm(solver: Apply) extends Binary.F({ (a: And, b: Term) =>
     if (a.nonPredicate == a) {
-      val aNext = And.nextOnly(a)
+      val aNext = And.extIsNow(a)
       val aNow = And.nowOnly(a)
       val solutionNow = solver(aNow, b)
       val solutionNext = solver(Next(aNext), b)
@@ -57,7 +57,7 @@ trait MatchingLogicMixin extends Mixin {
 
   case class TermAnd(solver: Apply) extends Binary.F({ (a: Term, b: And) =>
     if (b.nonPredicate == b) {
-      val bNext = And.nextOnly(b)
+      val bNext = And.extIsNow(b)
       val bNow = And.nowOnly(b)
       val solutionNow = solver(a, bNow)
       val solutionNext = solver(a, Next(bNext))
@@ -143,6 +143,10 @@ trait MatchingLogicPostfixMixin extends Mixin {
     }
   })
 
+  case class RightRewriteMatcher(solver: Binary.Apply) extends Binary.F({ (a: SimpleRewrite, b: Term) =>
+    ???
+  })
+
   case class TruthMatcher(solver: Binary.Apply) extends Binary.F[Term, Term]({
     case (Bottom, _) => Bottom
     case (_, Bottom) => Bottom
@@ -159,7 +163,7 @@ trait MatchingLogicPostfixMixin extends Mixin {
   }), Priority.high)
 
   register(Binary.definePartialFunction({
-    case (_, `Rewrite`) => AssertNotPossible
+    case (_, `Rewrite`) => RightRewriteMatcher
   }), Priority.ultimate)
 }
 
@@ -618,14 +622,14 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
   }
 
   // TODO: generalize to traversal?
-  def nextOnly(t: Term): Term = {
+  def extIsNow(t: Term): Term = {
     t.asOr map {
       case And.SPN(s, p, n) =>
-        And.SPN(s, p, innerNextOnly(n))
+        And.SPN(s, p, innerNextIsNow(n))
     }
   }
 
-  private def innerNextOnly(n: Term) = {
+  private def innerNextIsNow(n: Term) = {
     n.asAnd
       .filter(_.label == Next).asAnd
       .map {
@@ -646,10 +650,22 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
   }
 
   // TODO: generalize to traversal?
+  def nextOnly(t: Term): Term = {
+    t.asOr map {
+      case And.SPN(s, p, n) =>
+        And.SPN(s, p, innerNextOnly(n))
+    }
+  }
+
+  private def innerNextOnly(n: Term) = {
+    n.asAnd.filter(_.label == Next)
+  }
+
+  // TODO: generalize to traversal?
   object nowAndNext {
     def unapply(t: Term): Option[(Term, Term)] = t match {
       case And.SPN(s, p, n) =>
-        Some((And.SPN(s, p, innerNowOnly(n)), And.SPN(s, p, innerNextOnly(n))))
+        Some((And.SPN(s, p, innerNowOnly(n)), And.SPN(s, p, innerNextIsNow(n))))
     }
   }
 
@@ -659,10 +675,10 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
     }
   }
 
-  def nextIsNow(t: Term): Term = t.label match {
-    case And.SPN(s, p, And.nowAndNext(_, b)) => And.SPN(s, p, b)
+  def anytimeIsNow(t: Term): Term = t.label match {
+    case And.SPN(s, p, And.nowAndNext(_, b)) => And.SPN(s, p, anytimeIsNow(b))
     case Next => t.asInstanceOf[Node1]._1
-    case _ => t map0 nextIsNow
+    case _ => t map0 anytimeIsNow
   }
 
   private type TheFold = Set[(Term, List[Term])]

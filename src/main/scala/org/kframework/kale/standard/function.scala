@@ -91,7 +91,7 @@ trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel wi
       unify(rewriter, res) match {
         case Bottom => None
         case r =>
-          Some(And.nextIsNow(OneResult(And.onlyNonPredicate(r))))
+          Some(And.anytimeIsNow(OneResult(And.nextOnly(And.onlyNonPredicate(r)))))
       }
     } else {
       None
