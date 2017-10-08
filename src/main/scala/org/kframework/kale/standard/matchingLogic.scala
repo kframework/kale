@@ -208,7 +208,10 @@ private[standard] case class BottomInstance()(implicit eenv: Environment) extend
 }
 
 private[standard] case class SimpleNextLabel()(implicit override val env: Environment) extends Named("=>_") with NextLabel {
-  def apply(t: Term) = SimpleNext(t)
+  def apply(t: Term) = t match {
+    case env.Top => env.Top
+    case _ => SimpleNext(t)
+  }
 
   override val isPredicate: Option[Boolean] = None
 }
