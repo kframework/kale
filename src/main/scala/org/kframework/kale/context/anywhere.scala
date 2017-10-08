@@ -111,7 +111,7 @@ trait ContextMixin extends Mixin {
         val matchPredicate = unify(contextApp.finalContextPredicate, term)
 
         val res = matchPredicate.asOr map {
-          case And.SPN(_, p, _) if p.contains(Context.anywhere) =>
+          case And.SPN(s, p, n) if p.contains(Context.anywhere) =>
             val theAnywhereMatch = other match {
               //              case l: AssocLabel =>
               //                val subresults = l.asIterable(term).toList
@@ -121,7 +121,7 @@ trait ContextMixin extends Mixin {
                 // C[bar(X)] := foo(bar(1))
                 val subterms = term.children
                 val recursive = solutionFor(subterms.toSeq, (pos: Int, tt: Term) => term.updateAt(pos)(tt), indicesToAvoidTraversingForTerm(term))
-                recursive
+                And(s, recursive)
             }
             theAnywhereMatch
           case And.SPN(s, p, n) if p.findBU({ case Exists(contextApp.specificHole, _) => true; case _ => false }).isEmpty =>
