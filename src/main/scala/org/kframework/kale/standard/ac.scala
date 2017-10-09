@@ -4,7 +4,7 @@ import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
-import org.kframework.kale.util.Named
+import org.kframework.kale.util.{Named, measureTime}
 
 import scala.collection.{+:, Iterable, Seq}
 
@@ -55,35 +55,38 @@ trait AssocWithIdListMixin extends Mixin {
 
   override def AssocWithIdLabel(name: String, id: Term): NonPrimitiveMonoidLabel = new MonoidListLabel(name, id)
 
-  private def matchContents(l: SemigroupLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term = strongBottomize(soFar) {
-    val res = (ksLeft.toSeq, ksRight.toSeq) match {
-      case (Seq(), Seq()) =>
-        soFar
-      case (t +: tailL, ksR) =>
-        (0 to ksR.size)
-          .map {
-            index => (ksR.take(index), ksR.drop(index))
-          }
-          .map {
-            case (prefix, suffix) =>
-              val prefixTerm = l(prefix)
-              val newSoFar = t match {
-                case v: Variable => And.combine(l)(Solved(soFar), Solved(And(prefixTerm, Equality(v, prefixTerm))))
-                case _ => And.combine(l)(Solved(soFar), Task(t, prefixTerm))
+  private def matchContents(l: SemigroupLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term =
+    measureTime("assoc") {
+      strongBottomize(soFar) {
+        val res = (ksLeft.toSeq, ksRight.toSeq) match {
+          case (Seq(), Seq()) =>
+            soFar
+          case (t +: tailL, ksR) =>
+            (0 to ksR.size)
+              .map {
+                index => (ksR.take(index), ksR.drop(index))
               }
-              matchContents(l, newSoFar, tailL, suffix)
-          }
-          .fold(Bottom)({
-            (a, b) => Or(a, b)
-          })
-      case (left, right) if left.nonEmpty && right.nonEmpty =>
-        val And.SPN(sub, _, _) = soFar
-        val headSolution: Term = And.combine(l)(Solved(soFar), Task(sub(left.head), sub(right.head)))
-        matchContents(l, headSolution, left.tail, right.tail)
-      case _ => Bottom
+              .map {
+                case (prefix, suffix) =>
+                  val prefixTerm = l(prefix)
+                  val newSoFar = t match {
+                    case v: Variable => And.combine(l)(Solved(soFar), Solved(And(prefixTerm, Equality(v, prefixTerm))))
+                    case _ => And.combine(l)(Solved(soFar), Task(t, prefixTerm))
+                  }
+                  matchContents(l, newSoFar, tailL, suffix)
+              }
+              .fold(Bottom)({
+                (a, b) => Or(a, b)
+              })
+          case (left, right) if left.nonEmpty && right.nonEmpty =>
+            val And.SPN(sub, _, _) = soFar
+            val headSolution: Term = And.combine(l)(Solved(soFar), Task(sub(left.head), sub(right.head)))
+            matchContents(l, headSolution, left.tail, right.tail)
+          case _ => Bottom
+        }
+        res
+      }
     }
-    res
-  }
 
   def AssocWithIdTerm(solver: Apply) = { (a: AssocWithIdList, b: Term) =>
     val asList = a.label.asIterable _

@@ -6,6 +6,8 @@ import org.kframework.kale.util.{NameFromObject, Named, unreachable}
 import org.kframework.kale.{Environment, Substitution, _}
 import org.kframework.{kale, kore}
 
+import scala.annotation.switch
+
 trait MatchingLogicMixin extends Mixin {
   _: Environment =>
 
@@ -893,6 +895,13 @@ private[standard] case class DNFOrLabel()(implicit override val env: Environment
         case s => new OrWithAtLeastTwoElements(s)
       }
     }
+  }
+
+  @NonNormalizing
+  def applyWithoutNormalizing(s: Set[Term]): Term = (s.size: @switch) match {
+    case 0 => empty
+    case 1 => s.head
+    case 2 => new OrWithAtLeastTwoElements(s)
   }
 }
 
