@@ -21,13 +21,13 @@ trait BooleanMixin extends kale.BooleanMixin {
       * i.e., the t and e are only touched when we know whether the condition is True or False
       * see also STRATEGY.ifThenElse
       */
-    val ifThenElse = new Named("BOOLEAN.ifThenElse") with Label3 {
+    val ifThenElse = new Named("BOOLEAN.ifThenElse") with FunctionLabel3 {
       override val isPredicate: Option[Boolean] = None
 
-      override def apply(condition: Term, thenTerm: Term, elseTerm: Term): Term = condition match {
-        case True => thenTerm
-        case False => elseTerm
-        case _ => FreeNode3(this, condition, thenTerm, elseTerm)
+      override def f(condition: Term, thenTerm: Term, elseTerm: Term) = condition match {
+        case True => Some(thenTerm)
+        case False => Some(elseTerm)
+        case _ => None
       }
     }
 

@@ -4,7 +4,7 @@ import org.kframework.kale.standard.BottomizeMixin
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.transformer.{Binary, Unary}
 
-trait Environment extends Foundation with HasMatcher with MatchingLogicMixin with DefineMixin with BottomizeMixin
+trait Environment extends Foundation with RoaringMixin with HasMatcher with MatchingLogicMixin with DefineMixin with BottomizeMixin
 
 trait Foundation {
   _: Environment =>
@@ -38,7 +38,7 @@ trait Foundation {
     (a: Term, b: Term) =>
       assert(this.isSealed)
       unifier(a, b)
-  }, None)
+  })
 
   def unifier: Binary.Apply
 

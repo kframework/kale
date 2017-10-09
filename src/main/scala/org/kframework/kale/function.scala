@@ -2,11 +2,16 @@ package org.kframework.kale
 
 import cats.Monoid
 import org.kframework.kale.standard.AssocWithIdList
+import org.roaringbitmap.RoaringBitmap
 
 import scala.annotation.switch
 
 trait FunctionLabel extends NodeLabel {
   val name: String
+
+  def requiredLabels(children: Iterable[Term]): RoaringBitmap = env.allLabelIds
+
+  def suppliedLabels(children: Iterable[Term]): RoaringBitmap = RoaringBitmap.bitmapOf()
 }
 
 trait PureFunctionLabel {

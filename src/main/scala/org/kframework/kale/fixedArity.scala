@@ -1,5 +1,7 @@
 package org.kframework.kale
 
+import org.roaringbitmap.RoaringBitmap
+
 import scala.collection._
 
 trait Label0 extends (() => Term) with NodeLabel {

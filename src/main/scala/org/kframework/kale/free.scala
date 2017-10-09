@@ -1,5 +1,7 @@
 package org.kframework.kale
 
+import org.roaringbitmap.RoaringBitmap
+
 trait FreeMixin extends Mixin {
   env: Environment =>
 
@@ -20,7 +22,7 @@ trait FreeMixin extends Mixin {
   def FreeLabelN(name: String, arity: Int): FreeLabelN
 }
 
-trait Constructor extends NodeLabel
+trait Constructor extends NodeLabel with ConjunctiveRoaring
 
 trait FreeLabel extends Constructor {
   val isPredicate = Some(false)

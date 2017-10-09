@@ -6,12 +6,17 @@ import org.kframework.kale.standard.{HolesMixin, Name}
 import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 import org.kframework.kale.transformer.{Binary, Unary}
 import org.kframework.kale.util.{Named, measureTime}
+import org.roaringbitmap.RoaringBitmap
 
 trait ContextMixin extends Mixin {
   _: Environment with standard.MatchingLogicMixin =>
 
   val Context = new Named("Context") with Label3 {
     override val isPredicate: Option[Boolean] = Some(false)
+
+    override def requiredLabels(children: Iterable[Term]) = requiredFor(children.tail)
+
+    override def suppliedLabels(children: Iterable[Term]) = suppliedBy(children.tail)
 
     override def apply(variable: Term, redex: Term, contextPredicate: Term = Or(And(anywhere, Variable.freshVariable()), Variable.freshVariable())): ContextApplication = variable match {
       case v: Variable => ContextApplication(v, redex, contextPredicate)
@@ -21,7 +26,7 @@ trait ContextMixin extends Mixin {
 
     val hole = Variable("CONTEXT_HOLE")
 
-    val anywhere = (new Named("anywhere") with Label0 {
+    val anywhere = (new Named("anywhere") with Label0 with CluelessRoaring {
       override val isPredicate: Option[Boolean] = Some(false)
 
       override def apply(): Term = new FreeNode0(this) {
@@ -32,7 +37,7 @@ trait ContextMixin extends Mixin {
     def hole(x: Variable) = ContextContentVariable(x, 1)
   }
 
-  val SolvingContext = new Named("SolvingContext") with Label1 {
+  val SolvingContext = new Named("SolvingContext") with Label1 with Constructor {
     override val isPredicate: Option[Boolean] = Some(false)
 
     override def apply(_1: Term): Term = {

@@ -29,21 +29,6 @@ trait FunctionByRewritingMixin extends Mixin {
   }))
 }
 
-class InvokeLabel(implicit val env: Environment) extends NameFromObject with Label1 {
-  // the rewriter is initialized after the creation of the label to break the cycle when creating the rewriter for applying functions
-  var rewriter: Rewriter = _
-
-  override def apply(obj: Term): Term = env.bottomize(obj) {
-    Invoke(this, obj)
-  }
-
-  override val isPredicate: Option[Boolean] = Some(false)
-}
-
-case class Invoke(label: InvokeLabel, _1: Term) extends Node1 {
-  override lazy val isPredicate: Boolean = ???
-}
-
 case class NotLabel()(implicit override val env: Environment) extends Named("¬") with kale.NotLabel with FunctionLabel {
 
   import env._

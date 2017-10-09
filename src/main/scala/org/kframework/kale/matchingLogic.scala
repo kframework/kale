@@ -32,7 +32,7 @@ trait MatchingLogicMixin extends Mixin {
   def isSort(sort: kore.Sort, term: Term): Boolean
 }
 
-trait DomainValueLabel[T] extends LeafLabel[T] {
+trait DomainValueLabel[T] extends LeafLabel[T] with ThisRoaring {
 
   override val isPredicate: Option[Boolean] = Some(false)
 
@@ -149,9 +149,7 @@ trait RewriteLabel extends Label2 {
   override val isPredicate: Option[Boolean] = Some(false)
 }
 
-trait EqualityLabel extends Label2 with Z3Builtin {
-  override val isPredicate: Option[Boolean] = Some(true)
-
+trait EqualityLabel extends Label2 with Z3Builtin with Predicate {
   def binding(_1: Variable, _2: Term): Binding
 }
 

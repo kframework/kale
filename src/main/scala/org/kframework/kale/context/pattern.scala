@@ -5,13 +5,15 @@ import org.kframework.kale.context.anywhere.ContextContentVariable
 import org.kframework.kale.standard.{AssocWithIdList, HolesMixin, StandardEnvironment}
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.transformer.{Binary, Unary}
+import org.roaringbitmap.RoaringBitmap
 
 import scala.collection.Set
 
 trait PatternContextMixin extends Mixin {
   _: Environment with standard.MatchingLogicMixin with HasMatcher with HolesMixin =>
 
-  case class PatternContextApplicationLabel(name: String)(implicit val env: Environment with standard.MatchingLogicMixin) extends Context1ApplicationLabel {
+  case class PatternContextApplicationLabel(name: String)(implicit val env: Environment with standard.MatchingLogicMixin)
+    extends Context1ApplicationLabel with Projection2Roaring {
 
     //  val C = env.Variable("GENERIC_CONTEXT_VAR")
 

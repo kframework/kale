@@ -5,8 +5,9 @@ import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor}
 import org.kframework.kale.util.HasAtt
 import org.kframework.kore
+import org.roaringbitmap.RoaringBitmap
 
-trait Label extends MemoizedHashCode with kore.Symbol {
+trait Label extends MemoizedHashCode with kore.Symbol with RoaringOptimization {
   val env: Environment
 
   val name: String
@@ -37,6 +38,10 @@ trait Term extends kore.Pattern with HasAtt {
   val label: Label
 
   val isGround: Boolean
+
+  lazy val requiredLabels: RoaringBitmap = label.requiredLabels(children)
+
+  lazy val suppliedLabels: RoaringBitmap = label.suppliedLabels(children)
 
   lazy val isPredicate: Boolean = label.isPredicate match {
     case Some(isPred) => isPred
@@ -71,7 +76,9 @@ trait Term extends kore.Pattern with HasAtt {
   def copy(children: Seq[Term]): Term
 }
 
-trait Predicate {
+trait Predicate extends NotRoaring {
+  self: Label =>
+
   val isPredicate = Some(true)
 }
 
@@ -112,6 +119,7 @@ object Term {
   implicit class RichTerm(t: Term)(implicit env: Environment) {
     def moveRewriteToTop: Rewrite = moveRewriteSymbolToTop(t)
   }
+
 }
 
 trait LeafLabel[T] extends (T => Leaf[T]) with Label {

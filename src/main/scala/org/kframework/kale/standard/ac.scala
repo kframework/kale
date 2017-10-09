@@ -11,7 +11,7 @@ import scala.collection.{+:, Iterable, Seq}
 trait NonAssocWithIdListMixin extends Mixin {
   _: Environment with FreeMixin =>
 
-  case class NonAssocWithIdLabel(override val name: String, identity: Term) extends Named(name) with Label2 with HasId {
+  case class NonAssocWithIdLabel(override val name: String, identity: Term) extends Named(name) with Label2 with HasId with Constructor {
     val self = this
 
     override def apply(_1: Term, _2: Term): Term = (_1, _2) match {
