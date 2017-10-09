@@ -87,7 +87,7 @@ trait ContextMixin extends Mixin {
       val contextVar = contextApp.contextVar
 
       def solutionFor(subterms: Seq[Term], reconstruct: (Int, Term) => Term, avoidIndices: Set[Int] = Set()) = {
-        Or.applyWithoutNormalizing((subterms.indices.toSet &~ avoidIndices) map { i: Int =>
+        Or((subterms.indices.toSet &~ avoidIndices) map { i: Int =>
           measureTime("solutionFor") {
             // calling f directly instead of solver because we know contextApp is hooked to the current f
             val solutionForSubtermI = solver(solvingContext, subterms(i))
