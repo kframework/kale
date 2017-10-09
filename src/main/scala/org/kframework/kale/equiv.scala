@@ -80,7 +80,7 @@ object equiv {
         val labelEq = x.label.name compareTo y.label.name
         if (labelEq == 0) {
           x.label match {
-            case _: NodeLabel => x.children.zip(y.children).collectFirst({
+            case _: NodeLabel => x.flattenedChildren.zip(y.flattenedChildren).collectFirst({
               case (a, b) if compare(a, b) != 0 => compare(a, b)
             }).get
             case l: LeafLabel[_] =>
