@@ -43,6 +43,9 @@ object timer {
     def errorHits: Long = _errorHits
 
     def report: String = {
+      if (_entries != 0) {
+        System.err.println("Trying to print a report while inside a measured region")
+      }
       name + ": time = " + formatTime(totalTime) + ";  hits: " + _hits +
         (if (_errorHits > 0) "errorHits: " + _errorHits else "")
     }
