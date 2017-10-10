@@ -3,6 +3,7 @@ package org.kframework.kale.transformer
 import org.kframework.kale._
 import org.kframework.kale.standard.StandardEnvironment
 import org.kframework.kale.util.measureTime
+import org.roaringbitmap.RoaringBitmap
 
 object Binary {
 
@@ -89,12 +90,23 @@ object Binary {
       val u = functionFor(left.label, right.label)
 
       val res = if (u != null) {
-        val lR = left.requiredLabels
-        val lS = left.suppliedLabels
-        val rR = right.requiredLabels
-        val rS = right.suppliedLabels
 
-        u(left, right)
+        val roaringOptimization = false || {
+          val lR = left.requiredLabels
+          val lS = left.suppliedLabels
+          val rR = right.requiredLabels
+          val rS = right.suppliedLabels
+          rS.contains(lR) && lS.contains(rR)
+        }
+
+        if (roaringOptimization) {
+          u(left, right)
+        } else {
+          measureTime("avoided-by-roaring") {
+            assert(u(left, right) == env.Bottom, "roaring mistake: " + left + " ? " + right)
+          }
+          env.Bottom
+        }
       } else
         env.Bottom
 

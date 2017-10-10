@@ -356,8 +356,12 @@ class Binding(val variable: Variable, val term: Term)(implicit val env: Environm
 
 private[standard] case class StandardRewriteLabel()(implicit val env: Environment) extends {
   val name = "=>"
-} with RewriteLabel with Projection1Roaring {
+} with RewriteLabel {
   def apply(_1: Term, _2: Term) = SimpleRewrite(_1, _2)
+
+  override def requiredLabels(children: Iterable[Term]) = children.head.requiredLabels
+
+  override def suppliedLabels(children: Iterable[Term]) = Roaring.suppliedBy(children)
 }
 
 case class SimpleRewrite(_1: Term, _2: Term)(implicit env: Environment) extends kale.Rewrite {

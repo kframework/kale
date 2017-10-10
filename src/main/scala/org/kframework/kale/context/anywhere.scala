@@ -11,12 +11,12 @@ import org.roaringbitmap.RoaringBitmap
 trait ContextMixin extends Mixin {
   _: Environment with standard.MatchingLogicMixin =>
 
-  val Context = new Named("Context") with Label3 {
+  val Context = new Named("Context") with Label3 with CluelessRoaring {
     override val isPredicate: Option[Boolean] = Some(false)
 
-    override def requiredLabels(children: Iterable[Term]) = Roaring.requiredFor(children.tail)
-
-    override def suppliedLabels(children: Iterable[Term]) = Roaring.suppliedBy(children.tail)
+//    override def requiredLabels(children: Iterable[Term]) = Roaring.requiredFor(children.tail)
+//
+//    override def suppliedLabels(children: Iterable[Term]) = Roaring.suppliedBy(children.tail)
 
     override def apply(variable: Term, redex: Term, contextPredicate: Term = Or(And(anywhere, Variable.freshVariable()), Variable.freshVariable())): ContextApplication = variable match {
       case v: Variable => ContextApplication(v, redex, contextPredicate)
@@ -37,7 +37,7 @@ trait ContextMixin extends Mixin {
     def hole(x: Variable) = ContextContentVariable(x, 1)
   }
 
-  val SolvingContext = new Named("SolvingContext") with Label1 with Constructor {
+  val SolvingContext = new Named("SolvingContext") with Label1 with CluelessRoaring {
     override val isPredicate: Option[Boolean] = Some(false)
 
     override def apply(_1: Term): Term = {

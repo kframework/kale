@@ -18,7 +18,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     val isPredicate = Some(false)
   }
 
-  val compose = new Named("^compose") with Label2 with Strategy with ConjunctiveRoaring {
+  val compose = new Named("^compose") with Label2 with Strategy with CluelessRoaring {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
   }
 

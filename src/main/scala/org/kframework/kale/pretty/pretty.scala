@@ -13,7 +13,7 @@ trait PrettyWrapperMixin extends Mixin {
     case _ => t.toString
   }
 
-  val PrettyWrapper: Label3 = new Named("PrettyWrapper") with Label3 with Projection2Roaring {
+  val PrettyWrapper: Label3 = new Named("PrettyWrapper") with Label3 {
     lazy private val W = this
     lazy val I = Infer
 
@@ -50,6 +50,10 @@ trait PrettyWrapperMixin extends Mixin {
       * None means that it depends on its children
       */
     override val isPredicate: Option[Boolean] = Some(false)
+
+    override def requiredLabels(children: Iterable[Term]) = children.tail.head.requiredLabels
+
+    override def suppliedLabels(children: Iterable[Term]) = Roaring.suppliedBy(children)
   }
 
   val Infer = FreeLabel0("I")()

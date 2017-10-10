@@ -5,6 +5,7 @@ import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.{Named, measureTime}
+import org.roaringbitmap.RoaringBitmap
 
 import scala.collection.{+:, Iterable, Seq}
 
@@ -125,6 +126,18 @@ private[standard] class MonoidListLabel(val name: String, val identity: Term)(im
   val size = CollectionSize(this)
 
   protected override def construct(l: Iterable[Term]): Term = AssocWithIdList(this, l)
+
+  override def requiredLabels(children: Iterable[Term]): RoaringBitmap = {
+    val res = Roaring.requiredFor(children)
+    res.remove(empty.label.id)
+    res
+  }
+
+  override def suppliedLabels(children: Iterable[Term]): RoaringBitmap = {
+    val res = addThis(Roaring.suppliedBy(children))
+    res.add(empty.label.id)
+    res
+  }
 
   /**
     * None means that it depends on its children
