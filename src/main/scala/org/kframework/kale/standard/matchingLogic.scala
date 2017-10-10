@@ -130,7 +130,7 @@ trait MatchingLogicMixin extends Mixin {
   }), Priority.high)
 
   register(Binary.definePartialFunction({
-    case (_: DomainValueLabel[_], _: DomainValueLabel[_]) => Constants
+    case (a: DomainValueLabel[_], b: DomainValueLabel[_]) if a == b => Constants
   }))
 }
 
