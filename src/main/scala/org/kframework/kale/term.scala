@@ -7,7 +7,7 @@ import org.kframework.kale.util.HasAtt
 import org.kframework.kore
 import org.roaringbitmap.RoaringBitmap
 
-trait Label extends MemoizedHashCode with kore.Symbol with RoaringOptimization {
+trait Label extends MemoizedHashCode with kore.Symbol with RoaringLabel {
   val env: Environment
 
   val name: String
@@ -32,16 +32,12 @@ trait Label extends MemoizedHashCode with kore.Symbol with RoaringOptimization {
   override val str: String = name
 }
 
-trait Term extends kore.Pattern with HasAtt {
+trait Term extends kore.Pattern with HasAtt with RoaringTerm {
   def updateAt(i: Int)(t: Term): Term
 
   val label: Label
 
   val isGround: Boolean
-
-  lazy val requiredLabels: RoaringBitmap = label.requiredLabels(children)
-
-  lazy val suppliedLabels: RoaringBitmap = label.suppliedLabels(children)
 
   lazy val isPredicate: Boolean = label.isPredicate match {
     case Some(isPred) => isPred

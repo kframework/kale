@@ -2,22 +2,25 @@ package org.kframework.kale
 
 import org.roaringbitmap.{FastAggregation, RoaringBitmap}
 
-trait RoaringOptimization {
-  self: Label =>
+object Roaring {
 
   import collection.JavaConverters._
+
+  @inline def requiredFor(children: Iterable[Term]) = {
+    RoaringBitmap.or((children map (_.requiredLabels) toIterator).asJava)
+  }
+
+  @inline def suppliedBy(children: Iterable[Term]) = {
+    RoaringBitmap.or((children map (_.suppliedLabels) toIterator).asJava)
+  }
+}
+
+trait RoaringLabel {
+  self: Label =>
 
   def requiredLabels(children: Iterable[Term]): RoaringBitmap
 
   def suppliedLabels(children: Iterable[Term]): RoaringBitmap
-
-  @inline protected def requiredFor(children: Iterable[Term]) = {
-    RoaringBitmap.or((children map (_.requiredLabels) toIterator).asJava)
-  }
-
-  @inline protected def suppliedBy(children: Iterable[Term]) = {
-    RoaringBitmap.or((children map (_.suppliedLabels) toIterator).asJava)
-  }
 
   @inline protected def addThis(r: RoaringBitmap): RoaringBitmap = {
     r.add(this.id)
@@ -25,8 +28,34 @@ trait RoaringOptimization {
   }
 }
 
+trait RoaringTerm {
+  self: Term =>
+
+  lazy val requiredLabels: RoaringBitmap = label.requiredLabels(children)
+
+  lazy val suppliedLabels: RoaringBitmap = label.suppliedLabels(children)
+}
+
+trait NotRoaringTerm {
+  _: Term with RoaringTerm =>
+
+  override lazy val requiredLabels: RoaringBitmap =
+    throw new AssertionError("Should not look for required labels in predicates")
+
+  override lazy val suppliedLabels: RoaringBitmap =
+    throw new AssertionError("Should not look for supplied labels in predicates")
+}
+
+trait CluelessRoaringTerm {
+  _: Term with RoaringTerm =>
+
+  override lazy val requiredLabels: RoaringBitmap = RoaringBitmap.bitmapOf()
+
+  override lazy val suppliedLabels: RoaringBitmap = label.env.allLabelIds
+}
+
 trait NotRoaring {
-  self: Label with RoaringOptimization =>
+  self: Label with RoaringLabel =>
 
   def requiredLabels(children: Iterable[Term]): RoaringBitmap =
     throw new AssertionError("Should not look for required labels in predicates")
@@ -36,7 +65,7 @@ trait NotRoaring {
 }
 
 trait CluelessRoaring {
-  self: Label with RoaringOptimization =>
+  self: Label with RoaringLabel =>
 
   override def requiredLabels(children: Iterable[Term]) = RoaringBitmap.bitmapOf()
 
@@ -44,7 +73,7 @@ trait CluelessRoaring {
 }
 
 trait ThisRoaring {
-  self: Label with RoaringOptimization =>
+  self: Label with RoaringLabel =>
 
   def requiredLabels(children: Iterable[Term]): RoaringBitmap = RoaringBitmap.bitmapOf(this.id)
 
@@ -52,19 +81,19 @@ trait ThisRoaring {
 }
 
 trait ConjunctiveRoaring {
-  self: Label with RoaringOptimization =>
+  self: Label with RoaringLabel =>
 
-  def requiredLabels(children: Iterable[Term]): RoaringBitmap = addThis(requiredFor(children))
+  def requiredLabels(children: Iterable[Term]): RoaringBitmap = addThis(Roaring.requiredFor(children))
 
-  def suppliedLabels(children: Iterable[Term]): RoaringBitmap = addThis(suppliedBy(children))
+  def suppliedLabels(children: Iterable[Term]): RoaringBitmap = addThis(Roaring.suppliedBy(children))
 }
 
 trait DisjunctiveRoaring {
-  self: Label with RoaringOptimization =>
+  self: Label with RoaringLabel =>
 
   override def requiredLabels(children: Iterable[Term]) = FastAggregation.and(children map (_.requiredLabels) toSeq: _*)
 
-  override def suppliedLabels(children: Iterable[Term]) = suppliedBy(children)
+  override def suppliedLabels(children: Iterable[Term]) = Roaring.suppliedBy(children)
 }
 
 trait Projection1Roaring {

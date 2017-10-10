@@ -88,9 +88,14 @@ object Binary {
         return right
       val u = functionFor(left.label, right.label)
 
-      val res = if (u != null)
+      val res = if (u != null) {
+        val lR = left.requiredLabels
+        val lS = left.suppliedLabels
+        val rR = right.requiredLabels
+        val rS = right.suppliedLabels
+
         u(left, right)
-      else
+      } else
         env.Bottom
 
       statsInvocations.update(u, statsInvocations(u) + 1)

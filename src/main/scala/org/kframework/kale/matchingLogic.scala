@@ -172,7 +172,7 @@ trait Equals extends kore.Equals with Node2 with BinaryInfix {
   override lazy val isPredicate: Boolean = true
 }
 
-trait Binding extends Equals with Substitution {
+trait Binding extends Equals with Substitution with NotRoaringTerm {
   override val boundVariables: Set[Variable] = Set(_1.asInstanceOf[Variable])
 
   override def filter(f: Variable => Boolean): Substitution = if (f(_1.asInstanceOf[Variable])) this else env.Top

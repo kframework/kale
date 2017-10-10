@@ -229,7 +229,7 @@ private[standard] abstract class Truth(val data: Boolean)(implicit val env: Envi
   val label = env.Truth
 }
 
-private[standard] case class TopInstance()(implicit eenv: Environment) extends Truth(true) with kale.Top {
+private[standard] case class TopInstance()(implicit eenv: Environment) extends Truth(true) with kale.Top with CluelessRoaringTerm {
   override def get(v: Variable): Option[Term] = None
 
   def asMap = Map()
@@ -243,6 +243,10 @@ private[standard] case class TopInstance()(implicit eenv: Environment) extends T
 
 private[standard] case class BottomInstance()(implicit eenv: Environment) extends Truth(false) with kale.Bottom {
   override def toString: String = "⊥"
+
+  override lazy val requiredLabels: RoaringBitmap = label.env.allLabelIds
+
+  override lazy val suppliedLabels: RoaringBitmap = RoaringBitmap.bitmapOf()
 }
 
 private[standard] case class SimpleNextLabel()(implicit override val env: Environment) extends Named("=>_") with NextLabel with Projection1Roaring {
@@ -787,6 +791,10 @@ final case class NonPredicates(terms: Set[Term])(implicit env: MatchingLogicMixi
 
   assert(terms.forall(!_.isPredicate))
 
+  override lazy val requiredLabels: RoaringBitmap = Roaring.requiredFor(terms)
+
+  override lazy val suppliedLabels: RoaringBitmap = Roaring.suppliedBy(terms)
+
   override val predicate: Term = env.Top
   override val nonPredicate = this
   override val label = env.And
@@ -799,6 +807,10 @@ final case class NonPredicates(terms: Set[Term])(implicit env: MatchingLogicMixi
 }
 
 final case class PredicatesAndNonPredicates(predicate: Term, nonPredicate: Term)(implicit env: MatchingLogicMixin) extends And {
+
+  override lazy val requiredLabels: RoaringBitmap = nonPredicate.requiredLabels
+
+  override lazy val suppliedLabels: RoaringBitmap = nonPredicate.suppliedLabels
 
   import env._
 
@@ -847,7 +859,7 @@ private[kale] final class AndOfSubstitutionAndPredicates(val s: Substitution, va
   override def asSet: Set[Term] = And.asSet(preds) | And.asSet(s)
 }
 
-private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit val env: Environment with MatchingLogicMixin) extends And with Substitution with BinaryInfix {
+private[standard] final class MultipleBindings(val m: Map[Variable, Term])(implicit val env: Environment with MatchingLogicMixin) extends And with Substitution with BinaryInfix with NotRoaringTerm {
   assert(m.size >= 2)
   assert(m.forall({ case (a, b) => a != b }))
 

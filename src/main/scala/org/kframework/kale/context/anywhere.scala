@@ -14,9 +14,9 @@ trait ContextMixin extends Mixin {
   val Context = new Named("Context") with Label3 {
     override val isPredicate: Option[Boolean] = Some(false)
 
-    override def requiredLabels(children: Iterable[Term]) = requiredFor(children.tail)
+    override def requiredLabels(children: Iterable[Term]) = Roaring.requiredFor(children.tail)
 
-    override def suppliedLabels(children: Iterable[Term]) = suppliedBy(children.tail)
+    override def suppliedLabels(children: Iterable[Term]) = Roaring.suppliedBy(children.tail)
 
     override def apply(variable: Term, redex: Term, contextPredicate: Term = Or(And(anywhere, Variable.freshVariable()), Variable.freshVariable())): ContextApplication = variable match {
       case v: Variable => ContextApplication(v, redex, contextPredicate)

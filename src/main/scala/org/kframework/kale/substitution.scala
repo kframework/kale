@@ -16,4 +16,6 @@ trait Substitution extends (Term => Term) with Term {
   lazy val sub = env.substitutionMaker(this)
 
   def apply(t: Term): Term = sub(t)
+
+
 }
