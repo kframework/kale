@@ -53,6 +53,8 @@ object timer {
 
   private val rs = collection.mutable.Map[String, ReentrantTimer]()
 
+  def timers: Map[String, ReentrantTimer] = rs.toMap
+
   @inline def apply(name: String): ReentrantTimer = rs.getOrElseUpdate(name, new ReentrantTimer(name))
 
   def get(name: String): Option[ReentrantTimer] = rs.get(name)
