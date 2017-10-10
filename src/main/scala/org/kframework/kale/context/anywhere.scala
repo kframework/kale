@@ -11,12 +11,12 @@ import org.roaringbitmap.RoaringBitmap
 trait ContextMixin extends Mixin {
   _: Environment with standard.MatchingLogicMixin =>
 
-  val Context = new Named("Context") with Label3 with CluelessRoaring {
+  val Context = new Named("Context") with Label3 {
     override val isPredicate: Option[Boolean] = Some(false)
 
-//    override def requiredLabels(children: Iterable[Term]) = Roaring.requiredFor(children.tail)
-//
-//    override def suppliedLabels(children: Iterable[Term]) = Roaring.suppliedBy(children.tail)
+    override def requiredLabels(children: Iterable[Term]) = Roaring.requiredFor(children.tail)
+
+    override def suppliedLabels(children: Iterable[Term]) = allLabelIds
 
     override def apply(variable: Term, redex: Term, contextPredicate: Term = Or(And(anywhere, Variable.freshVariable()), Variable.freshVariable())): ContextApplication = variable match {
       case v: Variable => ContextApplication(v, redex, contextPredicate)
@@ -37,7 +37,7 @@ trait ContextMixin extends Mixin {
     def hole(x: Variable) = ContextContentVariable(x, 1)
   }
 
-  val SolvingContext = new Named("SolvingContext") with Label1 with CluelessRoaring {
+  val SolvingContext = new Named("SolvingContext") with Label1 with Projection1Roaring {
     override val isPredicate: Option[Boolean] = Some(false)
 
     override def apply(_1: Term): Term = {
@@ -85,62 +85,58 @@ trait ContextMixin extends Mixin {
   def indicesToAvoidTraversingForTerm(t: Term): Set[Int] = Set()
 
   def SolvingContextMatcher(solver: Apply): (Node1, Term) => Term = { (solvingContext: Node1, term: Term) =>
-    measureTime("context") {
-      val contextApp = solvingContext._1.asInstanceOf[ContextApplication]
+    val contextApp = solvingContext._1.asInstanceOf[ContextApplication]
 
-      assert(contextApp.label == Context)
-      val contextVar = contextApp.contextVar
+    assert(contextApp.label == Context)
+    val contextVar = contextApp.contextVar
 
-      def solutionFor(subterms: Seq[Term], reconstruct: (Int, Term) => Term, avoidIndices: Set[Int] = Set()) = {
-        Or((subterms.indices.toSet &~ avoidIndices) map { i: Int =>
-          measureTime("solutionFor") {
-            // calling f directly instead of solver because we know contextApp is hooked to the current f
-            val solutionForSubtermI = solver(solvingContext, subterms(i))
-            solutionForSubtermI.asOr map {
-              // this rewires C -> HOLE into C -> foo(HOLE)
-              case And.SPN(s, p, next) =>
-                And.SPN(s, p, reconstruct(i, next))
+    def solutionFor(subterms: Seq[Term], reconstruct: (Int, Term) => Term, avoidIndices: Set[Int] = Set()) = {
+      Or((subterms.indices.toSet &~ avoidIndices) map { i: Int =>
+        // calling f directly instead of solver because we know contextApp is hooked to the current f
+        val solutionForSubtermI = solver(solvingContext, subterms(i))
+        solutionForSubtermI.asOr map {
+          // this rewires C -> HOLE into C -> foo(HOLE)
+          case And.SPN(s, p, next) =>
+            And.SPN(s, p, reconstruct(i, next))
+        }
+      })
+    }
+
+    term.label match {
+      case Context =>
+        val (rightContextVar, rightContextRedex, rightContextPredicate) = Context.unapply(term).get
+        solutionFor(term.children.toSeq, (_: Int, tt: Term) => Context(rightContextVar, tt, rightContextPredicate), Set(0, 2))
+      case `Or` => {
+        term.asOr map (solver(contextApp, _))
+      }
+      case `And` => {
+        ???
+      }
+      case other =>
+        val matchPredicate = unify(contextApp.finalContextPredicate, term)
+
+        matchPredicate.asOr map {
+          case And.SPN(s, p, n) if p.contains(Context.anywhere) =>
+            val theAnywhereMatch = other match {
+              //              case l: AssocLabel =>
+              //                val subresults = l.asIterable(term).toList
+              //                val recursive = solutionFor(subresults, (pos: Int, tt: Term) => l(subresults.updated(pos, tt)))
+              //                recursive
+              case l =>
+                // C[bar(X)] := foo(bar(1))
+                val subterms = term.children
+                val recursive = solutionFor(subterms.toSeq, (pos: Int, tt: Term) => term.updateAt(pos)(tt), indicesToAvoidTraversingForTerm(term))
+                And(s, recursive)
             }
-          }
-        })
-      }
-
-      term.label match {
-        case Context =>
-          val (rightContextVar, rightContextRedex, rightContextPredicate) = Context.unapply(term).get
-          solutionFor(term.children.toSeq, (_: Int, tt: Term) => Context(rightContextVar, tt, rightContextPredicate), Set(0, 2))
-        case `Or` => {
-          term.asOr map (solver(contextApp, _))
+            theAnywhereMatch
+          case And.SPN(s, p, n) if p.findBU({ case Exists(contextApp.specificHole, _) => true; case _ => false }).isEmpty =>
+            val redexSol = solver(contextApp.redex, n)
+            redexSol.asOr map {
+              case And.SPN(ss, pp, redexTerm) =>
+                And.SPN(And.substitution(s.asMap ++ ss.asMap), And(p, pp, Exists(contextApp.specificHole, redexTerm)), contextApp.specificHole)
+            }
+          case o => o
         }
-        case `And` => {
-          ???
-        }
-        case other =>
-          val matchPredicate = unify(contextApp.finalContextPredicate, term)
-
-          matchPredicate.asOr map {
-            case And.SPN(s, p, n) if p.contains(Context.anywhere) =>
-              val theAnywhereMatch = other match {
-                //              case l: AssocLabel =>
-                //                val subresults = l.asIterable(term).toList
-                //                val recursive = solutionFor(subresults, (pos: Int, tt: Term) => l(subresults.updated(pos, tt)))
-                //                recursive
-                case l =>
-                  // C[bar(X)] := foo(bar(1))
-                  val subterms = term.children
-                  val recursive = solutionFor(subterms.toSeq, (pos: Int, tt: Term) => term.updateAt(pos)(tt), indicesToAvoidTraversingForTerm(term))
-                  And(s, recursive)
-              }
-              theAnywhereMatch
-            case And.SPN(s, p, n) if p.findBU({ case Exists(contextApp.specificHole, _) => true; case _ => false }).isEmpty =>
-              val redexSol = solver(contextApp.redex, n)
-              redexSol.asOr map {
-                case And.SPN(ss, pp, redexTerm) =>
-                  And.SPN(And.substitution(s.asMap ++ ss.asMap), And(p, pp, Exists(contextApp.specificHole, redexTerm)), contextApp.specificHole)
-              }
-            case o => o
-          }
-      }
     }
   }
 }

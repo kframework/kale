@@ -2,6 +2,8 @@ package org.kframework.kale.util
 
 object measureTime {
 
+  val globalActive = false
+
   class Reentrant(name: String) {
     var entries = 0
     var totalTime = 0L
@@ -26,21 +28,25 @@ object measureTime {
 
   private val rs = collection.mutable.Map[String, Reentrant]()
 
-  def apply[T](name: String, active: Boolean = true)(f: => T): T = if (active) {
-    enter(name)
-    val res = f
-    exit(name)
-    res
-  } else {
-    f
-  }
+  @inline def apply[T](name: String, active: Boolean = true)(f: => T): T =
+    if (globalActive && active) {
+      enter(name)
+      val res = try {
+        f
+      } finally {
+        exit(name)
+      }
+      res
+    } else {
+      f
+    }
 
-  def enter(name: String) = {
+  @inline private def enter(name: String) = {
     val r = rs.getOrElseUpdate(name, new Reentrant(name))
     r.enter()
   }
 
-  def exit(name: String): Unit = {
+  @inline private def exit(name: String): Unit = {
     val r = rs(name)
     r.exit()
   }
@@ -50,10 +56,13 @@ object measureTime {
   }
 
   def report(name: String): Option[String] = {
-    rs.get(name) map { r => name + "\n  time: " + formatTime(r.totalTime) + "\n  hits: " + r.hits }
+    rs.get(name) map { r =>
+      assert(r.entries == 0)
+      name + "\n  time: " + formatTime(r.totalTime) + "\n  hits: " + r.hits
+    }
   }
 
-  def reset(name: String) = {
+  @inline def reset(name: String) = {
     rs.remove(name)
   }
 

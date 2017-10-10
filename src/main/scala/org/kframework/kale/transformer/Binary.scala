@@ -1,6 +1,7 @@
 package org.kframework.kale.transformer
 
 import org.kframework.kale._
+import org.kframework.kale.context.Context1ApplicationLabel
 import org.kframework.kale.standard.StandardEnvironment
 import org.kframework.kale.util.measureTime
 import org.roaringbitmap.RoaringBitmap
@@ -103,7 +104,7 @@ object Binary {
           u(left, right)
         } else {
           measureTime("avoided-by-roaring") {
-            assert(u(left, right) == env.Bottom, "roaring mistake: " + left + " ? " + right)
+//            assert(u(left, right) == env.Bottom, "roaring mistake: " + left + " ? " + right)
           }
           env.Bottom
         }
