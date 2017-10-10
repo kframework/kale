@@ -58,7 +58,8 @@ object timer {
   }
 
   def formatTime(l: Long): String = {
-    (l / 1000000) + "ms"
+    import scala.concurrent.duration._
+    l.nanos.toMillis + "ms"
   }
 
   def fullReport(): String = {
