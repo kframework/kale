@@ -81,7 +81,9 @@ object Binary {
       }
     }
 
-    def apply(left: Term, right: Term): Term = timer("unify") {
+    val unifyTimer = timer("unify")
+
+    def apply(left: Term, right: Term): Term = unifyTimer {
       //      assert(labels.contains(left.label) && labels.contains(right.label))
       //      assert(left.label.id <= env.labels.size, "Left label " + left.label + " with id " + left.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
       //      assert(right.label.id <= env.labels.size, "Right label " + right.label + " with id " + right.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
@@ -92,7 +94,7 @@ object Binary {
 
       val res = if (u != null) {
 
-        val roaringOptimization = false || {
+        val roaringOptimization = {
           val lR = left.requiredLabels
           val lS = left.suppliedLabels
           val rR = right.requiredLabels
@@ -103,9 +105,7 @@ object Binary {
         if (roaringOptimization) {
           u(left, right)
         } else {
-          timer("avoided-by-roaring") {
-//            assert(u(left, right) == env.Bottom, "roaring mistake: " + left + " ? " + right)
-          }
+          //        assert(u(left, right) == env.Bottom, "roaring mistake: " + left + " ? " + right)
           env.Bottom
         }
       } else

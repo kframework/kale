@@ -44,7 +44,8 @@ object timer {
 
     def report: String = {
       assert(_entries == 0)
-      name + "\n  time: " + formatTime(totalTime) + "\n  hits: " + _hits
+      name + ": time = " + formatTime(totalTime) + ";  hits: " + _hits +
+        (if (_errorHits > 0) "errorHits: " + _errorHits else "")
     }
   }
 
