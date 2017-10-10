@@ -44,11 +44,15 @@ object timer {
 
     def errorHits: Long = _errorHits
 
-    def speed: Double =
+    /**
+      * hits per second
+      */
+    def speed: Double = {
       if (totalTime > 0)
-        hits.toDouble / totalTime.nanos.toSeconds.toDouble
+        (hits.toDouble / totalTime.toDouble) * Math.pow(10, 9)
       else
         Double.NaN
+    }
 
     def report: String = {
       if (_entries != 0) {
