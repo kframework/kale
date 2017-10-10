@@ -1,5 +1,7 @@
 package org.kframework.kale.util
 
+import scala.concurrent.duration._
+
 object timer {
 
   case class ReentrantTimer(name: String) {
@@ -42,12 +44,19 @@ object timer {
 
     def errorHits: Long = _errorHits
 
+    def speed: Double =
+      if (totalTime > 0)
+        hits.toDouble / totalTime.nanos.toSeconds.toDouble
+      else
+        Double.NaN
+
     def report: String = {
       if (_entries != 0) {
         System.err.println("Trying to print a report while inside a measured region")
       }
       name + ": time = " + formatTime(totalTime) + ";  hits: " + _hits +
-        (if (_errorHits > 0) "errorHits: " + _errorHits else "")
+        (if (hits > 0) "; speed: " + speed + "hits/s" else "") +
+        (if (_errorHits > 0) "; errorHits: " + _errorHits else "")
     }
   }
 
@@ -64,7 +73,6 @@ object timer {
   }
 
   def formatTime(l: Long): String = {
-    import scala.concurrent.duration._
     l.nanos.toMillis + "ms"
   }
 
