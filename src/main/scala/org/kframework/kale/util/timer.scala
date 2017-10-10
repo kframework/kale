@@ -2,7 +2,7 @@ package org.kframework.kale.util
 
 object timer {
 
-  class ReentrantTimer(name: String) {
+  case class ReentrantTimer(name: String) {
     private var _entries = 0
     private var _totalTime = 0L
     private var _lastEntry = 0L
