@@ -53,7 +53,9 @@ object timer {
 
   private val rs = collection.mutable.Map[String, ReentrantTimer]()
 
-  @inline def apply[T](name: String): ReentrantTimer = rs.getOrElseUpdate(name, new ReentrantTimer(name))
+  @inline def apply(name: String): ReentrantTimer = rs.getOrElseUpdate(name, new ReentrantTimer(name))
+
+  def get(name: String): Option[ReentrantTimer] = rs.get(name)
 
   @inline def reset(name: String) = {
     rs.remove(name)
