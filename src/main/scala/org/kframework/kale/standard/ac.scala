@@ -4,7 +4,7 @@ import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
-import org.kframework.kale.util.{Named, measureTime}
+import org.kframework.kale.util.{Named, timer}
 import org.roaringbitmap.RoaringBitmap
 
 import scala.collection.{+:, Iterable, Seq}
@@ -57,7 +57,7 @@ trait AssocWithIdListMixin extends Mixin {
   override def AssocWithIdLabel(name: String, id: Term): NonPrimitiveMonoidLabel = new MonoidListLabel(name, id)
 
   private def matchContents(l: SemigroupLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term =
-    measureTime("assoc") {
+    timer("assoc") {
       strongBottomize(soFar) {
         val res = (ksLeft.toSeq, ksRight.toSeq) match {
           case (Seq(), Seq()) =>

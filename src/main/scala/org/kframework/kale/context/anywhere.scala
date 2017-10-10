@@ -5,7 +5,7 @@ import org.kframework.kale.context.anywhere.ContextContentVariable
 import org.kframework.kale.standard.{HolesMixin, Name}
 import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 import org.kframework.kale.transformer.{Binary, Unary}
-import org.kframework.kale.util.{Named, measureTime}
+import org.kframework.kale.util.{Named, timer}
 import org.roaringbitmap.RoaringBitmap
 
 trait ContextMixin extends Mixin {
