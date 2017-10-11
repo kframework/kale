@@ -39,6 +39,8 @@ trait Term extends kore.Pattern with HasAtt with RoaringTerm {
 
   val isGround: Boolean
 
+  lazy val size: Long = (children map (_.size)).sum + 1
+
   lazy val isPredicate: Boolean = label.isPredicate match {
     case Some(isPred) => isPred
     case None =>

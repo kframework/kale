@@ -4,6 +4,7 @@ import org.kframework.kale._
 import org.kframework.kale.standard.StandardEnvironment
 import org.roaringbitmap.RoaringBitmap
 import org.kframework.kale.util.timer
+import org.kframework.kale.util.timer.Timer
 
 object Binary {
 
@@ -80,40 +81,52 @@ object Binary {
       }
     }
 
-    val unifyTimer = timer("unify")
+    val unifyTimer = new Timer("unify") {
+      override def reset(): Unit = {
+        super.reset()
+        _processedNodes = 0L
+      }
+    }
 
-    def apply(left: Term, right: Term): Term = unifyTimer.time {
-      //      assert(labels.contains(left.label) && labels.contains(right.label))
-      //      assert(left.label.id <= env.labels.size, "Left label " + left.label + " with id " + left.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
-      //      assert(right.label.id <= env.labels.size, "Right label " + right.label + " with id " + right.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
+    private var _processedNodes = 0L
 
-      if (left == right)
-        return right
-      val u = functionFor(left.label, right.label)
+    def apply(left: Term, right: Term): Term = {
+      if (!unifyTimer.isInside) {
+        _processedNodes += left.size
+      }
+      unifyTimer.time {
+        //      assert(labels.contains(left.label) && labels.contains(right.label))
+        //      assert(left.label.id <= env.labels.size, "Left label " + left.label + " with id " + left.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
+        //      assert(right.label.id <= env.labels.size, "Right label " + right.label + " with id " + right.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
 
-      val res = if (u != null) {
+        if (left == right)
+          return right
+        val u = functionFor(left.label, right.label)
 
-        val roaringOptimization = {
-          val lR = left.requiredLabels
-          val lS = left.suppliedLabels
-          val rR = right.requiredLabels
-          val rS = right.suppliedLabels
-          rS.contains(lR) && lS.contains(rR)
-        }
+        val res = if (u != null) {
 
-        if (roaringOptimization) {
-          u(left, right)
-        } else {
-          //        assert(u(left, right) == env.Bottom, "roaring mistake: " + left + " ? " + right)
+          val roaringOptimization = {
+            val lR = left.requiredLabels
+            val lS = left.suppliedLabels
+            val rR = right.requiredLabels
+            val rS = right.suppliedLabels
+            rS.contains(lR) && lS.contains(rR)
+          }
+
+          if (roaringOptimization) {
+            u(left, right)
+          } else {
+            //        assert(u(left, right) == env.Bottom, "roaring mistake: " + left + " ? " + right)
+            env.Bottom
+          }
+        } else
           env.Bottom
-        }
-      } else
-        env.Bottom
 
-      statsInvocations.update(u, statsInvocations(u) + 1)
+        statsInvocations.update(u, statsInvocations(u) + 1)
 
-      assert(!(left == right && res == env.Bottom), left.toString)
-      res
+        assert(!(left == right && res == env.Bottom), left.toString)
+        res
+      }
     }
 
     lazy val processingFunctionsByLabelPair: Map[(Label, Label), (Term, Term) => Term] = arr.zipWithIndex.flatMap({

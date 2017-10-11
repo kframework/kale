@@ -1,44 +1,6 @@
 package org.kframework.kale.util
 
-import cats.Monoid
-import org.kframework.kale.util.timer.formatTime
-
 import scala.concurrent.duration._
-
-//class functionTimer[A, B, M: Monoid](val name: String, measure: A => M)(val f: A => B)
-//  extends (A => B) with Timer {
-//
-//  timer.register(this)
-//
-//  val monoid = implicitly[Monoid[M]]
-//
-//  var _measured: M = monoid.empty
-//
-//  override def reset(): Unit = {
-//    _measured = monoid.empty
-//    super.reset()
-//  }
-//
-//  final def apply(a: A): B = {
-//    _measured = monoid.combine(_measured, measure(a))
-//    enter()
-//    val res = try {
-//      f(a)
-//    } catch {
-//      case e: Throwable => _errorHits += 1; throw e;
-//    } finally {
-//      exit()
-//    }
-//    res
-//  }
-//
-//  override def hashCode(): Int = f.hashCode()
-//
-//  override def equals(obj: scala.Any): Boolean = obj match {
-//    case that: functionTimer[_, _, _] => this.name == that.name
-//    case _ => false
-//  }
-//}
 
 object timer {
 
@@ -49,7 +11,7 @@ object timer {
     rs.put(t.name, t)
   }
 
-  def apply(name: String): Timer = rs.getOrElseUpdate(name, Timer(name))
+  def apply(name: String): Timer = rs.getOrElseUpdate(name, new Timer(name))
 
   def timers: Map[String, Timer] = rs.toMap
 
@@ -67,7 +29,7 @@ object timer {
     rs.values.foreach(_.reset())
   }
 
-  case class Timer(name: String) {
+  class Timer(val name: String) {
 
     timer.register(this)
 
@@ -79,7 +41,7 @@ object timer {
     protected[this] var _invocations = 0L
 
     def reset() = {
-      assert(_entries == 0, "Do not reset the timer during measuring.")
+      assert(isInside, "Do not reset the timer during measuring.")
       _entries = 0
       _totalTime = 0L
       _lastEntry = 0L
@@ -87,6 +49,8 @@ object timer {
       _errorHits = 0L
       _invocations = 0L
     }
+
+    def isInside = _entries == 0
 
     @inline final def time[T](f: => T): T = {
       enter()
@@ -113,7 +77,7 @@ object timer {
     }
 
     @inline protected[this] final def enter(): Unit = {
-      if (_entries == 0) {
+      if (isInside) {
         _lastEntry = System.nanoTime()
         _invocations += 1
       }
@@ -123,7 +87,7 @@ object timer {
 
     @inline protected[this] final def exit(): Unit = {
       _entries -= 1
-      if (_entries == 0) {
+      if (isInside) {
         _totalTime += (System.nanoTime() - _lastEntry)
       }
     }
