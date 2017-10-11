@@ -84,15 +84,27 @@ object Binary {
     val unifyTimer = new Timer("unify") {
       override def reset(): Unit = {
         super.reset()
-        _processedNodes = 0L
+        _processedLHSNodes = 0L
       }
-    }
 
-    private var _processedNodes = 0L
+      def processedLHSNodes = _processedLHSNodes
+
+      /**
+        * unified nodes per second
+        */
+      def unificationSpeed: Double = {
+        if (totalTime > 0)
+          (processedLHSNodes.toDouble / totalTime.toDouble) * Math.pow(10, 9)
+        else
+          Double.NaN
+      }
+
+      var _processedLHSNodes = 0L
+    }
 
     def apply(left: Term, right: Term): Term = {
       if (!unifyTimer.isInside) {
-        _processedNodes += left.size
+        unifyTimer._processedLHSNodes += left.size
       }
       unifyTimer.time {
         //      assert(labels.contains(left.label) && labels.contains(right.label))
