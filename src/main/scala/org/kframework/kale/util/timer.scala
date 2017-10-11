@@ -41,7 +41,7 @@ object timer {
     protected[this] var _invocations = 0L
 
     def reset() = {
-      assert(isInside, "Do not reset the timer during measuring.")
+//      assert(isInside, "Do not reset the timer during measuring.")
       _entries = 0
       _totalTime = 0L
       _lastEntry = 0L
