@@ -3,7 +3,7 @@ package org.kframework.kale.transformer
 import org.kframework.kale._
 import org.kframework.kale.context.Context1ApplicationLabel
 import org.kframework.kale.standard.StandardEnvironment
-import org.kframework.kale.util.timer
+import org.kframework.kale.util.{freeTimer, timer}
 import org.roaringbitmap.RoaringBitmap
 
 object Binary {
@@ -81,7 +81,7 @@ object Binary {
       }
     }
 
-    val unifyTimer = timer("unify")
+    val unifyTimer = timer.free("unify")
 
     def apply(left: Term, right: Term): Term = unifyTimer {
       //      assert(labels.contains(left.label) && labels.contains(right.label))
