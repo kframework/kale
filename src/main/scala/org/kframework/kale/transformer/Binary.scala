@@ -1,10 +1,9 @@
 package org.kframework.kale.transformer
 
 import org.kframework.kale._
-import org.kframework.kale.context.Context1ApplicationLabel
 import org.kframework.kale.standard.StandardEnvironment
-import org.kframework.kale.util.{freeTimer, timer}
 import org.roaringbitmap.RoaringBitmap
+import org.kframework.kale.util.timer
 
 object Binary {
 
@@ -81,9 +80,9 @@ object Binary {
       }
     }
 
-    val unifyTimer = timer.free("unify")
+    val unifyTimer = timer("unify")
 
-    def apply(left: Term, right: Term): Term = unifyTimer {
+    def apply(left: Term, right: Term): Term = unifyTimer.time {
       //      assert(labels.contains(left.label) && labels.contains(right.label))
       //      assert(left.label.id <= env.labels.size, "Left label " + left.label + " with id " + left.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
       //      assert(right.label.id <= env.labels.size, "Right label " + right.label + " with id " + right.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
