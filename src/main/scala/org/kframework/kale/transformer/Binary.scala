@@ -81,7 +81,7 @@ object Binary {
       }
     }
 
-    val unifyTimer = new Timer("unify") {
+    val unifyTimer = timer.register("unify", new Timer("unify") {
       override def reset(): Unit = {
         super.reset()
         _processedLHSNodes = 0L
@@ -100,7 +100,7 @@ object Binary {
       }
 
       var _processedLHSNodes = 0L
-    }
+    })
 
     def apply(left: Term, right: Term): Term = {
       if (!unifyTimer.isInside) {

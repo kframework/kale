@@ -6,12 +6,11 @@ object timer {
 
   private val rs = collection.mutable.Map[String, Timer]()
 
-  def register(t: Timer): Unit = {
-    assert(!rs.keySet.contains(t.name))
-    rs.put(t.name, t)
+  def register[T <: Timer](name: String, t: => T): T = {
+    rs.getOrElseUpdate(t.name, t).asInstanceOf[T]
   }
 
-  def apply(name: String): Timer = rs.getOrElseUpdate(name, new Timer(name))
+  def apply(name: String): Timer = register(name, new Timer(name))
 
   def timers: Map[String, Timer] = rs.toMap
 
@@ -30,9 +29,6 @@ object timer {
   }
 
   class Timer(val name: String) {
-
-    timer.register(this)
-
     protected[this] var _entries = 0
     protected[this] var _totalTime = 0L
     protected[this] var _lastEntry = 0L
@@ -41,7 +37,7 @@ object timer {
     protected[this] var _invocations = 0L
 
     def reset() = {
-//      assert(isInside, "Do not reset the timer during measuring.")
+      //      assert(isInside, "Do not reset the timer during measuring.")
       _entries = 0
       _totalTime = 0L
       _lastEntry = 0L
