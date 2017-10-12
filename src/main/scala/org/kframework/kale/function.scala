@@ -83,7 +83,7 @@ case class PrimitiveMonoid[O: Monoid : UpDown](name: String)(implicit val env: E
 
   private val Self = this
 
-  def combineExtendedWithABitOfSymbolic(a: Term, b: Term): Option[Term] = ((a, b): @switch) match {
+  def combineExtendedWithABitOfSymbolic(a: Term, b: Term): Option[Term] = (a, b) match {
     case (`identity`, b) => Some(b)
     case (a, `identity`) => Some(a)
     case (updown(aPrimitive), updown(bPrimitive)) => Some(updown(primitiveMonoid.combine(aPrimitive, bPrimitive)))
