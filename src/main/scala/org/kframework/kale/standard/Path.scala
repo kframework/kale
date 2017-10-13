@@ -13,11 +13,11 @@ trait PathMixin extends Mixin {
   implicit val updownPath = new UpDown[Path] {
     val updownList = implicitly[UpDown[List[Int]]]
 
-    override def unapply(t: Term) =
-      updownList.unapply(t.children.head) map Path
+    override def down(t: Term) =
+      updownList.down(t.children.head) map Path
 
-    override def apply(o: Path) =
-      PathLabel(updownList(o.positions))
+    override def up(o: Path) =
+      PathLabel(updownList.up(o.positions))
   }
 
   case class map0WithPath(f: (Term, Path) => Term) {

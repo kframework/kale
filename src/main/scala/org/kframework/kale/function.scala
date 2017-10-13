@@ -56,7 +56,7 @@ trait FunctionLabel4 extends Label4 with FunctionLabel {
 
 case class PrimitiveFunction1[A, R](name: String, aLabel: UpDown[A], rLabel: Up[R], primitiveF: A => R)(implicit val env: Environment) extends FunctionLabel1 with PureFunctionLabel {
   def f(_1: Term): Option[Term] = _1 match {
-    case aLabel(a) => Some(rLabel(primitiveF(a)))
+    case aLabel.extract(a) => Some(rLabel.up(primitiveF(a)))
     case _ => None
   }
 }
@@ -70,7 +70,7 @@ case class PrimitiveFunction2[A, B, R](name: String, aLabel: UpDown[A], bLabel: 
   extends FunctionLabel2 with PureFunctionLabel {
 
   def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
-    case (aLabel(a), bLabel(b)) => Some(rLabel(primitiveF(a, b)))
+    case (aLabel.extract(a), bLabel.extract(b)) => Some(rLabel.up(primitiveF(a, b)))
     case _ => None
   }
 }
@@ -86,7 +86,7 @@ case class PrimitiveMonoid[O: Monoid : UpDown](name: String)(implicit val env: E
   def combineExtendedWithABitOfSymbolic(a: Term, b: Term): Option[Term] = (a, b) match {
     case (`identity`, b) => Some(b)
     case (a, `identity`) => Some(a)
-    case (updown(aPrimitive), updown(bPrimitive)) => Some(updown(primitiveMonoid.combine(aPrimitive, bPrimitive)))
+    case (updown.extract(aPrimitive), updown.extract(bPrimitive)) => Some(updown.up(primitiveMonoid.combine(aPrimitive, bPrimitive)))
     case _ => None
   }
 
@@ -129,7 +129,7 @@ case class PrimitiveMonoid[O: Monoid : UpDown](name: String)(implicit val env: E
   }
 
   override val identity =
-    updown.apply(primitiveMonoid.empty)
+    updown.up(primitiveMonoid.empty)
 }
 
 //case class PrimitiveMonoid[O](label: PrimitiveMonoidLabel[O], list: List[O]) extends Node2 {
@@ -157,7 +157,7 @@ object PrimitiveFunction2 {
 
 case class PrimitiveFunction3[A, B, C, R](name: String, aLabel: UpDown[A], bLabel: UpDown[B], cLabel: UpDown[C], rLabel: Up[R], primitiveF: (A, B, C) => R)(implicit val env: Environment) extends FunctionLabel3 with PureFunctionLabel {
   def f(_1: Term, _2: Term, _3: Term): Option[Term] = (_1, _2, _3) match {
-    case (aLabel(a), bLabel(b), cLabel(c)) => Some(rLabel(primitiveF(a, b, c)))
+    case (aLabel.extract(a), bLabel.extract(b), cLabel.extract(c)) => Some(rLabel.up(primitiveF(a, b, c)))
     case _ => None
   }
 }
