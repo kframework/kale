@@ -4,7 +4,7 @@ import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
-import org.kframework.kale.util.{Named, timer}
+import org.kframework.kale.util.{LabelNamed, timer}
 import org.roaringbitmap.RoaringBitmap
 
 import scala.collection.{+:, Iterable, Seq}
@@ -12,7 +12,7 @@ import scala.collection.{+:, Iterable, Seq}
 trait NonAssocWithIdListMixin extends Mixin {
   _: Environment with FreeMixin =>
 
-  case class NonAssocWithIdLabel(override val name: String, identity: Term) extends Named(name) with Label2 with HasId with Constructor {
+  case class NonAssocWithIdLabel(override val name: String, identity: Term) extends LabelNamed(name) with Label2 with HasId with Constructor {
     val self = this
 
     override def apply(_1: Term, _2: Term): Term = (_1, _2) match {
@@ -106,7 +106,7 @@ trait AssocWithIdListMixin extends Mixin {
   }), Priority.medium)
 }
 
-case class CollectionSize(collectionLabel: CollectionLabel)(implicit env: Environment with IntMixin) extends Named(collectionLabel.name + ".size") with FunctionLabel1 {
+case class CollectionSize(collectionLabel: CollectionLabel)(implicit env: Environment with IntMixin) extends LabelNamed(collectionLabel.name + ".size") with FunctionLabel1 {
   override def f(_1: Term): Option[Term] =
     if (_1.isGround)
       Some(env.INT.Int(collectionLabel.asIterable(_1).size))

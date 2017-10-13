@@ -4,7 +4,7 @@ import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
-import org.kframework.kale.util.{NameFromObject, Named}
+import org.kframework.kale.util.{NameFromObject, LabelNamed}
 
 trait FunctionByRewritingMixin extends Mixin {
   _: Environment with standard.MatchingLogicMixin with HasMatcher =>
@@ -29,7 +29,7 @@ trait FunctionByRewritingMixin extends Mixin {
   }))
 }
 
-case class NotLabel()(implicit override val env: Environment) extends Named("¬") with kale.NotLabel with FunctionLabel {
+case class NotLabel()(implicit override val env: Environment) extends LabelNamed("¬") with kale.NotLabel with FunctionLabel {
 
   import env._
 

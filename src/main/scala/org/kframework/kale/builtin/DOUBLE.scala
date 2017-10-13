@@ -2,7 +2,7 @@ package org.kframework.kale.builtin
 
 import org.kframework.kale
 import org.kframework.kale.standard.ReferenceLabel
-import org.kframework.kale.util.Named
+import org.kframework.kale.util.LabelNamed
 import org.kframework.kale.{FunctionLabel2, _}
 
 trait DoubleMixin extends kale.DoubleMixin {
@@ -11,7 +11,7 @@ trait DoubleMixin extends kale.DoubleMixin {
   override val DOUBLE = new {
     val Double = define[Double]("Double")(_.toDouble)
 
-    val div = new Named("_/Double_") with FunctionLabel2 {
+    val div = new LabelNamed("_/Double_") with FunctionLabel2 {
       override val isPredicate: Option[Boolean] = Some(false)
 
       def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {

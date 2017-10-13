@@ -2,7 +2,7 @@ package org.kframework.kale.strategy
 
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.{ProcessingFunctions, definePartialFunction}
-import org.kframework.kale.util.Named
+import org.kframework.kale.util.LabelNamed
 import org.kframework.kale.{CluelessRoaring, ConjunctiveRoaring, DisjunctiveRoaring, Environment, FreeNode1, FreeNode2, FreeNode3, FunctionLabel1, FunctionLabel3, HasMatcher, Label1, Label2, Label3, Mixin, Node1, Predicate, Term, standard}
 import org.kframework.km.term.Variable
 import org.kframework.kore.Bottom
@@ -18,39 +18,39 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     val isPredicate = Some(false)
   }
 
-  val compose = new Named("^compose") with Label2 with Strategy with CluelessRoaring {
+  val compose = new LabelNamed("^compose") with Label2 with Strategy with CluelessRoaring {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
   }
 
-  val repeat = new Named("^repeat") with Label1 with Strategy with CluelessRoaring {
+  val repeat = new LabelNamed("^repeat") with Label1 with Strategy with CluelessRoaring {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
   def orElseLeave(t: Term): Term = orElse(t, env.Variable.freshVariable())
 
-  val fixpoint = new Named("^fixpoint") with Label1 with Strategy with CluelessRoaring {
+  val fixpoint = new LabelNamed("^fixpoint") with Label1 with Strategy with CluelessRoaring {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
   /**
     * Takes a partial function
     */
-  val bu = new Named("^bu") with Label1 with Strategy with CluelessRoaring {
+  val bu = new LabelNamed("^bu") with Label1 with Strategy with CluelessRoaring {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
   /**
     * Takes a partial function
     */
-  val td = new Named("^td") with Label1 with Strategy with CluelessRoaring {
+  val td = new LabelNamed("^td") with Label1 with Strategy with CluelessRoaring {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
-  val rw = new Named("^rewrite") with Label1 with Strategy with CluelessRoaring {
+  val rw = new LabelNamed("^rewrite") with Label1 with Strategy with CluelessRoaring {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
-  val orElse = new Named("^orElse") with Label2 with Strategy with DisjunctiveRoaring {
+  val orElse = new LabelNamed("^orElse") with Label2 with Strategy with DisjunctiveRoaring {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
   }
 
@@ -58,7 +58,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     * ifThenElse(c, t, e) is semantically equivalent to Or(And(c, t), And(Not(c), t)) but evaluated lazily
     * i.e., the t and e are only touched when we know whether the condition is Top or Bottom
     */
-  val ifThenElse = new Named("^ifThenElse") with FunctionLabel3 with Strategy {
+  val ifThenElse = new LabelNamed("^ifThenElse") with FunctionLabel3 with Strategy {
     override def f(condition: Term, thenTerm: Term, elseTerm: Term): Option[Term] = condition match {
       case env.Top => Some(thenTerm)
       case env.Bottom => Some(elseTerm)
@@ -72,7 +72,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
   /**
     * "Waits" for all non-anonymous variables to be instantiated, tries to match, and returns Top if unsat.
     */
-  val doesNotMatch = new Named("!=") with Label2 with Predicate {
+  val doesNotMatch = new LabelNamed("!=") with Label2 with Predicate {
     override def apply(pattern: Term, obj: Term): Term =
       if (obj.variables.forall(v => v.name.str.startsWith("_"))) {
         val res = env.unify(pattern, obj)
@@ -85,7 +85,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
   /**
     * Matches/unifies it's argument and returns obj if unsat. See also doesNotMatch.
     */
-  val unsat = new Named("unsat") with FunctionLabel1 with Strategy {
+  val unsat = new LabelNamed("unsat") with FunctionLabel1 with Strategy {
     override def f(_1: Term) = {
       val x = env.Variable("unsatVar" + env.Variable.counter)
       Some(env.And(x, doesNotMatch(_1, x)))

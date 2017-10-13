@@ -5,13 +5,13 @@ import org.kframework.kale.context.anywhere.ContextContentVariable
 import org.kframework.kale.standard.{HolesMixin, Name}
 import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 import org.kframework.kale.transformer.{Binary, Unary}
-import org.kframework.kale.util.{Named, timer}
+import org.kframework.kale.util.{LabelNamed, timer}
 import org.roaringbitmap.RoaringBitmap
 
 trait ContextMixin extends Mixin {
   _: Environment with standard.MatchingLogicMixin =>
 
-  val Context = new Named("Context") with Label3 {
+  val Context = new LabelNamed("Context") with Label3 {
     override val isPredicate: Option[Boolean] = Some(false)
 
     override def requiredLabels(children: Iterable[Term]) = Roaring.requiredFor(children.tail)
@@ -26,7 +26,7 @@ trait ContextMixin extends Mixin {
 
     val hole = Variable("CONTEXT_HOLE")
 
-    val anywhere = (new Named("anywhere") with Label0 with CluelessRoaring {
+    val anywhere = (new LabelNamed("anywhere") with Label0 with CluelessRoaring {
       override val isPredicate: Option[Boolean] = Some(false)
 
       override def apply(): Term = new FreeNode0(this) {
@@ -37,7 +37,7 @@ trait ContextMixin extends Mixin {
     def hole(x: Variable) = ContextContentVariable(x, 1)
   }
 
-  val SolvingContext = new Named("SolvingContext") with Label1 with Projection1Roaring {
+  val SolvingContext = new LabelNamed("SolvingContext") with Label1 with Projection1Roaring {
     override val isPredicate: Option[Boolean] = Some(false)
 
     override def apply(_1: Term): Term = {

@@ -1,7 +1,7 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale._
-import org.kframework.kale.util.Named
+import org.kframework.kale.util.LabelNamed
 
 trait MacroMixin {
   _: Environment with MatchingLogicMixin with TuplesMixin with StringMixin =>
@@ -10,7 +10,7 @@ trait MacroMixin {
 
   case class MacroException(msg: String) extends Exception(msg)
 
-  val macroDef = new Named("macro_def") with Label3 with FunctionLabel {
+  val macroDef = new LabelNamed("macro_def") with Label3 with FunctionLabel {
     override def apply(name: Term, signature: Term, body: Term): Term = name match {
       case STRING.String(name) =>
         defineMacro(name, signature, body)
@@ -29,7 +29,7 @@ trait MacroMixin {
 
   def macroIsDefined(name: String): Boolean = macros.contains(name)
 
-  val macroApply = new Named("macro_apply") with Label2 with FunctionLabel {
+  val macroApply = new LabelNamed("macro_apply") with Label2 with FunctionLabel {
     override def apply(name: Term, args: Term): Term = name match {
       case STRING.String(key) =>
         val x = macros.get(key) map {

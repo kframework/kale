@@ -4,7 +4,7 @@ import org.kframework.kale.standard.BottomizeMixin
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.transformer.{Binary, Unary}
 
-trait Environment extends Foundation with RoaringMixin with HasMatcher with MatchingLogicMixin with DefineMixin with BottomizeMixin
+trait Environment extends Foundation with RoaringMixin with HasMatcher with MatchingLogicMixin with LiftedCatsMixin with BottomizeMixin
 
 trait Foundation {
   _: Environment =>

@@ -1,10 +1,10 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale
-import org.kframework.kale.{DefineMixin, Environment, IntMixin, Mixin, MonoidLabeled, UpDown}
+import org.kframework.kale.{LiftedCatsMixin, Environment, IntMixin, Mixin, MonoidLabeled, UpDown}
 
 trait ScalaLibraryMixin extends Mixin {
-  _: Environment with AssocWithIdListMixin with FreeMixin with DefineMixin with IntMixin =>
+  _: Environment with AssocWithIdListMixin with FreeMixin with LiftedCatsMixin with IntMixin =>
 
   val emptyScalaList = FreeLabel0("emptyScalaList")()
   val scalaList = AssocWithIdLabel("scalaList", emptyScalaList)

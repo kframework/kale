@@ -2,7 +2,7 @@ package org.kframework.kale.standard
 
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
-import org.kframework.kale.util.{NameFromObject, Named, unreachable}
+import org.kframework.kale.util.{NameFromObject, LabelNamed, unreachable}
 import org.kframework.kale.{Environment, Substitution, _}
 import org.kframework.{kale, kore}
 import org.roaringbitmap.{FastAggregation, RoaringBitmap}
@@ -185,7 +185,7 @@ trait PrimordialDomainValueLabel[T] extends DomainValueLabel[T] {
 private[standard] case class StandardDomainValue[T](label: DomainValueLabel[T], data: T) extends DomainValue[T]
 
 private[standard] case class StandardVariableLabel()(implicit override val env: Environment)
-  extends Named("#Variable") with VariableLabel with CluelessRoaring {
+  extends LabelNamed("#Variable") with VariableLabel with CluelessRoaring {
   def apply(nameAndSort: (kale.Name, kale.Sort)): Variable = StandardVariable(nameAndSort._1, nameAndSort._2)
 
   override protected[this] def internalInterpret(s: String): (kale.Name, kale.Sort) = s.split(":") match {
@@ -249,7 +249,7 @@ private[standard] case class BottomInstance()(implicit eenv: Environment) extend
   override lazy val suppliedLabels: RoaringBitmap = RoaringBitmap.bitmapOf()
 }
 
-private[standard] case class SimpleNextLabel()(implicit override val env: Environment) extends Named("=>_") with NextLabel with Projection1Roaring {
+private[standard] case class SimpleNextLabel()(implicit override val env: Environment) extends LabelNamed("=>_") with NextLabel with Projection1Roaring {
   def apply(t: Term) = t match {
     case env.Top => env.Top
     case _ => SimpleNext(t)
@@ -263,7 +263,7 @@ private[standard] case class SimpleNext(_1: Term)(implicit env: Environment) ext
   override lazy val isPredicate: Boolean = _1.isPredicate
 }
 
-private[standard] case class MatchLabel()(implicit override val env: StandardEnvironment) extends Named(":=") with EqualityLabel {
+private[standard] case class MatchLabel()(implicit override val env: StandardEnvironment) extends LabelNamed(":=") with EqualityLabel {
 
   import env._
 
@@ -291,7 +291,7 @@ private[kale] class Matches(val _1: Term, val _2: Term)(implicit env: StandardEn
   val label = env.Match
 }
 
-private[standard] case class StandardEqualityLabel()(implicit override val env: Environment with MatchingLogicMixin) extends Named("=") with EqualityLabel {
+private[standard] case class StandardEqualityLabel()(implicit override val env: Environment with MatchingLogicMixin) extends LabelNamed("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = {
     val lhsOrElements = env.Or.asSet(_1)
     val rhsOrElements = env.Or.asSet(_2)
@@ -368,7 +368,7 @@ case class SimpleRewrite(_1: Term, _2: Term)(implicit env: Environment) extends 
   override val label = env.Rewrite
 }
 
-private[standard] class GroundApplyRewrite(implicit env: Environment) extends Named("ApplyRewrite") with FunctionLabel2 {
+private[standard] class GroundApplyRewrite(implicit env: Environment) extends LabelNamed("ApplyRewrite") with FunctionLabel2 {
   override def f(_1: Term, _2: Term): Option[Term] =
     if (_2.isGround) {
       Some(env.rewrite(_1, _2))
@@ -379,7 +379,7 @@ private[standard] class GroundApplyRewrite(implicit env: Environment) extends Na
   override val isPredicate: Option[Boolean] = Some(false)
 }
 
-private[standard] class OneResult(implicit penv: StandardEnvironment) extends Named("OneResult") with FunctionLabel1 {
+private[standard] class OneResult(implicit penv: StandardEnvironment) extends LabelNamed("OneResult") with FunctionLabel1 {
 
   import env._
 
@@ -906,7 +906,7 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
 }
 
 private[standard] case class DNFOrLabel()(implicit override val env: Environment)
-  extends Named("∨") with OrLabel with DisjunctiveRoaring {
+  extends LabelNamed("∨") with OrLabel with DisjunctiveRoaring {
 
   import env._
 
@@ -952,7 +952,7 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
   override def asSet: Set[Term] = terms
 }
 
-private[standard] case class SimpleForAllLabel()(implicit val e: Environment with MatchingLogicMixin) extends Named("∀") with ForAllLabel with Projection2Roaring {
+private[standard] case class SimpleForAllLabel()(implicit val e: Environment with MatchingLogicMixin) extends LabelNamed("∀") with ForAllLabel with Projection2Roaring {
 
   import env._
 
@@ -976,7 +976,7 @@ case class SimpleForAll(v: Variable, p: Term)(implicit val env: Environment) ext
   override def _2: Term = p
 }
 
-private[standard] case class SimpleExistsLabel()(implicit val e: Environment with MatchingLogicMixin) extends Named("∃") with ExistsLabel with Projection2Roaring {
+private[standard] case class SimpleExistsLabel()(implicit val e: Environment with MatchingLogicMixin) extends LabelNamed("∃") with ExistsLabel with Projection2Roaring {
 
   import env._
 
@@ -1008,7 +1008,7 @@ case class SimpleExists(v: Variable, p: Term)(implicit val env: Environment) ext
 
 case class Name(str: String) extends kale.Name
 
-private[standard] class BindMatchLabel(implicit override val env: Environment) extends Named("BindMatch") with Label2 with Projection2Roaring {
+private[standard] class BindMatchLabel(implicit override val env: Environment) extends LabelNamed("BindMatch") with Label2 with Projection2Roaring {
   def apply(v: Term, p: Term) = FreeNode2(this, v.asInstanceOf[Variable], p)
 
   override val isPredicate: Option[Boolean] = Some(false)

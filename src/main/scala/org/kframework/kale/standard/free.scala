@@ -4,27 +4,27 @@ import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
-import org.kframework.kale.util.Named
+import org.kframework.kale.util.LabelNamed
 
 import scala.language.implicitConversions
 
 trait FreeMixin extends kale.FreeMixin {
   _: Environment =>
-  override def FreeLabel0(name: String): FreeLabel0 = new Named(name) with FreeLabel0
+  override def FreeLabel0(name: String): FreeLabel0 = new LabelNamed(name) with FreeLabel0
 
-  override def FreeLabel1(name: String): FreeLabel1 = new Named(name) with FreeLabel1
+  override def FreeLabel1(name: String): FreeLabel1 = new LabelNamed(name) with FreeLabel1
 
-  override def FreeLabel2(name: String): FreeLabel2 = new Named(name) with FreeLabel2
+  override def FreeLabel2(name: String): FreeLabel2 = new LabelNamed(name) with FreeLabel2
 
-  override def FreeLabel3(name: String): FreeLabel3 = new Named(name) with FreeLabel3
+  override def FreeLabel3(name: String): FreeLabel3 = new LabelNamed(name) with FreeLabel3
 
-  override def FreeLabel4(name: String): FreeLabel4 = new Named(name) with FreeLabel4
+  override def FreeLabel4(name: String): FreeLabel4 = new LabelNamed(name) with FreeLabel4
 
-  override def FreeLabel5(name: String): FreeLabel5 = new Named(name) with FreeLabel5
+  override def FreeLabel5(name: String): FreeLabel5 = new LabelNamed(name) with FreeLabel5
 
-  override def FreeLabel6(name: String): FreeLabel6 = new Named(name) with FreeLabel6
+  override def FreeLabel6(name: String): FreeLabel6 = new LabelNamed(name) with FreeLabel6
 
-  override def FreeLabelN(name: String, theArity: Int): FreeLabelN = new Named(name) with FreeLabelN {
+  override def FreeLabelN(name: String, theArity: Int): FreeLabelN = new LabelNamed(name) with FreeLabelN {
     override val arity: Int = theArity
   }
 

@@ -3,7 +3,7 @@ package org.kframework.kale.pretty
 import org.kframework.kale._
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
-import org.kframework.kale.util.Named
+import org.kframework.kale.util.LabelNamed
 
 trait PrettyWrapperMixin extends Mixin {
   _: Environment with standard.MatchingLogicMixin with standard.FreeMixin with builtin.StringMixin =>
@@ -13,7 +13,7 @@ trait PrettyWrapperMixin extends Mixin {
     case _ => t.toString
   }
 
-  val PrettyWrapper: Label3 = new Named("PrettyWrapper") with Label3 {
+  val PrettyWrapper: Label3 = new LabelNamed("PrettyWrapper") with Label3 {
     lazy private val W = this
     lazy val I = Infer
 

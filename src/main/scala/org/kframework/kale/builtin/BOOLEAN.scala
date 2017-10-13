@@ -3,7 +3,7 @@ package org.kframework.kale.builtin
 import org.kframework.kale
 import org.kframework.kale._
 import org.kframework.kale.standard.ReferenceLabel
-import org.kframework.kale.util.Named
+import org.kframework.kale.util.LabelNamed
 
 
 trait BooleanMixin extends kale.BooleanMixin {
@@ -21,7 +21,7 @@ trait BooleanMixin extends kale.BooleanMixin {
       * i.e., the t and e are only touched when we know whether the condition is True or False
       * see also STRATEGY.ifThenElse
       */
-    val ifThenElse = new Named("BOOLEAN.ifThenElse") with FunctionLabel3 {
+    val ifThenElse = new LabelNamed("BOOLEAN.ifThenElse") with FunctionLabel3 {
       override val isPredicate: Option[Boolean] = None
 
       override def f(condition: Term, thenTerm: Term, elseTerm: Term) = condition match {
@@ -31,7 +31,7 @@ trait BooleanMixin extends kale.BooleanMixin {
       }
     }
 
-    val isTrue = new Named("isTrue") with FunctionLabel1 {
+    val isTrue = new LabelNamed("isTrue") with FunctionLabel1 {
 
       override val isPredicate: Option[Boolean] = Some(true)
 

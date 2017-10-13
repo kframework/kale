@@ -1,14 +1,14 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale.builtin.IntMixin
-import org.kframework.kale.util.Named
-import org.kframework.kale.{SemigroupLabel, DefineMixin, Environment, FreeLabel1, Label, Mixin, Term, UpDown}
+import org.kframework.kale.util.LabelNamed
+import org.kframework.kale.{SemigroupLabel, LiftedCatsMixin, Environment, FreeLabel1, Label, Mixin, Term, UpDown}
 
 trait PathMixin extends Mixin {
-  _: Environment with DefineMixin with IntMixin with ScalaLibraryMixin =>
+  _: Environment with LiftedCatsMixin with IntMixin with ScalaLibraryMixin =>
 
 
-  val PathLabel = new Named("PathLabel") with FreeLabel1
+  val PathLabel = new LabelNamed("PathLabel") with FreeLabel1
 
   implicit val updownPath = new UpDown[Path] {
     val updownList = implicitly[UpDown[List[Int]]]

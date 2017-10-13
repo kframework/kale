@@ -4,7 +4,7 @@ import org.kframework.backend.skala.backendImplicits._
 import org.kframework.kale._
 import org.kframework.kale.builtin.{MapLabel, SetLabel, TOKEN}
 import org.kframework.kale.standard._
-import org.kframework.kale.util.Named
+import org.kframework.kale.util.LabelNamed
 import org.kframework.kore.extended.Backend
 import org.kframework.kore.extended.implicits._
 import org.kframework.kore.implementation.DefaultBuilders
@@ -60,7 +60,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition,
     "MAP.update" -> { (labelName, labels, terms) =>
       uniqueLabels.get("Map@MAP").map(_.asInstanceOf[MapLabel]) map {
         mapLabel =>
-          new Named(labelName) with FunctionLabel3 {
+          new LabelNamed(labelName) with FunctionLabel3 {
             override def f(m: Term, key: Term, value: Term): Option[Term] = m match {
               case mapLabel.indexedAndUnindexed(indexed, unindexed) =>
                 val arrow = labels.head.asInstanceOf[Label2]
@@ -73,7 +73,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition,
     },
     "SUBSTITUTION.userSingletonSubstitutionKore" -> {
       (labelName, labels, terms) =>
-        Some(new Named(labelName)(env) with FunctionLabel3 {
+        Some(new LabelNamed(labelName)(env) with FunctionLabel3 {
           override def f(body: Term, value: Term, vari: Term): Option[Term] = {
             if (body.isGround && value.isGround)
               Some(body.mapBU({case `vari` => value case t => t}))
@@ -339,7 +339,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition,
     ss.exists(s => subsorts.<=(s, sort))
   }
 
-  case class IsSort(s: kore.Sort) extends Named("is" + s.str) with FunctionLabel1 {
+  case class IsSort(s: kore.Sort) extends LabelNamed("is" + s.str) with FunctionLabel1 {
     override def f(_1: Term): Option[Term] = {
       if (!_1.isGround)
         None

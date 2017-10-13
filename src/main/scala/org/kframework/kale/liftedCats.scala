@@ -2,7 +2,7 @@ package org.kframework.kale
 
 import cats.Monoid
 import org.kframework.kale.standard.{ReferenceLabel, ScalaLibraryMixin}
-import org.kframework.kale.util.Named
+import org.kframework.kale.util.LabelNamed
 
 trait Convert[A, B] {
   def convert(a: A): B
@@ -34,25 +34,25 @@ trait MonoidLabeled[O[_]] {
   def monoidLabel: MonoidLabel
 }
 
-trait DefineMixin extends Mixin {
+trait LiftedCatsMixin extends Mixin {
   _: Environment =>
 
   def lift(funcName: String, func: Term => Term)(implicit oenv: Environment): Label1 =
-    new Named(funcName) with Label1 with FunctionLabel {
+    new LabelNamed(funcName) with Label1 with FunctionLabel {
       override def apply(_1: Term): Term = func(_1)
 
       override val isPredicate = Some(false)
     }
 
   def lift(funcName: String, func: (Term, Term) => Term)(implicit oenv: Environment): Label2 =
-    new Named(funcName) with Label2 with FunctionLabel {
+    new LabelNamed(funcName) with Label2 with FunctionLabel {
       override def apply(_1: Term, _2: Term): Term = func(_1, _2)
 
       override lazy val isPredicate = Some(false)
     }
 
-  def lift(funcName: String, func: Term => Option[Term], isPred: Option[Boolean])(implicit oenv: Environment) =
-    new Named(funcName) with FunctionLabel1 {
+  def lift(funcName: String, func: Term => Option[Term], isPred: Option[Boolean])(implicit oenv: Environment): Label1 =
+    new LabelNamed(funcName) with FunctionLabel1 {
       override def f(_1: Term): Option[Term] = func(_1)
 
       override lazy val isPredicate = isPred
