@@ -19,9 +19,7 @@ trait Down[O] {
 object UpDown {
   final def apply[O](implicit instance: Up[O]): Up[O] = instance
 
-  final def apply[O](f: O => Term): Up[O] = new Up[O] {
-    override def apply(o: O): Term = f(o)
-  }
+  final def apply[O](f: O => Term): Up[O] = (o: O) => f(o)
 
   final implicit def updownFromLeafLabel[O](implicit l: LeafLabel[O]): UpDown[O] = new UpDown[O] {
     override def unapply(t: Term) = l.unapply(t)
