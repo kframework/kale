@@ -34,7 +34,7 @@ trait Foundation {
 
   val substitutionMaker: Substitution => SubstitutionApply
 
-  final val unify: Label2 = standard.lift("unify", {
+  final val unify: Label2 = lift("unify", {
     (a: Term, b: Term) =>
       assert(this.isSealed)
       unifier(a, b)

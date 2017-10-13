@@ -10,9 +10,9 @@ import org.roaringbitmap.RoaringBitmap
 
 case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin) {
 
-  val anytimeIsNow = standard.lift("^nextIsNow", env.And.anytimeIsNow _)
+  val anytimeIsNow = env.lift("^nextIsNow", env.And.anytimeIsNow _)
 
-  val onlyNonPredicate = standard.lift("^onlyNext", env.And.onlyNonPredicate _)
+  val onlyNonPredicate = env.lift("^onlyNext", env.And.onlyNonPredicate _)
 
   trait Strategy {
     val isPredicate = Some(false)
