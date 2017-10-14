@@ -8,17 +8,7 @@ trait PathMixin extends Mixin {
   _: Environment with LiftedCatsMixin with IntMixin with ScalaLibraryMixin =>
 
 
-  val PathLabel = new LabelNamed("PathLabel") with FreeLabel1
-
-  implicit val updownPath = new UpDown[Path] {
-    val updownList = implicitly[UpDown[List[Int]]]
-
-    override def down(t: Term) =
-      updownList.down(t.children.head) map Path
-
-    override def up(o: Path) =
-      PathLabel(updownList.up(o.positions))
-  }
+  implicit val PathLabel = free1(Path)
 
   case class map0WithPath(f: (Term, Path) => Term) {
     def apply(t: Term, path: Path): Term = t.copy(t.flattenedChildren.zipWithIndex map {
