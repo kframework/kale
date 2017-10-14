@@ -1,8 +1,9 @@
 package org.kframework.kale
 
-import cats.Monoid
-import org.kframework.kale.standard.{ReferenceLabel, ScalaLibraryMixin}
+import org.kframework.kale.standard.ReferenceLabel
 import org.kframework.kale.util.LabelNamed
+import cats._
+import cats.implicits._
 
 trait Convert[A, B] {
   def convert(a: A): B
@@ -18,8 +19,11 @@ trait Down[O] {
   object extract {
     def unapply(t: Term): Option[O] = down(t)
   }
-
 }
+
+trait Isomorphism[A, B] {
+  def to: A => B
+  def from: B => A
 }
 
 object UpDown {
@@ -40,7 +44,7 @@ trait MonoidLabeled[O[_]] {
   def monoidLabel: MonoidLabel
 }
 
-trait LiftedCatsMixin extends Mixin {
+trait LiftedCatsMixin extends Mixin with highcats.Free {
   _: Environment =>
 
   def lift(funcName: String, func: Term => Term)(implicit oenv: Environment): Label1 =
@@ -79,11 +83,9 @@ trait LiftedCatsMixin extends Mixin {
     override protected[this] def internalInterpret(s: String): T = ConvertFromString.convert(s)
   }
 
-  import cats._
+  import highcats._
 
-  implicit def autoUp[O](o: O)(implicit up: UpDown[O]): Term = up.up(o)
-
-  implicit def autoDown[O](t: Term)(implicit down: UpDown[O]): O = down.down(t).get
+  implicit def autoUp[O](o: O)(implicit up: Up[O]): Term = up.up(o)
 
   implicit def upMonoidLabeled[O[_] : MonoidLabeled : Traverse : Applicative : MonoidK, E: UpDown]: UpDown[O[E]] = new UpDown[O[E]] {
     val eUpDown = implicitly[UpDown[E]]
@@ -98,7 +100,6 @@ trait LiftedCatsMixin extends Mixin {
 
     override def down(t: Term): Option[O[E]] = t match {
       case label.iterable(seq: Iterable[Term]) =>
-        import cats.implicits._
         def ff(t: Term) = oApplicative.pure(eUpDown.down(t).get)
 
         Some(implicitly[Traverse[scala.List]].foldMap(seq.toList)(ff)(oMonoid))

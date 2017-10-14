@@ -34,6 +34,29 @@ class PlayingWithCatsSpec extends FunSuite with Discipline {
     assert(implicitly[UpDown[List[Int]]].down(scalaList(List(1, 2, 3))) == Some(List(1, 2, 3)))
   }
 
-    assert(implicitly[UpDown[List[Int]]].unapply(scalaList(List(1, 2, 3))) == Some(List(1, 2, 3)))
+
+  test("free lifting") {
+
+    case class Foo(a: Int)
+    case class Bar(a: Int, b: String)
+    case class Buz(a: Int, b: Foo, c: String)
+
+    implicit val freeFoo = free1(Foo)
+    implicit val freeBar = free2(Bar)
+    implicit val freeBuz = free3(Buz)
+
+    val foo = Foo(5)
+
+    val fooTerm: Term = Foo(5)
+
+    val fooBack = fooTerm.down[Foo]
+
+    val bar = Bar(7, "bar")
+    val buz = Buz(9, foo, "buz")
+
+    assert((foo: Term).down[Foo] === Some(foo))
+    assert((bar: Term).down[Bar] === Some(bar))
+    assert((buz: Term).down[Buz] === Some(buz))
+
   }
 }

@@ -1,6 +1,5 @@
 package org.kframework.kale
 
-import cats.Eq
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor}
 import org.kframework.kale.util.HasAtt
@@ -114,8 +113,9 @@ object Term {
     }
   }
 
-  implicit class RichTerm(t: Term)(implicit env: Environment) {
-    def moveRewriteToTop: Rewrite = moveRewriteSymbolToTop(t)
+  implicit class RichTerm(val t: Term) extends AnyVal {
+    def moveRewriteToTop(implicit env: Environment): Rewrite = moveRewriteSymbolToTop(t)
+    def down[O](implicit down: Down[O]): Option[O] = down.down(t)
   }
 
 }
