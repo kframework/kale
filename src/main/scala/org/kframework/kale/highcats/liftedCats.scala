@@ -1,44 +1,14 @@
-package org.kframework.kale
+package org.kframework.kale.highcats
 
-import org.kframework.kale.standard.ReferenceLabel
-import org.kframework.kale.util.LabelNamed
 import cats._
 import cats.implicits._
+import org.kframework.kale.standard.ReferenceLabel
+import org.kframework.kale.util.LabelNamed
+import org.kframework.kale.{Environment, FunctionLabel, FunctionLabel1, Label1, Label2, Mixin, MonoidLabel, PrimitiveFunction1, PrimitiveFunction2, PrimitiveFunction3, PrimitiveMonoid, Term, highcats}
 
 trait Convert[A, B] {
   def convert(a: A): B
 }
-
-trait Up[O] {
-  def up(o: O): Term
-}
-
-trait Down[O] {
-  def down(t: Term): Option[O]
-
-  object extract {
-    def unapply(t: Term): Option[O] = down(t)
-  }
-}
-
-trait Isomorphism[A, B] {
-  def to: A => B
-  def from: B => A
-}
-
-object UpDown {
-  final def apply[O](implicit instance: Up[O]): Up[O] = instance
-
-  final def apply[O](f: O => Term): Up[O] = (o: O) => f(o)
-
-  final implicit def updownFromLeafLabel[O](implicit l: LeafLabel[O]): UpDown[O] = new UpDown[O] {
-    override def down(t: Term) = l.unapply(t)
-
-    override def up(o: O) = l.apply(o)
-  }
-}
-
-trait UpDown[O] extends Up[O] with Down[O]
 
 trait MonoidLabeled[O[_]] {
   def monoidLabel: MonoidLabel
@@ -82,8 +52,6 @@ trait LiftedCatsMixin extends Mixin with highcats.Free {
   def define[T](name: String)(implicit ConvertFromString: Convert[String, T]): ReferenceLabel[T] = new ReferenceLabel[T](name) {
     override protected[this] def internalInterpret(s: String): T = ConvertFromString.convert(s)
   }
-
-  import highcats._
 
   implicit def autoUp[O](o: O)(implicit up: Up[O]): Term = up.up(o)
 

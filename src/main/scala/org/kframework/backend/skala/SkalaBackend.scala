@@ -3,6 +3,7 @@ package org.kframework.backend.skala
 import org.kframework.backend.skala.backendImplicits._
 import org.kframework.kale._
 import org.kframework.kale.builtin.{MapLabel, SetLabel, TOKEN}
+import org.kframework.kale.highcats.UpDown
 import org.kframework.kale.standard._
 import org.kframework.kale.util.LabelNamed
 import org.kframework.kore.extended.Backend

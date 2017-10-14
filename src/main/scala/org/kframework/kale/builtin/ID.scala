@@ -1,8 +1,7 @@
 package org.kframework.kale.builtin
 
 import org.kframework.kale
-import org.kframework.kale.standard.ReferenceLabel
-import org.kframework.kale.{DomainValue, Environment, Up, builtin}
+import org.kframework.kale.Environment
 
 
 trait IdMixin extends kale.IdMixin {

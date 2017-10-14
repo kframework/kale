@@ -4,7 +4,7 @@ import cats._
 import cats.implicits._
 import cats.{Apply, Eq}
 import org.kframework.kale.util.LabelNamed
-import org.kframework.kale.{Environment, FreeLabel1, FreeLabel2, FreeLabel3, Term, UpDown}
+import org.kframework.kale.{Environment, FreeLabel1, FreeLabel2, FreeLabel3, Term}
 
 trait Free {
   _: Environment =>

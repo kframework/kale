@@ -2,6 +2,7 @@ package org.kframework.kale
 
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor}
+import org.kframework.kale.highcats._
 import org.kframework.kale.util.HasAtt
 import org.kframework.kore
 import org.roaringbitmap.RoaringBitmap

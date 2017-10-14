@@ -1,8 +1,9 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale.builtin.IntMixin
+import org.kframework.kale.highcats.LiftedCatsMixin
 import org.kframework.kale.util.LabelNamed
-import org.kframework.kale.{SemigroupLabel, LiftedCatsMixin, Environment, FreeLabel1, Label, Mixin, Term, UpDown}
+import org.kframework.kale.{Environment, FreeLabel1, Label, Mixin, SemigroupLabel, Term}
 
 trait PathMixin extends Mixin {
   _: Environment with LiftedCatsMixin with IntMixin with ScalaLibraryMixin =>

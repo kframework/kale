@@ -1,5 +1,6 @@
 package org.kframework.kale
 
+import org.kframework.kale.highcats.LiftedCatsMixin
 import org.kframework.kale.standard.BottomizeMixin
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.transformer.{Binary, Unary}

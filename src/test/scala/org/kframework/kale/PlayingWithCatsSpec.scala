@@ -1,6 +1,7 @@
 package org.kframework.kale
 
 import cats.Eq
+import highcats._
 import org.kframework.kale.standard.StandardEnvironment
 import org.kframework.kale.util.LabelNamed
 import org.scalatest.FunSuite

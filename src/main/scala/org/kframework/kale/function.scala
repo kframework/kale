@@ -1,6 +1,7 @@
 package org.kframework.kale
 
 import cats.Monoid
+import org.kframework.kale.highcats._
 import org.kframework.kale.standard.AssocWithIdList
 import org.roaringbitmap.RoaringBitmap
 

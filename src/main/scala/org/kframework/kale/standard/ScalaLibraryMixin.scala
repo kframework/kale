@@ -1,7 +1,8 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale
-import org.kframework.kale.{LiftedCatsMixin, Environment, IntMixin, Mixin, MonoidLabeled, UpDown}
+import org.kframework.kale.highcats.{LiftedCatsMixin, MonoidLabeled, UpDown}
+import org.kframework.kale.{Environment, IntMixin, Mixin}
 
 trait ScalaLibraryMixin extends Mixin {
   _: Environment with AssocWithIdListMixin with FreeMixin with LiftedCatsMixin with IntMixin =>
