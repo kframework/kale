@@ -21,6 +21,8 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-laws" % "1.0.+" % "test",
   "org.typelevel" %% "kittens" % "1.0.+",
 
+  "org.typelevel"  %% "squants"  % "1.3.0",
+
   "org.roaringbitmap" % "RoaringBitmap" % "0.6.+",
 
   "io.circe" %% "circe-core" % "0.9.+",

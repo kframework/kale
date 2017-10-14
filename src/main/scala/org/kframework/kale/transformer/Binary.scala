@@ -5,6 +5,7 @@ import org.kframework.kale.standard.StandardEnvironment
 import org.roaringbitmap.RoaringBitmap
 import org.kframework.kale.util.timer
 import org.kframework.kale.util.timer.Timer
+import squants.time.Nanoseconds
 
 object Binary {
 
@@ -87,16 +88,18 @@ object Binary {
         _processedLHSNodes = 0L
       }
 
-      def processedLHSNodes = _processedLHSNodes
+      def processedLHSNodes: Long = _processedLHSNodes
+
+      import squants.information._
 
       /**
         * unified nodes per second
         */
-      def unificationSpeed: Double = {
+      def unificationSpeed: DataRate = {
         if (totalTime > 0)
-          (processedLHSNodes.toDouble / totalTime.toDouble) * Math.pow(10, 9)
+          Bytes(processedLHSNodes) / Nanoseconds(totalTime) in KilobytesPerSecond
         else
-          Double.NaN
+          throw new AssertionError("Nothing has been processed yet")
       }
 
       var _processedLHSNodes = 0L
