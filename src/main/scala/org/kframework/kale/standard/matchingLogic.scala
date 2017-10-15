@@ -420,6 +420,8 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
       _2
     } else if (_2 == Top) {
       _1
+    } else if (_1.label != Or && _2.label != Or) {
+      applyOnNonOrs(_1, _2)
     } else {
       val disjunction = cartezianProduct(Or.asSet(_1), Or.asSet(_2))
       Or(disjunction)
