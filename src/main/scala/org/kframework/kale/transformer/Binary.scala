@@ -74,7 +74,7 @@ object Binary {
 
     val memo = collection.mutable.Map[(Term, Term), Term]()
 
-    @inline def functionFor(left: Label, right: Label): (Term, Term) => Term = {
+    @inline final def functionFor(left: Label, right: Label): (Term, Term) => Term = {
       try {
         // the array of arrays seems to be about 10% faster than the others
         arr(left.id)(right.id)
@@ -168,9 +168,7 @@ object Binary {
       }
     }).toMap
 
-    override def toString: String
-
-    = processingFunctionsByLabelPair.mkString("\n")
+    override def toString: String = processingFunctionsByLabelPair.mkString("\n")
   }
 
 }
