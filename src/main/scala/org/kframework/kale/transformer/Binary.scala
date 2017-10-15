@@ -72,11 +72,12 @@ object Binary {
 
     val memo = collection.mutable.Map[(Term, Term), Term]()
 
-    def functionFor(left: Label, right: Label): (Term, Term) => Term = {
+    @inline def functionFor(left: Label, right: Label): (Term, Term) => Term = {
       try {
-        //        arr(left.id)(right.id)
-        //        m1.get((left.id, right.id)).orNull
-        m2.get(left.id).flatMap(_.get(right.id)).orNull
+        // the array of arrays seems to be about 10% faster than the others
+        arr(left.id)(right.id)
+        //                m1.get((left.id, right.id)).orNull
+        //        m2.get(left.id).flatMap(_.get(right.id)).orNull
       } catch {
         case _: IndexOutOfBoundsException => throw new AssertionError("No processing function registered for: " + left + " and " + right)
       }
@@ -97,7 +98,7 @@ object Binary {
         */
       def unificationSpeed: DataRate = {
         if (totalTime > 0)
-          Bytes(processedLHSNodes) / Nanoseconds(totalTime) in KilobytesPerSecond
+          Bytes(processedLHSNodes) / Nanoseconds(totalTime) in BytesPerSecond
         else
           throw new AssertionError("Nothing has been processed yet")
       }
@@ -106,7 +107,7 @@ object Binary {
     })
 
     def apply(left: Term, right: Term): Term = {
-      if (!unifyTimer.isInside) {
+      if (unifyTimer.isOutside) {
         unifyTimer._processedLHSNodes += left.size
       }
       unifyTimer.time {

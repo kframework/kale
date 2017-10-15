@@ -46,7 +46,7 @@ object timer {
       _invocations = 0L
     }
 
-    def isInside = _entries == 0
+    def isOutside = _entries == 0
 
     @inline final def time[T](f: => T): T = {
       enter()
@@ -60,20 +60,8 @@ object timer {
       res
     }
 
-    @inline final def timeWithM[T](f: => T): T = {
-      enter()
-      val res = try {
-        f
-      } catch {
-        case e: Throwable => _errorHits += 1; throw e;
-      } finally {
-        exit()
-      }
-      res
-    }
-
     @inline protected[this] final def enter(): Unit = {
-      if (isInside) {
+      if (isOutside) {
         _lastEntry = System.nanoTime()
         _invocations += 1
       }
@@ -83,7 +71,7 @@ object timer {
 
     @inline protected[this] final def exit(): Unit = {
       _entries -= 1
-      if (isInside) {
+      if (isOutside) {
         _totalTime += (System.nanoTime() - _lastEntry)
       }
     }
