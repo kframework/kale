@@ -407,12 +407,18 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
 
   import env._
 
+  var apply2hits = 0L
+  var applyOnNonOrHits = 0L
+  var innerApplyHits = 0L
+
   @Normalizing
   override def apply(_1: Term, _2: Term): Term = {
-      innerApply(_1, _2)
+    apply2hits += 1
+    innerApply(_1, _2)
   }
 
   private def innerApply(_1: Term, _2: Term) = {
+    innerApplyHits += 1
 
     if (_1 == Bottom || _2 == Bottom) {
       Bottom
@@ -431,6 +437,7 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
 
   @Normalizing
   def applyOnNonOrs(_1: Term, _2: Term): Term = {
+    applyOnNonOrHits += 1
     if (_1 == Bottom || _2 == Bottom)
       Bottom
     else {
@@ -598,7 +605,11 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
   //    def unapply(t: Term): Option[(Substitution, Iterable[Term])] = Some(asSubstitutionAndTerms(t))
   //  }
 
+  var cartezianProductHits = 0L
+
   private def cartezianProduct(t1: Iterable[Term], t2: Iterable[Term]): Seq[Term] = {
+    cartezianProductHits += 1
+
     for (e1 <- t1.toSeq;
          e2 <- t2.toSeq) yield {
       applyOnNonOrs(e1, e2)
@@ -704,7 +715,10 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
 
   private type TheFold = Set[(Term, List[Term])]
 
+  var cartezianProductWithNextHits = 0L
+
   private def cartezianProductWithNext(soFar: TheFold, task: MightBeSolved): TheFold = {
+    cartezianProductWithNextHits += 1
     if (soFar.isEmpty) {
       soFar
     } else {

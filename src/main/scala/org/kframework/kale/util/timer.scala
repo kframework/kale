@@ -1,6 +1,10 @@
 package org.kframework.kale.util
 
+import io.circe.Json
+
+import scala.concurrent._
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object timer {
 
@@ -48,18 +52,44 @@ object timer {
 
     def isOutside = _entries == 0
 
-    @inline final def time[T](f: => T): T = {
+    def atMost[T](f: => T, time: Duration): T = {
+      val future = Future[T] {
+        f
+      }(ExecutionContext.global)
+
+      try {
+        Await.result(future, time)
+      } catch {
+        case e: ExecutionException =>
+          throw e.getCause
+        case e: TimeoutException =>
+          // so, on timeout, we mark the final exit correctly
+          fullReset()
+          throw e
+        case e: Throwable =>
+          throw e
+      }
+    }
+
+    @inline final def time[T](f: => T, timeLimit: Option[Duration] = None): T =
+      if (isOutside && timeLimit.isDefined) {
+        atMost(process(f), timeLimit.get)
+      } else {
+        process(f)
+      }
+
+    @inline private final def process[T](f: => T) = {
       enter()
-      val res = try {
+      try {
         f
       } catch {
-        case e: Throwable => _errorHits += 1; throw e;
+        case e: Throwable =>
+          _errorHits += 1
+          throw e;
       } finally {
         exit()
       }
-      res
     }
-
     @inline protected[this] final def enter(): Unit = {
       if (isOutside) {
         _lastEntry = System.nanoTime()
@@ -94,7 +124,8 @@ object timer {
 
     def report: String = {
       if (_entries != 0) {
-        System.err.println("Trying to print a report while inside a measured region")
+        throw new AssertionError("Trying to print a report while inside a measured region")
+        //        System.err.println
       }
       name + ": time = " + formatTime(totalTime) + ";  hits: " + _hits +
         (if (hits > 0) f"; speed: $speed%.2f hits/s" else "") +
@@ -102,4 +133,14 @@ object timer {
     }
   }
 
+}
+
+class Hits {
+  var _hits = 0L
+
+  def hit(): Unit = {
+    _hits += 1
+  }
+
+  def hits = _hits
 }

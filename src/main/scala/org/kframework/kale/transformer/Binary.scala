@@ -3,7 +3,7 @@ package org.kframework.kale.transformer
 import org.kframework.kale._
 import org.kframework.kale.standard.StandardEnvironment
 import org.roaringbitmap.RoaringBitmap
-import org.kframework.kale.util.timer
+import org.kframework.kale.util.{Hits, timer}
 import org.kframework.kale.util.timer.Timer
 import squants.time.Nanoseconds
 
@@ -116,6 +116,10 @@ object Binary {
     final val andId = env.And.id
     final val orMatcher = functionFor(env.Or, env.BOOLEAN.Boolean)
     final val orId = env.Or.id
+    final val contextMatcher = functionFor(env.SolvingContext, env.BOOLEAN.Boolean)
+    final val contextId = env.SolvingContext.id
+
+    var unifyCacheHits = 0L
 
     def apply(left: Term, right: Term): Term = {
       if (unifyTimer.isOutside) {
@@ -144,11 +148,18 @@ object Binary {
             }
 
             if (roaringOptimization) {
-              u(left, right)
+              if (left.label.id == contextId) {
+                if(memo.contains((left, right)))
+                  unifyCacheHits += 1
+                memo.getOrElseUpdate((left, right), u(left, right))
+              } else {
+                u(left, right)
+              }
             } else {
               //        assert(u(left, right) == env.Bottom, "roaring mistake: " + left + " ? " + right)
               env.Bottom
             }
+
           } else
             env.Bottom
 
