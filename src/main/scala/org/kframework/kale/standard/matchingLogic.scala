@@ -409,13 +409,8 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
 
   @Normalizing
   override def apply(_1: Term, _2: Term): Term = {
-    if (env.isSealed) {
-      env.unifier.memo.getOrElseUpdate((_1, _2), innerApply(_1, _2))
-    } else {
       innerApply(_1, _2)
-    }
   }
-
 
   private def innerApply(_1: Term, _2: Term) = {
 
