@@ -77,7 +77,7 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition,
         Some(new LabelNamed(labelName)(env) with FunctionLabel3 {
           override def f(body: Term, value: Term, vari: Term): Option[Term] = {
             if (body.isGround && value.isGround)
-              Some(body.mapBU({case `vari` => value case t => t}))
+              Some(body.mapBU({ case `vari` => value case t => t }))
             else
               None
           }
@@ -294,10 +294,10 @@ class SkalaBackend(implicit val originalDefintion: kore.Definition,
 
 
   private def reconstruct(inhibitForLabel: Label)(t: Term): Term = t match {
-    case Node(label, children) if label != inhibitForLabel => {
+    case Node(label, children) if label != inhibitForLabel =>
       val changedChildren = children map reconstruct(inhibitForLabel)
-      return label(changedChildren)
-    }
+      label(changedChildren)
+      
     case t => t
   }
 
