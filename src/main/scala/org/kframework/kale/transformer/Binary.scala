@@ -152,7 +152,9 @@ object Binary {
           } else
             env.Bottom
 
-          statsInvocations.update(u, statsInvocations(u) + 1)
+          if (unifyTimer.hits % 1000 == 0) {
+            statsInvocations.update(u, statsInvocations(u) + 1)
+          }
 
           assert(!(left == right && res == env.Bottom), left.toString)
           res
