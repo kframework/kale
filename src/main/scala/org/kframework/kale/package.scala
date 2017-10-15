@@ -260,7 +260,7 @@ package object kale {
   trait MemoizedHashCode {
     lazy val cachedHashCode = computeHashCode
 
-    override def hashCode = cachedHashCode
+    override final def hashCode = cachedHashCode
 
     def computeHashCode: Int
   }

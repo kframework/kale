@@ -20,11 +20,11 @@ trait Label extends MemoizedHashCode with kore.Symbol with RoaringLabel {
   val isPredicate: Option[Boolean]
 
   override def equals(other: Any): Boolean = other match {
-    case that: Label => this.name == that.name
+    case that: Label => this.id == that.id
     case _ => false
   }
 
-  override def computeHashCode: Int = name.hashCode
+  override def computeHashCode: Int = id.hashCode
 
   override def toString: String = name
 
@@ -32,7 +32,7 @@ trait Label extends MemoizedHashCode with kore.Symbol with RoaringLabel {
   override val str: String = name
 }
 
-trait Term extends kore.Pattern with HasAtt with RoaringTerm {
+trait Term extends kore.Pattern with HasAtt with MemoizedHashCode with RoaringTerm {
   def updateAt(i: Int)(t: Term): Term
 
   val label: Label
@@ -68,10 +68,10 @@ trait Term extends kore.Pattern with HasAtt with RoaringTerm {
     */
   //  override def updatePostProcess(oldTerm: Term): Term = this
 
-  // TODO: should experiment with other implementations
-  override def hashCode: Int = this.label.hashCode
 
   def copy(children: Seq[Term]): Term
+
+  override final def computeHashCode: Int = this.label.hashCode + 17 * this.children.hashCode
 }
 
 trait Predicate extends NotRoaring {
@@ -153,7 +153,7 @@ trait Leaf[T] extends Term {
   }
 
   override def equals(obj: scala.Any): Boolean = obj match {
-    case that: Leaf[_] => that.label == this.label && that.data == this.data
+    case that: Leaf[_] => that.label == this.label && this.hashCode == that.hashCode && that.data == this.data
     case _ => false
   }
 
@@ -197,7 +197,7 @@ trait Node extends Term with Product {
   override lazy val variables: Set[Variable] = children.flatMap(_.variables).toSet
 
   override def equals(obj: Any): Boolean = obj match {
-    case n: Node => n.label == label && n.children == children
+    case n: Node => n.label == this.label && n.hashCode == this.hashCode && n.children == this.children
     case _ => false
   }
 }

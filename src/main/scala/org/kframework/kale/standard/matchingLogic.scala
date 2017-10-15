@@ -875,8 +875,6 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
     case _ => false
   }
 
-  override val hashCode: Int = label.hashCode
-
   def get(v: Variable): Option[Term] = m.get(v)
 
   override def asMap: Map[Variable, Term] = m
