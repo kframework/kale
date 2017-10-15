@@ -111,37 +111,35 @@ object Binary {
         unifyTimer._processedLHSNodes += left.size
       }
       unifyTimer.time {
-        //      assert(labels.contains(left.label) && labels.contains(right.label))
-        //      assert(left.label.id <= env.labels.size, "Left label " + left.label + " with id " + left.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
-        //      assert(right.label.id <= env.labels.size, "Right label " + right.label + " with id " + right.label.id + " is not registered. Label list:" + env.labels.map(l => (l.id, l)).toList.sortBy(_._1).mkString("\n"))
+        if (left == right) {
+          right
+        } else {
+          val u = functionFor(left.label, right.label)
 
-        if (left == right)
-          return right
-        val u = functionFor(left.label, right.label)
+          val res = if (u != null) {
 
-        val res = if (u != null) {
+            @inline val roaringOptimization = {
+              @inline val lR = left.requiredLabels
+              @inline val lS = left.suppliedLabels
+              @inline val rR = right.requiredLabels
+              @inline val rS = right.suppliedLabels
+              rS.contains(lR) && lS.contains(rR)
+            }
 
-          val roaringOptimization = {
-            val lR = left.requiredLabels
-            val lS = left.suppliedLabels
-            val rR = right.requiredLabels
-            val rS = right.suppliedLabels
-            rS.contains(lR) && lS.contains(rR)
-          }
-
-          if (roaringOptimization) {
-            u(left, right)
-          } else {
-            //        assert(u(left, right) == env.Bottom, "roaring mistake: " + left + " ? " + right)
+            if (roaringOptimization) {
+              u(left, right)
+            } else {
+              //        assert(u(left, right) == env.Bottom, "roaring mistake: " + left + " ? " + right)
+              env.Bottom
+            }
+          } else
             env.Bottom
-          }
-        } else
-          env.Bottom
 
-        statsInvocations.update(u, statsInvocations(u) + 1)
+          statsInvocations.update(u, statsInvocations(u) + 1)
 
-        assert(!(left == right && res == env.Bottom), left.toString)
-        res
+          assert(!(left == right && res == env.Bottom), left.toString)
+          res
+        }
       }
     }
 
