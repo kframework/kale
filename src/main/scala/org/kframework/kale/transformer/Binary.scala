@@ -7,6 +7,8 @@ import org.kframework.kale.util.timer
 import org.kframework.kale.util.timer.Timer
 import squants.time.Nanoseconds
 
+import scala.annotation.switch
+
 object Binary {
 
   /**
@@ -106,6 +108,15 @@ object Binary {
       var _processedLHSNodes = 0L
     })
 
+    final val forAllMatcher = functionFor(env.ForAll, env.BOOLEAN.Boolean)
+    final val forAllId = env.ForAll.id
+    final val existsMatcher = functionFor(env.Exists, env.BOOLEAN.Boolean)
+    final val existsId = env.Exists.id
+    final val andMatcher = functionFor(env.And, env.BOOLEAN.Boolean)
+    final val andId = env.And.id
+    final val orMatcher = functionFor(env.Or, env.BOOLEAN.Boolean)
+    final val orId = env.Or.id
+
     def apply(left: Term, right: Term): Term = {
       if (unifyTimer.isOutside) {
         unifyTimer._processedLHSNodes += left.size
@@ -114,7 +125,13 @@ object Binary {
         if (left == right) {
           right
         } else {
-          val u = functionFor(left.label, right.label)
+          val u = (left.label.id: @switch) match {
+            case `forAllId` => forAllMatcher
+            case `existsId` => existsMatcher
+            case `andId` => andMatcher
+            case `orId` => orMatcher
+            case _ => functionFor(left.label, right.label)
+          }
 
           val res = if (u != null) {
 
