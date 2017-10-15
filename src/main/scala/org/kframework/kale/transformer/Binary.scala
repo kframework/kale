@@ -96,11 +96,11 @@ object Binary {
       /**
         * unified nodes per second
         */
-      def unificationSpeed: DataRate = {
+      def unificationSpeed: Option[DataRate] = {
         if (totalTime > 0)
-          Bytes(processedLHSNodes) / Nanoseconds(totalTime) in BytesPerSecond
+          Some(Bytes(processedLHSNodes) / Nanoseconds(totalTime) in BytesPerSecond)
         else
-          throw new AssertionError("Nothing has been processed yet")
+          None
       }
 
       var _processedLHSNodes = 0L
