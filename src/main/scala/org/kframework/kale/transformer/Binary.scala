@@ -118,6 +118,9 @@ object Binary {
     final val orId = env.Or.id
     final val contextMatcher = functionFor(env.SolvingContext, env.BOOLEAN.Boolean)
     final val contextId = env.SolvingContext.id
+    final val orElseMatcher = functionFor(env.STRATEGY.orElse, env.BOOLEAN.Boolean)
+    final val orElseId = env.STRATEGY.orElse.id
+
 
     var unifyCacheHits = 0L
 
@@ -134,6 +137,7 @@ object Binary {
             case `existsId` => existsMatcher
             case `andId` => andMatcher
             case `orId` => orMatcher
+            case `orElseId` => orElseMatcher
             case _ => functionFor(left.label, right.label)
           }
 
@@ -149,7 +153,7 @@ object Binary {
 
             if (roaringOptimization) {
               if (left.label.id == contextId) {
-                if(memo.contains((left, right)))
+                if (memo.contains((left, right)))
                   unifyCacheHits += 1
                 memo.getOrElseUpdate((left, right), u(left, right))
               } else {
