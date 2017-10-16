@@ -7,6 +7,7 @@ import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.{LabelNamed, timer}
 import org.roaringbitmap.RoaringBitmap
 
+import scala.annotation.switch
 import scala.collection.{+:, Iterable, Seq}
 
 trait NonAssocWithIdListMixin extends Mixin {
@@ -56,48 +57,54 @@ trait AssocWithIdListMixin extends Mixin {
 
   override def AssocWithIdLabel(name: String, id: Term): NonPrimitiveMonoidLabel = new MonoidListLabel(name, id)
 
-  private def matchContents(l: SemigroupLabel, soFar: Term, ksLeft: Iterable[Term], ksRight: Iterable[Term])(implicit solver: Apply): Term =
+  private def matchContents(l: SemigroupLabel, soFar: Term, ksLeft: List[Term], ksRight: List[Term])(implicit solver: Apply): Term =
     strongBottomize(soFar) {
-      val res = (ksLeft.toSeq, ksRight.toSeq) match {
-        case (Seq(), Seq()) =>
-          soFar
-        case (t +: tailL, ksR) =>
-          (0 to ksR.size)
-            .map {
-              index => (ksR.take(index), ksR.drop(index))
-            }
-            .map {
-              case (prefix, suffix) =>
-                val prefixTerm = l(prefix)
-                val newSoFar = t match {
-                  case v: Variable => And.combine(l)(Solved(soFar), Solved(And(prefixTerm, Equality(v, prefixTerm))))
-                  case _ => And.combine(l)(Solved(soFar), Task(t, prefixTerm))
-                }
-                matchContents(l, newSoFar, tailL, suffix)
-            }
-            .fold(Bottom)({
-              (a, b) => Or(a, b)
+      (ksLeft.size: @switch) match {
+        case 0 =>
+          if (ksRight.isEmpty)
+            soFar
+          else
+            Bottom
+
+        case 1 =>
+          val t = ksLeft.head
+          And.combine(l)(Solved(soFar), Task(t, l(ksRight)))
+
+//        case 2 =>
+//          val t = ksLeft.head
+//          And.combine(l)(Solved(soFar), Task(t, l(ksRight)))
+
+        case _ =>
+          // assumes no variables on the RHS
+          val t = ksLeft.head
+          Or((0 to ksRight.size)
+            .map { index: Int =>
+              val prefix = ksRight.take(index)
+              val suffix = ksRight.drop(index)
+              val prefixTerm = l(prefix)
+              val newSoFar = if (t.label == Variable) {
+                And.combine(l)(Solved(soFar), Solved(And(prefixTerm, Equality(t, prefixTerm))))
+              } else {
+                And.combine(l)(Solved(soFar), Task(t, prefixTerm))
+              }
+              matchContents(l, newSoFar, ksLeft.tail, suffix)
             })
-        case (left, right) if left.nonEmpty && right.nonEmpty =>
-          val And.SPN(sub, _, _) = soFar
-          val headSolution: Term = And.combine(l)(Solved(soFar), Task(sub(left.head), sub(right.head)))
-          matchContents(l, headSolution, left.tail, right.tail)
-        case _ => Bottom
       }
-      res
     }
 
-  def AssocWithIdTerm(solver: Apply) = { (a: AssocWithIdList, b: Term) =>
-    val asList = a.label.asIterable _
-    val l1 = asList(a)
-    val l2 = asList(b)
-    matchContents(a.label, a.label.identity, l1, l2)(solver)
+
+  def AssocWithIdTerm(solver: Apply) = {
+    (a: AssocWithIdList, b: Term) =>
+      val asList = a.label.asIterable _
+      val l1 = asList(a).asInstanceOf[List[Term]]
+      val l2 = asList(b).asInstanceOf[List[Term]]
+      matchContents(a.label, a.label.identity, l1, l2)(solver)
   }
 
   case class TermAssocWithId(solver: Apply) extends Binary.F({ (a: Term, b: AssocWithIdList) =>
     val asList = b.label.asIterable _
-    val l1 = asList(a)
-    val l2 = asList(b)
+    val l1 = asList(a).asInstanceOf[List[Term]]
+    val l2 = asList(b).asInstanceOf[List[Term]]
     matchContents(b.label, b.label.identity, l1, l2)(solver)
   })
 
