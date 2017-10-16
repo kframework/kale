@@ -13,7 +13,7 @@ trait PrettyWrapperMixin extends Mixin {
     case _ => t.toString
   }
 
-  val PrettyWrapper: Label3 = new LabelNamed("PrettyWrapper") with Label3 {
+  val PrettyWrapper: Label3 = new LabelNamed("PrettyWrapper") with Label3 with Constructor {
     lazy private val W = this
     lazy val I = Infer
 

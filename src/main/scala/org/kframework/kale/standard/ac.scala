@@ -66,17 +66,21 @@ trait AssocWithIdListMixin extends Mixin {
           else
             Bottom
 
-        case 1 =>
-          val t = ksLeft.head
-          And.combine(l)(Solved(soFar), Task(t, l(ksRight)))
+        //        case 1 =>
+        //          val t = ksLeft.head
+        //          And.combine(l)(Solved(soFar), Task(t, l(ksRight)))
 
         case _ =>
           // assumes no variables on the RHS
           val t = ksLeft.head
           if (cannotMatchAssoc(l, t)) {
-            val newSoFar = And.combine(l)(Solved(soFar), Task(t, ksRight.head))
-            matchContents(l, newSoFar, ksLeft.tail, ksRight.tail)
-          } else if (ksRight.nonEmpty && cannotMatchAssoc(l, ksRight.last)) {
+            if (ksRight.isEmpty) {
+              Bottom
+            } else {
+              val newSoFar = And.combine(l)(Solved(soFar), Task(t, ksRight.head))
+              matchContents(l, newSoFar, ksLeft.tail, ksRight.tail)
+            }
+          } else if (ksRight.nonEmpty && cannotMatchAssoc(l, ksLeft.last)) {
             And.combine(l)(
               Solved(matchContents(l, soFar, ksLeft.dropRight(1), ksRight.dropRight(1))),
               Task(ksLeft.last, ksRight.last))
@@ -97,9 +101,13 @@ trait AssocWithIdListMixin extends Mixin {
     }
 
 
-  private def cannotMatchAssoc(l: SemigroupLabel, t: Term) = {
-    t.label != l && t.label.isInstanceOf[Constructor]
+  private final def cannotMatchAssoc(l: SemigroupLabel, t: Term) = {
+    Or.asSet(t).forall({
+      case And.SPN(_, _, nonPredicate) =>
+        nonPredicate.label != l && nonPredicate.label.isInstanceOf[Constructor]
+    })
   }
+
   def AssocWithIdTerm(solver: Apply) = {
     (a: AssocWithIdList, b: Term) =>
       val asList = a.label.asIterable _

@@ -125,7 +125,7 @@ trait AssocCommLabel extends SemigroupLabel with CommLabel {
 }
 
 trait CommutativeMonoid extends AssocCommLabel with MonoidLabel {
-  override def asSet(t: Term): Set[Term] =
+  override final def asSet(t: Term): Set[Term] =
     if (t == identity) {
       Set()
     } else {
