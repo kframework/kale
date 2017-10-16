@@ -70,29 +70,36 @@ trait AssocWithIdListMixin extends Mixin {
           val t = ksLeft.head
           And.combine(l)(Solved(soFar), Task(t, l(ksRight)))
 
-//        case 2 =>
-//          val t = ksLeft.head
-//          And.combine(l)(Solved(soFar), Task(t, l(ksRight)))
-
         case _ =>
           // assumes no variables on the RHS
           val t = ksLeft.head
-          Or((0 to ksRight.size)
-            .map { index: Int =>
-              val prefix = ksRight.take(index)
-              val suffix = ksRight.drop(index)
-              val prefixTerm = l(prefix)
-              val newSoFar = if (t.label == Variable) {
-                And.combine(l)(Solved(soFar), Solved(And(prefixTerm, Equality(t, prefixTerm))))
-              } else {
-                And.combine(l)(Solved(soFar), Task(t, prefixTerm))
-              }
-              matchContents(l, newSoFar, ksLeft.tail, suffix)
-            })
+          if (cannotMatchAssoc(l, t)) {
+            val newSoFar = And.combine(l)(Solved(soFar), Task(t, ksRight.head))
+            matchContents(l, newSoFar, ksLeft.tail, ksRight.tail)
+          } else if (ksRight.nonEmpty && cannotMatchAssoc(l, ksRight.last)) {
+            And.combine(l)(
+              Solved(matchContents(l, soFar, ksLeft.dropRight(1), ksRight.dropRight(1))),
+              Task(ksLeft.last, ksRight.last))
+          } else
+            Or((0 to ksRight.size)
+              .map { index: Int =>
+                val prefix = ksRight.take(index)
+                val suffix = ksRight.drop(index)
+                val prefixTerm = l(prefix)
+                val newSoFar = if (t.label == Variable) {
+                  And.combine(l)(Solved(soFar), Solved(And(prefixTerm, Equality(t, prefixTerm))))
+                } else {
+                  And.combine(l)(Solved(soFar), Task(t, prefixTerm))
+                }
+                matchContents(l, newSoFar, ksLeft.tail, suffix)
+              })
       }
     }
 
 
+  private def cannotMatchAssoc(l: SemigroupLabel, t: Term) = {
+    t.label != l && t.label.isInstanceOf[Constructor]
+  }
   def AssocWithIdTerm(solver: Apply) = {
     (a: AssocWithIdList, b: Term) =>
       val asList = a.label.asIterable _
