@@ -124,8 +124,7 @@ object timer {
 
     def report: String = {
       if (_entries != 0) {
-        throw new AssertionError("Trying to print a report while inside a measured region")
-        //        System.err.println
+        System.err.println("Trying to print a report while inside a measured region")
       }
       name + ": time = " + formatTime(totalTime) + ";  hits: " + _hits +
         (if (hits > 0) f"; speed: $speed%.2f hits/s" else "") +
