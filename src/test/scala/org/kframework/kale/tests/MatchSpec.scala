@@ -29,13 +29,13 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
     assert(unify(a, And(b, Next(a))) === Bottom)
   }
 
-  "focus" in {
+  "and next" in {
     assert(unify(a, And(a, Next(a))) === And(a, Next(a)))
   }
 
   "Regex" in {
     // TODO: change regex implementation to use a match function instead of direct unification
-//    assert((STRING.Regex("a.*c".r) =:= STRING.String("abbbc")) === STRING.String("abbbc"))
+    //    assert((STRING.Regex("a.*c".r) =:= STRING.String("abbbc")) === STRING.String("abbbc"))
   }
 
   "conjunction with nested disjunction" in {
@@ -48,6 +48,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
   }
 
   "assoc" in {
+    assert(unifier(el ~~ 5 ~~ X, el ~~ 5) === Equality(X, el))
     assert(unifier(X ~~ 5, el ~~ 3 ~~ 5) === Equality(X, 3))
     assert(unifier(el ~~ 3 ~~ 4 ~~ X ~~ 7, el ~~ 3 ~~ 4 ~~ 5 ~~ 6 ~~ 7) === Equality(X, el ~~ 5 ~~ 6))
     assert(unifier(el ~~ 3 ~~ X ~~ 5 ~~ Y ~~ 7, el ~~ 3 ~~ 4 ~~ 5 ~~ 6 ~~ 7) === And.substitution(Map(X -> (4: Term), Y -> (6: Term))))
