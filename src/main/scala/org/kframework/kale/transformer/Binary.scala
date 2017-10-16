@@ -99,8 +99,8 @@ object Binary {
         * unified nodes per second
         */
       def unificationSpeed: Option[DataRate] = {
-        if (totalTime > 0)
-          Some(Bytes(processedLHSNodes) / Nanoseconds(totalTime) in BytesPerSecond)
+        if (_totalTime > 0)
+          Some(Bytes(processedLHSNodes) / Nanoseconds(_totalTime) in BytesPerSecond)
         else
           None
       }

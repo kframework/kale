@@ -4,7 +4,6 @@ import io.circe.Json
 
 import scala.concurrent._
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
 object timer {
 
@@ -32,6 +31,10 @@ object timer {
     rs.values.foreach(_.reset())
   }
 
+  def fullTimout(): Unit = {
+    rs.values.foreach(_.timeoutMode())
+  }
+
   class Timer(val name: String) {
     protected[this] var _entries = 0
     protected[this] var _totalTime = 0L
@@ -39,6 +42,12 @@ object timer {
     protected[this] var _hits = 0L
     protected[this] var _errorHits = 0L
     protected[this] var _invocations = 0L
+
+    def timeoutMode() = {
+      //      assert(isInside, "Do not reset the timer during measuring.")
+      _entries = -Int.MaxValue
+      _totalTime += (System.nanoTime() - _lastEntry)
+    }
 
     def reset() = {
       //      assert(isInside, "Do not reset the timer during measuring.")
@@ -50,7 +59,11 @@ object timer {
       _invocations = 0L
     }
 
+    def isOutsideOrError = _entries <= 0
+
     def isOutside = _entries == 0
+
+    def isTimeoutMode = _entries == -Int.MaxValue
 
     def atMost[T](f: => T, time: Duration): T = {
       val future = Future[T] {
@@ -64,13 +77,16 @@ object timer {
           throw e.getCause
         case e: TimeoutException =>
           // so, on timeout, we mark the final exit correctly
-          fullReset()
+          fullTimout()
           throw e
         case e: Throwable =>
           throw e
       }
     }
 
+    /**
+      * We should only have a timeLimit on the outermost timer.
+      */
     @inline final def time[T](f: => T, timeLimit: Option[Duration] = None): T =
       if (isOutside && timeLimit.isDefined) {
         atMost(process(f), timeLimit.get)
@@ -90,8 +106,13 @@ object timer {
         exit()
       }
     }
+
+    object TriesToMeasureAfterTimeout extends Exception("Tried to measure after a timeout occurred. Reset the timers to reuse.")
+
     @inline protected[this] final def enter(): Unit = {
-      if (isOutside) {
+      if (isOutsideOrError) {
+        if (isTimeoutMode)
+          throw TriesToMeasureAfterTimeout
         _lastEntry = System.nanoTime()
         _invocations += 1
       }
@@ -101,12 +122,14 @@ object timer {
 
     @inline protected[this] final def exit(): Unit = {
       _entries -= 1
-      if (isOutside) {
+      if (isOutsideOrError) {
+        if (isTimeoutMode)
+          throw TriesToMeasureAfterTimeout
         _totalTime += (System.nanoTime() - _lastEntry)
       }
     }
 
-    def totalTime: Long = _totalTime
+    def totalTime: Duration = _totalTime.nanos
 
     def hits: Long = _hits
 
@@ -116,8 +139,8 @@ object timer {
       * hits per second
       */
     def speed: Double = {
-      if (totalTime > 0)
-        (hits.toDouble / totalTime.toDouble) * Math.pow(10, 9)
+      if (_totalTime > 0)
+        (hits.toDouble / _totalTime.toDouble) * Math.pow(10, 9)
       else
         Double.NaN
     }
@@ -126,7 +149,7 @@ object timer {
       if (_entries != 0) {
         System.err.println("Trying to print a report while inside a measured region")
       }
-      name + ": time = " + formatTime(totalTime) + ";  hits: " + _hits +
+      name + ": time = " + totalTime.toMillis + "ms;  hits: " + _hits +
         (if (hits > 0) f"; speed: $speed%.2f hits/s" else "") +
         (if (_errorHits > 0) "; errorHits: " + _errorHits else "")
     }
