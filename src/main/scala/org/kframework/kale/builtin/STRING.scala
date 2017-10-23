@@ -28,6 +28,8 @@ trait StringMixin extends kale.StringMixin {
 
     val rfindchar = define("rfindChar", (_: String).lastIndexOf((_: String).charAt(0), _: Int))
 
+    val unescape = define("Unescape", StringContext.treatEscapes(_: String))
+
     implicit val concatMonoid = new Monoid[String] {
       override def empty = ""
 
