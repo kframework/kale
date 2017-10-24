@@ -49,7 +49,7 @@ class TimerSpec extends FreeSpec with BeforeAndAfter with BeforeAndAfterAll {
     }
   }
 
-  "timeout" in {
+  "timeout" ignore {
     val t = timer("foo")
 
     def time(x: Int): Unit = {
@@ -69,7 +69,7 @@ class TimerSpec extends FreeSpec with BeforeAndAfter with BeforeAndAfterAll {
     }
   }
 
-  "test gradual reset" in {
+  "test gradual reset" ignore {
     val t = timer("foo")
 
     def time(x: Int): Unit = {
