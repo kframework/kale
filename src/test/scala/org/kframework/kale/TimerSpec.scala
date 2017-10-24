@@ -12,6 +12,10 @@ class TimerSpec extends FreeSpec with BeforeAndAfter {
     timer.fullReset()
   }
 
+  after {
+    timer.fullReset()
+  }
+
   "timer" in {
     val t = timer("foo")
 
