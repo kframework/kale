@@ -42,7 +42,7 @@ trait DomainValueLabel[T] extends LeafLabel[T] with ThisRoaring {
 trait DomainValue[T] extends Leaf[T] with kore.DomainValue {
   val label: DomainValueLabel[T]
 
-  val isGround = true
+  def isGround = true
 
   override lazy val isPredicate: Boolean = false
 

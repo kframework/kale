@@ -37,7 +37,7 @@ trait Term extends kore.Pattern with HasAtt with MemoizedHashCode with RoaringTe
 
   val label: Label
 
-  val isGround: Boolean
+  def isGround: Boolean
 
   lazy val size: Long = (children map (_.size)).sum + 1
 
