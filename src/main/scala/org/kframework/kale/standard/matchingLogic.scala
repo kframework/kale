@@ -76,8 +76,8 @@ trait MatchingLogicMixin extends Mixin {
 
   case class NotTerm(solver: Apply) extends Binary.F({ (a: Term, b: Term) =>
     unify(a.asInstanceOf[Node1]._1, b) match {
-      case Bottom => Top
-      case Top => Bottom
+      case Bottom => b
+      case And.SPN(_, Top, _) => Bottom
       case _ => And.nonPredicates(Set(a, b))
     }
   })
@@ -473,16 +473,13 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
 
             val finalSub = substitution(sub.asMap ++ newSub.asMap)
 
-            val now1s = finalSub(now1)
-            val now2s = finalSub(now2)
-
-            val newNow = if (now1s != Top) {
-              if (now2s != Top && now1s != now2s)
-                unify(now1s, now2s)
+            val newNow = if (now1 != Top) {
+              if (now2 != Top && now1 != now2)
+                unify(now1, now2)
               else
-                now1s
+                now1
             } else {
-              now2s
+              now2
             }
 
             And.SPN(
@@ -532,6 +529,7 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
       if (sols.values.exists(_ == Bottom)) {
         Bottom
       } else {
+        assert(sols.values.forall(_.isInstanceOf[Substitution]))
         apply(m1 ++ m2 ++ sols)
       }
 
@@ -663,7 +661,7 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
   object nonPredicates {
     def apply(s: Set[Term]): Term = {
       val set = s - Top
-      //      assert(set.forall(!_.isPredicate))
+      assert(set.forall(!_.isPredicate))
       set.size match {
         case 0 => Top
         case 1 => set.head

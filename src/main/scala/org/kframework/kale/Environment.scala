@@ -46,7 +46,10 @@ trait Foundation {
           val newS = s(s)
           newS match {
             case Bottom => Bottom
-            case ss: Substitution => And.SPN(ss, ss(p), ss(n))
+            case ss: Substitution =>
+              val rr = ss(n)
+              assert((rr.variables & ss.boundVariables) == Set())
+              And.SPN(ss, ss(p), rr)
           }
       }
   })

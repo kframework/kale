@@ -126,7 +126,7 @@ case class PrimitiveMonoid[O: Monoid : UpDown](name: String)(implicit val env: E
       val newAList = processA(la, b)
       AssocWithIdList(this, newAList)
     }
-    case (a, b) => combineExtendedWithABitOfSymbolic(a, b) getOrElse AssocWithIdList(this, List(a, b))
+    case (a, b) => combineExtendedWithABitOfSymbolic(a, b) getOrElse AssocWithIdList(this, Vector(a, b))
   }
 
   override val identity =
