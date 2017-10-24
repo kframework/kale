@@ -1,7 +1,7 @@
 package org.kframework.kale
 
 import org.kframework.kale.highcats.LiftedCatsMixin
-import org.kframework.kale.standard.BottomizeMixin
+import org.kframework.kale.standard.{BottomizeMixin, StandardEnvironment}
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.transformer.{Binary, Unary}
 
@@ -38,7 +38,17 @@ trait Foundation {
   final val unify: Label2 = lift("unify", {
     (a: Term, b: Term) =>
       assert(this.isSealed)
+      // hack to allow us to use the DNF-specific SPN here
+      val And = env.asInstanceOf[StandardEnvironment].And
       unifier(a, b)
+        .asOr map {
+        case And.SPN(s, p, n) =>
+          val newS = s(s)
+          newS match {
+            case Bottom => Bottom
+            case ss: Substitution => And.SPN(ss, ss(p), ss(n))
+          }
+      }
   })
 
   def unifier: Binary.Apply

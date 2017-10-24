@@ -40,6 +40,9 @@ case class NotLabel()(implicit override val env: Environment) extends LabelNamed
       Some(Bottom)
     case `Bottom` =>
       Some(Top)
+    case Equality(a, b) =>
+      // not sure if this is correct in ML
+      Some(Equality(a, Not(b)))
     case Or.set(terms) if terms.size > 1 =>
       Some(And(terms map (Not(_))))
     case And.set(terms) if terms.size > 1 =>
