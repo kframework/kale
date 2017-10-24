@@ -111,8 +111,9 @@ object timer {
 
     @inline protected[this] final def enter(): Unit = {
       if (isOutsideOrError) {
-        if (isTimeoutMode)
+        if (isTimeoutMode) {
           throw TriesToMeasureAfterTimeout
+        }
         _lastEntry = System.nanoTime()
         _invocations += 1
       }

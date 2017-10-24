@@ -2,6 +2,7 @@ package org.kframework.kale.tests
 
 import org.kframework.kale._
 import org.kframework.kale.standard.StandardEnvironment
+import org.kframework.kale.util.timer
 import org.scalatest.FreeSpec
 
 import scala.language.implicitConversions
@@ -12,6 +13,8 @@ class RewriteTest extends TestSetup[StandardEnvironment]() {
   import implicits._
 
   implicit val eeenv = env
+
+  before(timer.fullReset())
 
   "X + 0 => X" in {
     assertRewrite(Rewrite(X + 0, X))((5: Term) + 0, 5: Term)

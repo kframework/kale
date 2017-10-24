@@ -1,18 +1,16 @@
 package org.kframework.kale
 
 import org.kframework.kale.util.timer
-import org.scalatest.{BeforeAndAfter, FreeSpec}
+import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, FreeSpec}
 
 import concurrent.duration._
 import scala.concurrent.TimeoutException
 
-class TimerSpec extends FreeSpec with BeforeAndAfter {
+class TimerSpec extends FreeSpec with BeforeAndAfter with BeforeAndAfterAll {
 
-  before {
-    timer.fullReset()
-  }
+  before(timer.fullReset())
 
-  after {
+  override def afterAll {
     timer.fullReset()
   }
 

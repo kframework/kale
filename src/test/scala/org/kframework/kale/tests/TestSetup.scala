@@ -2,11 +2,11 @@ package org.kframework.kale.tests
 
 import org.kframework.kale._
 import org.kframework.kale.standard.{SimpleRewrite => _, _}
-import org.kframework.kale.util.dsl
+import org.kframework.kale.util.{dsl, timer}
 import org.scalactic.Prettifier
-import org.scalatest.FreeSpec
+import org.scalatest.{BeforeAndAfter, FreeSpec}
 
-abstract class TestSetup[E <: StandardEnvironment](implicit val env: E = StandardEnvironment()) extends FreeSpec {
+abstract class TestSetup[E <: StandardEnvironment](implicit val env: E = StandardEnvironment()) extends FreeSpec with BeforeAndAfter {
 
   import env._
 
