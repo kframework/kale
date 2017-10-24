@@ -44,6 +44,9 @@ trait SemigroupLabel extends CollectionLabel with cats.Semigroup[Term] {
 }
 
 trait MonoidLabel extends SemigroupLabel with HasId with cats.Monoid[Term] {
+  @Normalizing
+  override def apply(list: Iterable[Term]): Term = (list fold identity) (apply)
+
   override def asIterable(t: Term): Iterable[Term] = t match {
     case `identity` => List[Term]()
     case x if x.label == this => x.asInstanceOf[Assoc].assocIterable
@@ -65,9 +68,6 @@ trait NonPrimitiveMonoidLabel extends MonoidLabel {
   }
 
   val self = this
-
-  @Normalizing
-  override def apply(list: Iterable[Term]): Term = (list fold identity) ((a, b) => apply(a, b))
 
   @NonNormalizing
   protected def construct(l: Iterable[Term]): Term
@@ -131,7 +131,4 @@ trait CommutativeMonoid extends AssocCommLabel with MonoidLabel {
     } else {
       super.asSet(t)
     }
-
-  @Normalizing
-  override def apply(list: Iterable[Term]): Term = list.foldLeft(identity)(apply)
 }
