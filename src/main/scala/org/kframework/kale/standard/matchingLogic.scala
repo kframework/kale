@@ -1008,7 +1008,7 @@ private[standard] case class SimpleExistsLabel()(implicit val e: Environment wit
 case class SimpleExists(v: Variable, p: Term)(implicit val env: Environment) extends Node2 with Exists {
   val label = env.Exists
   // TODO: this should be p.isPredicate but we're using it as a marker for contexts now
-  override lazy val isPredicate = true
+  override lazy val isPredicate = p.isPredicate
 
   override def _1: Term = v
 

@@ -48,6 +48,10 @@ trait ContextMixin extends Mixin {
 
   def ANYWHERE(t: Term) = Context(Variable.freshVariable(), t)
 
+  val HoleBinder = new LabelNamed("HoleBinder") with Label2 with Predicate {
+    override def apply(_1: Term, _2: Term) = new FreeNode2(this, _1, _2)
+  }
+
   case class ContextApplication(contextVar: Variable, redex: Term, contextPredicate: Term) extends Node3 with Context {
 
     val label = Context
@@ -70,14 +74,15 @@ trait ContextMixin extends Mixin {
   }
 
   def ContextMatcher(solver: Apply): (ContextApplication, Term) => Term = { (contextApp: ContextApplication, term: Term) =>
-    solver(SolvingContext(contextApp), term).asOr map {
+    val res = solver(SolvingContext(contextApp), term)
+    res.asOr map {
       case And.SPN(s, p@And.set(setOfp), n) =>
         val redex = setOfp.collect({
-          case Exists(contextApp.specificHole, r) => r
+          case HoleBinder(contextApp.specificHole, r) => r
         }).head
         And.SPN(
           And.substitution(s.asMap + (contextApp.contextVar -> n)),
-          And(setOfp.filter({ case Exists(contextApp.specificHole, _) => false; case _ => true })),
+          And(setOfp.filter({ case HoleBinder(contextApp.specificHole, _) => false; case _ => true })),
           Equality.binding(contextApp.specificHole, redex)(n))
     }
   }
@@ -129,11 +134,11 @@ trait ContextMixin extends Mixin {
                 And(s, recursive)
             }
             theAnywhereMatch
-          case And.SPN(s, p, n) if p.findBU({ case Exists(contextApp.specificHole, _) => true; case _ => false }).isEmpty =>
+          case And.SPN(s, p, n) if p.findBU({ case HoleBinder(contextApp.specificHole, _) => true; case _ => false }).isEmpty =>
             val redexSol = solver(contextApp.redex, n)
             redexSol.asOr map {
               case And.SPN(ss, pp, redexTerm) =>
-                And.SPN(And.substitution(s.asMap ++ ss.asMap), And(p, pp, Exists(contextApp.specificHole, redexTerm)), contextApp.specificHole)
+                And.SPN(And.substitution(s.asMap ++ ss.asMap), And(p, pp, HoleBinder(contextApp.specificHole, redexTerm)), contextApp.specificHole)
             }
           case o => o
         }
