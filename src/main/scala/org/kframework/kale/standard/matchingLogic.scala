@@ -1013,6 +1013,8 @@ case class SimpleExists(v: Variable, p: Term)(implicit val env: Environment) ext
   override def _1: Term = v
 
   override def _2: Term = p
+
+  override lazy val variables: Set[Variable] = p.variables.filterNot(_ == v)
 }
 
 case class Name(str: String) extends kale.Name

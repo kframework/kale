@@ -74,7 +74,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     */
   val doesNotMatch = new LabelNamed("!=") with Label2 with Predicate {
     override def apply(pattern: Term, obj: Term): Term =
-      if (obj.variables.forall(v => v.name.str.startsWith("_"))) {
+      if ((pattern.variables | obj.variables).forall(v => v.name.str.startsWith("_"))) {
         val res = env.unify(pattern, obj)
         env.Truth(res == env.Bottom)
       } else {
@@ -88,7 +88,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
   val unsat = new LabelNamed("unsat") with FunctionLabel1 with Strategy {
     override def f(_1: Term) = {
       val x = env.Variable("unsatVar" + env.Variable.counter)
-      Some(env.And(x, doesNotMatch(_1, x)))
+      Some(env.Exists(x, env.And(x, doesNotMatch(_1, x))))
     }
   }
 }
