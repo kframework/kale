@@ -70,6 +70,8 @@ trait ContextMixin extends Mixin {
       case (t, v) => Exists(v, t)
     }
 
+    override lazy val variables: Set[Variable] = contextVar.variables | redex.variables
+
     override lazy val isGround = false
   }
 
