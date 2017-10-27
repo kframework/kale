@@ -18,6 +18,10 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     val isPredicate = Some(false)
   }
 
+  val oneSolution = new LabelNamed("^oneSolution") with Label1 with Strategy with CluelessRoaring {
+    override def apply(_1: Term): Term = FreeNode1(this, _1)
+  }
+
   val compose = new LabelNamed("^compose") with Label2 with Strategy with CluelessRoaring {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
   }
@@ -106,6 +110,7 @@ trait StrategyMixin extends Mixin {
       case (`orElse`, _) => orElseTerm
       case (`compose`, _) => composeTerm
       case (`repeat`, _) => repeatTerm
+      case (`oneSolution`, _) => oneSolutionTerm
       case (`fixpoint`, _) => fixpointTerm
       case (`bu`, _) => buTerm
       case (`td`, _) => tdTerm
@@ -146,6 +151,12 @@ trait StrategyMixin extends Mixin {
           solver(fp, anytimeIsNow(t)) // TODO: pass in the remaining predicates
         }
     }
+  })
+
+  case class oneSolutionTerm(solver: Binary.Apply) extends Binary.F({ (fp: Node1, obj: Term) =>
+    val sol = solver(fp._1, obj)
+    // TODO: make sure we pick deterministically
+    env.Or.asSet(sol).headOption.getOrElse(env.Bottom)
   })
 
   case class fixpointTerm(solver: Binary.Apply) extends Binary.F({ (fp: Term, obj: Term) =>
