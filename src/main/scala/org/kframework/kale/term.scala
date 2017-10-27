@@ -1,5 +1,6 @@
 package org.kframework.kale
 
+import cats.Show
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor}
 import org.kframework.kale.highcats._
@@ -81,6 +82,11 @@ trait Predicate extends NotRoaring {
 }
 
 object Term {
+
+  implicit val show = new Show[Term] {
+    override def show(t: Term) = t.toConstructor
+  }
+
   implicit def termDecoder(implicit env: Environment): Decoder[Term] = {
     Decoder.instance { (h: HCursor) =>
       val label = env.label(h.get[String]("label").right.get)
