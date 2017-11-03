@@ -3,9 +3,6 @@ package org.kframework.kale
 import cats.Monoid
 import org.kframework.kale.highcats._
 import org.kframework.kale.standard.AssocWithIdList
-import org.roaringbitmap.RoaringBitmap
-
-import scala.annotation.switch
 
 trait FunctionLabel extends NodeLabel with CluelessRoaring {
   val name: String
@@ -15,6 +12,12 @@ trait PureFunctionLabel {
   self: FunctionLabel =>
 
   override lazy val isPredicate = Some(false)
+}
+
+trait PredicateFunctionLabel {
+  self: FunctionLabel =>
+
+  override lazy val isPredicate = Some(true)
 }
 
 trait FunctionLabel0 extends Label0 with FunctionLabel {
@@ -37,6 +40,10 @@ trait FunctionLabel2 extends Label2 with FunctionLabel {
   override def apply(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
     f(_1, _2) getOrElse FreeNode2(this, _1, _2)
   }
+  // testing only
+  def applyBuild(_1: Term, _2: Term): Term = env.bottomize(_1, _2) {
+    FreeNode2(this, _1, _2)
+  }
 }
 
 trait FunctionLabel3 extends Label3 with FunctionLabel {
@@ -55,7 +62,9 @@ trait FunctionLabel4 extends Label4 with FunctionLabel {
   }
 }
 
-case class PrimitiveFunction1[A, R](name: String, aLabel: UpDown[A], rLabel: Up[R], primitiveF: A => R)(implicit val env: Environment) extends FunctionLabel1 with PureFunctionLabel {
+case class PrimitiveFunction1[A, R]
+(name: String, aLabel: UpDown[A], rLabel: Up[R], primitiveF: A => R)
+(implicit val env: Environment) extends FunctionLabel1 with PureFunctionLabel {
   def f(_1: Term): Option[Term] = _1 match {
     case aLabel.extract(a) => Some(rLabel.up(primitiveF(a)))
     case _ => None
@@ -67,11 +76,51 @@ object PrimitiveFunction1 {
     PrimitiveFunction1(name, aLabel, aLabel, f)
 }
 
-case class PrimitiveFunction2[A, B, R](name: String, aLabel: UpDown[A], bLabel: UpDown[B], rLabel: Up[R], primitiveF: (A, B) => R)(implicit val env: Environment)
+case class HasLabelPredicateFunction(name: String, label: Label)
+                                    (implicit val env: Environment)
+  extends FunctionLabel1 with PredicateFunctionLabel {
+
+  def f(_1: Term): Option[Term] = {
+    if (_1.label.isInstanceOf[VariableLabel]) {
+      None
+    } else if (_1.label == label) {
+      Some(env.Top)
+    } else _1 match {
+      case v: SymbolicVariable if v.givenLabel == label =>
+        Some(env.Top)
+      case _ =>
+        Some(env.Bottom)
+    }
+  }
+}
+
+case class PredicateFunction1(functionLabel: FunctionLabel1)
+                             (implicit val env: Environment)
+  extends FunctionLabel1 with PredicateFunctionLabel {
+  override def f(_1: Term) = {
+    if (_1.label.isInstanceOf[VariableLabel]) {
+      None
+    } else {
+      functionLabel.f(_1)
+    }
+  }
+
+  override val name = "pred" + functionLabel.name
+}
+
+case class PrimitiveFunction2[A, B, R](name: String,
+                                       aLabel: UpDown[A], bLabel: UpDown[B], rLabel: Up[R],
+                                       primitiveF: (A, B) => R)
+                                      (implicit val env: Environment)
   extends FunctionLabel2 with PureFunctionLabel {
 
   def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
     case (aLabel.extract(a), bLabel.extract(b)) => Some(rLabel.up(primitiveF(a, b)))
+    case (_: SymbolicVariable, bLabel.extract(_))
+         |(aLabel.extract(_), _: SymbolicVariable)
+         | (_: SymbolicVariable, _: SymbolicVariable) =>
+      val newVar: SymbolicVariable = env.SymbolicVariable.freshVariable(rLabel.label)
+      Some(env.And(newVar, env.Equality(newVar, FreeNode2(this, _1, _2))))
     case _ => None
   }
 }
@@ -149,10 +198,12 @@ case class PrimitiveMonoid[O: Monoid : UpDown](name: String)(implicit val env: E
 
 
 object PrimitiveFunction2 {
-  def apply[A, R](name: String, aLabel: UpDown[A], rLabel: Up[R], f: (A, A) => R)(implicit env: Environment): PrimitiveFunction2[A, A, R] =
+  def apply[A, R](name: String, aLabel: UpDown[A], rLabel: Up[R], f: (A, A) => R)
+                 (implicit env: Environment): PrimitiveFunction2[A, A, R] =
     PrimitiveFunction2(name, aLabel, aLabel, rLabel, f)
 
-  def apply[A](name: String, aLabel: UpDown[A], f: (A, A) => A)(implicit env: Environment): PrimitiveFunction2[A, A, A] =
+  def apply[A](name: String, aLabel: UpDown[A], f: (A, A) => A)
+              (implicit env: Environment): PrimitiveFunction2[A, A, A] =
     PrimitiveFunction2(name, aLabel, aLabel, aLabel, f)
 }
 

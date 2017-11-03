@@ -4,7 +4,7 @@ import cats._
 import cats.implicits._
 import cats.{Apply, Eq}
 import org.kframework.kale.util.LabelNamed
-import org.kframework.kale.{Environment, FreeLabel1, FreeLabel2, FreeLabel3, Term}
+import org.kframework.kale.{Environment, FreeLabel1, FreeLabel2, FreeLabel3, Label, Term}
 
 trait Free {
   _: Environment =>
@@ -21,6 +21,8 @@ trait Free {
         case (a) => a.down[A] map companionObject
       }
       override def up(o: R): Term = apply(split(o))
+
+      override def label: Label = this
     }
 
   def free2[A: UpDown, B: UpDown, R <: Product](companionObject: (A, B) => R) =
@@ -35,6 +37,8 @@ trait Free {
       override def up(o: R) = split(o) match {
         case (a, b) => apply(a, b)
       }
+
+      override def label: Label = this
     }
 
   def free3[A: UpDown, B: UpDown, C: UpDown, R <: Product](companionObject: (A, B, C) => R) =
@@ -51,6 +55,8 @@ trait Free {
           case (a, b, c) => apply(a, b, c)
         }
       }
+
+      override def label: Label = this
     }
 
 }

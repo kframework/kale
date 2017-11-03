@@ -83,7 +83,10 @@ trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel wi
     }
 }
 
-case class FunctionDefinedByRewritingLabel0(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel0 {
+case class FunctionDefinedByRewritingLabel0(name: String)
+                                           (implicit val env: StandardEnvironment)
+  extends FunctionDefinedByRewriting with FunctionLabel0 {
+
   def f(): Option[Term] = tryToApply(FreeNode0(this))
 }
 

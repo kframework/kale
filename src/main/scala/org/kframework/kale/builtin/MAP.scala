@@ -99,7 +99,10 @@ trait MapMixin extends Mixin {
 
 }
 
-case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)(implicit val env: Environment) extends NonPrimitiveMonoidLabel with Constructor {
+case class MapLabel(name: String, indexFunction: Term => Term, identity: Term)
+                   (implicit val env: Environment)
+  extends NonPrimitiveMonoidLabel with Constructor {
+
   override val isPredicate: Option[Boolean] = Some(false)
 
   def isIndexable(t: Term) =
