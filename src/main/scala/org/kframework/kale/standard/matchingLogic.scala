@@ -196,16 +196,18 @@ private[standard] case class StandardVariableLabel()(implicit override val env: 
 
   var counter = 0
 
-  def freshVariable() = {
+  def freshVariable(): Variable = freshVariable(Sort.K)
+
+  def freshVariable(sort: Sort): Variable = {
     counter += 1
-    this ((Name("_" + counter), Sort("K")))
+    this ((Name("_" + counter), sort))
   }
 
   override val isPredicate: Option[Boolean] = Some(false)
 }
 
 private[standard] case class StandardSymbolicVariableLabel()(implicit override val env: Environment)
-  extends LabelNamed("#SymbolicVariable") with SymbolicVariableLabel with CluelessRoaring {  // TODO: Is is really CluelessRoaring?
+  extends LabelNamed("#SymbolicVariable") with SymbolicVariableLabel with CluelessRoaring { // TODO: Is is really CluelessRoaring?
   override def apply(nameSortLabel: (kale.Name, kale.Sort, Label)): SymbolicVariable =
     StandardSymbolicVariable(nameSortLabel._1, nameSortLabel._2, nameSortLabel._3)
 
