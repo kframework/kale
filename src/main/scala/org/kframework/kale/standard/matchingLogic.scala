@@ -208,13 +208,13 @@ private[standard] case class StandardVariableLabel()(implicit override val env: 
 
 private[standard] case class StandardSymbolicVariableLabel()(implicit override val env: Environment)
   extends LabelNamed("#SymbolicVariable") with SymbolicVariableLabel with CluelessRoaring { // TODO: Is is really CluelessRoaring?
-  override def apply(nameSortLabel: (kale.Name, kale.Sort, Label)): SymbolicVariable =
-    StandardSymbolicVariable(nameSortLabel._1, nameSortLabel._2, nameSortLabel._3)
+  override def apply(nameSortLabel: (kale.Name, kale.Sort)): SymbolicVariable =
+    StandardSymbolicVariable(nameSortLabel._1, nameSortLabel._2)
 
-  override protected[this] def internalInterpret(s: String): (kale.Name, kale.Sort, Label) = ???
+  override protected[this] def internalInterpret(s: String): (kale.Name, kale.Sort) = ???
 
-  override def generatedVariable(givenLabel: Label, counter: Int): SymbolicVariable = {
-    this ((Name("_" + counter), Sort("K"), givenLabel))
+  override def generatedVariable(givenSort: kale.Sort, counter: Int): SymbolicVariable = {
+    this ((Name("_" + counter), givenSort))
   }
 
   override val isPredicate: Option[Boolean] = Some(false)
@@ -227,8 +227,7 @@ private[standard] case class StandardVariable(name: kale.Name, givenSort: kale.S
 }
 
 private[standard] case class StandardSymbolicVariable(override val name: kale.Name,
-                                                      givenSort: kale.Sort,
-                                                      override val givenLabel: Label)
+                                                      givenSort: kale.Sort)
                                                      (implicit env: Environment)
   extends SymbolicVariable with kore.Variable {
 

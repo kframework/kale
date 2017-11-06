@@ -76,21 +76,16 @@ object PrimitiveFunction1 {
     PrimitiveFunction1(name, aLabel, aLabel, f)
 }
 
-case class HasLabelPredicateFunction(name: String, label: Label)
-                                    (implicit val env: Environment)
+case class HasSortPredicateFunction(name: String, sort: Sort)
+                                   (implicit val env: Environment)
   extends FunctionLabel1 with PredicateFunctionLabel {
 
   def f(_1: Term): Option[Term] = {
     if (_1.label.isInstanceOf[VariableLabel]) {
       None
-    } else if (_1.label == label) {
+    } else if (_1.sort == sort) {
       Some(env.Top)
-    } else _1 match {
-      case v: SymbolicVariable if v.givenLabel == label =>
-        Some(env.Top)
-      case _ =>
-        Some(env.Bottom)
-    }
+    } else Some(env.Bottom)
   }
 }
 
@@ -119,7 +114,7 @@ case class PrimitiveFunction2[A, B, R](name: String,
     case (_: SymbolicVariable, bLabel.extract(_))
          |(aLabel.extract(_), _: SymbolicVariable)
          | (_: SymbolicVariable, _: SymbolicVariable) =>
-      val newVar: SymbolicVariable = env.SymbolicVariable.freshVariable(rLabel.label)
+      val newVar: SymbolicVariable = env.SymbolicVariable.freshVariable(env.sort(rLabel.label))
       Some(env.And(newVar, env.Equality(newVar, FreeNode2(this, _1, _2))))
     case _ => None
   }

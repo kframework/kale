@@ -80,26 +80,21 @@ trait VariableLabel extends LeafLabel[(Name, Sort)] {
   def apply(name: kale.Name): Variable = apply((name, standard.Sort.K))
 }
 
-trait SymbolicVariableLabel extends LeafLabel[(Name, Sort, Label)] {
-  def apply(name: String, givenLabel: Label): SymbolicVariable =
-    apply((standard.Name(name), standard.Sort.K, givenLabel))
+trait SymbolicVariableLabel extends LeafLabel[(Name, kale.Sort)] {
 
-  def apply(name: String, sort: kale.Sort, givenLabel: Label): SymbolicVariable =
-    apply((standard.Name(name), sort, givenLabel))
+  def apply(name: String, sort: kale.Sort): SymbolicVariable =
+    apply((standard.Name(name), sort))
 
-  def apply(v: (Name, Sort, Label)): SymbolicVariable
-
-  def apply(name: kale.Name, givenLabel: Label): SymbolicVariable =
-    apply((name, standard.Sort.K, givenLabel))
+  def apply(v: (Name, Sort)): SymbolicVariable
 
   private var counter = 0
 
-  def freshVariable(givenLabel: Label): SymbolicVariable = {
+  def freshVariable(givenSort: Sort): SymbolicVariable = {
     counter += 1
-    generatedVariable(givenLabel, counter)
+    generatedVariable(givenSort, counter)
   }
 
-  def generatedVariable(givenLabel: Label, count: Int): SymbolicVariable
+  def generatedVariable(givenSort: Sort, count: Int): SymbolicVariable
 }
 
 trait Name extends kore.Name {
@@ -131,14 +126,13 @@ trait Variable extends Leaf[(Name, Sort)] with kore.SortedVariable {
   override val variables: Set[Variable] = Set(this)
 }
 
-trait SymbolicVariable extends Leaf[(Name, Sort, Label)] {
+trait SymbolicVariable extends Leaf[(Name, Sort)] {
   val name: Name
-  val givenLabel: Label  // TODO: Should use the sort instead.
 
   val label: SymbolicVariableLabel
   override val isGround = true
   override val sort: Sort
-  override lazy val data: (Name, Sort, Label) = (name, sort, givenLabel)
+  override lazy val data: (Name, Sort) = (name, sort)
   override lazy val isPredicate: Boolean = false
 
   override def toString: String = name.str + (
@@ -146,7 +140,7 @@ trait SymbolicVariable extends Leaf[(Name, Sort, Label)] {
       ""
     else
       ":" + sort.name
-    ) + ":" + givenLabel.name
+    )
 
   override def canEqual(o: Any): Boolean = o.isInstanceOf[SymbolicVariable]
 
