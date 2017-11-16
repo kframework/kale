@@ -31,7 +31,7 @@ trait CollectionLabel extends Label2 {
 }
 
 trait SemigroupLabel extends CollectionLabel with cats.Semigroup[Term] {
-  override def apply(l: Iterable[Term]): Term
+  override def apply(list: Iterable[Term]): Term = list reduce apply
 
   private val thisthis = this
 
