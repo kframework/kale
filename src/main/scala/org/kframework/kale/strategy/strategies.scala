@@ -3,7 +3,7 @@ package org.kframework.kale.strategy
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.{ProcessingFunctions, definePartialFunction}
 import org.kframework.kale.util.LabelNamed
-import org.kframework.kale.{CluelessRoaring, ConjunctiveRoaring, DisjunctiveRoaring, Environment, FreeNode1, FreeNode2, FreeNode3, FunctionLabel1, FunctionLabel3, HasMatcher, Label1, Label2, Label3, Mixin, Node1, Predicate, Term, standard}
+import org.kframework.kale.{CluelessRoaring, ConjunctiveRoaring, DisjunctiveRoaring, Environment, FreeNode1, FreeNode2, FreeNode3, FunctionLabel1, FunctionLabel3, HasMatcher, Label1, Label2, Label3, Mixin, MonoidLabel, Node1, Predicate, SemigroupLabel, Term, standard}
 import org.kframework.km.term.Variable
 import org.kframework.kore.Bottom
 import org.roaringbitmap.RoaringBitmap
@@ -54,7 +54,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
-  val orElse = new LabelNamed("^orElse") with Label2 with Strategy with DisjunctiveRoaring {
+  val orElse = new LabelNamed("^orElse") with Label2 with Strategy with DisjunctiveRoaring  with SemigroupLabel {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
   }
 
