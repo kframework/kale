@@ -25,7 +25,8 @@ class TimerSpec extends FreeSpec with BeforeAndAfter with BeforeAndAfterAll {
       }, None)
     }
     time(3)
-    assert(t.totalTime > 400.millis && t.totalTime < 450.millis)
+    val totalTime = t.totalTime.toMillis.millis
+    assert(totalTime > 400.millis && totalTime < 490.millis)
     println(timer.fullReport())
   }
 
