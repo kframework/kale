@@ -38,7 +38,7 @@ trait LiftedCatsMixin extends Mixin with highcats.Free {
       override lazy val isPredicate = isPred
     }
 
-  def monoid[O: Monoid : UpDown](name: String) = PrimitiveMonoid(name)
+  def monoid[O: Monoid : UpDown](name: String) = PrimitiveMonoid[O](name)
 
   def define[A: UpDown, B: UpDown, R: UpDown](name: String, f: (A, B) => R): PrimitiveFunction2[A, B, R] =
     PrimitiveFunction2(name, implicitly[UpDown[A]], implicitly[UpDown[B]], implicitly[Up[R]], f)
