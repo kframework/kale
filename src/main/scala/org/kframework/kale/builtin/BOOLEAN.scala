@@ -31,7 +31,7 @@ trait BooleanMixin extends kale.BooleanMixin {
       }
     }
 
-    val isTrue = new LabelNamed("isTrue") with FunctionLabel1 {
+    val isTrue = new LabelNamed("IsTrue") with FunctionLabel1 {
 
       override val isPredicate: Option[Boolean] = Some(true)
 
