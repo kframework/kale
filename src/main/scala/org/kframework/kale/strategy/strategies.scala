@@ -22,7 +22,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     override def apply(_1: Term): Term = FreeNode1(this, _1)
   }
 
-  val compose = new LabelNamed("^compose") with Label2 with Strategy with CluelessRoaring {
+  val compose = new LabelNamed("^compose") with Label2 with Strategy with CluelessRoaring with SemigroupLabel {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
   }
 
