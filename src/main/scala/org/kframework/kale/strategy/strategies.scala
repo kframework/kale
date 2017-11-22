@@ -50,11 +50,18 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
+  /**
+    * Takes a partial function. Similar to ^td, but returns Bottom if not applied anywhere.
+    **/
+  val topDown = new LabelNamed("^topDown") with Label1 with Strategy with CluelessRoaring {
+    override def apply(f: Term): Term = FreeNode1(this, f)
+  }
+
   val rw = new LabelNamed("^rewrite") with Label1 with Strategy with CluelessRoaring {
     override def apply(f: Term): Term = FreeNode1(this, f)
   }
 
-  val orElse = new LabelNamed("^orElse") with Label2 with Strategy with DisjunctiveRoaring  with SemigroupLabel {
+  val orElse = new LabelNamed("^orElse") with Label2 with Strategy with DisjunctiveRoaring with SemigroupLabel {
     override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
   }
 
@@ -114,6 +121,7 @@ trait StrategyMixin extends Mixin {
       case (`fixpoint`, _) => fixpointTerm
       case (`bu`, _) => buTerm
       case (`td`, _) => tdTerm
+      case (`topDown`, _) => topDownTerm
       case (`rw`, _) => rewriteTerm
     }), Priority.ultimate)
 
@@ -188,6 +196,23 @@ trait StrategyMixin extends Mixin {
       }
     })
     res
+  })
+
+  case class topDownTerm(solver: Binary.Apply) extends Binary.F({ (td: Node1, obj: Term) =>
+    var matchedAtLeastOnce = false
+    val res = obj.mapTD(t => {
+      val res = solver(td._1, t)
+      res match {
+        case Bottom => t
+        case _ =>
+          matchedAtLeastOnce = true
+          anytimeIsNow(onlyNonPredicate(res))
+      }
+    })
+    if (matchedAtLeastOnce)
+      res
+    else
+      Bottom
   })
 
   case class rewriteTerm(solver: Binary.Apply) extends Binary.F({ (rewrite: Node1, obj: Term) =>
