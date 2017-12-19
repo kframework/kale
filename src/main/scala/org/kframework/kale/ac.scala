@@ -38,7 +38,10 @@ trait SemigroupLabel extends CollectionLabel with cats.Semigroup[Term] {
   def combine(a: Term, b: Term) = apply(a, b)
 
   def asIterable(t: Term): Iterable[Term] = t.label match {
-    case `thisthis` => t.asInstanceOf[Assoc].assocIterable
+    case `thisthis` => t match {
+      case t: Assoc => t.assocIterable
+      case _ => throw new AssertionError(t + " is not Assoc")
+    }
     case _ => List(t)
   }
 }
