@@ -1,6 +1,6 @@
 package org.kframework.kale
 
-import org.kframework.kale.standard.{MightBeSolved}
+import org.kframework.kale.standard.MightBeSolved
 import org.kframework.kore.implementation.DefaultBuilders
 import org.kframework.{kale, kore}
 
@@ -15,6 +15,7 @@ trait MatchingLogicMixin extends Mixin {
 
   // Labels
   val Variable: VariableLabel
+  val SymbolicVariable: SymbolicVariableLabel
   val And: AndLabel
   val Or: OrLabel
   val Rewrite: RewriteLabel
@@ -79,6 +80,28 @@ trait VariableLabel extends LeafLabel[(Name, Sort)] {
   def apply(name: kale.Name): Variable = apply((name, standard.Sort.K))
 }
 
+trait SymbolicVariableLabel extends LeafLabel[(Name, Sort, Label)] {
+  def apply(name: String, givenLabel: Label): SymbolicVariable =
+    apply((standard.Name(name), standard.Sort.K, givenLabel))
+
+  def apply(name: String, sort: kale.Sort, givenLabel: Label): SymbolicVariable =
+    apply((standard.Name(name), sort, givenLabel))
+
+  def apply(v: (Name, Sort, Label)): SymbolicVariable
+
+  def apply(name: kale.Name, givenLabel: Label): SymbolicVariable =
+    apply((name, standard.Sort.K, givenLabel))
+
+  private var counter = 0
+
+  def freshVariable(givenLabel: Label): SymbolicVariable = {
+    counter += 1
+    generatedVariable(givenLabel, counter)
+  }
+
+  def generatedVariable(givenLabel: Label, count: Int): SymbolicVariable
+}
+
 trait Name extends kore.Name {
   override def toString = str
 }
@@ -106,6 +129,31 @@ trait Variable extends Leaf[(Name, Sort)] with kore.SortedVariable {
   }
 
   override val variables: Set[Variable] = Set(this)
+}
+
+trait SymbolicVariable extends Leaf[(Name, Sort, Label)] {
+  val name: Name
+  val givenLabel: Label  // TODO: Should use the sort instead.
+
+  val label: SymbolicVariableLabel
+  override val isGround = true
+  override val sort: Sort
+  override lazy val data: (Name, Sort, Label) = (name, sort, givenLabel)
+  override lazy val isPredicate: Boolean = false
+
+  override def toString: String = name.str + (
+    if (sort.name == "K")
+      ""
+    else
+      ":" + sort.name
+    ) + ":" + givenLabel.name
+
+  override def canEqual(o: Any): Boolean = o.isInstanceOf[SymbolicVariable]
+
+  override def equals(o: Any): Boolean = o match {
+    case v: SymbolicVariable => v.name == this.name
+    case _ => false
+  }
 }
 
 trait TruthLabel extends LeafLabel[Boolean] {

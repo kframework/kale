@@ -4,7 +4,7 @@ import cats._
 import cats.implicits._
 import org.kframework.kale.standard.ReferenceLabel
 import org.kframework.kale.util.LabelNamed
-import org.kframework.kale.{Environment, FunctionLabel, FunctionLabel1, Label1, Label2, Mixin, MonoidLabel, PrimitiveFunction1, PrimitiveFunction2, PrimitiveFunction3, PrimitiveMonoid, Term, highcats}
+import org.kframework.kale.{Environment, FunctionLabel, FunctionLabel1, Label, Label1, Label2, LeafLabel, Mixin, MonoidLabel, PrimitiveFunction1, PrimitiveFunction2, PrimitiveFunction3, PrimitiveMonoid, Term, highcats}
 
 trait Convert[A, B] {
   def convert(a: A): B
@@ -58,16 +58,18 @@ trait LiftedCatsMixin extends Mixin with highcats.Free {
   implicit def upMonoidLabeled[O[_] : MonoidLabeled : Traverse : Applicative : MonoidK, E: UpDown]: UpDown[O[E]] = new UpDown[O[E]] {
     val eUpDown = implicitly[UpDown[E]]
     val fTraverse = implicitly[Traverse[O]]
-    val label = implicitly[MonoidLabeled[O]].monoidLabel
+    val mLabel = implicitly[MonoidLabeled[O]].monoidLabel
     val oMonoid = implicitly[MonoidK[O]].algebra[E]
     val oApplicative = implicitly[Applicative[O]]
 
+    override def label: Label = mLabel
+
     override def up(o: O[E]): Term = {
-      fTraverse.foldMap(o)(eUpDown.up)(label)
+      fTraverse.foldMap(o)(eUpDown.up)(mLabel)
     }
 
     override def down(t: Term): Option[O[E]] = t match {
-      case label.iterable(seq: Iterable[Term]) =>
+      case mLabel.iterable(seq: Iterable[Term]) =>
         def ff(t: Term) = oApplicative.pure(eUpDown.down(t).get)
 
         Some(implicitly[Traverse[scala.List]].foldMap(seq.toList)(ff)(oMonoid))

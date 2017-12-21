@@ -87,7 +87,7 @@ class z3(val symbolsSeq: Seq[Seq[term.Symbol]]) {
 object z3 {
 
   // TODO: set proper z3 path
-  private val z3 = "./z3/bin/z3" // "z3-4.5.0-x64-osx-10.11.6/bin/z3"
+  private val z3 = "/home/virgil/runtime-verification/z3/build/z3" // "/usr/bin/z3" // "./z3/bin/z3" // "z3-4.5.0-x64-osx-10.11.6/bin/z3"
 
   val cmd = Seq(z3, "-smt2", "-in")
 

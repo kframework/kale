@@ -141,7 +141,9 @@ case class CollectionSize(collectionLabel: CollectionLabel)(implicit env: Enviro
   override val isPredicate: Option[Boolean] = Some(false)
 }
 
-private[standard] class MonoidListLabel(val name: String, val identity: Term)(implicit val env: Environment with IntMixin) extends NonPrimitiveMonoidLabel with Constructor {
+private[standard] class MonoidListLabel(val name: String, val identity: Term)
+                                       (implicit val env: Environment with IntMixin)
+  extends NonPrimitiveMonoidLabel with Constructor {
 
   val size = CollectionSize(this)
 

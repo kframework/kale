@@ -11,7 +11,8 @@ class rewrite(val symbols: Seq[Seq[term.Symbol]]) {
 
   val z3 = new z3(symbols)
 
-  def applyRule(rule: SimpleRewrite, term: SimplePattern): Seq[SimplePattern] = { val cntRename = term.counter + 1
+  def applyRule(rule: SimpleRewrite, term: SimplePattern): Seq[SimplePattern] = {
+    val cntRename = term.counter + 1
     // rule:  l => r if c
     lazy val l = rule.l.rename(cntRename)
     lazy val r = rule.r.rename(cntRename)

@@ -21,6 +21,7 @@ trait MatchingLogicMixin extends Mixin {
   override val Or: DNFOrLabel = DNFOrLabel()
   override val Not: NotLabel = NotLabel()
   override val Variable: StandardVariableLabel = standard.StandardVariableLabel()
+  override val SymbolicVariable: StandardSymbolicVariableLabel = standard.StandardSymbolicVariableLabel()
   override val Equality: EqualityLabel = standard.StandardEqualityLabel()
 
   override val Exists: ExistsLabel = standard.SimpleExistsLabel()
@@ -195,9 +196,25 @@ private[standard] case class StandardVariableLabel()(implicit override val env: 
 
   var counter = 0
 
-  def freshVariable() = {
+  def freshVariable(): Variable = freshVariable(Sort.K)
+
+  def freshVariable(sort: Sort): Variable = {
     counter += 1
-    this ((Name("_" + counter), Sort("K")))
+    this ((Name("_" + counter), sort))
+  }
+
+  override val isPredicate: Option[Boolean] = Some(false)
+}
+
+private[standard] case class StandardSymbolicVariableLabel()(implicit override val env: Environment)
+  extends LabelNamed("#SymbolicVariable") with SymbolicVariableLabel with CluelessRoaring { // TODO: Is is really CluelessRoaring?
+  override def apply(nameSortLabel: (kale.Name, kale.Sort, Label)): SymbolicVariable =
+    StandardSymbolicVariable(nameSortLabel._1, nameSortLabel._2, nameSortLabel._3)
+
+  override protected[this] def internalInterpret(s: String): (kale.Name, kale.Sort, Label) = ???
+
+  override def generatedVariable(givenLabel: Label, counter: Int): SymbolicVariable = {
+    this ((Name("_" + counter), Sort("K"), givenLabel))
   }
 
   override val isPredicate: Option[Boolean] = Some(false)
@@ -209,7 +226,20 @@ private[standard] case class StandardVariable(name: kale.Name, givenSort: kale.S
   val label = env.Variable
 }
 
-private[standard] case class StandardTruthLabel()(implicit val env: Environment) extends NameFromObject with TruthLabel with RoaringLabelsFromTerm {
+private[standard] case class StandardSymbolicVariable(override val name: kale.Name,
+                                                      givenSort: kale.Sort,
+                                                      override val givenLabel: Label)
+                                                     (implicit env: Environment)
+  extends SymbolicVariable with kore.Variable {
+
+  override lazy val sort: kale.Sort = givenSort
+  override val label: SymbolicVariableLabel = env.SymbolicVariable
+}
+
+private[standard] case class StandardTruthLabel()
+                                               (implicit val env: Environment)
+  extends NameFromObject with TruthLabel with RoaringLabelsFromTerm {
+
   def apply(v: Boolean) = if (v) env.Top else env.Bottom
 
   override val isPredicate: Option[Boolean] = Some(true)
@@ -291,7 +321,8 @@ private[kale] class Matches(val _1: Term, val _2: Term)(implicit env: StandardEn
   val label = env.Match
 }
 
-private[standard] case class StandardEqualityLabel()(implicit override val env: Environment with MatchingLogicMixin) extends LabelNamed("=") with EqualityLabel {
+private[standard] case class StandardEqualityLabel()(implicit override val env: Environment with MatchingLogicMixin)
+  extends LabelNamed("=") with EqualityLabel {
   override def apply(_1: Term, _2: Term): Term = {
     val lhsOrElements = env.Or.asSet(_1)
     val rhsOrElements = env.Or.asSet(_2)
@@ -307,7 +338,7 @@ private[standard] case class StandardEqualityLabel()(implicit override val env: 
     if (_1 == _2)
       env.Top
     else if (_1.isGround && _2.isGround) {
-      if (env.isSealed) {
+      if (env.isSealed && !_1.isInstanceOf[SymbolicVariable] && !_2.isInstanceOf[SymbolicVariable]) {
         env.And.onlyPredicate(env.unify(_1, _2))
       } else
         new Equals(_1, _2)

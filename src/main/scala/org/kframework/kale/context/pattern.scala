@@ -12,7 +12,8 @@ import scala.collection.Set
 trait PatternContextMixin extends Mixin {
   _: Environment with standard.MatchingLogicMixin with HasMatcher with HolesMixin =>
 
-  case class PatternContextApplicationLabel(name: String)(implicit val env: Environment with standard.MatchingLogicMixin)
+  case class PatternContextApplicationLabel(name: String)
+                                           (implicit val env: Environment with standard.MatchingLogicMixin)
     extends Context1ApplicationLabel with CluelessRoaring {
 
     //  val C = env.Variable("GENERIC_CONTEXT_VAR")
