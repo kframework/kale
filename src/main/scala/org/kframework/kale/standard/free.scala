@@ -67,7 +67,7 @@ trait FreeMixin extends kale.FreeMixin {
     case (a: FreeLabel5, b: FreeLabel5) if a == b => FreeNode5FreeNode5
     case (a: FreeLabel6, b: FreeLabel6) if a == b => FreeNode6FreeNode6
     case (a: FreeLabelN, b: FreeLabelN) if a == b => FreeNodeNFreeNodeN
-  })
+  }, Priority.low)
 }
 
 trait TuplesMixin extends Mixin {

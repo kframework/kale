@@ -26,7 +26,7 @@ trait FunctionByRewritingMixin extends Mixin {
     case (_: FunctionDefinedByRewritingLabel2, _: FunctionDefinedByRewritingLabel2) => FunctionDefinedByRewritingMatcher
     case (_: FunctionDefinedByRewritingLabel3, _: FunctionDefinedByRewritingLabel3) => FunctionDefinedByRewritingMatcher
     case (_: FunctionDefinedByRewritingLabel4, _: FunctionDefinedByRewritingLabel4) => FunctionDefinedByRewritingMatcher
-  })
+  }, Priority.low)
 }
 
 case class NotLabel()(implicit override val env: Environment) extends LabelNamed("¬") with kale.NotLabel with FunctionLabel {

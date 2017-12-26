@@ -131,7 +131,7 @@ trait MatchingLogicMixin extends Mixin {
 
   registerMatcher({
     case (a: DomainValueLabel[_], b: DomainValueLabel[_]) if a == b => Constants
-  })
+  }, Priority.low)
 }
 
 trait MatchingLogicPostfixMixin extends Mixin {
@@ -166,11 +166,11 @@ trait MatchingLogicPostfixMixin extends Mixin {
 
   registerMatcher({
     case (`Rewrite`, _) => LeftRewriteMatcher
-    case (Truth, _) => TruthMatcher
-    case (_, Truth) => TruthMatcher
   }, Priority.high)
 
   registerMatcher({
+    case (Truth, _) => TruthMatcher
+    case (_, Truth) => TruthMatcher
     case (_, `Rewrite`) => RightRewriteMatcher
   }, Priority.ultimate)
 }
