@@ -1,8 +1,7 @@
 package org.kframework.kale
 
-import org.kframework.kale.standard.{MightBeSolved}
-import org.kframework.kore.implementation.DefaultBuilders
-import org.kframework.{kale, kore}
+import org.kframework.kale.standard.MightBeSolved
+import org.kframework.kale
 
 import scala.collection.Seq
 
@@ -10,8 +9,8 @@ trait MatchingLogicMixin extends Mixin {
   env: Environment =>
 
   // Constants
-  val Bottom: Truth with kore.Bottom
-  val Top: Truth with Substitution with kore.Top
+  val Bottom: Truth
+  val Top: Truth with Substitution
 
   // Labels
   val Variable: VariableLabel
@@ -29,7 +28,7 @@ trait MatchingLogicMixin extends Mixin {
 
   def sort(l: Label): kale.Sort
 
-  def isSort(sort: kore.Sort, term: Term): Boolean
+  def isSort(sort: Sort, term: Term): Boolean
 }
 
 trait DomainValueLabel[T] extends LeafLabel[T] with ThisRoaring {
@@ -39,7 +38,7 @@ trait DomainValueLabel[T] extends LeafLabel[T] with ThisRoaring {
   def apply(v: T): DomainValue[T]
 }
 
-trait DomainValue[T] extends Leaf[T] with kore.DomainValue {
+trait DomainValue[T] extends Leaf[T] {
   val label: DomainValueLabel[T]
 
   def isGround = true
@@ -47,13 +46,9 @@ trait DomainValue[T] extends Leaf[T] with kore.DomainValue {
   override lazy val isPredicate: Boolean = false
 
   override def toString: String = data.toString
-
-  override def symbol = label
-
-  override def value = DefaultBuilders.Value(data.toString)
 }
 
-trait Sort extends kore.Sort {
+trait Sort {
   val name: String
 
   def smtName: String = name
@@ -64,26 +59,23 @@ trait Sort extends kore.Sort {
   }
 
   override def hashCode(): Int = name.hashCode
-
-  // FOR KORE
-  override val str = name
 }
 
 trait VariableLabel extends LeafLabel[(Name, Sort)] {
-  def apply(name: String): Variable = apply((standard.Name(name), standard.Sort.K))
+  def apply(name: String): Variable = apply((Name(name), standard.Sort.K))
 
-  def apply(name: String, sort: kale.Sort): Variable = apply((standard.Name(name), sort))
+  def apply(name: String, sort: kale.Sort): Variable = apply((Name(name), sort))
 
   def apply(v: (Name, Sort)): Variable
 
   def apply(name: kale.Name): Variable = apply((name, standard.Sort.K))
 }
 
-trait Name extends kore.Name {
-  override def toString = str
+case class Name(name: String) {
+  override def toString = name
 }
 
-trait Variable extends Leaf[(Name, Sort)] with kore.SortedVariable {
+trait Variable extends Leaf[(Name, Sort)] {
   val label: VariableLabel
   val name: Name
   val sort: Sort
@@ -91,7 +83,7 @@ trait Variable extends Leaf[(Name, Sort)] with kore.SortedVariable {
   val isGround = false
   override lazy val isPredicate: Boolean = false
 
-  override def toString: String = name.str + (
+  override def toString: String = name.toString + (
     if (sort.name == "K")
       ""
     else
@@ -117,11 +109,11 @@ trait Truth extends Leaf[Boolean] {
   override lazy val isPredicate: Boolean = false
 }
 
-trait Top extends Truth with Substitution with kore.Top {
+trait Top extends Truth with Substitution {
   override val boundVariables: Set[Variable] = Set()
 }
 
-trait Bottom extends Truth with kore.Bottom
+trait Bottom extends Truth
 
 
 trait AndLabel extends CommutativeMonoid with Z3Builtin {
@@ -159,16 +151,16 @@ trait ExistsLabel extends Label2 {
   override val isPredicate: Option[Boolean] = None
 }
 
-trait Exists extends kore.Exists {
+trait Exists {
   val v: Variable
   val p: Term
 }
 
 trait ForAllLabel extends Label2
 
-trait ForAll extends Node2 with kore.ForAll
+trait ForAll extends Node2
 
-trait Equals extends kore.Equals with Node2 with BinaryInfix {
+trait Equals extends Node2 with BinaryInfix {
   override lazy val isPredicate: Boolean = true
 }
 
@@ -178,7 +170,7 @@ trait Binding extends Equals with Substitution with NotRoaringTerm {
   override def filter(f: Variable => Boolean): Substitution = if (f(_1.asInstanceOf[Variable])) this else env.Top
 }
 
-trait And extends kore.And with AssocComm {
+trait And extends AssocComm {
   self: And =>
   val predicate: Term
   val nonPredicate: Term
@@ -186,22 +178,14 @@ trait And extends kore.And with AssocComm {
   override lazy val isPredicate: Boolean = nonPredicate == label.env.Top
 }
 
-trait Or extends kore.Or with AssocComm {
+trait Or extends AssocComm {
   val label: OrLabel
 
   def map(f: Term => Term): Term = label.map(f)(this)
 }
 
-trait Rewrite extends kore.Rewrite with Node2 with BinaryInfix {
+trait Rewrite extends Node2 with BinaryInfix {
   override lazy val isPredicate: Boolean = false
-}
-
-trait Application extends Node with kore.Application {
-
-  // for KORE
-  override def symbol: kore.Symbol = label
-
-  override def args: Seq[kore.Pattern] = children.toSeq
 }
 
 trait NextLabel extends Label1

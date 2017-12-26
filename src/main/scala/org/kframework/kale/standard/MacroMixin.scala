@@ -44,7 +44,7 @@ trait MacroMixin {
                 .zip(args.children)
                 .toMap
                 .withDefault({
-                  case v: Variable if v.name.str.startsWith("_") =>
+                  case v: Variable if v.name.toString.startsWith("_") =>
                     Variable.freshVariable()
                   case t => t
                 })

@@ -4,7 +4,7 @@ import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.Apply
 import org.kframework.kale.util.{NameFromObject, LabelNamed, unreachable}
 import org.kframework.kale.{Environment, Substitution, _}
-import org.kframework.{kale, kore}
+import org.kframework.kale
 import org.roaringbitmap.{FastAggregation, RoaringBitmap}
 
 import scala.annotation.switch
@@ -203,7 +203,7 @@ private[standard] case class StandardVariableLabel()(implicit override val env: 
   override val isPredicate: Option[Boolean] = Some(false)
 }
 
-private[standard] case class StandardVariable(name: kale.Name, givenSort: kale.Sort)(implicit env: Environment) extends Variable with kore.Variable {
+private[standard] case class StandardVariable(name: kale.Name, givenSort: kale.Sort)(implicit env: Environment) extends Variable {
   override lazy val sort = givenSort
 
   val label = env.Variable
@@ -258,7 +258,7 @@ private[standard] case class SimpleNextLabel()(implicit override val env: Enviro
   override val isPredicate: Option[Boolean] = None
 }
 
-private[standard] case class SimpleNext(_1: Term)(implicit env: Environment) extends Node1 with kore.Next {
+private[standard] case class SimpleNext(_1: Term)(implicit env: Environment) extends Node1 {
   override val label = env.Next
   override lazy val isPredicate: Boolean = _1.isPredicate
 }
@@ -1016,8 +1016,6 @@ case class SimpleExists(v: Variable, p: Term)(implicit val env: Environment) ext
 
   override lazy val variables: Set[Variable] = p.variables.filterNot(_ == v)
 }
-
-case class Name(str: String) extends kale.Name
 
 private[standard] class BindMatchLabel(implicit override val env: Environment) extends LabelNamed("BindMatch") with Label2 with Projection2Roaring {
   def apply(v: Term, p: Term) = FreeNode2(this, v.asInstanceOf[Variable], p)

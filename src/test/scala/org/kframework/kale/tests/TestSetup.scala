@@ -68,7 +68,7 @@ abstract class TestSetup[E <: StandardEnvironment](implicit val env: E = Standar
   val X_1 = Context.hole(X)
 
   def toAssert(t: Term): String = t match {
-    case Variable((name, _)) => name.str
+    case Variable((name, _)) => name.toString
     case t: Node => t.toString
   }
 

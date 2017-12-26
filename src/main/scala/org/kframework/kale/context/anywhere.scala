@@ -2,7 +2,7 @@ package org.kframework.kale.context
 
 import org.kframework.kale.{Environment, HasMatcher, _}
 import org.kframework.kale.context.anywhere.ContextContentVariable
-import org.kframework.kale.standard.{HolesMixin, Name}
+import org.kframework.kale.standard.HolesMixin
 import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 import org.kframework.kale.transformer.{Binary, Unary}
 import org.kframework.kale.util.{LabelNamed, timer}
@@ -211,7 +211,7 @@ object anywhere {
     //  assert(!basedOn.isInstanceOf[ContextContentVariable])
     val label: VariableLabel = basedOn.label
 
-    override val name = Name(basedOn.name.str + "☐" + index)
+    override val name = Name(basedOn.name.toString + "☐" + index)
   }
 
 }
