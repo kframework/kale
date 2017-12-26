@@ -80,6 +80,9 @@ trait ThisRoaring {
   def suppliedLabels(children: Iterable[Term]): RoaringBitmap = RoaringBitmap.bitmapOf(this.id)
 }
 
+/**
+  * Requires and supplies all children
+  */
 trait ConjunctiveRoaring {
   self: Label with RoaringLabel =>
 
