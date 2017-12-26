@@ -10,7 +10,7 @@ import scala.collection.{Iterable, Map, Set}
 trait MapMixin extends Mixin {
   _: Environment with standard.MatchingLogicMixin with HasMatcher =>
 
-  register({
+  registerMatcher({
     case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm
   }, Priority.medium)
 

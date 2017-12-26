@@ -197,7 +197,7 @@ trait BundledContextMixin extends ContextMixin with PatternContextMixin {
   }
 
 
-  register(
+  registerMatcher(
     {
       case (capp: PatternContextApplicationLabel, _) => PatternContextMatcher
       case (Context, _) => ContextMatcher

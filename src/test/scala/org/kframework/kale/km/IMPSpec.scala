@@ -9,7 +9,7 @@ import org.scalatest.FreeSpec
 class IMPSpec extends FreeSpec {
 
   implicit val env = new StandardEnvironment with MultisortedMixin {
-    register({
+    registerMatcher({
       case (_, `Variable`) => SortedVarRight
     }, Priority.high)
   }

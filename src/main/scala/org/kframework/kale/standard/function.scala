@@ -20,13 +20,13 @@ trait FunctionByRewritingMixin extends Mixin {
   }
   })
 
-  register(Binary.definePartialFunction({
+  registerMatcher({
     case (_: FunctionDefinedByRewritingLabel0, _: FunctionDefinedByRewritingLabel0) => FunctionDefinedByRewritingMatcher
     case (_: FunctionDefinedByRewritingLabel1, _: FunctionDefinedByRewritingLabel1) => FunctionDefinedByRewritingMatcher
     case (_: FunctionDefinedByRewritingLabel2, _: FunctionDefinedByRewritingLabel2) => FunctionDefinedByRewritingMatcher
     case (_: FunctionDefinedByRewritingLabel3, _: FunctionDefinedByRewritingLabel3) => FunctionDefinedByRewritingMatcher
     case (_: FunctionDefinedByRewritingLabel4, _: FunctionDefinedByRewritingLabel4) => FunctionDefinedByRewritingMatcher
-  }))
+  })
 }
 
 case class NotLabel()(implicit override val env: Environment) extends LabelNamed("¬") with kale.NotLabel with FunctionLabel {

@@ -86,7 +86,7 @@ trait MultisortedMixin extends Environment with standard.MatchingLogicMixin with
   def sorted(l: Label6, arg1: kale.Sort, arg2: kale.Sort, arg3: kale.Sort, arg4: kale.Sort, arg5: kale.Sort, arg6: kale.Sort, target: kale.Sort): Unit =
     sorted(l, Signature(Seq(arg1, arg2, arg3, arg4, arg5, arg6), target))
 
-  register({
+  registerMatcher({
     case (l1: FreeLabel, l2: FreeLabel) if l1 != l2 || env.sort(l1) != env.sort(l2) => NoMatch
   }, Priority.medium)
 }

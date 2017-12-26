@@ -102,7 +102,7 @@ trait PrettyWrapperMixin extends Mixin {
     }
   })
 
-  register({
+  registerMatcher({
     case (PrettyWrapper, PrettyWrapper) =>
       PrettyWrapperPrettyWrapper
     case (PrettyWrapper, term) =>

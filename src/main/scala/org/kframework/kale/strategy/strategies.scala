@@ -110,7 +110,7 @@ trait StrategyMixin extends Mixin {
   import STRATEGY._
 
 
-  register(
+  registerMatcher(
     {
       case (`orElse`, _) => orElseTerm
       case (`compose`, _) => composeTerm

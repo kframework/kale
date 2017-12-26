@@ -90,7 +90,7 @@ trait HasMatcher extends Mixin {
     _registeredMatchers = _registeredMatchers + (matcher -> priority)
   }
 
-  def register[Process <: Apply, A <: Term, B <: Term](f: PartialFunction[(Label, Label), Process => (A, B) => Term], priority: Int = Priority.low) = {
+  def registerMatcher[Process <: Apply, A <: Term, B <: Term](f: PartialFunction[(Label, Label), Process => (A, B) => Term], priority: Int = Priority.low) = {
     registerInner(Binary.definePartialFunction(f), priority)
   }
 
