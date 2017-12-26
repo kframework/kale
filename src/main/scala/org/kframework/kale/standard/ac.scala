@@ -20,9 +20,9 @@ trait NonAssocWithIdListMixin extends Mixin {
       case (`identity`, b) => b
       case (a, `identity`) => a
       case (self(a, b), c) =>
-        FreeNode2(this, a, FreeNode2(this, b, c))
+        SimpleNode2(this, a, SimpleNode2(this, b, c))
       case (a, b) =>
-        FreeNode2(this, a, b)
+        SimpleNode2(this, a, b)
     }
 
     override val isPredicate: Option[Boolean] = Some(false)

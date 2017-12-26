@@ -84,21 +84,21 @@ trait FunctionDefinedByRewriting extends FunctionLabel with PureFunctionLabel wi
 }
 
 case class FunctionDefinedByRewritingLabel0(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel0 {
-  def f(): Option[Term] = tryToApply(FreeNode0(this))
+  def f(): Option[Term] = tryToApply(SimpleNode0(this))
 }
 
 case class FunctionDefinedByRewritingLabel1(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel1 {
-  def f(_1: Term): Option[Term] = tryToApply(FreeNode1(this, _1))
+  def f(_1: Term): Option[Term] = tryToApply(SimpleNode1(this, _1))
 }
 
 case class FunctionDefinedByRewritingLabel2(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel2 {
-  def f(_1: Term, _2: Term): Option[Term] = tryToApply(FreeNode2(this, _1, _2))
+  def f(_1: Term, _2: Term): Option[Term] = tryToApply(SimpleNode2(this, _1, _2))
 }
 
 case class FunctionDefinedByRewritingLabel3(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel3 {
-  def f(_1: Term, _2: Term, _3: Term): Option[Term] = tryToApply(FreeNode3(this, _1, _2, _3))
+  def f(_1: Term, _2: Term, _3: Term): Option[Term] = tryToApply(SimpleNode3(this, _1, _2, _3))
 }
 
 case class FunctionDefinedByRewritingLabel4(name: String)(implicit val env: StandardEnvironment) extends FunctionDefinedByRewriting with FunctionLabel4 {
-  def f(_1: Term, _2: Term, _3: Term, _4: Term): Option[Term] = tryToApply(FreeNode4(this, _1, _2, _3, _4))
+  def f(_1: Term, _2: Term, _3: Term, _4: Term): Option[Term] = tryToApply(SimpleNode4(this, _1, _2, _3, _4))
 }

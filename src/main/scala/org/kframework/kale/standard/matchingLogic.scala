@@ -1018,7 +1018,7 @@ case class SimpleExists(v: Variable, p: Term)(implicit val env: Environment) ext
 }
 
 private[standard] class BindMatchLabel(implicit override val env: Environment) extends LabelNamed("BindMatch") with Label2 with Projection2Roaring {
-  def apply(v: Term, p: Term) = FreeNode2(this, v.asInstanceOf[Variable], p)
+  def apply(v: Term, p: Term) = SimpleNode2(this, v.asInstanceOf[Variable], p)
 
   override val isPredicate: Option[Boolean] = Some(false)
 }
