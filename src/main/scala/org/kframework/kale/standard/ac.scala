@@ -47,9 +47,9 @@ trait NonAssocWithIdListMixin extends Mixin {
 
   //#KSequence(__(_=_;('n, 10), _=_;('sum, 0)), while(_)_(!_(_<=_('n, 0)), {_}(__(_=_;('sum, _+_('sum, 'n)), _=_;('n, _+_('n, -1))))))
 
-  register(Binary.definePartialFunction({
+  register({
     case (_: NonAssocWithIdLabel, right) if !right.isInstanceOf[Variable] => NonAssocWithIdTerm
-  }), Priority.medium)
+  }, Priority.medium)
 }
 
 trait AssocWithIdListMixin extends Mixin {
@@ -123,9 +123,9 @@ trait AssocWithIdListMixin extends Mixin {
     matchContents(b.label, b.label.identity, l1, l2)(solver)
   })
 
-  register(Binary.definePartialFunction({
+  register({
     case (_: MonoidLabel, right) if !right.isInstanceOf[Variable] => AssocWithIdTerm
-  }), Priority.medium)
+  }, Priority.medium)
 }
 
 case class CollectionSize(collectionLabel: CollectionLabel)(implicit env: Environment with IntMixin) extends LabelNamed(collectionLabel.name + ".size") with FunctionLabel1 {

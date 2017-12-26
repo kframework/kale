@@ -10,9 +10,9 @@ import scala.collection.{Iterable, Map, Set}
 trait MapMixin extends Mixin {
   _: Environment with standard.MatchingLogicMixin with HasMatcher =>
 
-  register(Binary.definePartialFunction({
+  register({
     case (_: MapLabel, right) if !right.isInstanceOf[Variable] => MapTerm
-  }), Priority.medium)
+  }, Priority.medium)
 
   case class MapTerm(solver: Apply) extends Binary.F({ (a: Term, b: Term) =>
     a.label match {

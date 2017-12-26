@@ -197,11 +197,14 @@ trait BundledContextMixin extends ContextMixin with PatternContextMixin {
   }
 
 
-  register(Binary.definePartialFunction({
-    case (capp: PatternContextApplicationLabel, _) => PatternContextMatcher
-    case (Context, _) => ContextMatcher
-    case (SolvingContext, _) => SolvingContextMatcher
-  }), Priority.high + 1)
+  register(
+    {
+      case (capp: PatternContextApplicationLabel, _) => PatternContextMatcher
+      case (Context, _) => ContextMatcher
+      case (SolvingContext, _) => SolvingContextMatcher
+    },
+    Priority.high + 1
+  )
 }
 
 object anywhere {

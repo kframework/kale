@@ -59,7 +59,7 @@ trait StringMixin extends kale.StringMixin {
     }
   })
 
-  register(Binary.definePartialFunction({
+  register({
     case (Regex, String) => RegexMatch
-  }), Priority.low + 1)
+  }, Priority.low + 1)
 }

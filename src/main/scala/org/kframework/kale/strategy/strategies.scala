@@ -111,7 +111,7 @@ trait StrategyMixin extends Mixin {
 
 
   register(
-    definePartialFunction({
+    {
       case (`orElse`, _) => orElseTerm
       case (`compose`, _) => composeTerm
       case (`repeat`, _) => repeatTerm
@@ -121,7 +121,7 @@ trait StrategyMixin extends Mixin {
       case (`td`, _) => tdTerm
       case (`topDown`, _) => topDownTerm
       case (`rw`, _) => rewriteTerm
-    }), Priority.ultimate)
+    }, Priority.ultimate)
 
   // only works for ground obj
   case class orElseTerm(solver: Binary.Apply) extends Binary.F({ (orElse: Term, obj: Term) =>

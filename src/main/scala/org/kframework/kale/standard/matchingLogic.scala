@@ -112,7 +112,7 @@ trait MatchingLogicMixin extends Mixin {
     Next(solver(a._1, b._1))
   }
 
-  register(Binary.definePartialFunction({
+  register({
     case (_, `Not`) => OneIsFormula
     case (`Not`, _) => OneIsFormula
     case (`And`, _) => AndTerm
@@ -127,7 +127,7 @@ trait MatchingLogicMixin extends Mixin {
     case (`Next`, `Next`) => NextNext
     case (`Next`, _) => NextTerm
     case (_, `Next`) => TermNext
-  }), Priority.high)
+  }, Priority.high)
 
   register(Binary.definePartialFunction({
     case (a: DomainValueLabel[_], b: DomainValueLabel[_]) if a == b => Constants
@@ -164,15 +164,15 @@ trait MatchingLogicPostfixMixin extends Mixin {
     case _ => throw new AssertionError("Use only the env.Top and env.Bottom Truth objects.")
   })
 
-  register(Binary.definePartialFunction({
+  register({
     case (`Rewrite`, _) => LeftRewriteMatcher
     case (Truth, _) => TruthMatcher
     case (_, Truth) => TruthMatcher
-  }), Priority.high)
+  }, Priority.high)
 
-  register(Binary.definePartialFunction({
+  register({
     case (_, `Rewrite`) => RightRewriteMatcher
-  }), Priority.ultimate)
+  }, Priority.ultimate)
 }
 
 
