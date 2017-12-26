@@ -69,7 +69,7 @@ trait NoSortingMixin extends Environment {
 
   def sort(l: Label): Sort = Sort.Top
 
-  override def isSort(left: org.kframework.kore.Sort, term: Term): Boolean = true
+  override def isSort(left: kale.Sort, term: Term): Boolean = true
 }
 
 trait HolesMixin extends Mixin {

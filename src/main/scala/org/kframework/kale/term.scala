@@ -5,10 +5,9 @@ import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor}
 import org.kframework.kale.highcats._
 import org.kframework.kale.util.HasAtt
-import org.kframework.kore
 import org.roaringbitmap.RoaringBitmap
 
-trait Label extends MemoizedHashCode with kore.Symbol with RoaringLabel {
+trait Label extends MemoizedHashCode with RoaringLabel {
   val env: Environment
 
   val name: String
@@ -28,12 +27,9 @@ trait Label extends MemoizedHashCode with kore.Symbol with RoaringLabel {
   override def computeHashCode: Int = id.hashCode
 
   override def toString: String = name
-
-  // FOR KORE
-  override val str: String = name
 }
 
-trait Term extends kore.Pattern with HasAtt with MemoizedHashCode with RoaringTerm {
+trait Term extends HasAtt with MemoizedHashCode with RoaringTerm {
   def updateAt(i: Int)(t: Term): Term
 
   val label: Label

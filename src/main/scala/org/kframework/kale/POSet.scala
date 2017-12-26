@@ -1,7 +1,6 @@
 // Copyright (c) 2015 K Team. All Rights Reserved.
-package org.kframework.backend.skala
+package org.kframework.kale
 
-import java.util
 import java.util.Optional
 
 import scala.collection.JavaConverters._
@@ -116,20 +115,12 @@ class POSet[T](directRelations: Set[(T, T)]) extends Serializable {
   def maximal(sorts: Iterable[T]): Set[T] =
     sorts.filter(s1 => !sorts.exists(s2 => lessThan(s1, s2))).toSet
 
-  def maximal(sorts: util.Collection[T]): util.Set[T] = {
-    maximal(sorts.asScala).asJava
-  }
-
   /**
     * Return the subset of items from the argument which are not
     * greater than any other item.
     */
   def minimal(sorts: Iterable[T]): Set[T] =
     sorts.filter(s1 => !sorts.exists(s2 => >(s1, s2))).toSet
-
-  def minimal(sorts: util.Collection[T]): util.Set[T] = {
-    maximal(sorts.asScala).asJava
-  }
 
   override def toString() = {
     "POSet(" + (relations flatMap { case (from, tos) => tos map { case to => from + "<" + to } }).mkString(",") + ")"

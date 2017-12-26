@@ -4,8 +4,6 @@ import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.{ProcessingFunctions, definePartialFunction}
 import org.kframework.kale.util.LabelNamed
 import org.kframework.kale.{CluelessRoaring, ConjunctiveRoaring, DisjunctiveRoaring, Environment, FreeNode1, FreeNode2, FreeNode3, FunctionLabel1, FunctionLabel3, HasMatcher, Label1, Label2, Label3, Mixin, MonoidLabel, Node1, Predicate, SemigroupLabel, Term, standard}
-import org.kframework.km.term.Variable
-import org.kframework.kore.Bottom
 import org.roaringbitmap.RoaringBitmap
 
 case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin) {
@@ -85,7 +83,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
     */
   val doesNotMatch = new LabelNamed("!=") with Label2 with Predicate {
     override def apply(pattern: Term, obj: Term): Term =
-      if ((pattern.variables | obj.variables).forall(v => v.name.str.startsWith("_"))) {
+      if ((pattern.variables | obj.variables).forall(v => v.name.toString.startsWith("_"))) {
         val res = env.unify(pattern, obj)
         env.Truth(res == env.Bottom)
       } else {

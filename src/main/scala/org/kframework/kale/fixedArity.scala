@@ -96,7 +96,7 @@ trait LabelN extends NodeLabel {
 }
 
 
-trait Node0 extends Node with Application {
+trait Node0 extends Node {
   val label: Label0
 
   val isGround = true
