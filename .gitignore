@@ -1,6 +1,5 @@
 target
 .idea
-
 /z3
 .DS_Store
 /src/test/scala/org/kframework/test.sc

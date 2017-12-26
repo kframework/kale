@@ -9,9 +9,7 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 
 resolvers += Resolver.mavenLocal
 
-lazy val kale = project.in(file(".")).dependsOn(kore)
-
-lazy val kore = project in file("kore")
+lazy val kale = project.in(file("."))
 
 libraryDependencies ++= Seq(
   "org.typelevel" %% "discipline" % "0.7.+" % "test",
