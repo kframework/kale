@@ -120,7 +120,6 @@ trait StrategyMixin extends Mixin {
       case (`bu`, _) => buTerm
       case (`td`, _) => tdTerm
       case (`topDown`, _) => topDownTerm
-      case (`rw`, _) => rewriteTerm
     }, Priority.ultimate)
 
   // only works for ground obj
@@ -211,15 +210,6 @@ trait StrategyMixin extends Mixin {
       res
     else
       Bottom
-  })
-
-  case class rewriteTerm(solver: Binary.Apply) extends Binary.F({ (rewrite: Node1, obj: Term) =>
-    rewrite._1.rewrite(obj) match {
-      case Bottom =>
-        Bottom
-      case x =>
-        Next(x)
-    }
   })
 
 }
