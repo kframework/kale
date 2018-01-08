@@ -13,8 +13,8 @@ Developed by:
     K Team
 
     University of Illinois at Urbana-Champaign
-    University Alexandru-Ioan Cuza, Romania
     Runtime Verification, Inc.
+    Iuvo AI, Inc.
 
     http://kframework.org
 
@@ -59,20 +59,3 @@ licenses gives permission to use the names of the K Team, the
 University of Illinois, or the University Alexandru-Ioan Cuza to endorse or
 promote products derived from this Software.
 
-The following pieces of software have additional or alternate copyrights,
-licenses, and/or restrictions:
-
----------------------------------------
-Stratego (http://strategoxt.org) is licensed under the LGPL license.
-
-Xstream (http://xstream.codehaus.org/) is licensed under the BSD license.
-
-XML Pull (http://www.xmlpull.org) API is free.
-
-Xpp3 (http://www.extreme.indiana.edu/xgws/xsoap/xpp) is licensed under Indiana
-University Extreme! Lab Software License.
-
-KXML2 (http://kxml.sourceforge.net/kxml2/) is licensed under the BSD license.
-
-SSCTarjan (https://github.com/indy256/codelibrary) is licensed under the Unlicense.
-Alphanum (http://www.davekoelle.com/alphanum.html) is licensed under the LGPL license.
