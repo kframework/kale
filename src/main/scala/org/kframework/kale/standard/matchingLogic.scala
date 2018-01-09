@@ -112,7 +112,7 @@ trait MatchingLogicMixin extends Mixin {
     Next(solver(a._1, b._1))
   }
 
-  register(Binary.definePartialFunction({
+  registerMatcher({
     case (_, `Not`) => OneIsFormula
     case (`Not`, _) => OneIsFormula
     case (`And`, _) => AndTerm
@@ -127,11 +127,11 @@ trait MatchingLogicMixin extends Mixin {
     case (`Next`, `Next`) => NextNext
     case (`Next`, _) => NextTerm
     case (_, `Next`) => TermNext
-  }), Priority.high)
+  }, Priority.high)
 
-  register(Binary.definePartialFunction({
+  registerMatcher({
     case (a: DomainValueLabel[_], b: DomainValueLabel[_]) if a == b => Constants
-  }))
+  }, Priority.low)
 }
 
 trait MatchingLogicPostfixMixin extends Mixin {
@@ -164,15 +164,15 @@ trait MatchingLogicPostfixMixin extends Mixin {
     case _ => throw new AssertionError("Use only the env.Top and env.Bottom Truth objects.")
   })
 
-  register(Binary.definePartialFunction({
+  registerMatcher({
     case (`Rewrite`, _) => LeftRewriteMatcher
+  }, Priority.high)
+
+  registerMatcher({
     case (Truth, _) => TruthMatcher
     case (_, Truth) => TruthMatcher
-  }), Priority.high)
-
-  register(Binary.definePartialFunction({
     case (_, `Rewrite`) => RightRewriteMatcher
-  }), Priority.ultimate)
+  }, Priority.ultimate)
 }
 
 
@@ -1018,7 +1018,7 @@ case class SimpleExists(v: Variable, p: Term)(implicit val env: Environment) ext
 }
 
 private[standard] class BindMatchLabel(implicit override val env: Environment) extends LabelNamed("BindMatch") with Label2 with Projection2Roaring {
-  def apply(v: Term, p: Term) = FreeNode2(this, v.asInstanceOf[Variable], p)
+  def apply(v: Term, p: Term) = SimpleNode2(this, v.asInstanceOf[Variable], p)
 
   override val isPredicate: Option[Boolean] = Some(false)
 }

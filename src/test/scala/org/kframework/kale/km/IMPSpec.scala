@@ -9,9 +9,9 @@ import org.scalatest.FreeSpec
 class IMPSpec extends FreeSpec {
 
   implicit val env = new StandardEnvironment with MultisortedMixin {
-    register(Binary.definePartialFunction({
+    registerMatcher({
       case (_, `Variable`) => SortedVarRight
-    }), Priority.high)
+    }, Priority.high)
   }
 
   import env._

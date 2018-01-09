@@ -2,7 +2,7 @@ package org.kframework.kale
 
 import org.kframework.kale.highcats.LiftedCatsMixin
 import org.kframework.kale.standard.BottomizeMixin
-import org.kframework.kale.transformer.Binary.Apply
+import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 import org.kframework.kale.transformer.{Binary, Unary}
 
 trait Environment extends Foundation with RoaringMixin with HasMatcher with MatchingLogicMixin with LiftedCatsMixin with BottomizeMixin
@@ -86,8 +86,12 @@ trait HasMatcher extends Mixin {
 
   def registeredMatchers = _registeredMatchers
 
-  def register(matcher: Binary.ProcessingFunctions, priority: Int = Priority.low) = {
+  def registerInner(matcher: Binary.ProcessingFunctions, priority: Int) {
     _registeredMatchers = _registeredMatchers + (matcher -> priority)
+  }
+
+  def registerMatcher[Process <: Apply, A <: Term, B <: Term](f: PartialFunction[(Label, Label), Process => (A, B) => Term], priority: Int) = {
+    registerInner(Binary.definePartialFunction(f), priority)
   }
 
   final lazy val makeMatcher: Binary.ProcessingFunctions = {

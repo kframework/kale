@@ -102,14 +102,14 @@ trait PrettyWrapperMixin extends Mixin {
     }
   })
 
-  register(Binary.definePartialFunction({
+  registerMatcher({
     case (PrettyWrapper, PrettyWrapper) =>
       PrettyWrapperPrettyWrapper
     case (PrettyWrapper, term) =>
       PrettyWrapperTerm
     case (term, PrettyWrapper) =>
       TermPrettyWrapper
-  }), Priority.high + 1)
+  }, Priority.high + 1)
 
   case class PrettyWrapperHolder(prefix: Term, content: Term, suffix: Term) extends Node3 {
     override def toString =

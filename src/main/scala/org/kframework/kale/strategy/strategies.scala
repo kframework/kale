@@ -3,7 +3,7 @@ package org.kframework.kale.strategy
 import org.kframework.kale.transformer.Binary
 import org.kframework.kale.transformer.Binary.{ProcessingFunctions, definePartialFunction}
 import org.kframework.kale.util.LabelNamed
-import org.kframework.kale.{CluelessRoaring, ConjunctiveRoaring, DisjunctiveRoaring, Environment, FreeNode1, FreeNode2, FreeNode3, FunctionLabel1, FunctionLabel3, HasMatcher, Label1, Label2, Label3, Mixin, MonoidLabel, Node1, Predicate, SemigroupLabel, Term, standard}
+import org.kframework.kale.{CluelessRoaring, ConjunctiveRoaring, DisjunctiveRoaring, Environment, SimpleNode1, SimpleNode2, SimpleNode3, FunctionLabel1, FunctionLabel3, HasMatcher, Label1, Label2, Label3, Mixin, MonoidLabel, Node1, Predicate, SemigroupLabel, Term, standard}
 import org.roaringbitmap.RoaringBitmap
 
 case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin) {
@@ -17,50 +17,50 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
   }
 
   val oneSolution = new LabelNamed("^oneSolution") with Label1 with Strategy with CluelessRoaring {
-    override def apply(_1: Term): Term = FreeNode1(this, _1)
+    override def apply(_1: Term): Term = SimpleNode1(this, _1)
   }
 
   val compose = new LabelNamed("^compose") with Label2 with Strategy with CluelessRoaring with SemigroupLabel {
-    override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
+    override def apply(_1: Term, _2: Term): Term = SimpleNode2(this, _1, _2)
   }
 
   val repeat = new LabelNamed("^repeat") with Label1 with Strategy with CluelessRoaring {
-    override def apply(f: Term): Term = FreeNode1(this, f)
+    override def apply(f: Term): Term = SimpleNode1(this, f)
   }
 
   def orElseLeave(t: Term): Term = orElse(t, env.Variable.freshVariable())
 
   val fixpoint = new LabelNamed("^fixpoint") with Label1 with Strategy with CluelessRoaring {
-    override def apply(f: Term): Term = FreeNode1(this, f)
+    override def apply(f: Term): Term = SimpleNode1(this, f)
   }
 
   /**
     * Takes a partial function
     */
   val bu = new LabelNamed("^bu") with Label1 with Strategy with CluelessRoaring {
-    override def apply(f: Term): Term = FreeNode1(this, f)
+    override def apply(f: Term): Term = SimpleNode1(this, f)
   }
 
   /**
     * Takes a partial function
     */
   val td = new LabelNamed("^td") with Label1 with Strategy with CluelessRoaring {
-    override def apply(f: Term): Term = FreeNode1(this, f)
+    override def apply(f: Term): Term = SimpleNode1(this, f)
   }
 
   /**
     * Takes a partial function. Similar to ^td, but returns Bottom if not applied anywhere.
     **/
   val topDown = new LabelNamed("^topDown") with Label1 with Strategy with CluelessRoaring {
-    override def apply(f: Term): Term = FreeNode1(this, f)
+    override def apply(f: Term): Term = SimpleNode1(this, f)
   }
 
   val rw = new LabelNamed("^rewrite") with Label1 with Strategy with CluelessRoaring {
-    override def apply(f: Term): Term = FreeNode1(this, f)
+    override def apply(f: Term): Term = SimpleNode1(this, f)
   }
 
   val orElse = new LabelNamed("^orElse") with Label2 with Strategy with DisjunctiveRoaring with SemigroupLabel {
-    override def apply(_1: Term, _2: Term): Term = FreeNode2(this, _1, _2)
+    override def apply(_1: Term, _2: Term): Term = SimpleNode2(this, _1, _2)
   }
 
   /**
@@ -87,7 +87,7 @@ case class STRATEGY()(implicit env: Environment with standard.MatchingLogicMixin
         val res = env.unify(pattern, obj)
         env.Truth(res == env.Bottom)
       } else {
-        new FreeNode2(this, pattern, obj)
+        new SimpleNode2(this, pattern, obj)
       }
   }
 
@@ -110,8 +110,8 @@ trait StrategyMixin extends Mixin {
   import STRATEGY._
 
 
-  register(
-    definePartialFunction({
+  registerMatcher(
+    {
       case (`orElse`, _) => orElseTerm
       case (`compose`, _) => composeTerm
       case (`repeat`, _) => repeatTerm
@@ -120,8 +120,7 @@ trait StrategyMixin extends Mixin {
       case (`bu`, _) => buTerm
       case (`td`, _) => tdTerm
       case (`topDown`, _) => topDownTerm
-      case (`rw`, _) => rewriteTerm
-    }), Priority.ultimate)
+    }, Priority.ultimate)
 
   // only works for ground obj
   case class orElseTerm(solver: Binary.Apply) extends Binary.F({ (orElse: Term, obj: Term) =>
@@ -211,15 +210,6 @@ trait StrategyMixin extends Mixin {
       res
     else
       Bottom
-  })
-
-  case class rewriteTerm(solver: Binary.Apply) extends Binary.F({ (rewrite: Node1, obj: Term) =>
-    rewrite._1.rewrite(obj) match {
-      case Bottom =>
-        Bottom
-      case x =>
-        Next(x)
-    }
   })
 
 }

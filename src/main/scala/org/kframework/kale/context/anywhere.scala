@@ -29,7 +29,7 @@ trait ContextMixin extends Mixin {
     val anywhere = (new LabelNamed("anywhere") with Label0 with CluelessRoaring {
       override val isPredicate: Option[Boolean] = Some(false)
 
-      override def apply(): Term = new FreeNode0(this) {
+      override def apply(): Term = new SimpleNode0(this) {
         override lazy val isPredicate = true
       }
     }) ()
@@ -42,14 +42,14 @@ trait ContextMixin extends Mixin {
 
     override def apply(_1: Term): Term = {
       assert(_1.label == Context)
-      FreeNode1(this, _1)
+      SimpleNode1(this, _1)
     }
   }
 
   def ANYWHERE(t: Term) = Context(Variable.freshVariable(), t)
 
   val HoleBinder = new LabelNamed("HoleBinder") with Label2 with Predicate {
-    override def apply(_1: Term, _2: Term) = new FreeNode2(this, _1, _2)
+    override def apply(_1: Term, _2: Term) = new SimpleNode2(this, _1, _2)
   }
 
   case class ContextApplication(contextVar: Variable, redex: Term, contextPredicate: Term) extends Node3 with Context {
@@ -197,11 +197,14 @@ trait BundledContextMixin extends ContextMixin with PatternContextMixin {
   }
 
 
-  register(Binary.definePartialFunction({
-    case (capp: PatternContextApplicationLabel, _) => PatternContextMatcher
-    case (Context, _) => ContextMatcher
-    case (SolvingContext, _) => SolvingContextMatcher
-  }), Priority.high + 1)
+  registerMatcher(
+    {
+      case (capp: PatternContextApplicationLabel, _) => PatternContextMatcher
+      case (Context, _) => ContextMatcher
+      case (SolvingContext, _) => SolvingContextMatcher
+    },
+    Priority.high + 1
+  )
 }
 
 object anywhere {

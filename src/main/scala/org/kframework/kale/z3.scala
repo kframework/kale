@@ -40,8 +40,8 @@ class z3(val env: Environment with MultisortedMixin with Z3Mixin, val symbolsSeq
     case t:Equals => "(= " + encode(t._1) + " " + encode(t._2) + ")"
     case t:And => "(and " + encode(t._1) + " " + encode(t._2) + ")"
     case t:Or => "(or " + encode(t._1) + " " + encode(t._2) + ")"
-    case FreeNode0(symbol) => symbol.smtName
-    case t:FreeNode => "(" + t.label.smtName + " " + t.children.map(encode).mkString(" ") + ")"
+    case SimpleNode0(symbol) => symbol.smtName
+    case t:SimpleNode => "(" + t.label.smtName + " " + t.children.map(encode).mkString(" ") + ")"
     case v:Variable => v.name.toString
     case c:DomainValue[_] => c.toString
     case _ => ???
