@@ -23,11 +23,13 @@ trait Foundation {
   private lazy val labelSet = uniqueLabels.values.toSet
   private var pisSealed = false
 
-  var _matcher: Binary.Apply = _
+  protected[this] var _matcher: Binary.Apply = _
 
   def seal(): Unit = {
     pisSealed = true
   }
+
+  def unify: Label2
 
   def isSealed = pisSealed
 
@@ -35,13 +37,7 @@ trait Foundation {
 
   val substitutionMaker: Substitution => SubstitutionApply
 
-  final val unify: Label2 = lift("unify", {
-    (a: Term, b: Term) =>
-      assert(this.isSealed)
-      unifier(a, b)
-  })
-
-  def unifier: Binary.Apply
+  protected[this] def unifier: Binary.Apply
 
   def register(label: Label): Int = {
     assert(!isSealed, "Cannot register label " + label + " because the environment is sealed")

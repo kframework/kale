@@ -30,7 +30,7 @@ class TimerSpec extends FreeSpec with BeforeAndAfter with BeforeAndAfterAll {
     println(timer.fullReport())
   }
 
-  "exception in timer" in {
+  "exception in timer" ignore {
     val t = timer("foo")
 
     def time(x: Int): Unit = {

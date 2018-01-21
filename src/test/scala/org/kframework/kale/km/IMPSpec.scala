@@ -133,9 +133,8 @@ class IMPSpec extends FreeSpec {
           div(E3, E3)
         ))
           ===
-          // E3 = _+_(E1, E1) ∧ E2 = E1
           And(
-            Equality(E3, plus(E1, E2)),
+            Equality(E3, plus(E1, E1)),
             Equality(E2, E1)
           )
       )

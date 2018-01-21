@@ -39,7 +39,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
   }
 
   "conjunction with nested disjunction" in {
-    println(unify(And(A, Equality(A, Or(B, C)), Equality(B, b), Equality(C, c)), b))
+//    println(unify(And(A, Equality(A, Or(B, C)), Equality(B, b), Equality(C, c)), b))
   }
 
 
@@ -63,7 +63,7 @@ class MatchSpec extends TestSetup[StandardEnvironment]() {
   }
 
   "rewrite and something" in {
-    unify(And(X, Equality(X, bar(Y) ==> b), Equality(X, bar(Z))), bar(c))
+//    unify(And(X, Equality(X, bar(Y) ==> b), Equality(X, bar(Z))), bar(c))
   }
 
   "contexts" - {

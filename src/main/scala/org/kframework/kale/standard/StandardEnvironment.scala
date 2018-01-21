@@ -44,9 +44,39 @@ trait StandardEnvironment
 
   override lazy val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)
 
-  def unifier = matcher
+  final val unify: Label2 = lift("unify", {
+    (a: Term, b: Term) =>
+      assert(this.isSealed)
+      val res = unifier(a, b)
+      strongBottomize(res)({
+        val And.SPN(sub, pred, nonPred) = res
+        val newSub: Term = sub.asMap.foldLeft(Top: Term)({
+          case (Bottom, _) => Bottom
+          case (acc: Substitution, (k: Variable, v: Term)) =>
+            val newValue: Term = acc(v)
+            if (newValue.containsInConstructor(k)) {
+              Bottom
+            } else {
+              val updatedAcc = Equality.binding(k, newValue)(acc).asInstanceOf[Substitution]
+              And.substitution(updatedAcc.asMap + (k -> newValue))
+            }
+          case _ => throw new AssertionError("We have a serious error in the code just above.")
+        })
 
-  def matcher = {
+        newSub match {
+          case Bottom => Bottom
+          case s: Substitution =>
+            val newPred = s(pred)
+            strongBottomize(newPred) {
+              And.SPN(s, newPred, s(nonPred))
+            }
+        }
+      })
+  })
+
+  protected[this] def unifier = matcher
+
+  protected[this] def matcher = {
     if (_matcher == null)
       throw new AssertionError("Seal environment to have access to the matcher")
     _matcher

@@ -444,25 +444,47 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
       val And.SPN(sub1, pred1, And.nowAndNext(now1, next1)) = _1
       val And.SPN(sub2, pred2, And.nowAndNext(now2, next2)) = _2
 
-      assertAtMostOneNonPred(now1, now2)
-      assertAtMostOneNonPred(next1, next2)
+      val m1 = sub1.asMap
+      val m2 = sub2.asMap
 
-      apply(sub1, sub2) match {
-        case `Bottom` => Bottom
-        case And.SPN(sub, pred, Top) =>
-          val updatedPred = sub(Predicates(And.asSet(pred1) | And.asSet(pred2)))
 
-          strongBottomize(updatedPred) {
-            val And.SPN(newSub, And.set(other), Top) = updatedPred
-
-            val finalSub = substitution(sub.asMap ++ newSub.asMap)
-
-            And.SPN(
-              finalSub,
-              Predicates(other | And.asSet(finalSub(pred))),
-              nonPredicates(Set(now1, now2, Next(next1), Next(next2)).map(finalSub)))
-          }
+      val commonKeys = m1.keySet & m2.keySet
+      val noConflictingKeys = commonKeys forall {
+        k =>
+          val v1 = m1(k)
+          val v2 = m2(k)
+          assert(v1.isGround && v2.isGround)
+          v1 == v2
       }
+      if (noConflictingKeys) {
+        val newSub = substitution(m1 ++ m2)
+        And.SPN(
+          newSub,
+          Predicates(And.asSet(pred1) | And.asSet(pred2)),
+          nonPredicates(Set(now1, now2, Next(next1), Next(next2))))
+      } else {
+        Bottom
+      }
+
+      //      assertAtMostOneNonPred(now1, now2)
+      //      assertAtMostOneNonPred(next1, next2)
+      //
+      //      apply(sub1, sub2) match {
+      //        case `Bottom` => Bottom
+      //        case And.SPN(sub, pred, Top) =>
+      //          val updatedPred = sub(Predicates(And.asSet(pred1) | And.asSet(pred2)))
+      //
+      //          strongBottomize(updatedPred) {
+      //            val And.SPN(newSub, And.set(other), Top) = updatedPred
+      //
+      //            val finalSub = substitution(sub.asMap ++ newSub.asMap)
+      //
+      //            And.SPN(
+      //              finalSub,
+      //              Predicates(other | And.asSet(finalSub(pred))),
+      //              nonPredicates(Set(now1, now2, Next(next1), Next(next2)).map(finalSub)))
+      //          }
+      //      }
     }
   }
 
@@ -492,24 +514,33 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
       */
     def apply(_1: Substitution, _2: Substitution): Term = {
 
-      val merged = _1(_2)
+      val m1 = _1.asMap
+      val m2 = _2.asMap
 
-      if (merged == Bottom)
-        Bottom
-      else {
-        // TODO(Daejun): exhaustively apply to get a fixpoint, but be careful to guarantee termination
-        // TODO: optimize to use the larger substitution as the first one
-        val And.SPN(newSubs2, pred2: Term, nonPred2) = _1(_2)
+      assert((m1.keySet & m2.keySet) == Set.empty)
 
-        val And.SPN(applyingTheSubsOutOf2To1, pred3, Top) = newSubs2(_1)
+      substitution(m1 ++ m2)
 
-        val m1 = asMap(applyingTheSubsOutOf2To1)
-        val m2 = asMap(newSubs2)
+      //
 
-        val newSub: Substitution = substitution(m1 ++ m2)
-
-        And.SPN(newSub, And(pred2, pred3), nonPred2)
-      }
+      //      val merged = _1(_2)
+      //
+      //      if (merged == Bottom)
+      //        Bottom
+      //      else {
+      //        // TODO(Daejun): exhaustively apply to get a fixpoint, but be careful to guarantee termination
+      //        // TODO: optimize to use the larger substitution as the first one
+      //        val And.SPN(newSubs2, pred2: Term, nonPred2) = _1(_2)
+      //
+      //        val And.SPN(applyingTheSubsOutOf2To1, pred3, Top) = newSubs2(_1)
+      //
+      //        val m1 = asMap(applyingTheSubsOutOf2To1)
+      //        val m2 = asMap(newSubs2)
+      //
+      //        val newSub: Substitution = substitution(m1 ++ m2)
+      //
+      //        And.SPN(newSub, And(pred2, pred3), nonPred2)
+      //      }
     }
 
     /**
