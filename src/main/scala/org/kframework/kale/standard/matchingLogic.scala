@@ -94,8 +94,18 @@ trait MatchingLogicMixin extends Mixin {
 
   case class QuantifierTerm(solver: Apply) extends Binary.F({ (a: Node2, b: Term) =>
     val res = solver(a._2, b)
-    res.asOr map {
-      And.removeVariable(a._1.asInstanceOf[Variable], _)
+    val theVar = a._1.asInstanceOf[Variable]
+    res.asOr map { r =>
+      val And.SPN(sub, pred, nonPred) = r
+      sub.asMap.get(theVar)
+        .map { binding =>
+          val eq = Equality.binding(theVar, binding)
+          val newPred = eq(pred)
+          strongBottomize(newPred) {
+            And.SPN(And.substitution(sub.asMap.filterKeys(_ != theVar)), newPred, eq(nonPred))
+          }
+        }
+        .getOrElse(r)
     }
   })
 
@@ -456,6 +466,7 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
           assert(v1.isGround && v2.isGround)
           v1 == v2
       }
+
       if (noConflictingKeys) {
         val newSub = substitution(m1 ++ m2)
         And.SPN(
