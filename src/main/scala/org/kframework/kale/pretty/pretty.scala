@@ -19,7 +19,7 @@ trait PrettyWrapperMixin extends Mixin {
 
     override def apply(_1: Term, _2: Term, _3: Term): Term = bottomize(_2) {
       assert(isValidWrapper(_1), "Invalid wrapper left: " + _1)
-      assert(isValidWrapper(_1), "Invalid: wrapper right" + _1)
+      assert(isValidWrapper(_3), "Invalid: wrapper right" + _3)
 
       _2 match {
         case assoc: Assoc =>
@@ -27,12 +27,24 @@ trait PrettyWrapperMixin extends Mixin {
           assoc.label(terms map {
             case t if t == terms.head && !t.isPredicate =>
               t match {
-                case PrettyWrapper(a, t, b) => PrettyWrapper(STRING.strconcat(_1, a), t, b)
+                case PrettyWrapper(a, t, b) =>
+                  (_1, a) match {
+                    case (I, I) => PrettyWrapper(I, t, b)
+                    case (_, I) => PrettyWrapper(_1, t, b)
+                    case (I, _) => PrettyWrapper(a, t, b)
+                    case (_, _) => PrettyWrapper(STRING.strconcat(_1, a), t, b)
+                  }
                 case _ => PrettyWrapper(_1, t, I)
               }
             case t if t == terms.last && !t.isPredicate =>
               t match {
-                case PrettyWrapper(a, t, b) => PrettyWrapper(a, t, STRING.strconcat(b, _3))
+                case PrettyWrapper(a, t, b) =>
+                  (b, _3) match {
+                    case (I, I) => PrettyWrapper(a, t, I)
+                    case (_, I) => PrettyWrapper(a, t, b)
+                    case (I, _) => PrettyWrapper(a, t, _3)
+                    case (_, _) => PrettyWrapper(a, t, STRING.strconcat(b, _3))
+                  }
                 case _ => PrettyWrapper(I, t, _3)
               }
             case t => t
