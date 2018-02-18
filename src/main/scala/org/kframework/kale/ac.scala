@@ -48,7 +48,7 @@ trait SemigroupLabel extends CollectionLabel with cats.Semigroup[Term] {
 
 trait MonoidLabel extends SemigroupLabel with HasId with cats.Monoid[Term] {
   @Normalizing
-  override def apply(list: Iterable[Term]): Term = (list fold identity) (apply)
+  override def apply(list: Iterable[Term]): Term = (list fold identity) ((a, b) => apply(a, b))
 
   override def asIterable(t: Term): Iterable[Term] = t match {
     case `identity` => List[Term]()
