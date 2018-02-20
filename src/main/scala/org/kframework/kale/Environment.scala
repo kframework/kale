@@ -1,8 +1,8 @@
 package org.kframework.kale
 
 import org.kframework.kale.highcats.LiftedCatsMixin
-import org.kframework.kale.standard.{BottomizeMixin, StandardEnvironment}
-import org.kframework.kale.transformer.Binary.Apply
+import org.kframework.kale.standard.BottomizeMixin
+import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
 import org.kframework.kale.transformer.{Binary, Unary}
 
 trait Environment extends Foundation with RoaringMixin with HasMatcher with MatchingLogicMixin with LiftedCatsMixin with BottomizeMixin
@@ -35,40 +35,11 @@ trait Foundation {
 
   val substitutionMaker: Substitution => SubstitutionApply
 
-  final val doMatch: Label2 = lift("match", {
+  final val unify: Label2 = lift("unify", {
     (a: Term, b: Term) =>
       assert(this.isSealed)
-
-      val (aa, bb) = if(a.variables.isEmpty && b.variables.nonEmpty) {
-        (b, a)
-      } else {
-        (a, b)
-      }
-
-      //      assert(b.isGround)
-
-      callUnifier(aa, bb)
+      unifier(a, b)
   })
-
-  final val unify: Label2 = lift("unify", callUnifier)
-
-  private def callUnifier(aa: Term, bb: Term) = {
-    // hack to allow us to use the DNF-specific SPN here
-    val And = env.asInstanceOf[StandardEnvironment].And
-
-    unifier(aa, bb)
-      .asOr map {
-      case And.SPN(s, p, n) =>
-        val newS = s(s)
-        newS match {
-          case Bottom => Bottom
-          case ss: Substitution =>
-            val rr = ss(n)
-            assert((rr.variables & ss.boundVariables) == Set())
-            And.SPN(ss, ss(p), rr)
-        }
-    }
-  }
 
   def unifier: Binary.Apply
 

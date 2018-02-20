@@ -147,26 +147,26 @@ trait StrategyMixin extends Mixin {
   case class repeatTerm(solver: Binary.Apply) extends Binary.F({ (fp: Term, obj: Term) =>
     val repeat(f) = fp
     val someVar = Variable.freshVariable()
-    val sol = unify(orElse(f, Rewrite(someVar, someVar)), obj)
+    val sol = solver(orElse(f, Rewrite(someVar, someVar)), obj)
     sol.asOr map {
       case And.SPN(s, p, t) =>
         if (s.boundVariables.contains(someVar)) {
           And(p, Next(anytimeIsNow(t)))
         } else {
-          unify(fp, anytimeIsNow(t)) // TODO: pass in the remaining predicates
+          solver(fp, anytimeIsNow(t)) // TODO: pass in the remaining predicates
         }
     }
   })
 
   case class oneSolutionTerm(solver: Binary.Apply) extends Binary.F({ (fp: Node1, obj: Term) =>
-    val sol = unify(fp._1, obj)
+    val sol = solver(fp._1, obj)
     // TODO: make sure we pick deterministically
     env.Or.asSet(sol).headOption.getOrElse(env.Bottom)
   })
 
   case class fixpointTerm(solver: Binary.Apply) extends Binary.F({ (fp: Term, obj: Term) =>
     val fixpoint(f) = fp
-    unify(f, obj) match {
+    solver(f, obj) match {
       case Bottom => Bottom
       case Next(`obj`) => Next(obj)
       case res => solver(fp, And.anytimeIsNow(res))
@@ -175,7 +175,7 @@ trait StrategyMixin extends Mixin {
 
   case class buTerm(solver: Binary.Apply) extends Binary.F({ (bu: Node1, obj: Term) =>
     val res = obj.mapBU(t => {
-      val res = unify(bu._1, t)
+      val res = solver(bu._1, t)
       res match {
         case Bottom => t
         case _ => anytimeIsNow(onlyNonPredicate(res))
@@ -186,7 +186,7 @@ trait StrategyMixin extends Mixin {
 
   case class tdTerm(solver: Binary.Apply) extends Binary.F({ (td: Node1, obj: Term) =>
     val res = obj.mapTD(t => {
-      val res = unify(td._1, t)
+      val res = solver(td._1, t)
       res match {
         case Bottom => t
         case _ => anytimeIsNow(onlyNonPredicate(res))
@@ -198,14 +198,12 @@ trait StrategyMixin extends Mixin {
   case class topDownTerm(solver: Binary.Apply) extends Binary.F({ (td: Node1, obj: Term) =>
     var matchedAtLeastOnce = false
     val res = obj.mapTD(t => {
-      val res = unify(td._1, t)
+      val res = solver(td._1, t)
       res match {
         case Bottom => t
         case _ =>
           matchedAtLeastOnce = true
-          val rr = anytimeIsNow(onlyNonPredicate(res))
-          assert(rr.variables.isEmpty)
-          rr
+          anytimeIsNow(onlyNonPredicate(res))
       }
     })
     if (matchedAtLeastOnce)

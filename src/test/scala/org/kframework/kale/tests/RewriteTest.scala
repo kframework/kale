@@ -98,16 +98,6 @@ class RewriteTest extends TestSetup[StandardEnvironment]() {
         foo(a, traversed(matched(andMatchingY()))),
         foo(a, bar(traversed(X_1))))
     }
-
-    "with separate variable" in {
-      assertRewrite(
-        And(
-          Equality(Z, Rewrite(Y, bar(Y))),
-          foo(a, Z)))(
-        foo(a, b),
-        foo(a, bar(b))
-      )
-    }
   }
 
   "of pattern contexts" - {

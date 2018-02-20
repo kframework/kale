@@ -80,7 +80,7 @@ trait Variable extends Leaf[(Name, Sort)] {
   val name: Name
   val sort: Sort
   lazy val data = (name, sort)
-  lazy val isGround = false
+  val isGround = false
   override lazy val isPredicate: Boolean = false
 
   override def toString: String = name.toString + (

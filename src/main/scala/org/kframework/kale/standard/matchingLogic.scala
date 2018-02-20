@@ -39,7 +39,7 @@ trait MatchingLogicMixin extends Mixin {
 
   def SortedVarLeft(solver: Apply)(a: Variable, b: Term): Term =
     if (isSort(a.sort, b))
-      And(Equality(a.asInstanceOf[Variable], b), a)
+      And(Equality(a.asInstanceOf[Variable], b), b)
     else
       Bottom
 
@@ -73,22 +73,6 @@ trait MatchingLogicMixin extends Mixin {
 
   // TODO: something is not quite right with FormulaLabel -- make sure it is correct
   case class OneIsFormula(solver: Apply) extends Binary.F({ (a: Term, b: Term) => And(a, b) })
-
-  case class NotTerm(solver: Apply) extends Binary.F({ (a: Term, b: Term) =>
-    unify(a.asInstanceOf[Node1]._1, b) match {
-      case Bottom => b
-      case And.SPN(_, Top, _) => Bottom
-      case _ => And.nonPredicates(Set(a, b))
-    }
-  })
-
-  case class TermNot(solver: Apply) extends Binary.F({ (a: Term, b: Term) =>
-    unify(a, b.asInstanceOf[Node1]._1) match {
-      case Bottom => a
-      case And.SPN(_, Top, _) => Bottom
-      case _ => And.nonPredicates(Set(a, b))
-    }
-  })
 
   case class OrTerm(solver: Apply) extends Binary.F({ (a: Or, b: Term) => a map (solver(_, b)) })
 
@@ -129,8 +113,8 @@ trait MatchingLogicMixin extends Mixin {
   }
 
   registerMatcher({
-    case (_, `Not`) => TermNot
-    case (`Not`, _) => NotTerm
+    case (_, `Not`) => OneIsFormula
+    case (`Not`, _) => OneIsFormula
     case (`And`, _) => AndTerm
     case (_, `And`) => TermAnd
     case (`Or`, _) => OrTerm
@@ -157,13 +141,13 @@ trait MatchingLogicPostfixMixin extends Mixin {
     val m = solver(a._1, b)
     m.asOr map {
       case And.SPN(subs, predicates, _) =>
-        And.SPN(subs, predicates, Next(a._2))
+        val s = substitutionMaker(subs)
+        And.SPN(subs, predicates, Next(s(a._2)))
     }
   })
 
   case class RightRewriteMatcher(solver: Binary.Apply) extends Binary.F({ (a: Term, b: SimpleRewrite) =>
-    ??? // not updated to  latest (lazy) handling of variables
-  val m = solver(a, b._1)
+    val m = solver(a, b._1)
     m.asOr map {
       case And.SPN(subs, predicates, _) =>
         val s = substitutionMaker(subs)
@@ -265,7 +249,7 @@ private[standard] case class BottomInstance()(implicit eenv: Environment) extend
   override lazy val suppliedLabels: RoaringBitmap = RoaringBitmap.bitmapOf()
 }
 
-private[standard] case class SimpleNextLabel()(implicit override val env: Environment) extends LabelNamed("○") with NextLabel with Projection1Roaring {
+private[standard] case class SimpleNextLabel()(implicit override val env: Environment) extends LabelNamed("=>_") with NextLabel with Projection1Roaring {
   def apply(t: Term) = t match {
     case env.Top => env.Top
     case _ => SimpleNext(t)
@@ -460,10 +444,10 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
       val And.SPN(sub1, pred1, And.nowAndNext(now1, next1)) = _1
       val And.SPN(sub2, pred2, And.nowAndNext(now2, next2)) = _2
 
-      // assertAtMostOneNonPred(now1, now2)
-      // assertAtMostOneNonPred(next1, next2)
+      assertAtMostOneNonPred(now1, now2)
+      assertAtMostOneNonPred(next1, next2)
 
-      apply(sub1, sub2).asOr map {
+      apply(sub1, sub2) match {
         case `Bottom` => Bottom
         case And.SPN(sub, pred, Top) =>
           val updatedPred = sub(Predicates(And.asSet(pred1) | And.asSet(pred2)))
@@ -473,19 +457,10 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
 
             val finalSub = substitution(sub.asMap ++ newSub.asMap)
 
-            val newNow = if (now1 != Top) {
-              if (now2 != Top && now1 != now2)
-                unify(now1, now2)
-              else
-                now1
-            } else {
-              now2
-            }
-
             And.SPN(
               finalSub,
               Predicates(other | And.asSet(finalSub(pred))),
-              nonPredicates(Set(newNow, Next(finalSub(next1)), Next(finalSub(next2)))))
+              nonPredicates(Set(now1, now2, Next(next1), Next(next2)).map(finalSub)))
           }
       }
     }
@@ -517,50 +492,24 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
       */
     def apply(_1: Substitution, _2: Substitution): Term = {
 
-      val m1 = asMap(_1)
-      val m2 = asMap(_2)
+      val merged = _1(_2)
 
-      val commonKeys = m1.keySet & m2.keySet
-
-      val sols: Map[Variable, Term] = (for (k <- commonKeys) yield {
-        (k, doMatch(m1(k), m2(k)))
-      }).toMap
-
-      if (sols.values.exists(_ == Bottom)) {
+      if (merged == Bottom)
         Bottom
-      } else {
-        val mapWithoutCommonKeys = apply((m1 ++ m2).filterNot({
-          case (variable, _) => commonKeys.contains(variable)
-        }))
+      else {
+        // TODO(Daejun): exhaustively apply to get a fixpoint, but be careful to guarantee termination
+        // TODO: optimize to use the larger substitution as the first one
+        val And.SPN(newSubs2, pred2: Term, nonPred2) = _1(_2)
 
-        Or(sols.foldLeft(Set(mapWithoutCommonKeys)) {
-          case (currentDisjunctionAsSet, (variable, sol)) =>
-            cartezianProduct(currentDisjunctionAsSet, Or.asSet(sol)).filterNot(_ == Bottom) map {
-              case And.SPN(s, p, n) =>
-                assert(p == Top)
-                apply(s.asMap + (variable -> n))
-            } toSet
-        })
+        val And.SPN(applyingTheSubsOutOf2To1, pred3, Top) = newSubs2(_1)
+
+        val m1 = asMap(applyingTheSubsOutOf2To1)
+        val m2 = asMap(newSubs2)
+
+        val newSub: Substitution = substitution(m1 ++ m2)
+
+        And.SPN(newSub, And(pred2, pred3), nonPred2)
       }
-
-      //      val merged = _1(_2)
-      //
-      //      if (merged == Bottom)
-      //        Bottom
-      //      else {
-      //        // TODO(Daejun): exhaustively apply to get a fixpoint, but be careful to guarantee termination
-      //        // TODO: optimize to use the larger substitution as the first one
-      //        val And.SPN(newSubs2, pred2: Term, nonPred2) = _1(_2)
-      //
-      //        val And.SPN(applyingTheSubsOutOf2To1, pred3, Top) = newSubs2(_1)
-      //
-      //        val m1 = asMap(applyingTheSubsOutOf2To1)
-      //        val m2 = asMap(newSubs2)
-      //
-      //        val newSub: Substitution = substitution(m1 ++ m2)
-      //
-      //        And.SPN(newSub, And(pred2, pred3), nonPred2)
-      //      }
     }
 
     /**
@@ -608,7 +557,6 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
     @NonNormalizing
     @PerformanceCritical
     def apply(substitution: Substitution, predicates: Term, nonPredicates: Term): Term = {
-      assert(predicates.label != Or)
       val substitutionAndPredicates = if (substitution == Top) {
         predicates
       } else if (predicates == Top) {
@@ -662,10 +610,10 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
   private def cartezianProduct(t1: Iterable[Term], t2: Iterable[Term]): Seq[Term] = {
     cartezianProductHits += 1
 
-    (for (e1 <- t1.toSeq;
-          e2 <- t2.toSeq) yield {
-      Or.asSet(applyOnNonOrs(e1, e2))
-    }).flatten
+    for (e1 <- t1.toSeq;
+         e2 <- t2.toSeq) yield {
+      applyOnNonOrs(e1, e2)
+    }
   }
 
   @NonNormalizing
@@ -697,9 +645,7 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
   @PerformanceCritical
   def removeVariable(v: Variable, and: Term): Term = and match {
     case s: Substitution => s.remove(v)
-    case And.SPN(s, terms, next) =>
-      val theSubsForTheVariable = Equality.binding(v, s(v))
-      And.SPN(s.remove(v), theSubsForTheVariable(terms), theSubsForTheVariable(next))
+    case And.SPN(s, terms, next) => And.SPN(s.remove(v), terms, next)
   }
 
   def onlyPredicate(t: Term): Term = {
@@ -784,13 +730,11 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
               val sub = solutionSoFar match {
                 case And.SPN(s, _, _) => s
               }
-              env.unifier(a, b)
+              env.unify(sub(a), sub(b))
           }
-          Or.asSet(solvedTask) flatMap {
+          Or.asSet(solvedTask) map {
             case And.SPN(s, p, n) =>
-              Or.asSet(applyOnNonOrs(solutionSoFar, And.SPN(s, p, Top))) map {
-                (_, nexts :+ n)
-              }
+              (applyOnNonOrs(solutionSoFar, And.SPN(s, p, Top)), nexts :+ n)
           }
       }
     }
@@ -961,11 +905,12 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
   override def filter(f: Variable => Boolean): Substitution = {
     val newBindings = m.filterKeys(f)
 
-    newBindings.size match {
-      case 0 => Top
-      case 1 => Equality.binding(newBindings.head._1, newBindings.head._2)
-      case _ => new MultipleBindings(newBindings)
-    }
+    val res = if (newBindings.size == 1)
+      Equality.binding(newBindings.head._1, newBindings.head._2)
+    else
+      new MultipleBindings(newBindings)
+
+    res
   }
 }
 
