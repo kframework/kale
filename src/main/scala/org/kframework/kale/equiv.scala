@@ -84,7 +84,7 @@ object equiv {
               case (a, b) if compare(a, b) != 0 => compare(a, b)
             }).get
             case l: LeafLabel[_] =>
-              implicitly[Order[String]].compare(x.toString, y.toString)
+              x.toString compareTo y.toString
           }
         } else {
           labelEq

@@ -76,7 +76,7 @@ trait ContextMixin extends Mixin {
   }
 
   def ContextMatcher(solver: Apply): (ContextApplication, Term) => Term = { (contextApp: ContextApplication, term: Term) =>
-    val res = solver(SolvingContext(contextApp), term)
+    val res = unify(SolvingContext(contextApp), term)
     res.asOr map {
       case And.SPN(s, p@And.set(setOfp), n) =>
         val redex = setOfp.collect({
@@ -100,7 +100,7 @@ trait ContextMixin extends Mixin {
     def solutionFor(subterms: Seq[Term], reconstruct: (Int, Term) => Term, avoidIndices: Set[Int] = Set()) = {
       Or((subterms.indices.toSet &~ avoidIndices) map { i: Int =>
         // calling f directly instead of solver because we know contextApp is hooked to the current f
-        val solutionForSubtermI = solver(solvingContext, subterms(i))
+        val solutionForSubtermI = unify(solvingContext, subterms(i))
         solutionForSubtermI.asOr map {
           // this rewires C -> HOLE into C -> foo(HOLE)
           case And.SPN(s, p, next) =>
@@ -114,7 +114,7 @@ trait ContextMixin extends Mixin {
         val (rightContextVar, rightContextRedex, rightContextPredicate) = Context.unapply(term).get
         solutionFor(term.children.toSeq, (_: Int, tt: Term) => Context(rightContextVar, tt, rightContextPredicate), Set(0, 2))
       case `Or` => {
-        term.asOr map (solver(contextApp, _))
+        term.asOr map (unify(contextApp, _))
       }
       case `And` => {
         ???
@@ -122,7 +122,18 @@ trait ContextMixin extends Mixin {
       case other =>
         val matchPredicate = unify(contextApp.finalContextPredicate, term)
 
-        matchPredicate.asOr map {
+//        def filterOutContextPredicateVariables(t: Term) = {
+//          contextApp.contextPredicate.variables.filter(_ != Context.hole).foldLeft(t) {
+//            case (tt, v) =>
+//              tt.asOr map {
+//                case And.SPN(s, p, n) =>
+//                  val sub: Substitution = s.filter(_ == v)
+//                  And.SPN(s.remove(v), sub(p), sub(n))
+//              }
+//          }
+//        }
+
+        val res = matchPredicate.asOr map {
           case And.SPN(s, p, n) if p.contains(Context.anywhere) =>
             val theAnywhereMatch = other match {
               //              case l: AssocLabel =>
@@ -137,13 +148,17 @@ trait ContextMixin extends Mixin {
             }
             theAnywhereMatch
           case And.SPN(s, p, n) if p.findBU({ case HoleBinder(contextApp.specificHole, _) => true; case _ => false }).isEmpty =>
-            val redexSol = solver(contextApp.redex, n)
+            val redexSol = unify(contextApp.redex, n)
             redexSol.asOr map {
               case And.SPN(ss, pp, redexTerm) =>
                 And.SPN(And.substitution(s.asMap ++ ss.asMap), And(p, pp, HoleBinder(contextApp.specificHole, redexTerm)), contextApp.specificHole)
             }
           case o => o
         }
+
+        res
+
+//        filterOutContextPredicateVariables(res)
     }
   }
 }

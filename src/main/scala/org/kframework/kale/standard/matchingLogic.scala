@@ -39,7 +39,7 @@ trait MatchingLogicMixin extends Mixin {
 
   def SortedVarLeft(solver: Apply)(a: Variable, b: Term): Term =
     if (isSort(a.sort, b))
-      And(Equality(a.asInstanceOf[Variable], b), b)
+      And(Equality(a.asInstanceOf[Variable], b), a)
     else
       Bottom
 
@@ -157,13 +157,13 @@ trait MatchingLogicPostfixMixin extends Mixin {
     val m = solver(a._1, b)
     m.asOr map {
       case And.SPN(subs, predicates, _) =>
-        val s = substitutionMaker(subs)
-        And.SPN(subs, predicates, Next(s(a._2)))
+        And.SPN(subs, predicates, Next(a._2))
     }
   })
 
   case class RightRewriteMatcher(solver: Binary.Apply) extends Binary.F({ (a: Term, b: SimpleRewrite) =>
-    val m = solver(a, b._1)
+    ??? // not updated to  latest (lazy) handling of variables
+  val m = solver(a, b._1)
     m.asOr map {
       case And.SPN(subs, predicates, _) =>
         val s = substitutionMaker(subs)
@@ -463,7 +463,7 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
       // assertAtMostOneNonPred(now1, now2)
       // assertAtMostOneNonPred(next1, next2)
 
-      apply(sub1, sub2) match {
+      apply(sub1, sub2).asOr map {
         case `Bottom` => Bottom
         case And.SPN(sub, pred, Top) =>
           val updatedPred = sub(Predicates(And.asSet(pred1) | And.asSet(pred2)))
@@ -522,27 +522,25 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
 
       val commonKeys = m1.keySet & m2.keySet
 
-      val sols = (for (k <- commonKeys) yield {
-        (k, unify(m1(k), m2(k)))
+      val sols: Map[Variable, Term] = (for (k <- commonKeys) yield {
+        (k, doMatch(m1(k), m2(k)))
       }).toMap
 
       if (sols.values.exists(_ == Bottom)) {
         Bottom
       } else {
-        val extraSideConditions = collection.mutable.Stack[Substitution]()
-        val strippedSols = sols map {
-          case (variable, And.SPN(s, p, n)) =>
-            assert(p == Top)
-            extraSideConditions.push(s)
-            (variable, n)
-        }
+        val mapWithoutCommonKeys = apply((m1 ++ m2).filterNot({
+          case (variable, _) => commonKeys.contains(variable)
+        }))
 
-        val currentSol = apply(m1 ++ m2 ++ strippedSols)
-
-        extraSideConditions.foldLeft[Term](currentSol) {
-          case (Bottom, _) => Bottom
-          case (current: Substitution, newOne: Substitution) => apply(current, newOne)
-        }
+        Or(sols.foldLeft(Set(mapWithoutCommonKeys)) {
+          case (currentDisjunctionAsSet, (variable, sol)) =>
+            cartezianProduct(currentDisjunctionAsSet, Or.asSet(sol)).filterNot(_ == Bottom) map {
+              case And.SPN(s, p, n) =>
+                assert(p == Top)
+                apply(s.asMap + (variable -> n))
+            } toSet
+        })
       }
 
       //      val merged = _1(_2)
@@ -610,6 +608,7 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
     @NonNormalizing
     @PerformanceCritical
     def apply(substitution: Substitution, predicates: Term, nonPredicates: Term): Term = {
+      assert(predicates.label != Or)
       val substitutionAndPredicates = if (substitution == Top) {
         predicates
       } else if (predicates == Top) {
@@ -663,10 +662,10 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
   private def cartezianProduct(t1: Iterable[Term], t2: Iterable[Term]): Seq[Term] = {
     cartezianProductHits += 1
 
-    for (e1 <- t1.toSeq;
-         e2 <- t2.toSeq) yield {
-      applyOnNonOrs(e1, e2)
-    }
+    (for (e1 <- t1.toSeq;
+          e2 <- t2.toSeq) yield {
+      Or.asSet(applyOnNonOrs(e1, e2))
+    }).flatten
   }
 
   @NonNormalizing
@@ -698,7 +697,9 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
   @PerformanceCritical
   def removeVariable(v: Variable, and: Term): Term = and match {
     case s: Substitution => s.remove(v)
-    case And.SPN(s, terms, next) => And.SPN(s.remove(v), terms, next)
+    case And.SPN(s, terms, next) =>
+      val theSubsForTheVariable = Equality.binding(v, s(v))
+      And.SPN(s.remove(v), theSubsForTheVariable(terms), theSubsForTheVariable(next))
   }
 
   def onlyPredicate(t: Term): Term = {
@@ -783,11 +784,13 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
               val sub = solutionSoFar match {
                 case And.SPN(s, _, _) => s
               }
-              env.unify(sub(a), sub(b))
+              env.unifier(a, b)
           }
-          Or.asSet(solvedTask) map {
+          Or.asSet(solvedTask) flatMap {
             case And.SPN(s, p, n) =>
-              (applyOnNonOrs(solutionSoFar, And.SPN(s, p, Top)), nexts :+ n)
+              Or.asSet(applyOnNonOrs(solutionSoFar, And.SPN(s, p, Top))) map {
+                (_, nexts :+ n)
+              }
           }
       }
     }
@@ -958,12 +961,11 @@ private[standard] final class MultipleBindings(val m: Map[Variable, Term])(impli
   override def filter(f: Variable => Boolean): Substitution = {
     val newBindings = m.filterKeys(f)
 
-    val res = if (newBindings.size == 1)
-      Equality.binding(newBindings.head._1, newBindings.head._2)
-    else
-      new MultipleBindings(newBindings)
-
-    res
+    newBindings.size match {
+      case 0 => Top
+      case 1 => Equality.binding(newBindings.head._1, newBindings.head._2)
+      case _ => new MultipleBindings(newBindings)
+    }
   }
 }
 

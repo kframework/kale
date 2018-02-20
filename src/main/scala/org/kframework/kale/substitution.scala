@@ -13,7 +13,7 @@ trait Substitution extends (Term => Term) with Term {
 
   def asMap: Map[Variable, Term]
 
-  lazy val sub = env.substitutionMaker(this)
+  private lazy val sub = env.substitutionMaker(this)
 
   def apply(t: Term): Term = sub(t)
 

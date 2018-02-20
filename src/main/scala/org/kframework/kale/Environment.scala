@@ -35,24 +35,40 @@ trait Foundation {
 
   val substitutionMaker: Substitution => SubstitutionApply
 
-  final val unify: Label2 = lift("unify", {
+  final val doMatch: Label2 = lift("match", {
     (a: Term, b: Term) =>
       assert(this.isSealed)
-      // hack to allow us to use the DNF-specific SPN here
-      val And = env.asInstanceOf[StandardEnvironment].And
-      unifier(a, b)
-        .asOr map {
-        case And.SPN(s, p, n) =>
-          val newS = s(s)
-          newS match {
-            case Bottom => Bottom
-            case ss: Substitution =>
-              val rr = ss(n)
-              assert((rr.variables & ss.boundVariables) == Set())
-              And.SPN(ss, ss(p), rr)
-          }
+
+      val (aa, bb) = if(a.variables.isEmpty && b.variables.nonEmpty) {
+        (b, a)
+      } else {
+        (a, b)
       }
+
+      //      assert(b.isGround)
+
+      callUnifier(aa, bb)
   })
+
+  final val unify: Label2 = lift("unify", callUnifier)
+
+  private def callUnifier(aa: Term, bb: Term) = {
+    // hack to allow us to use the DNF-specific SPN here
+    val And = env.asInstanceOf[StandardEnvironment].And
+
+    unifier(aa, bb)
+      .asOr map {
+      case And.SPN(s, p, n) =>
+        val newS = s(s)
+        newS match {
+          case Bottom => Bottom
+          case ss: Substitution =>
+            val rr = ss(n)
+            assert((rr.variables & ss.boundVariables) == Set())
+            And.SPN(ss, ss(p), rr)
+        }
+    }
+  }
 
   def unifier: Binary.Apply
 
