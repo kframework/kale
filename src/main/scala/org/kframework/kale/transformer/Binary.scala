@@ -109,17 +109,17 @@ object Binary {
     })
 
     final val forAllMatcher = functionFor(env.ForAll, env.BOOLEAN.Boolean)
-    final val forAllId = env.ForAll.id
+    final val forAllId: Int = env.ForAll.id
     final val existsMatcher = functionFor(env.Exists, env.BOOLEAN.Boolean)
-    final val existsId = env.Exists.id
+    final val existsId: Int = env.Exists.id
     final val andMatcher = functionFor(env.And, env.BOOLEAN.Boolean)
-    final val andId = env.And.id
+    final val andId: Int = env.And.id
     final val orMatcher = functionFor(env.Or, env.BOOLEAN.Boolean)
-    final val orId = env.Or.id
+    final val orId: Int = env.Or.id
     final val contextMatcher = functionFor(env.SolvingContext, env.BOOLEAN.Boolean)
     final val contextId = env.SolvingContext.id
     final val orElseMatcher = functionFor(env.STRATEGY.orElse, env.BOOLEAN.Boolean)
-    final val orElseId = env.STRATEGY.orElse.id
+    final val orElseId: Int = env.STRATEGY.orElse.id
 
 
     var unifyCacheHits = 0L
@@ -132,13 +132,13 @@ object Binary {
         if (left == right) {
           right
         } else {
-          val u = (left.label.id: @switch) match {
+          val u = (left.label.id) match {
             case `forAllId` => forAllMatcher
             case `existsId` => existsMatcher
             case `andId` => andMatcher
             case `orId` => orMatcher
             case `orElseId` => orElseMatcher
-            case _ => functionFor(left.label, right.label)
+            case other => functionFor(left.label, right.label)
           }
 
           val res = if (u != null) {
