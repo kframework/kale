@@ -113,29 +113,22 @@ trait ContextMixin extends Mixin {
       case Context =>
         val (rightContextVar, rightContextRedex, rightContextPredicate) = Context.unapply(term).get
         solutionFor(term.children.toSeq, (_: Int, tt: Term) => Context(rightContextVar, tt, rightContextPredicate), Set(0, 2))
-      case `Or` => {
-        term.asOr map (solver(contextApp, _))
-      }
-      case `And` => {
-        ???
-      }
       case other =>
         val matchPredicate = unify(contextApp.finalContextPredicate, term)
 
         matchPredicate.asOr map {
           case And.SPN(s, p, n) if p.contains(Context.anywhere) =>
-            val theAnywhereMatch = other match {
-              //              case l: AssocLabel =>
-              //                val subresults = l.asIterable(term).toList
-              //                val recursive = solutionFor(subresults, (pos: Int, tt: Term) => l(subresults.updated(pos, tt)))
-              //                recursive
-              case l =>
-                // C[bar(X)] := foo(bar(1))
-                val subterms = term.children
-                val recursive = solutionFor(subterms.toSeq, (pos: Int, tt: Term) => term.updateAt(pos)(tt), indicesToAvoidTraversingForTerm(term))
+            assert(n.label != And && n.label != Or)
+            // C[bar(X)] := foo(bar(1))
+            val subterms = n.children
+            val recursive = solutionFor(subterms.toSeq, (pos: Int, tt: Term) => n.updateAt(pos)(tt), indicesToAvoidTraversingForTerm(n))
+            /*
+                // previous code used for matching assoc. now assoc is simply treated as right-assoc for anywhere matches
+                val subresults = l.asIterable(term).toList
+                val recursive = solutionFor(subresults, (pos: Int, tt: Term) => l(subresults.updated(pos, tt)))
                 And(s, recursive)
-            }
-            theAnywhereMatch
+             */
+            And(s, recursive)
           case And.SPN(s, p, n) if p.findBU({ case HoleBinder(contextApp.specificHole, _) => true; case _ => false }).isEmpty =>
             val redexSol = solver(contextApp.redex, n)
             redexSol.asOr map {

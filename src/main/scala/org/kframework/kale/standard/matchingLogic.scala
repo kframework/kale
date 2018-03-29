@@ -24,7 +24,12 @@ trait MatchingLogicMixin extends Mixin {
   override val Equality: EqualityLabel = standard.StandardEqualityLabel()
 
   override val Exists: ExistsLabel = standard.SimpleExistsLabel()
+
   override val ForAll: ForAllLabel = standard.SimpleForAllLabel()
+  val ForAllAcrossVars: FunctionLabel1 = new LabelNamed("ForAllAcrossVars") with FunctionLabel1 with PureFunctionLabel {
+    override def f(_1: Term): Option[Term] = Some(_1.variables.foldLeft(_1)((x, v) => ForAll(v, x)))
+  }
+
   override val Next: NextLabel = standard.SimpleNextLabel()
 
   override val Rewrite = StandardRewriteLabel()
@@ -299,7 +304,13 @@ private[standard] case class StandardEqualityLabel()(implicit override val env: 
     env.Or(for (
       e1 <- lhsOrElements;
       e2 <- rhsOrElements) yield {
-      inner(e1, e2)
+      val lhsAndElements = env.And.asSet(e1)
+      val rhsAndElements = env.And.asSet(e2)
+      env.And(for (
+        ee1 <- lhsAndElements;
+        ee2 <- rhsAndElements) yield {
+        inner(ee1, ee2)
+      })
     })
   }
 
@@ -333,7 +344,9 @@ private[standard] case class StandardEqualityLabel()(implicit override val env: 
 }
 
 private[kale] class Equals(val _1: Term, val _2: Term)(implicit env: Environment) extends kale.Equals {
+  assert(_1.label != env.And && _2.label != env.And)
   val label = env.Equality
+  assert(_1.label != label && _2.label != label)
 
   override def equals(other: Any): Boolean = other match {
     case that: Equals => this._1 == that._1 && this._2 == that._2
@@ -557,6 +570,8 @@ private[standard] case class DNFAndLabel()(implicit val env: Environment with Ma
     @NonNormalizing
     @PerformanceCritical
     def apply(substitution: Substitution, predicates: Term, nonPredicates: Term): Term = {
+
+
       val substitutionAndPredicates = if (substitution == Top) {
         predicates
       } else if (predicates == Top) {
@@ -961,7 +976,7 @@ private[this] class OrWithAtLeastTwoElements(val terms: Set[Term])(implicit env:
   override def asSet: Set[Term] = terms
 }
 
-private[standard] case class SimpleForAllLabel()(implicit val e: Environment with MatchingLogicMixin) extends LabelNamed("∀") with ForAllLabel with Projection2Roaring {
+private[standard] case class SimpleForAllLabel()(implicit val e: Environment with MatchingLogicMixin) extends LabelNamed("ForAll") with ForAllLabel with Projection2Roaring {
 
   import env._
 

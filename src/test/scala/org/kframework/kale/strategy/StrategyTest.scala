@@ -31,12 +31,20 @@ class StrategyTest extends TestSetup[StandardEnvironment]() {
   }
 
   "repeat" - {
-    val repeatRule = repeat(Or(Rewrite(a, b), Rewrite(b, c)))
-    "simple" in {
-      assert(repeatRule.unify(a) === Next(c))
+    "simpe" - {
+      val repeatRule = repeat(Or(Rewrite(a, b), Rewrite(b, c)))
+      "simple" in {
+        assert(repeatRule.unify(a) === Next(c))
+      }
+      "disjunction" in {
+        assert(repeatRule.unify(Or(a, d)) === Or(Next(c), Next(d)))
+      }
     }
-    "disjunction" in {
-      assert(repeatRule.unify(Or(a, d)) === Or(Next(c), Next(d)))
+    "multiple spots" - {
+      "two spots, no special bounding" in {
+        val repeatRule = repeat(Y % Rewrite(a, b))
+        assert(repeatRule.unify(foo(a, a)) == Next(foo(b, b)))
+      }
     }
   }
 

@@ -153,7 +153,7 @@ trait StrategyMixin extends Mixin {
         if (s.boundVariables.contains(someVar)) {
           And(p, Next(anytimeIsNow(t)))
         } else {
-          solver(fp, anytimeIsNow(t)) // TODO: pass in the remaining predicates
+          solver(fp, And.SPN(s, p, anytimeIsNow(t)))
         }
     }
   })

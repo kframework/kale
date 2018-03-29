@@ -92,8 +92,14 @@ trait PrettyWrapperMixin extends Mixin {
     (a: PrettyWrapperHolder, t: Term) =>
       if (t.isGround)
         Bottom
-      else
-        And(Equality(a, t), a)
+      else {
+        val And.SPN(s, p, n) = t
+        val thePredicate = And.SPN(s, p, Top)
+        if(thePredicate != Top)
+          And(solver(a, n), thePredicate)
+        else
+          Bottom
+      }
   })
 
   def isValidWrapper(_1: Term) = {
