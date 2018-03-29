@@ -138,7 +138,7 @@ trait StrategyMixin extends Mixin {
   case class composeTerm(solver: Binary.Apply) extends Binary.F({ (composed: Term, obj: Term) =>
     val compose(f, g) = composed
     val matchG = unify(g, obj)
-    val takeRelevantFromGMatch = anytimeIsNow(onlyNonPredicate(matchG))
+    val takeRelevantFromGMatch = anytimeIsNow(matchG)
     val matchF = unify(f, takeRelevantFromGMatch)
 
     matchF
