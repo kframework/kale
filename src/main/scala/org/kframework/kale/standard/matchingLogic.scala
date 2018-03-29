@@ -26,9 +26,8 @@ trait MatchingLogicMixin extends Mixin {
   override val Exists: ExistsLabel = standard.SimpleExistsLabel()
 
   override val ForAll: ForAllLabel = standard.SimpleForAllLabel()
-  val ForAllAcrossVars: FunctionLabel1 = new LabelNamed("ForAllAcrossVars") with FunctionLabel1 with PureFunctionLabel {
-    override def f(_1: Term): Option[Term] = Some(_1.variables.foldLeft(_1)((x, v) => ForAll(v, x)))
-  }
+  val ForAllAcrossVars: Label1 =
+    lift("ForAllAcrossVars", t => t.variables.foldLeft(t)((x, v) => ForAll(v, x)))
 
   override val Next: NextLabel = standard.SimpleNextLabel()
 
