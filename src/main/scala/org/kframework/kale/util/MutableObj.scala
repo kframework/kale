@@ -1,6 +1,6 @@
 package org.kframework.kale.util
 
-import io.circe.{Decoder, Encoder, JsonObject, ObjectEncoder}
+import io.circe.{Decoder, Encoder}
 
 final class MutableObj[T](private var v: T) extends Mutable {
   def set(v: T): Unit = {

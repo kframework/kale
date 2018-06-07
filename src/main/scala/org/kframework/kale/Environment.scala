@@ -1,30 +1,50 @@
 package org.kframework.kale
 
-import org.kframework.kale.standard.{Bottomize, Name, Sort}
-import org.kframework.kore
+import org.kframework.kale.highcats.LiftedCatsMixin
+import org.kframework.kale.standard.BottomizeMixin
+import org.kframework.kale.transformer.Binary.{Apply, ProcessingFunctions}
+import org.kframework.kale.transformer.{Binary, Unary}
 
-import scala.collection._
+trait Environment extends Foundation with RoaringMixin with HasMatcher with MatchingLogicMixin with LiftedCatsMixin with BottomizeMixin
 
-trait Environment extends KORELabels with Bottomize {
+trait Foundation {
+  _: Environment =>
 
-  trait HasEnvironment {
-    val env = Environment.this
+  implicit protected val env: this.type = this
+
+  val uniqueLabels = collection.mutable.Map[String, Label]()
+
+  def labels: Set[Label] = if (isSealed) {
+    labelSet
+  } else {
+    uniqueLabels.values.toSet
   }
 
-  val uniqueLabels = mutable.Map[String, Label]()
-
-  def labels = uniqueLabels.values.toSet
-
+  private lazy val labelSet = uniqueLabels.values.toSet
   private var pisSealed = false
 
-  def seal(): Unit = pisSealed = true
+  var _matcher: Binary.Apply = _
+
+  def seal(): Unit = {
+    pisSealed = true
+  }
 
   def isSealed = pisSealed
 
+  def unaryProcessingFunctions: Unary.ProcessingFunctions = Unary.processingFunctions
+
   val substitutionMaker: Substitution => SubstitutionApply
 
+  final val unify: Label2 = lift("unify", {
+    (a: Term, b: Term) =>
+      assert(this.isSealed)
+      unifier(a, b)
+  })
+
+  def unifier: Binary.Apply
+
   def register(label: Label): Int = {
-    assert(!isSealed, "The environment is sealed")
+    assert(!isSealed, "Cannot register label " + label + " because the environment is sealed")
     assert(label != null)
 
     if (uniqueLabels.contains(label.name))
@@ -36,29 +56,52 @@ trait Environment extends KORELabels with Bottomize {
 
   def label(labelName: String): Label = uniqueLabels(labelName)
 
-  def sort(l: Label, children: Seq[Term]): Sort
-
-  def sortArgs(l: Label): Seq[Sort]
-
-  def sortTarget(l: Label): Sort
+  lazy val labelForIndex: Map[Int, Label] = labels map { l => (l.id, l) } toMap
 
   override def toString = {
     "nextId: " + uniqueLabels.size + "\n" + uniqueLabels.mkString("\n")
   }
+
+  def rewrite(rule: Term, obj: Term): Term
+
 }
 
-trait KORELabels {
-  // Constants
-  val Bottom: Truth with kore.Bottom
-  val Top: Truth with Substitution with kore.Top
+trait HasMatcher extends Mixin {
+  env: Environment =>
 
-  // Labels
-  val Variable: VariableLabel
-  val And: AndLabel
-  val Or: OrLabel
-  val Rewrite: RewriteLabel
-  val Equality: EqualityLabel
-  val Truth: TruthLabel
-  val Not: NotLabel
+  case class NoMatch(solver: Apply) extends Binary.F({ (a: Term, b: Term) => Bottom })
+
+  case class LeaveAlone(solver: Apply) extends Binary.F({ (a: Term, b: Term) => And(a, b) })
+
+  case class AssertNotPossible(solver: Apply) extends Binary.F({ (a: Term, b: Term) => throw new AssertionError("Should not try to match " + a + " with " + b) })
+
+  private var _registeredMatchers: Map[Binary.ProcessingFunctions, Int] = collection.immutable.ListMap()
+
+  object Priority {
+    val low = 30
+    val medium = 50
+    val high = 80
+    val ultimate = 200
+  }
+
+  def registeredMatchers = _registeredMatchers
+
+  def registerInner(matcher: Binary.ProcessingFunctions, priority: Int) {
+    _registeredMatchers = _registeredMatchers + (matcher -> priority)
+  }
+
+  def registerMatcher[Process <: Apply, A <: Term, B <: Term](f: PartialFunction[(Label, Label), Process => (A, B) => Term], priority: Int) = {
+    registerInner(Binary.definePartialFunction(f), priority)
+  }
+
+  final lazy val makeMatcher: Binary.ProcessingFunctions = {
+    registeredMatchers
+      .groupBy(_._2)
+      .mapValues(_.keySet)
+      .toList
+      .sortBy(-_._1)
+      .map(_._2)
+      .map(_.reduce(_ orElse _))
+      .reduceLeft(_ orElse _)
+  }
 }
-

@@ -1,14 +1,12 @@
 import org.kframework.kale._
-import org.kframework.kale.util.Implicits
-import standard._
+import org.kframework.kale.standard._
+import org.kframework.kale.util.dsl
 
 implicit val env = new StandardEnvironment
 
 import env._
 
-val impl = new Implicits()
-
-import impl._
+val impl = new dsl()
 
 val block = SimpleFreeLabel1("block")
 

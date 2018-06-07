@@ -1,32 +1,84 @@
 package org.kframework.kale.standard
 
 import org.kframework.kale
-import org.kframework.kale.builtin._
-import org.kframework.kale.context.anywhere.AnywhereContextApplicationLabel
-import org.kframework.kale.{standard, _}
+import org.kframework.kale._
+import org.kframework.kale.context.BundledContextMixin
+import org.kframework.kale.transformer.Binary
+
+import scala.collection.Seq
 
 object StandardEnvironment {
-  def apply(): StandardEnvironment = new StandardEnvironment {}
+  def apply(): StandardEnvironment = new StandardEnvironment with NoSortingMixin
 }
 
-trait StandardEnvironment extends DNFEnvironment with HasBOOLEAN with HasINT with HasINTdiv with HasDOUBLE with HasSTRING with HasID {
-  private implicit val env = this
+trait StandardEnvironment
+  extends Environment
+    with MatchingLogicMixin
+    with HolesMixin
+    with FreeMixin
+    with TuplesMixin
+    with builtin.BooleanMixin
+    with builtin.IntMixin
+    with builtin.DoubleMixin
+    with builtin.StringMixin
+    with builtin.IdMixin
+    with ACMixin
+    with AssocWithIdListMixin
+    with NonAssocWithIdListMixin
+    with standard.FunctionByRewritingMixin
+    with builtin.MapMixin
+    with BundledContextMixin
+    with MacroMixin
+    with strategy.StrategyMixin
+    with ScalaLibraryMixin
+    with PathMixin
+    with MatchingLogicPostfixMixin {
 
-  val Hole = Variable("☐", Sort.K)
+  val Match = new MatchLabel()
 
-  val IfThenElse = new IfThenElseLabel()
-  val BindMatch = new BindMatchLabel()
+  val ApplyRewrite = new GroundApplyRewrite()
 
-  val AnywhereContext = AnywhereContextApplicationLabel()
+  val OneResult = new OneResult()
 
-  override def sort(l: Label, children: Seq[Term]): kale.Sort = Sort.K
+  val ApplySimpleRewrite = new Compose2("ApplySimpleRewrite", ApplyRewrite, OneResult)
 
-  override def sortTarget(l: Label): kale.Sort = Sort.K
+  override lazy val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)
 
-  override def sortArgs(l: Label): Seq[kale.Sort] = l match {
-    case l:LeafLabel[_] => Seq()
-    case l:NodeLabel => Seq.fill(l.arity)(Sort.K)
+  def unifier = matcher
+
+  def matcher = {
+    if (_matcher == null)
+      throw new AssertionError("Seal environment to have access to the matcher")
+    _matcher
   }
 
-  override val substitutionMaker: (Substitution) => SubstitutionApply = new SubstitutionWithContext(_)
+  override def seal(): Unit = {
+    super.seal()
+    _matcher = Binary.Apply(this.makeMatcher)
+  }
+
+  // HELPERS:
+
+  def rewrite(rule: Term, obj: Term): Term = {
+    And.anytimeIsNow(And.onlyNonPredicate(unify(rule, obj)))
+  }
 }
+
+trait NoSortingMixin extends Environment {
+  def sort(l: Label, children: Seq[Term]): kale.Sort = Sort.Top
+
+  def sort(l: Label): Sort = Sort.Top
+
+  override def isSort(left: kale.Sort, term: Term): Boolean = true
+}
+
+trait HolesMixin extends Mixin {
+  _: Environment =>
+  val Hole = Variable("☐", Sort.K)
+  val Hole1 = Variable("☐1", Sort.K)
+  val Hole2 = Variable("☐2", Sort.K)
+  val Hole3 = Variable("☐3", Sort.K)
+}
+
+case class MatchNotSupporteredError(l: Term, r: Term, message: String = "") extends
+  AssertionError("Trying to match " + l + " with " + r + " not supported yet. " + message)

@@ -1,27 +1,28 @@
 package org.kframework.kale.builtin
 
+import org.kframework.kale
 import org.kframework.kale.standard.ReferenceLabel
-import org.kframework.kale.{Environment, FunctionLabel2, Term}
+import org.kframework.kale.util.LabelNamed
+import org.kframework.kale.{FunctionLabel2, _}
 
-trait HasDOUBLE {
-  self: Environment =>
+trait DoubleMixin extends kale.DoubleMixin {
+  _: Environment =>
 
-  val DOUBLE = new ReferenceLabel[Double]("Double")(this) {
-    override protected[this] def internalInterpret(s: String): Double = s.toDouble
-  }
-}
+  override val DOUBLE = new {
+    val Double = define[Double]("Double")(_.toDouble)
 
-trait HasDOUBLEdiv {
-  self: Environment with HasDOUBLE =>
+    val div = new LabelNamed("_/Double_") with FunctionLabel2 {
+      override val isPredicate: Option[Boolean] = Some(false)
 
-  val DOUBLEdiv = new HasEnvironment with FunctionLabel2 {
-    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
-      case (_, DOUBLE(0)) => None
-      case (DOUBLE(0), b) if b.isGround => Some(DOUBLE(0))
-      case (DOUBLE(a), DOUBLE(b)) => Some(DOUBLE(a / b))
-      case _ => None
+      def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
+        case (_, Double(0)) => None
+        case (Double(0), b) if b.isGround => Some(Double(0))
+        case (Double(a), Double(b)) => Some(Double(a / b))
+        case _ => None
+      }
     }
-
-    override val name: String = "_/Double_"
   }
+
+  implicit val upDouble = DOUBLE.Double
+
 }

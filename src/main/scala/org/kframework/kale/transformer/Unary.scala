@@ -1,8 +1,7 @@
 package org.kframework.kale.transformer
 
+import org.kframework.kale
 import org.kframework.kale._
-import org.kframework.kale.transformer.GenUnary.Apply
-import org.kframework.kale.util.fixpoint
 
 /**
   * Abstract stateful transformer from Term to Term
@@ -23,7 +22,7 @@ object GenUnary {
   /**
     * Extend this class to define the transformation by implementing f.
     */
-  trait ProcessingFunction[ReturnType, -SpecificSolver <: Apply[ReturnType]] extends (SpecificSolver => Term => ReturnType) {
+  trait ProcessingFunction[ReturnType, -SpecificSolver] extends (SpecificSolver => Term => ReturnType) {
     type Element <: Term
 
     def apply(unarySolver: SpecificSolver): (Term => ReturnType) = { t: Term => f(unarySolver)(t.asInstanceOf[Element]) }
@@ -31,12 +30,10 @@ object GenUnary {
     def f(state: SpecificSolver)(t: Element): ReturnType
   }
 
+  type ProcessingFunctions[T, Solver <: Apply[T]] = PartialFunction[Label, ProcessingFunction[T, Solver]]
 
-  abstract class Apply[T](env: Environment) extends (Term => T) {
-
-    type ProcessingFunctions = PartialFunction[Label, ProcessingFunction[T, this.type]]
-
-    protected def definePartialFunction(f: ProcessingFunctions): ProcessingFunctions = f
+  abstract class Apply[T](val env: Environment) extends (Term => T) {
+    type ProcessingFunctions = GenUnary.ProcessingFunctions[T, this.type]
 
     protected def processingFunctions: ProcessingFunctions
 
@@ -56,7 +53,7 @@ object GenUnary {
 }
 
 object Unary {
-  type ProcessingFunction[-SpecificSolver <: Apply] = GenUnary.ProcessingFunction[Term, SpecificSolver]
+  type ProcessingFunction[-SpecificSolver] = GenUnary.ProcessingFunction[Term, SpecificSolver]
 
   def Node0(solver: Apply)(t: Node0): Term = t.copy()
 
@@ -74,21 +71,21 @@ object Unary {
 
   def DoNothing(solver: Apply)(a: Term): Term = a
 
+  type ProcessingFunctions = GenUnary.ProcessingFunctions[Term, Apply]
 
-  abstract class Apply(env: Environment) extends GenUnary.Apply[Term](env) {
+  def processingFunctions: ProcessingFunctions = {
+    case l: Label0 => Node0 _
+    case l: Label1 => Node1 _
+    case l: Label2 => Node2 _
+    case l: Label3 => Node3 _
+    case l: Label4 => Node4 _
+    case l: Label5 => Node5 _
+    case l: Label6 => Node6 _
+    case l: LeafLabel[_] => DoNothing _
+  }
 
-    protected def processingFunctions: ProcessingFunctions = {
-      case l: Label0 => Node0 _
-      case l: Label1 => Node1 _
-      case l: Label2 => Node2 _
-      case l: Label3 => Node3 _
-      case l: Label4 => Node4 _
-      case l: Label5 => Node5 _
-      case l: Label6 => Node6 _
-      case l: LeafLabel[_] => DoNothing _
-    }
-
-    def fixpoint(t: Term): Term = util.fixpoint(apply)(t)
+  abstract class Apply(implicit env: Environment) extends GenUnary.Apply[Term](env) {
+    def fixpoint(t: Term): Term = kale.fixpoint(apply)(t)
   }
 
 }

@@ -1,25 +1,34 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale.Term
-import org.kframework.kale.util.Path
-import org.scalatest.FreeSpec
+import org.kframework.kale.standard.StandardEnvironment
 
-class PathTest extends FreeSpec with TestSetup {
-  import implicits._
+class PathTest extends TestSetup[StandardEnvironment]() {
+
+  import env._
 
   "apply empty path" in {
-    assert(Path(Seq())(foo(bar(1), 2)) === foo(bar(1), 2))
+    assert(Path(List())(foo(bar(1), 2)) === foo(bar(1), 2))
   }
 
   "apply path one way" in {
-    assert(Path(Seq(1))(foo(bar(1), 2)) === (2:Term))
+    assert(Path(List(1))(foo(bar(1), 2)) === (2: Term))
   }
 
   "apply path another way" in {
-    assert(Path(Seq(0, 0))(foo(bar(1), 2)) === (1:Term))
+    assert(Path(List(0, 0))(foo(bar(1), 2)) === (1: Term))
   }
 
   "apply to third element in assoc" in {
-    assert(Path(Seq(2))(el ~~ 1 ~~ 2 ~~ 3) === (3:Term))
+    assert(Path(List(2))(el ~~ 1 ~~ 2 ~~ 3) === (3: Term))
+  }
+
+  "explicitate" in {
+    assert(Path(List(0, 0, 1)).explicitate(foo(bar(el ~~ 1 ~~ 2), 2)) === List(foo, bar, listLabel, INT.Int))
+  }
+
+  "updown" in {
+    val p = Path(List(0, 1, 2))
+    assert((p: Term) === PathLabel(scalaList(0: Term, 1: Term, 2: Term)))
   }
 }

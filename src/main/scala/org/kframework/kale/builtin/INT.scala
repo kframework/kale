@@ -1,109 +1,31 @@
 package org.kframework.kale.builtin
 
+import org.kframework.kale
+import org.kframework.kale._
 import org.kframework.kale.standard.ReferenceLabel
-import org.kframework.kale.util.Named
-import org.kframework.kale.{Environment, FunctionLabel2, Term, Z3Builtin}
 
-trait HasINT {
-  self: Environment =>
+trait IntMixin extends kale.IntMixin {
+  _: Environment with kale.BooleanMixin =>
 
-  val INT = new ReferenceLabel[Int]("Int")(this) {
-    override protected[this] def internalInterpret(s: String): Int = s.toInt
+  override val INT = new INT {
+    implicit val Int = define[Int]("Int@INT-SYNTAX")(_.toInt)
+
+    import BOOLEAN.Boolean
+
+    val plus = define("_+Int_", (_: Int) + (_: Int))
+    val minus = define("_-Int_", (_: Int) - (_: Int))
+    val mult = define("_*Int_", (_: Int) * (_: Int))
+    val div = define("_/Int_", (_: Int) / (_: Int))
+    val mod = define("_%Int_", (_: Int) % (_: Int))
+    val lt = define("_<Int_", (_: Int) < (_: Int))
+    val le = define("_<=Int_", (_: Int) <= (_: Int))
+    val gt = define("_>Int_", (_: Int) > (_: Int))
+    val ge = define("_>=Int_", (_: Int) >= (_: Int))
+    val neq = define("_=/=Int_", (_: Int) != (_: Int))
+    val eq = define("_==Int_", (_: Int) == (_: Int))
+
+    lazy val all = Set(Int, plus, minus, mult, div, mod, lt, le, gt, ge, neq, eq)
   }
-}
 
-trait HasINTbop extends HasINTplus with HasINTminus with HasINTmult with HasINTdiv with HasINTmod { self: Environment => }
-
-trait HasINTplus extends HasINT { self: Environment =>
-  val intPlus = new Named("_+Int_")(self) with FunctionLabel2 {
-    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
-      case (INT(a), INT(b)) => Some(INT(a + b))
-      case _ => None
-    }
-    override def smtName: String = "+"
-  }
-}
-
-trait HasINTminus extends HasINT { self: Environment =>
-  val intMinus = new Named("_-Int_")(self) with FunctionLabel2 {
-    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
-      case (INT(a), INT(b)) => Some(INT(a + b))
-      case _ => None
-    }
-    override def smtName: String = "-"
-  }
-}
-
-trait HasINTmult extends HasINT { self: Environment =>
-  val intMult = new Named("_*Int_")(self) with FunctionLabel2 {
-    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
-      case (INT(a), INT(b)) => Some(INT(a * b))
-      case _ => None
-    }
-    override def smtName: String = "*"
-  }
-}
-
-trait HasINTdiv extends HasINT { self: Environment =>
-  val intDiv = new Named("_/Int_")(self) with FunctionLabel2 {
-    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
-    //case (_, INT(0)) => None
-    //case (INT(0), b) if b.isGround => Some(INT(0))
-      case (INT(a), INT(b)) => Some(INT(a / b))
-      case _ => None
-    }
-    override def smtName: String = "div" // integer division, while "/" is real division.
-  }
-}
-
-trait HasINTmod extends HasINT { self: Environment =>
-  val intMod = new Named("_%Int_")(self) with FunctionLabel2 {
-    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
-      case (INT(a), INT(b)) => Some(INT(a % b))
-      case _ => None
-    }
-    override def smtName: String = "mod" // z3 also has "rem", remainder.
-  }
-}
-
-trait HasINTcmp extends HasINTlt with HasINTle with HasINTgt with HasINTge { self: Environment => }
-
-trait HasINTlt extends HasINT with HasBOOLEAN { self: Environment =>
-  val intLt = new Named("_<Int_")(self) with FunctionLabel2 with Z3Builtin {
-    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
-      case (INT(a), INT(b)) => Some(BOOLEAN(a < b))
-      case _ => None
-    }
-    override def smtName: String = "<"
-  }
-}
-
-trait HasINTle extends HasINT with HasBOOLEAN { self: Environment =>
-  val intLe = new Named("_<=Int_")(self) with FunctionLabel2 with Z3Builtin {
-    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
-      case (INT(a), INT(b)) => Some(BOOLEAN(a <= b))
-      case _ => None
-    }
-    override def smtName: String = "<="
-  }
-}
-
-trait HasINTgt extends HasINT with HasBOOLEAN { self: Environment =>
-  val intGt = new Named("_>Int_")(self) with FunctionLabel2 with Z3Builtin {
-    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
-      case (INT(a), INT(b)) => Some(BOOLEAN(a > b))
-      case _ => None
-    }
-    override def smtName: String = ">"
-  }
-}
-
-trait HasINTge extends HasINT with HasBOOLEAN { self: Environment =>
-  val intGe = new Named("_>=Int_")(self) with FunctionLabel2 with Z3Builtin {
-    def f(_1: Term, _2: Term): Option[Term] = (_1, _2) match {
-      case (INT(a), INT(b)) => Some(BOOLEAN(a >= b))
-      case _ => None
-    }
-    override def smtName: String = ">="
-  }
+  implicit val updownInt = INT.Int
 }

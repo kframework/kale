@@ -1,7 +1,7 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard._
-import org.kframework.kale.util.Implicits
+import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
 
 /*
@@ -77,26 +77,25 @@ endmodule
  */
 
 
-
 object IMP {
   implicit val env = StandardEnvironment()
 
   val signature = new IMPCommonSignature()
+
   import signature._
-
   import env._
-  import builtin._
 
-  val ints = new standard.AssocWithIdListLabel("_,_", emptyIntList())
-  val kseq = new standard.AssocWithIdListLabel("_~>_", emptyk())
+  val ints = AssocWithIdLabel("_,_", emptyIntList())
+  val kseq = AssocWithIdLabel("_~>_", emptyk())
 
   case class isSort(label: LeafLabel[_])(implicit val env: Environment) extends {
     val name: String = "is" + label.name
+    override val isPredicate: Option[Boolean] = Some(true)
   } with FunctionLabel1 {
     def f(_1: Term): Option[Term] = Some(Truth(_1.label == label))
   }
 
-  val isInt = isSort(INT)
+  val isInt = isSort(INT.Int)
 
   //  // AExp
   //  rule <k> X:Id => I ...</k> <state>... X |-> I ...</state>
@@ -130,20 +129,16 @@ object IMP {
   val SO = Variable("SO")
   val R = Variable("R")
 
-  val implicits = new Implicits()
-  import implicits._
+  val implicits = new dsl()
 
-  val rules = Set(
+  val rules: Set[Term] = Set(
     T(k(kseq(Rewrite(X, I), R)), state(statesMap(varBinding(X, I), SO))),
-    T(k(kseq(Rewrite(div(And(I1, isInt(I1)), And(I2, isInt(I2))), intDiv(I1, I2)), R)), S)
+    T(k(kseq(Rewrite(div(And(I1, isInt(I1)), And(I2, isInt(I2))), INT.div(I1, I2)), R)), S)
   ) map (t => Rewrite(lhs(t), rhs(t)))
-
-  ID("junk")
 
   env.seal()
 
-  val matcher = SingleSortedMatcher()
-  val rewrite = Rewriter(SubstitutionWithContext(_), matcher)(rules)
+  val rewrite = Rewriter(env)(rules)
 }
 
 //object IMP {
@@ -182,16 +177,14 @@ object IMP {
 //}
 
 class ImpSpec extends FreeSpec {
-  "IMP" - {
+  "IMP" ignore {
 
-    import IMP._
     import IMP.env._
     import IMP.signature._
-    import implicits._
 
-    val term = T(k(ID("foo")), state(varBinding(ID("foo"), 5)))
+    val term = T(k('foo), state(varBinding('foo, 5)))
 
-    println(rewrite.searchStep(term))
+    println(IMP.rewrite.searchStep(term))
 
     //    println(TCell(kCell(KSEQ.unit), stateCell(emptyState)))
   }

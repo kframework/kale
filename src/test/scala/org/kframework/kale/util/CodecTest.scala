@@ -1,10 +1,10 @@
 package org.kframework.kale.util
 
 import io.circe._
-import io.circe.syntax._
 import io.circe.parser._
+import io.circe.syntax._
 import org.kframework.kale._
-import org.kframework.kale.standard.{SimpleFreeLabel2, StandardEnvironment}
+import org.kframework.kale.standard.{StandardEnvironment}
 import org.scalatest.FreeSpec
 
 import scala.language.implicitConversions
@@ -13,11 +13,13 @@ class CodecTest extends FreeSpec {
 
   implicit val env = StandardEnvironment()
 
-  val foo = SimpleFreeLabel2("foo")
+  import env._
+
+  val foo = FreeLabel2("foo")
 
   import env._
 
-  val pattern = foo(INT(3), STRING("bar"))
+  val pattern = foo(3, STRING.String("bar"))
 
   object TestAtt extends Att[Int] {
     override def toString = "test"
@@ -33,19 +35,19 @@ class CodecTest extends FreeSpec {
 
   "encode" in {
     val actual = pattern.asJson.noSpaces
-    val expected = "{\"label\":\"foo\",\"att\":{},\"children\":[{\"label\":\"Int\",\"att\":{},\"data\":\"3\"},{\"label\":\"String\",\"att\":{},\"data\":\"bar\"}]}"
+    val expected = "{\"label\":\"foo\",\"children\":[{\"label\":\"Int@INT-SYNTAX\",\"data\":\"3\"},{\"label\":\"String\",\"data\":\"bar\"}]}"
     assert(actual == expected)
   }
 
   "decode int" in {
-    val actual = decode[Term]("{\"label\":\"Int\",\"att\":{},\"data\":\"3\"}")
-    val expected = Right(INT(3))
+    val actual = decode[Term]("{\"label\":\"Int@INT-SYNTAX\",\"att\":{},\"data\":\"3\"}")
+    val expected = Right(INT.Int(3))
     assert(actual === expected)
   }
 
   "decode string" in {
     val actual = decode[Term]("{\"label\":\"String\",\"att\":{},\"data\":\"bar\"}")
-    val expected = Right(STRING("bar"))
+    val expected = Right(STRING.String("bar"))
     assert(actual === expected)
   }
 
@@ -65,10 +67,10 @@ class CodecTest extends FreeSpec {
   }
 
   "att encoding" in {
-    val expectedTerm: Term = INT(3)
+    val expectedTerm: Term = INT.Int(3)
     expectedTerm.att(TestAtt)
 
-    val expectedJson = "{\"label\":\"Int\",\"att\":{\"test\":0},\"data\":\"3\"}"
+    val expectedJson = "{\"label\":\"Int@INT-SYNTAX\",\"att\":{\"test\":0},\"data\":\"3\"}"
 
     assertEncodings(expectedTerm, expectedJson)
   }

@@ -1,11 +1,9 @@
 package org.kframework.kale
 
-import org.kframework.kale.context.pattern.PatternContextApplicationLabel
 import org.kframework.kale.standard._
-import org.kframework.kale.util.{Implicits, Util}
+import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
 
-import scala.collection._
 import scala.language.implicitConversions
 
 class ParsingDisambiguationTest extends FreeSpec {
@@ -14,36 +12,36 @@ class ParsingDisambiguationTest extends FreeSpec {
 
   import env._
 
-  val implicits = new Implicits()
+  val implicits = new dsl()
 
-  val ExpId = SimpleFreeLabel1("ExpId")
-  val readPointer = SimpleFreeLabel1("readPointer")
-  val mult = SimpleFreeLabel2("mult")
-  val plus = SimpleFreeLabel2("plus")
+  val ExpId = FreeLabel1("ExpId")
+  val readPointer = FreeLabel1("readPointer")
+  val mult = FreeLabel2("mult")
+  val plus = FreeLabel2("plus")
 
-  val emptyExpList = SimpleFreeLabel0("emptyExpList")
-  val ExpList = SimpleFreeLabel2("ExpList")
+  val emptyExpList = FreeLabel0("emptyExpList")
+  val ExpList = FreeLabel2("ExpList")
 
-  val ExpStmt = SimpleFreeLabel1("_;")
-  val block = SimpleFreeLabel1("block")
-  val typedef = SimpleFreeLabel1("typedef")
+  val ExpStmt = FreeLabel1("_;")
+  val block = FreeLabel1("block")
+  val typedef = FreeLabel1("typedef")
 
-  val VarDecl = SimpleFreeLabel2("VarDecl")
+  val VarDecl = FreeLabel2("VarDecl")
 
-  val TypeId = SimpleFreeLabel1("TypeId")
+  val TypeId = FreeLabel1("TypeId")
 
-  val Pointer = SimpleFreeLabel1("Pointer")
+  val Pointer = FreeLabel1("Pointer")
 
-  val emptyTypeList = SimpleFreeLabel0("emptyTypeList")
-  val TypeList = SimpleFreeLabel2("TypeList")
+  val emptyTypeList = FreeLabel0("emptyTypeList")
+  val TypeList = FreeLabel2("TypeList")
 
-  val emptyDeclList = SimpleFreeLabel0("emptyDeclList")
-  val DeclList = SimpleFreeLabel2("DeclList")
+  val emptyDeclList = FreeLabel0("emptyDeclList")
+  val DeclList = FreeLabel2("DeclList")
 
-  val emptyStmtList = SimpleFreeLabel0("emptyStmtList")
-  val StmtList = SimpleFreeLabel2("StmtList")
+  val emptyStmtList = FreeLabel0("emptyStmtList")
+  val StmtList = FreeLabel2("StmtList")
 
-  val amb = SimpleFreeLabel2("amb")
+  val amb = FreeLabel2("amb")
 
   //  val ANYWHERE_NOT_BLOCK = PatternContextApplicationLabel("ANYWHERE_NOT_BLOCK")
 
@@ -75,35 +73,33 @@ class ParsingDisambiguationTest extends FreeSpec {
 
   env.seal()
 
-  implicit val unifier = SingleSortedMatcher()
-
   val substitutionApplier = SubstitutionWithContext(_)
 
   val theAmbiguity: Term = amb(
     VarDecl(
-      TypeList(TypeId(ID("a")), emptyTypeList()),
+      TypeList(TypeId('a), emptyTypeList()),
       DeclList(
-        Pointer(ID("b")),
-        DeclList(Pointer(ID("c")), emptyDeclList()))),
+        Pointer('b),
+        DeclList(Pointer('c), emptyDeclList()))),
     ExpStmt(
       ExpList(
-        mult(ExpId(ID("a")), ExpId(ID("b"))),
+        mult(ExpId('a), ExpId('b)),
         ExpList(
-          readPointer(ExpId(ID("c"))),
+          readPointer(ExpId('c)),
           emptyExpList())))
   )
 
   def asMult(amb: Term) = StmtList(
-    block(StmtList(typedef(ID("a")), emptyStmtList())),
+    block(StmtList(typedef('a), emptyStmtList())),
     ExpList(
-      ID("traversed"),
+      'traversed,
       amb)
   )
 
   def asDecl(amb: Term) = StmtList(
-    typedef(ID("a")),
+    typedef('a),
     ExpList(
-      ID("traversed"),
+      'traversed,
       amb
     )
   )
@@ -116,84 +112,6 @@ class ParsingDisambiguationTest extends FreeSpec {
 
   val Mult = Variable("Mult")
   val Decl = Variable("Decl")
-
-  "match part" ignore {
-    val pattern = AnywhereContext(
-      Variable("ANYWHERE0"),
-      StmtList(
-        BindMatch(DeclOrNot,
-          IfThenElse(TYPEDEF_CONTEXT(
-            CX,
-            typedef(A)
-          ), Equality(IsDecl, Top), Equality(IsDecl, Bottom))
-        ),
-        Or(
-          And(Not(IsDecl),
-            BindMatch(Mult, ExpList(
-              mult(A, B),
-              readPointer(C)
-            ))
-          ),
-          And(IsDecl,
-            BindMatch(Decl, VarDecl(
-              A,
-              DeclList(
-                Pointer(B),
-                Pointer(C))
-            ))
-          )
-        )
-      )
-    )
-
-    // as decl
-    assert(unifier(pattern, asDecl(theAmbiguity))
-      === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
-      Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Top), Equality(CX, Hole))))
-
-    // as mult
-    assert(unifier(pattern, asMult(theAmbiguity))
-      === And(List(Equality(A, ID("a")), Equality(B, ID("b")), Equality(C, ID("c")),
-      Equality(Variable("ANYWHERE0"), Variable("ANYWHERE0_1")), Equality(IsDecl, Bottom))))
-
-  }
-
-  var anywhereCounter = 0
-
-  def ANYWHERE(p: Term) = {
-    anywhereCounter += 1
-    AnywhereContext(
-      Variable("ANYWHERE" + anywhereCounter), p)
-  }
-
-  "rewrite" ignore {
-
-    val disambRule = ANYWHERE(
-      StmtList(
-        Rewrite(
-          BindMatch(DeclOrNot,
-            IfThenElse(TYPEDEF_CONTEXT(CX, typedef(A)), Equality(IsDecl, Top), Equality(IsDecl, Bottom))),
-          DeclOrNot),
-        Or(
-          And(Not(IsDecl),
-            ANYWHERE(
-              Rewrite(
-                BindMatch(Mult, MULT(Variable("CxMult"), mult(A, _V))),
-                Mult))),
-          And(IsDecl,
-            ANYWHERE(
-              Rewrite(
-                BindMatch(Decl, VarDecl(A, _V)),
-                Decl))
-          ))))
-
-    val rewriteOnTop = Util.moveRewriteSymbolToTop(disambRule)(env)
-
-    val rewriter = Rewriter(substitutionApplier, unifier)(Set(rewriteOnTop))
-
-    println(rewriter.searchStep(asMult(theAmbiguity)))
-    println(rewriter.searchStep(asDecl(theAmbiguity)))
-  }
 
   "with two rules and amb" in {
     val keepVarDecl =
@@ -209,12 +127,12 @@ class ParsingDisambiguationTest extends FreeSpec {
         Rewrite(amb(ANYWHERE(TypeId(A)), B), B)
       )
 
-    val rewriterVarDecl = Rewriter(substitutionApplier, unifier)(Set(Util.moveRewriteSymbolToTop(keepVarDecl)(env)))
+    val rewriterVarDecl = Rewriter(env)(Set(moveRewriteSymbolToTop(keepVarDecl)(env)))
 
     println(rewriterVarDecl.searchStep(asMult(theAmbiguity)))
     println(rewriterVarDecl.searchStep(asDecl(theAmbiguity)))
 
-    val rewriter = Rewriter(substitutionApplier, unifier)(Set(Util.moveRewriteSymbolToTop(keepMult)(env)))
+    val rewriter = Rewriter(env)(Set(moveRewriteSymbolToTop(keepMult)(env)))
 
     println(rewriter.searchStep(asMult(theAmbiguity)))
     println(rewriter.searchStep(asDecl(theAmbiguity)))

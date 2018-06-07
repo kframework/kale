@@ -1,0 +1,86 @@
+package org.kframework.kale.strategy
+
+import org.kframework.kale.Term
+import org.kframework.kale.standard.StandardEnvironment
+import org.kframework.kale.tests.TestSetup
+
+class StrategyTest extends TestSetup[StandardEnvironment]() {
+
+  import env._
+  import STRATEGY._
+  import implicits._
+
+  "orElse" - {
+    "then" in {
+      assert(orElse(X, b).unify(a) === And(a, Equality(X, a)))
+    }
+    "else" in {
+      assert(orElse(a, Y).unify(b) === And(b, Equality(Y, b)))
+    }
+    "mixed" in {
+      assert(orElse(Rewrite(a, c), Rewrite(b, d)).unify(Or(a, b)) === Or(Next(c), Next(d)))
+    }
+  }
+
+  "nextIsNow" in {
+    assert(anytimeIsNow(And(Next(a), Equality(X, a))) === And(Equality(X, a), a))
+  }
+
+  "compose" in {
+    assert(compose(Rewrite(b, c), Rewrite(a, b)).unify(a) === Next(c))
+  }
+
+  "repeat" - {
+    "simpe" - {
+      val repeatRule = repeat(Or(Rewrite(a, b), Rewrite(b, c)))
+      "simple" in {
+        assert(repeatRule.unify(a) === Next(c))
+      }
+      "disjunction" in {
+        assert(repeatRule.unify(Or(a, d)) === Or(Next(c), Next(d)))
+      }
+    }
+    "multiple spots" - {
+      "two spots, no special bounding" in {
+        val repeatRule = repeat(Y % Rewrite(a, b))
+        assert(repeatRule.unify(foo(a, a)) == Next(foo(b, b)))
+      }
+    }
+  }
+
+  "fixpoint" - {
+    val fp = fixpoint(Or(Rewrite(a, b), Rewrite(b, b)))
+    "simple" in {
+      assert(fp.unify(a) === Next(b))
+      assert(fp.unify(b) === Next(b))
+      assert(fp.unify(c) === Bottom)
+    }
+    "disjunction" in {
+      assert(fp.unify(Or(a, d)) === Next(b))
+    }
+  }
+
+  "bu" - {
+    "simple" in {
+      assertRewrite(
+        bu(a ==> c))(
+        foo(a, b),
+        foo(c, b)
+      )
+    }
+
+    "show that it is bottom-up" in {
+      assertRewrite(
+        bu(foo(a, X) ==> a))(
+        foo(foo(a, b), b),
+        a
+      )
+    }
+
+    "assoc" in {
+      assertRewrite(STRATEGY.bu(__ ~~ ((1: Term) ==> 2) ~~ __))(el ~~ 1 ~~ 2 ~~ 3, el ~~ 2 ~~ 2 ~~ 3)
+      assertRewrite(STRATEGY.bu(__ ~~ ((1: Term) ==> 2)))(el ~~ 1 ~~ 2 ~~ 3, el ~~ 2 ~~ 2 ~~ 3)
+      assertRewrite(STRATEGY.bu((1: Term) ==> 2))(el ~~ 1 ~~ 2 ~~ 3, el ~~ 2 ~~ 2 ~~ 3)
+    }
+  }
+}

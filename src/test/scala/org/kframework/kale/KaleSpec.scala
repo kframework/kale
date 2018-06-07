@@ -1,7 +1,7 @@
 package org.kframework.kale
 
 import org.kframework.kale.standard.StandardEnvironment
-import org.kframework.kale.util.Implicits
+import org.kframework.kale.util.dsl
 import org.scalatest.FreeSpec
 
 class KaleSpec extends FreeSpec {
@@ -10,9 +10,7 @@ class KaleSpec extends FreeSpec {
 
   import env._
 
-  val impl = new Implicits()
-
-  import impl._
+  val impl = new dsl()
 
   val X = Variable("X")
 
@@ -27,15 +25,15 @@ class KaleSpec extends FreeSpec {
 
 
   "INT" - {
-    val x: DomainValue[Int] = 2
-    val y: DomainValue[Int] = 3
+    val x: DomainValue[Int] = INT.Int(2)
+    val y: DomainValue[Int] = INT.Int(3)
 
     "Int" in {
-      assert(x == INT(2))
+      assert(x == INT.Int(2))
       assert(x != y)
 
       assert(x.data == 2)
-      assert(x.label == INT)
+      assert(x.label == INT.Int)
     }
     //    "+" in {
     //      assert(x + y == INT(5))

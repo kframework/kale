@@ -1,27 +1,20 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
-import org.kframework.kale.util.Util
+import org.kframework.kale.standard.StandardEnvironment
+import org.kframework.kale.util.timer
 import org.scalatest.FreeSpec
 
-import scala.collection._
 import scala.language.implicitConversions
 
-class RewriteTest extends FreeSpec with TestSetup {
+class RewriteTest extends TestSetup[StandardEnvironment]() {
 
   import env._
   import implicits._
 
-  def assertRewrite(rule: Rewrite)(obj: Term, expected: Term) {
-    val unificationRes = unifier(rule._1, obj)
-    val res = Or.asSet(unificationRes) map (s => substitutionApplier(s.asInstanceOf[Substitution])(rule._2))
-    assert(Or(res) === expected)
-  }
+  implicit val eeenv = env
 
-  def assertRewrite(rule0: Term)(obj: Term, expected: Term) {
-    val rule = Util.moveRewriteSymbolToTop(rule0)(env)
-    assertRewrite(rule)(obj, expected)
-  }
+  before(timer.fullReset())
 
   "X + 0 => X" in {
     assertRewrite(Rewrite(X + 0, X))((5: Term) + 0, 5: Term)
@@ -31,34 +24,55 @@ class RewriteTest extends FreeSpec with TestSetup {
     assertRewrite(Rewrite((2: Term) + X + 3, (5: Term) + X))((2: Term) + 4 + 3, (5: Term) + 4)
   }
 
-  val rewriter = Rewriter(substitutionApplier, unifier)(Set(
+  val rewriter = Or(
     Rewrite(X + 0, X),
     Rewrite((0: Term) + X, X),
     Rewrite(el ~~ 3 ~~ X ~~ Y ~~ 6, el ~~ X ~~ 0 ~~ Y)
-  ))
+  )
+
+  "inner rewrite" - {
+    "simple" in {
+      assert((bar(Rewrite(X, b)) =:= bar(a)) === And(Equality(X, a), bar(Next(b))))
+    }
+    "swap" in {
+      assert((foo(Rewrite(X, Y), Rewrite(Y, X)) =:= foo(a, b)) === And(Equality(X, a), Equality(Y, b), foo(Next(b), Next(a))))
+    }
+  }
 
   "step" in {
-    assert(rewriter.step((1: Term) + 0).toList === List(1: Term))
-    assert(rewriter.step(1: Term).toList === List())
+    assert((rewriter ==:= ((1: Term) + 0)) === Next(1))
+    assert((rewriter ==:= (1: Term)) === Bottom)
   }
 
   "search" in {
-    assert(rewriter.searchStep((1: Term) + 0) === (1: Term))
-    assert(rewriter.searchStep(1: Term) === Bottom)
-    assert(rewriter.searchStep(el ~~ 3 ~~ 4 ~~ 5 ~~ 6) ===
+    assert((rewriter ==:= ((1: Term) + 0)) === Next(1))
+    assert((rewriter ==:= (1: Term)) === Bottom)
+  }
+
+  // TODO: check this test
+  "search assoc" in {
+    assert(And.anytimeIsNow(rewriter ==:= (el ~~ 3 ~~ 4 ~~ 5 ~~ 6)) ===
       Or(List(el ~~ 4 ~~ 0 ~~ 5, el ~~ 0 ~~ 4 ~~ 5, el ~~ 4 ~~ 5 ~~ 0)))
+  }
+
+  "nested disjunction" in {
+    assertRewrite(And(Rewrite(A, A), Equality(A, Or(a, b))))(a, a)
+  }
+
+  "empty to empty bug" in {
+    assert(unify(env.STRATEGY.td(foo(A, B) ==> el), X) === X)
   }
 
   "contexts" - {
 
     "zero-level" in {
-      assertRewrite(foo(a, AnywhereContext(X, Rewrite(Y, bar(Y)))))(
+      assertRewrite(foo(a, Context(X, Rewrite(Y, bar(Y)))))(
         foo(a, b),
         foo(a, bar(b)))
     }
 
     "a bit more" in {
-      assertRewrite(foo(a, AnywhereContext(X, Rewrite(Y, bar(Y)))))(
+      assertRewrite(foo(a, Context(X, Rewrite(Y, bar(Y)))))(
         foo(a, traversed(b)),
         Or(
           foo(a, traversed(bar(b))),
@@ -68,19 +82,19 @@ class RewriteTest extends FreeSpec with TestSetup {
     }
 
     "with traversal" in {
-      assertRewrite(foo(a, AnywhereContext(X, Rewrite(matched(Y), bar(Y)))))(
+      assertRewrite(foo(a, Context(X, Rewrite(matched(Y), bar(Y)))))(
         foo(a, traversed(matched(andMatchingY()))),
         foo(a, traversed(bar(andMatchingY()))))
     }
 
     "with traversal outer rewrite" in {
-      assertRewrite(foo(a, Rewrite(AnywhereContext(X, matched(Y)), bar(Y))))(
+      assertRewrite(foo(a, Rewrite(Context(X, matched(Y)), bar(Y))))(
         foo(a, traversed(matched(andMatchingY()))),
         foo(a, bar(andMatchingY())))
     }
 
     "referring to context" in {
-      assertRewrite(foo(a, Rewrite(AnywhereContext(X, matched(Y)), bar(X))))(
+      assertRewrite(foo(a, Rewrite(Context(X, matched(Y)), bar(X))))(
         foo(a, traversed(matched(andMatchingY()))),
         foo(a, bar(traversed(X_1))))
     }
@@ -110,5 +124,16 @@ class RewriteTest extends FreeSpec with TestSetup {
         foo(1, bar(buz(3, bar(2)))),
         foo(1, buz(buz(3, bar(2)), buz(3, bar(2)))))
     }
+  }
+
+  "inline rewrite" - {
+    "very simple" in {
+      val rw = Rewrite(1, 2)
+      assert((rw =:= 1) === Next(2))
+    }
+  }
+
+  "flip" in {
+    assert(Rewrite(foo(A, B), foo(B, A)).rewrite(foo(a, b)) === foo(b, a))
   }
 }

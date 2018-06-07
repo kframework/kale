@@ -1,43 +1,50 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
-import org.kframework.kale.context.pattern.PatternContextApplicationLabel
-import org.kframework.kale.standard.{Rewrite => _, _}
-import org.kframework.kale.util.Implicits
+import org.kframework.kale.standard.{SimpleRewrite => _, _}
+import org.kframework.kale.util.{dsl, timer}
 import org.scalactic.Prettifier
+import org.scalatest.{BeforeAndAfter, FreeSpec}
 
-trait TestSetup {
-
-  implicit val env = StandardEnvironment()
+abstract class TestSetup[E <: StandardEnvironment](implicit val env: E = StandardEnvironment()) extends FreeSpec with BeforeAndAfter {
 
   import env._
 
-  val implicits = new Implicits()
+  val implicits = new dsl()
 
   val X = Variable("X")
   val Y = Variable("Y")
+  val Z = Variable("Z")
 
-  val emptyList = SimpleFreeLabel0("emptyList")
+  val plus = env.uniqueLabels.getOrElse("+", FreeLabel2("+")).asInstanceOf[Label2]
+
+  implicit class asTerm(x: Term) {
+    def +(y: Term): Term = plus(x, y)
+  }
+
+  val emptyList = FreeLabel0("emptyList")
 
   val el = emptyList()
 
-  val listLabel = new standard.AssocWithIdListLabel("listLabel", el)
+  val listLabel = AssocWithIdLabel("listLabel", el)
 
   implicit class WithListConcat(t: Term) {
     def ~~(o: Term): Term = listLabel(t, o)
   }
 
-  val foo = SimpleFreeLabel2("foo")
-  val bar = SimpleFreeLabel1("bar")
-  val buz = SimpleFreeLabel2("buz")
-  val (a, b, c, d, e) = (STRING("a"), STRING("b"), STRING("c"), STRING("d"), STRING("e"))
-  val matched = SimpleFreeLabel1("matched")
-  val traversed = SimpleFreeLabel1("traversed")
-  val andMatchingY = SimpleFreeLabel0("andMatchingY")
+  val foo = FreeLabel2("foo")
+  val bar = FreeLabel1("bar")
+  val buz = FreeLabel2("buz")
+  val poc = FreeLabel1("poc")
+  val List(a, b, c, d, e) = List("a", "b", "c", "d", "e").map(STRING.String)
+  val List(u, v) = List("u", "v").map(STRING.String)
+  val matched = FreeLabel1("matched")
+  val traversed = FreeLabel1("traversed")
+  val andMatchingY = FreeLabel0("andMatchingY")
 
   val a2b = standard.FunctionDefinedByRewritingLabel1("a2b")
 
-  val a2bRules = Set(Rewrite(a2b(a), b))
+  val a2bRules = Set[Rewrite](Rewrite(a2b(a), b))
 
   val C = Variable("C")
   val C1 = Variable("C1")
@@ -52,18 +59,16 @@ trait TestSetup {
 
   env.seal()
 
-  implicit val rewriterBuilder: (collection.Set[_ <: Rewrite]) => Rewriter = Rewriter(SubstitutionWithContext(_)(env), SingleSortedMatcher()(env))(_)
+  a2b.setRules(Or(a2bRules))
 
-  a2b.setRules(a2bRules)
-
-  implicit val unifier = SingleSortedMatcher()
+  def unifier(t1: Term, t2: Term): Term = env.And.onlyPredicate(matcher(t1, t2))
 
   val substitutionApplier = SubstitutionWithContext(_)
 
-  val X_1 = AnywhereContext.hole(X)
+  val X_1 = Context.hole(X)
 
   def toAssert(t: Term): String = t match {
-    case Variable((name, _)) => name.str
+    case Variable((name, _)) => name.toString
     case t: Node => t.toString
   }
 
@@ -72,5 +77,10 @@ trait TestSetup {
       case n: Node => n.toString
       case o => Prettifier.default(o)
     }
+  }
+
+  def assertRewrite(rule: Term)(obj: Term, expected: Term) {
+    val actual = rule.rewrite(obj)
+    assert(actual === expected)
   }
 }

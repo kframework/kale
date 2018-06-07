@@ -1,65 +1,88 @@
 package org.kframework.kale
 
-import io.circe.{Decoder, Encoder, HCursor}
-import org.kframework.kale.util.{HasAtt, Util}
-import org.kframework.kore
-import org.kframework.kore.implementation.DefaultBuilders
+import cats.Show
 import io.circe.syntax._
+import io.circe.{Decoder, Encoder, HCursor}
+import org.kframework.kale.highcats._
+import org.kframework.kale.util.HasAtt
+import org.roaringbitmap.RoaringBitmap
 
-trait Label extends MemoizedHashCode with kore.Symbol {
+trait Label extends MemoizedHashCode with RoaringLabel {
   val env: Environment
 
   val name: String
 
-  def smtName: String = name
-
   val id: Int = env.register(this)
 
+  /**
+    * None means that it depends on its children
+    */
+  val isPredicate: Option[Boolean]
+
   override def equals(other: Any): Boolean = other match {
-    case that: Label => this.name == that.name
+    case that: Label => this.id == that.id
     case _ => false
   }
 
-  override def computeHashCode: Int = name.hashCode
+  override def computeHashCode: Int = id.hashCode
 
   override def toString: String = name
-
-  // FOR KORE
-  override val str: String = name
 }
 
-trait Term extends kore.Pattern with HasAtt {
+trait Term extends HasAtt with MemoizedHashCode with RoaringTerm {
   def updateAt(i: Int)(t: Term): Term
 
   val label: Label
 
-  val isGround: Boolean
+  def isGround: Boolean
 
-  val isPredicate: Boolean
+  lazy val size: Long = (children map (_.size)).sum + 1
+
+  lazy val isPredicate: Boolean = label.isPredicate match {
+    case Some(isPred) => isPred
+    case None =>
+      throw new AssertionError("Could not determine whether term is a predicate based on the label (" +
+        label + ", which is hooked to " + label.getClass + "). Override isPredicate with correct specification.")
+  }
 
   lazy val sort: Sort = label.env.sort(label, this.children.toSeq)
 
   def children: Iterable[Term]
+
+  def map0(f: Term => Term): Term
 
   def canEqual(that: Any): Boolean = that match {
     case t: Term => t.label == this.label
     case _ => false
   }
 
+  val variables: Set[Variable]
+
   /**
     * This method is called after `oldTerm` is updated resulting in `this` term.
     * Subclasses can override the method to attach functionality related to updating, e.g., updating attributes.
     * Should return `this`.
     */
-//  override def updatePostProcess(oldTerm: Term): Term = this
+  //  override def updatePostProcess(oldTerm: Term): Term = this
 
-  // TODO: should experiment with other implementations
-  override def hashCode: Int = this.label.hashCode
 
   def copy(children: Seq[Term]): Term
+
+  override final def computeHashCode: Int = this.label.hashCode + 17 * this.children.hashCode
+}
+
+trait Predicate extends NotRoaring {
+  self: Label =>
+
+  val isPredicate = Some(true)
 }
 
 object Term {
+
+  implicit val show = new Show[Term] {
+    override def show(t: Term) = t.toConstructor
+  }
+
   implicit def termDecoder(implicit env: Environment): Decoder[Term] = {
     Decoder.instance { (h: HCursor) =>
       val label = env.label(h.get[String]("label").right.get)
@@ -93,19 +116,14 @@ object Term {
     }
   }
 
-  implicit class StaticRichTerm(t: Term) {
-    def contains(subterm: Term): Boolean = Util.contains(t, subterm) // if (t == subterm) true else t.children.exists(_.contains(subterm))
-    def containsInConstructor(subterm: Term): Boolean = Util.containsInConstructor(t, subterm)
+  implicit class RichTerm(val t: Term) extends AnyVal {
+    def moveRewriteToTop(implicit env: Environment): Rewrite = moveRewriteSymbolToTop(t)
+    def down[O](implicit down: Down[O]): Option[O] = down.down(t)
   }
 
-  implicit class RichTerm(t: Term)(implicit env: Environment) {
-    def moveRewriteToTop: Rewrite = Util.moveRewriteSymbolToTop(t)
-  }
 }
 
-trait LeafLabel[T] extends Label {
-  def apply(t: T): Term
-
+trait LeafLabel[T] extends (T => Leaf[T]) with Label {
   def unapply(t: Term): Option[T] = t match {
     case t: Leaf[T] if t.label == this => Some(t.data)
     case _ => None
@@ -119,6 +137,8 @@ trait LeafLabel[T] extends Label {
 
 trait Leaf[T] extends Term {
   def children: Iterable[Term] = Iterable.empty
+
+  def map0(f: Term => Term): Term = this
 
   def updateAt(i: Int)(t: Term): Term = throw new IndexOutOfBoundsException("Leaves have no children. Trying to update index _" + i)
 
@@ -135,9 +155,11 @@ trait Leaf[T] extends Term {
   }
 
   override def equals(obj: scala.Any): Boolean = obj match {
-    case that: Leaf[_] => that.label == this.label && that.data == this.data
+    case that: Leaf[_] => that.label == this.label && this.hashCode == that.hashCode && that.data == this.data
     case _ => false
   }
+
+  override val variables: Set[Variable] = Set()
 }
 
 trait NodeLabel extends Label {
@@ -173,11 +195,25 @@ trait Node extends Term with Product {
   override def toString: String = label + "(" + children.mkString(", ") + ")"
 
   def copy(children: Seq[Term]): Term
+
+  override lazy val variables: Set[Variable] = children.flatMap(_.variables).toSet
+
+  override def equals(obj: Any): Boolean = obj match {
+    case n: Node => n.label == this.label && n.hashCode == this.hashCode && n.children == this.children
+    case _ => false
+  }
 }
 
 object Node {
   def unapply(t: Term): Option[(NodeLabel, Iterable[Term])] = t match {
     case t: Node => Some(t.label, t.children)
+    case _ => None
+  }
+}
+
+object Leaf {
+  def unapply(t: Term): Option[(LeafLabel[T], T) forSome {type T}] = t match {
+    case l: Leaf[_] => Some(l.label, l.data)
     case _ => None
   }
 }

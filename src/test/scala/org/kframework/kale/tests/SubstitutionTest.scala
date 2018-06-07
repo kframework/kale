@@ -1,11 +1,11 @@
 package org.kframework.kale.tests
 
 import org.kframework.kale._
+import org.kframework.kale.standard.StandardEnvironment
 import org.scalatest.FreeSpec
 
-class SubstitutionTest extends FreeSpec with TestSetup {
+class SubstitutionTest extends TestSetup[StandardEnvironment]() {
 
-  import implicits._
   import env._
 
   "substitution" in {
@@ -23,7 +23,7 @@ class SubstitutionTest extends FreeSpec with TestSetup {
     val substitution = substitutionApplier(s)
 
     assert(substitution(
-      foo(3, AnywhereContext(X, bar(Y)))
+      foo(3, Context(X, bar(Y)))
     ) === foo(3, buz(bar(1), bar(bar(2)))))
   }
 }

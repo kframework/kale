@@ -1,12 +1,15 @@
 package org.kframework.kale.builtin
 
+import org.kframework.kale
 import org.kframework.kale.Environment
-import org.kframework.kale.standard.ReferenceLabel
 
-trait HasID {
-  self: Environment =>
 
-  val ID = new ReferenceLabel[String]("ID")(this) {
-    override protected[this] def internalInterpret(s: String): String = s
+trait IdMixin extends kale.IdMixin {
+  env: Environment =>
+
+  override val ID = new {
+    val Id = define[Symbol]("Id@ID")(Symbol(_))
   }
+
+  implicit val upSymbol = ID.Id
 }

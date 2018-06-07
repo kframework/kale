@@ -18,13 +18,17 @@ class Codec(attCodecs: Set[AttCodec[E] forSome {type E}])(implicit val env: Envi
     Decoder.instance { (h: HCursor) =>
       val label = env.label(h.get[String]("label").right.get)
 
-      val attsCursor: HCursor = h.downField("att").success.get
+      val atts: Map[Att[_], _] = h.downField("att").success
+        .map { attsCursor =>
+          val x: Map[Att[_], _] = attsCursor.fieldSet.get map {
+            (attName: String) =>
+              val AttCodec(att, _, decoder) = nameToAttDecoder(attName)
+              att -> decoder(attsCursor.downField(attName).success.get).right.get
+          } toMap
 
-      val atts: Map[Att[_], _] = attsCursor.fieldSet.get map {
-        (attName: String) =>
-          val AttCodec(att, _, decoder) = nameToAttDecoder(attName)
-          (att -> decoder(attsCursor.downField(attName).success.get).right.get)
-      } toMap
+          x
+        }
+        .getOrElse(Map[Att[_], Any]())
 
       label match {
         case leafLabel: LeafLabel[_] =>
@@ -50,14 +54,21 @@ class Codec(attCodecs: Set[AttCodec[E] forSome {type E}])(implicit val env: Envi
     } toMap
 
     Encoder.instance[Term] { t =>
-      val encodedAtts: Map[String, Json] = t.attributes map {
-        case (att: Att[_], v: Any) => (att.toString -> nameToAttDecoder(att.toString).encoder.asInstanceOf[Encoder[Any]](v))
+      val encodedAtts: Map[String, Json] = t.attributes collect {
+        case (att, v) if nameToAttDecoder.contains(att.toString) =>
+          att.toString -> nameToAttDecoder(att.toString).encoder.asInstanceOf[Encoder[Any]](v)
       }
-      val labelAndAtts = Map("label" -> t.label.toString.asJson, "att" -> encodedAtts.asJson)
+
+      val attBinding =
+        if (encodedAtts.nonEmpty)
+          Map("att" -> encodedAtts.asJson)
+        else
+          Map()
+      val labelAndAtts = Map("label" -> t.label.toString.asJson) ++ attBinding
       t.label match {
         case label: LeafLabel[_] =>
           val label(data) = t
-          (labelAndAtts + ("data" -> data.toString.asJson)).asJson
+          (labelAndAtts + ("data" -> t.toString.asJson)).asJson
         case label: NodeLabel =>
           val node = t.asInstanceOf[Node]
           (labelAndAtts + ("children" -> node.children.asJson)).asJson
